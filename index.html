@@ -120,6 +120,46 @@ img.emp-avatar { cursor: zoom-in; }
 .login-card .mb-2, .login-card button, .login-card form { text-align: left; }
 .login-card { max-height: 94vh; overflow-y: auto; }
 #appShell { display: none; width: 100%; height: 100vh; }
+
+/* ── สถานะอัปเดตอัตโนมัติ (Realtime) ── */
+.rt-status { font-size: .7rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+.rt-status .dot { width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; }
+.rt-status.on { color: #15803d; }
+.rt-status.on .dot { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
+
+/* ── มือถือ / แท็บเล็ต: เมนูเป็นลิ้นชักเลื่อนออก (ปุ่ม ☰) ── */
+.mobile-topbar { display: none; }
+.sidebar-backdrop { display: none; }
+@media (max-width: 991.98px) {
+  body, #appShell, .main-content { height: 100dvh; }
+  .sidebar { transform: translateX(-100%); transition: transform .22s ease; box-shadow: 6px 0 24px rgba(0,0,0,.25); z-index: 1045; }
+  body.sidebar-open .sidebar { transform: none; }
+  body.sidebar-open .sidebar-backdrop { display: block; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 1044; }
+  .main-content { margin-left: 0; width: 100%; }
+  .mobile-topbar { display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding: 8px 12px; color: #fff; background: rgba(15,23,42,.18); }
+  .mobile-topbar .btn-menu { background: rgba(255,255,255,.15); border: 0; color: #fff; width: 40px; height: 40px; border-radius: 10px; font-size: 1.1rem; padding: 0 !important; }
+  .mobile-topbar .title { font-weight: 600; font-size: .95rem; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .page-header { padding: 12px 14px 10px; flex-wrap: wrap; gap: 8px; }
+  .page-header h4 { display: none; }   /* ชื่อหน้าแสดงที่แถบบน (mobileTopbarTitle) แล้ว */
+  .page-header { justify-content: flex-end !important; }
+  .sticky-toolbar { padding: 0 14px; }
+  .sticky-toolbar .d-flex { flex-wrap: wrap; }
+  .scroll-content { padding: 0 14px 24px; }
+  .search-wrap { width: 100% !important; display: block; }
+  .sticky-toolbar .form-select.w-auto { flex: 1 1 140px; }
+  .table thead th, .table tbody td { white-space: nowrap; }
+  .glass-card { padding: 12px; }
+}
+@media (max-width: 575.98px) {
+  /* ฟอร์ม popup เต็มจอบนมือถือ — ปุ่มบันทึกอยู่ในระยะนิ้วโป้งเสมอ */
+  /* สูงเท่าจอพอดี: หัว/ท้ายอยู่กับที่ เลื่อนเฉพาะเนื้อหาฟอร์ม (position:sticky ใช้ไม่ได้เพราะ .modal-content มี overflow:hidden) */
+  .modal-dialog { margin: 0; max-width: 100%; height: 100dvh; }
+  .modal-content { border-radius: 0; height: 100dvh; }
+  .modal-body { overflow-y: auto; }
+  .kpi-card { padding: 10px 12px; }
+  .kpi-card .kpi-num { font-size: 1.3rem; }
+  .page-header .text-white-50 { display: none; }
+}
 </style>
 </head>
 <body>
@@ -249,10 +289,18 @@ img.emp-avatar { cursor: zoom-in; }
       <span id="currentUserRole"></span>
     </div>
     <a href="#" onclick="logout();return false;"><i class="fa-solid fa-right-from-bracket me-1"></i>ออกจากระบบ</a>
+    <div class="rt-status" id="rtStatus" title="เมื่อมีคนอื่นบันทึกข้อมูล หน้านี้จะอัปเดตเองภายใน ~1 วินาที"><span class="dot"></span><span class="txt">กำลังเชื่อมต่อ...</span></div>
   </div>
 </div>
+<div class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
 
 <div class="main-content">
+  <!-- แถบบนสุด เฉพาะมือถือ/แท็บเล็ต -->
+  <div class="mobile-topbar">
+    <button class="btn-menu" onclick="toggleSidebar()" aria-label="เปิดเมนู"><i class="fa-solid fa-bars"></i></button>
+    <div class="title" id="mobileTopbarTitle">BM Flow</div>
+    <button class="btn-menu" onclick="refreshCurrentPage()" aria-label="รีเฟรช" title="โหลดข้อมูลล่าสุด"><i class="fa-solid fa-rotate"></i></button>
+  </div>
 
   <!-- ═══════════════ DASHBOARD ═══════════════ -->
   <div class="page-view" id="page-dashboard">
@@ -1137,15 +1185,34 @@ function _modalShowError(fieldId, msg) {
   el.focus();
 }
 
+// ── ปรับสต็อก ──
+// ใช้ฟังก์ชัน DB adjust_stock_rm / adjust_stock_fg (migration_2026-09-25_realtime_stock.sql) ที่บวกยอดในคำสั่งเดียว
+// — วิธีเดิม "อ่านยอด → บวก → เขียนทับ" ถ้า 2 คนบันทึกพร้อมกัน ยอดของคนหนึ่งหาย
+// ถ้ายังไม่ได้รัน SQL (PGRST202 = หาฟังก์ชันไม่เจอ) ถอยไปใช้วิธีเดิมชั่วคราว
+// เดิมไม่เช็ค error เลย (สต็อกอัปเดตไม่สำเร็จแบบเงียบๆ) — ตอนนี้แจ้งเตือนเสมอ
+function _stockErr(error, what) {
+  console.error(error);
+  Swal.fire('ปรับสต็อกไม่สำเร็จ', `${esc(what)}: ${esc(error.message)}<br><small>กรุณาตรวจยอดสต็อกรายการนี้</small>`, 'error');
+}
 async function adjustStockRM(rmId, deltaQty, unit) {
+  const { error } = await _sb.rpc('adjust_stock_rm', { p_rm_id: rmId, p_delta: deltaQty, p_unit: unit || null });
+  if (!error) return true;
+  if (error.code !== 'PGRST202') { _stockErr(error, rmId); return false; }
   const { data: cur } = await _sb.from('stock_balance').select('*').eq('RM_ID', rmId).maybeSingle();
   const newQty = (cur?.Qty || 0) + deltaQty;
-  await _sb.from('stock_balance').upsert({ RM_ID: rmId, Qty: newQty, Unit: unit || cur?.Unit || 'กก.', UpdatedAt: new Date().toISOString() });
+  const r = await _sb.from('stock_balance').upsert({ RM_ID: rmId, Qty: newQty, Unit: unit || cur?.Unit || 'กก.', UpdatedAt: new Date().toISOString() });
+  if (r.error) { _stockErr(r.error, rmId); return false; }
+  return true;
 }
 async function adjustStockFG(fgId, lot, deltaQty, mfgDate, expDate) {
+  const { error } = await _sb.rpc('adjust_stock_fg', { p_fg_id: fgId, p_lot: lot, p_delta: deltaQty, p_mfg: mfgDate || null, p_exp: expDate || null });
+  if (!error) return true;
+  if (error.code !== 'PGRST202') { _stockErr(error, `${fgId} / ${lot}`); return false; }
   const { data: cur } = await _sb.from('stock_fg').select('*').eq('FG_ID', fgId).eq('Lot', lot).maybeSingle();
   const newQty = (cur?.Qty || 0) + deltaQty;
-  await _sb.from('stock_fg').upsert({ FG_ID: fgId, Lot: lot, Qty: newQty, MfgDate: mfgDate || cur?.MfgDate, ExpDate: expDate || cur?.ExpDate, UpdatedAt: new Date().toISOString() });
+  const r = await _sb.from('stock_fg').upsert({ FG_ID: fgId, Lot: lot, Qty: newQty, MfgDate: mfgDate || cur?.MfgDate, ExpDate: expDate || cur?.ExpDate, UpdatedAt: new Date().toISOString() });
+  if (r.error) { _stockErr(r.error, `${fgId} / ${lot}`); return false; }
+  return true;
 }
 
 // ── auth ──────────────────────────────────────────────────
@@ -1256,14 +1323,141 @@ const PAGE_LOADERS = {
   co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
   rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad, employee: employeeLoad,
 };
+let _currentPage = 'dashboard';
 async function showPage(name) {
+  _currentPage = name;
   document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.sidebar .nav-link').forEach(el => el.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
+  const page = document.getElementById('page-' + name);
+  page.classList.add('active');
   const link = document.getElementById('navlink-' + name); if (link) link.classList.add('active');
+  document.getElementById('mobileTopbarTitle').textContent = page.querySelector('.page-header h4')?.innerText.trim() || 'BM Flow';
+  toggleSidebar(false);
   if (PAGE_LOADERS[name]) await PAGE_LOADERS[name]();
 }
-function initApp() { showPage('dashboard'); }
+function toggleSidebar(open) {
+  document.body.classList.toggle('sidebar-open', open ?? !document.body.classList.contains('sidebar-open'));
+}
+function initApp() {
+  _ensureRefreshButtons();
+  _singleFlight(_WRITE_ACTIONS);
+  _realtimeSubscribe();
+  showPage('dashboard');
+}
+
+// ── รีเฟรชหน้าปัจจุบัน (ปุ่มรีเฟรช / Realtime / กลับมาที่แท็บ) ──
+// loader หลายหน้าโหลด cache ของตารางอื่น "เฉพาะตอนยังว่าง" (if (!_planCache.length) ...) เช่นหน้าเบิกวัตถุดิบ
+// ใช้ _planCache/_bomCache/_stockRmCache — ถ้าไม่ล้างก่อน หน้านั้นจะแสดงข้อมูลเก่าที่โหลดไว้ตั้งแต่ตอนแรก
+// จึงล้าง cache ข้อมูลธุรกรรมทิ้งก่อน แล้วโหลด master (สินค้า/วัตถุดิบ) ใหม่ให้ชื่อแสดงครบ ค่อยเรียก loader ของหน้า
+let _refreshing = false;
+async function refreshCurrentPage() {
+  if (_refreshing) return;
+  _refreshing = true;
+  try {
+    _planCache = []; _coCache = []; _bomCache = []; _stockRmCache = []; _stockFgCache = []; _receivedCache = []; _wasteCache = [];
+    await Promise.all([fgMasterLoad(), rmMasterLoad()]);
+    if (PAGE_LOADERS[_currentPage]) await PAGE_LOADERS[_currentPage]();
+    if (_hasRole('admin')) signupreqRefreshBadge();
+  } finally { _refreshing = false; }
+}
+// เพิ่มปุ่ม "รีเฟรช" ให้ทุกหน้าที่ยังไม่มี (ทำครั้งเดียวตอนเริ่มแอป แทนการแก้ HTML ทีละหน้า)
+function _ensureRefreshButtons() {
+  const btnHtml = '<button class="btn btn-outline-light btn-sm" onclick="refreshCurrentPage()" title="โหลดข้อมูลล่าสุด"><i class="fa-solid fa-rotate me-1"></i>รีเฟรช</button>';
+  document.querySelectorAll('.page-view').forEach(pv => {
+    if (pv.querySelector('.fa-rotate')) return;   // มีปุ่มรีเฟรชของตัวเองอยู่แล้ว
+    const h = pv.querySelector('.page-header');
+    if (!h) return;
+    if (!h.classList.contains('d-flex')) {
+      const inner = document.createElement('div');
+      while (h.firstChild) inner.appendChild(h.firstChild);
+      h.classList.add('d-flex', 'justify-content-between', 'align-items-start');
+      h.appendChild(inner);
+      h.insertAdjacentHTML('beforeend', `<div class="d-flex gap-2 flex-wrap">${btnHtml}</div>`);
+    } else {
+      const action = h.lastElementChild;           // ปุ่มหลักเดิมของหน้า เช่น "รับเข้าคลัง"
+      const wrap = document.createElement('div');
+      wrap.className = 'd-flex gap-2 flex-wrap align-items-start';
+      wrap.innerHTML = btnHtml;
+      h.replaceChild(wrap, action);
+      wrap.appendChild(action);
+    }
+  });
+}
+
+// ── Realtime: หลายคน/หลายเครื่องเห็นข้อมูลใหม่เอง (migration_2026-09-25_realtime_stock.sql เพิ่มตารางเข้า publication) ──
+// ช่องเดียวฟังทุกตารางใน schema public → รอ 0.8 วิ (รวบหลาย event เป็นครั้งเดียว) → รีเฟรชหน้าที่เปิดอยู่
+// ถ้ากำลังกรอกฟอร์ม/มีกล่องยืนยันเปิดอยู่/กำลังบันทึก จะเลื่อนไปรีเฟรชตอนปิดฟอร์ม — ไม่รบกวนคนที่กำลังพิมพ์
+let _rtTimer = null, _rtPending = false;
+// toast "บันทึกแล้ว" มุมจอไม่นับว่ากำลังยุ่ง (ไม่งั้นรีเฟรชจะค้างรอจน event ถัดไป)
+function _uiBusy() {
+  const swalBlocking = Swal.isVisible() && !Swal.getPopup()?.classList.contains('swal2-toast');
+  return !!document.querySelector('.modal.show') || swalBlocking || _singleFlightRunning > 0;
+}
+function _realtimeQueueRefresh() {
+  clearTimeout(_rtTimer);
+  _rtTimer = setTimeout(() => {
+    if (_uiBusy()) { _rtPending = true; return; }
+    _rtPending = false;
+    refreshCurrentPage();
+  }, 800);
+}
+function _flushPendingRefresh() { if (_rtPending && !_uiBusy()) _realtimeQueueRefresh(); }
+function _setRtStatus(status) {
+  const el = document.getElementById('rtStatus');
+  const on = status === 'SUBSCRIBED';
+  el.classList.toggle('on', on);
+  el.querySelector('.txt').textContent = on ? 'อัปเดตอัตโนมัติ' : status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' ? 'ออฟไลน์ — กดรีเฟรชเอง' : 'กำลังเชื่อมต่อ...';
+}
+function _realtimeSubscribe() {
+  _sb.channel('bmflow-db')
+    .on('postgres_changes', { event: '*', schema: 'public' }, _realtimeQueueRefresh)
+    .subscribe(_setRtStatus);
+}
+document.addEventListener('hidden.bs.modal', () => setTimeout(_flushPendingRefresh, 50));
+// มือถือพับจอ/สลับแอปแล้วกลับมา — websocket อาจหลุดไประหว่างนั้น ดึงข้อมูลล่าสุดใหม่เสมอ
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && _currentUser) _realtimeQueueRefresh(); });
+
+// ── กันกดบันทึกซ้ำ (double-submit) ──
+// ครอบทุกฟังก์ชันที่เขียนข้อมูล: ระหว่างที่ยังทำงานไม่เสร็จ กดซ้ำจะไม่มีผล + ปุ่มที่กดจะถูกล็อกพร้อมไอคอนหมุน
+// สำคัญที่สุดกับรับเข้า/เบิก/รับ FG เพราะกดซ้ำ = สต็อกถูกบวก/หักซ้ำ
+// ⚠️ ฟังก์ชันบันทึก/ลบใหม่ที่เพิ่มในอนาคต ต้องเพิ่มชื่อใน _WRITE_ACTIONS ด้วย
+const _WRITE_ACTIONS = [
+  'rmMasterModalSave', 'fgMasterModalSave', 'bomLineSubmit', 'receivedModalSave', 'coModalSave', 'planModalSave',
+  'issueModalSave', 'prodRecordModalSave', 'fgReceiveModalSave', 'fgoutModalSave', 'deliveryAdvance',
+  'wasteModalNext', 'wasteLotModalSave', 'employeeSave',
+  'rmMasterDelete', 'bomDeleteLine', 'bomDeleteProduct', 'receivedDelete', 'coDelete', 'planDelete', 'prodRecordDelete', 'wasteDelete',
+  'signupreqApprove', 'signupreqReject', 'userrolesUpdateRole', 'userrolesUpdateName',
+];
+let _singleFlightRunning = 0;
+function _singleFlight(names) {
+  names.forEach(name => {
+    const fn = window[name];
+    if (typeof fn !== 'function' || fn._guarded) return;
+    let running = false;
+    const guarded = async function (...args) {
+      if (running) return;
+      running = true;
+      _singleFlightRunning++;
+      // ปุ่มที่ถูกกด (onclick แบบ inline เรียกฟังก์ชันนี้ตรงๆ ระหว่าง event จึงอ่าน window.event ได้)
+      const t = window.event?.target;
+      const btn = t?.closest?.('button');
+      const oldHtml = btn?.innerHTML;
+      if (btn) {
+        btn.disabled = true;
+        if (btn.innerText.trim()) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>' + btn.innerText.trim();
+      }
+      try { return await fn.apply(this, args); }
+      finally {
+        running = false;
+        _singleFlightRunning--;
+        if (btn && btn.isConnected) { btn.disabled = false; btn.innerHTML = oldHtml; }
+        setTimeout(_flushPendingRefresh, 50);
+      }
+    };
+    guarded._guarded = true;
+    window[name] = guarded;
+  });
+}
 
 // ═══════════════════════════════════════════════════════════
 // สิทธิ์การใช้งาน (แอดมินเท่านั้น) — แบบหน้า "จัดการผู้ใช้" ของ ProFlow + แก้ชื่อแสดงผลได้
