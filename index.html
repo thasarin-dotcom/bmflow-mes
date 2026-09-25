@@ -93,6 +93,11 @@ body {
    bomDeleteLine, bomDeleteProduct ...) ตั้งชื่อฟังก์ชันลบใหม่ให้มี "Delete(" เสมอ ไม่งั้นจะหลุดกฎนี้
    ซ่อนแค่ระดับ UI — ตัวบังคับจริงคือ RLS "supervisor_can_delete" (migration_2026-09-25_user_roles.sql) */
 body.role-operator [onclick*="Delete("] { display: none !important; }
+.emp-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: #e2e8f0; color: #475569; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+img.emp-avatar { cursor: zoom-in; }
+.emp-photo-lg { width: 150px; height: 150px; border-radius: 12px; overflow: hidden; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 3rem; border: 1px solid #cbd5e1; }
+.emp-photo-lg img { width: 100%; height: 100%; object-fit: cover; }
+.emp-type-badge { color: #fff; }
 .role-badge { font-size: .68rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
 .role-desc { border-left: 4px solid #cbd5e1; padding: 8px 12px; background: #fff; border-radius: 8px; height: 100%; }
 .kpi-card.bom-kpi-active { outline: 2px solid #f59e0b; background: #fffbeb; }
@@ -226,6 +231,7 @@ body.role-operator [onclick*="Delete("] { display: none !important; }
     <ul class="nav flex-column nav-group-body collapsed">
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('rmmaster');return false;" id="navlink-rmmaster"><i class="fa-solid fa-seedling me-2"></i>วัตถุดิบ / แพ็คเกจจิ้ง (Master)</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('bom');return false;" id="navlink-bom"><i class="fa-solid fa-flask me-2"></i>สูตรแม่บท (BOM Master)</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('employee');return false;" id="navlink-employee"><i class="fa-solid fa-users me-2"></i>พนักงาน (Employee Master)</a></li>
     </ul>
 
     <!-- แอดมินเท่านั้น (ซ่อน/แสดงใน _applyRolePermissions) -->
@@ -455,6 +461,36 @@ body.role-operator [onclick*="Delete("] { display: none !important; }
     </div>
   </div>
 
+  <!-- ═══════════════ พนักงาน (Employee Master) — แบบ ProFlow + รูปพนักงาน ═══════════════ -->
+  <div class="page-view" id="page-employee">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-users me-2"></i>พนักงาน (Employee Master)</h4><div class="text-white-50 small">ข้อมูลพนักงานพร้อมรูปถ่าย</div></div>
+      <button class="btn btn-success" onclick="employeeOpenModal()"><i class="fa-solid fa-circle-plus me-1"></i>เพิ่มพนักงานใหม่</button>
+    </div>
+    <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+      <div class="search-wrap" style="width:340px;max-width:100%"><input class="form-control search-input" id="employeeSearch" placeholder="ค้นหา รหัส / ชื่อ / ชื่อเล่น / ตำแหน่ง..." oninput="employeeRender()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('employeeSearch').value='';employeeRender()"></i></div>
+      <select class="form-select w-auto" id="employeeFilterType" onchange="employeeRender()">
+        <option value="">ทุกประเภท</option><option value="FT">พนักงานประจำ (FT)</option><option value="PT">พาร์ทไทม์ (PT)</option><option value="OS">เอาท์ซอร์ส (OS)</option>
+      </select>
+      <select class="form-select w-auto" id="employeeFilterStatus" onchange="employeeRender()">
+        <option value="ทำงานอยู่">ทำงานอยู่</option><option value="">ทุกสถานะ</option><option value="ลาออก">ลาออก</option>
+      </select>
+      <button class="btn btn-outline-light btn-sm ms-auto" onclick="employeeLoad()"><i class="fa-solid fa-rotate me-1"></i>รีเฟรช</button>
+    </div></div>
+    <div class="scroll-content">
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-num" id="emp-kpi-total">—</div><div class="kpi-label">พนักงานทำงานอยู่</div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi-card" style="border-left-color:#0d6efd"><div class="kpi-num" style="color:#0d6efd" id="emp-kpi-ft">—</div><div class="kpi-label">พนักงานประจำ (FT)</div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi-card" style="border-left-color:#198754"><div class="kpi-num" style="color:#198754" id="emp-kpi-pt">—</div><div class="kpi-label">พาร์ทไทม์ (PT)</div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi-card" style="border-left-color:#8b5cf6"><div class="kpi-num" style="color:#8b5cf6" id="emp-kpi-os">—</div><div class="kpi-label">เอาท์ซอร์ส (OS)</div></div></div>
+      </div>
+      <div class="glass-card p-0 overflow-hidden"><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th style="width:64px">รูป</th><th>รหัส</th><th>ชื่อ-นามสกุล</th><th>ประเภท</th><th>ตำแหน่ง</th><th>แผนก</th><th>สถานะ</th><th>เบอร์โทร</th><th class="text-center">จัดการ</th></tr></thead>
+        <tbody id="employeeTableBody"><tr><td colspan="9" class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังโหลด...</td></tr></tbody>
+      </table></div></div>
+    </div>
+  </div>
+
   <!-- ═══════════════ คำขอสมัครใช้งาน (แอดมินเท่านั้น) — จากปุ่ม "ขอรหัส" หน้า login ═══════════════ -->
   <div class="page-view" id="page-signupreq">
     <div class="page-header d-flex justify-content-between align-items-start">
@@ -519,6 +555,63 @@ body.role-operator [onclick*="Delete("] { display: none !important; }
   </div>
 
 </div>
+</div>
+
+<!-- ═══════════════ MODAL: พนักงาน ═══════════════ -->
+<div class="modal fade" id="employeeModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title" id="empm-title"><i class="fa-solid fa-circle-plus me-2"></i>เพิ่มพนักงานใหม่</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <!-- รูปพนักงาน -->
+          <div class="col-md-3 text-center">
+            <div class="emp-photo-lg mx-auto mb-2" id="empm-photo-preview"></div>
+            <input type="file" id="empm-photo-file" accept="image/*" class="d-none" onchange="employeePickPhoto(this)">
+            <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="document.getElementById('empm-photo-file').click()"><i class="fa-solid fa-camera me-1"></i>เลือก / ถ่ายรูป</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="empm-photo-remove" onclick="employeeRemovePhoto()"><i class="fa-solid fa-xmark me-1"></i>เอารูปออก</button>
+            <div class="small text-muted mt-1" style="font-size:.72rem">ระบบย่อรูปให้อัตโนมัติ</div>
+          </div>
+          <div class="col-md-9"><div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">รหัสพนักงาน<span class="text-danger">*</span></label>
+              <input id="empm-code" class="form-control">
+              <div class="invalid-feedback" id="empm-code-err"></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">ประเภทพนักงาน<span class="text-danger">*</span></label>
+              <select id="empm-type" class="form-select"><option value="FT">พนักงานประจำ (FT)</option><option value="PT">พาร์ทไทม์ (PT)</option><option value="OS">เอาท์ซอร์ส (OS)</option></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">ชื่อจริง<span class="text-danger">*</span></label>
+              <input id="empm-first" class="form-control">
+              <div class="invalid-feedback" id="empm-first-err"></div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">นามสกุล<span class="text-danger">*</span></label>
+              <input id="empm-last" class="form-control">
+              <div class="invalid-feedback" id="empm-last-err"></div>
+            </div>
+            <div class="col-md-4"><label class="form-label">ชื่อเล่น</label><input id="empm-nick" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">ตำแหน่ง</label><input id="empm-position" class="form-control" list="empPositionList"></div>
+            <div class="col-md-4"><label class="form-label">แผนก / สาย</label><input id="empm-dept" class="form-control" list="empDeptList"></div>
+            <div class="col-md-4"><label class="form-label">วันที่เริ่มงาน</label><input id="empm-start" type="date" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">เบอร์โทร</label><input id="empm-phone" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label">สถานะ</label><select id="empm-status" class="form-select"><option value="ทำงานอยู่">ทำงานอยู่</option><option value="ลาออก">ลาออก</option></select></div>
+            <div class="col-12"><label class="form-label">หมายเหตุ</label><input id="empm-note" class="form-control"></div>
+          </div></div>
+        </div>
+        <datalist id="empPositionList"></datalist><datalist id="empDeptList"></datalist>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" id="empm-save-btn" onclick="employeeSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════ MODAL: วัตถุดิบ / แพ็คเกจจิ้ง (Master) ═══════════════ -->
@@ -1161,7 +1254,7 @@ const PAGE_LOADERS = {
   plan: planLoad, issue: issueLoad, prodrecord: prodRecordLoad,
   fgreceive: fgReceiveLoad, stockfg: stockFgLoad, stockcard: stockCardLoad,
   co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
-  rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad,
+  rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad, employee: employeeLoad,
 };
 async function showPage(name) {
   document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
@@ -1177,6 +1270,188 @@ function initApp() { showPage('dashboard'); }
 // การสร้างบัญชีทำที่ Supabase Dashboard เท่านั้น (ต้องใช้ service_role key ซึ่งเก็บในหน้าเว็บ static ไม่ได้)
 // trigger on_auth_user_created_add_role สร้างแถว user_roles (operator) ให้เองทันทีที่สร้างบัญชี
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// พนักงาน (Employee Master) — แบบหน้าพนักงานของ ProFlow + รูปพนักงาน (migration_2026-09-25_employees.sql)
+// รูปเก็บใน Storage bucket "employee-photos" แบบ private → แสดงผ่าน signed URL (หมดอายุ 1 ชม., ขอใหม่ทุกครั้งที่โหลดหน้า)
+// ทุกครั้งที่เปลี่ยนรูปใช้ path ใหม่ (มี timestamp) แล้วลบไฟล์เก่า — กันเบราว์เซอร์แสดงรูปเก่าจาก cache
+// ไม่มีปุ่มลบพนักงาน (เหมือน ProFlow) — คนออกให้เปลี่ยนสถานะเป็น "ลาออก" เก็บประวัติไว้
+// ═══════════════════════════════════════════════════════════
+const EMP_PHOTO_BUCKET = 'employee-photos';
+const EMP_TYPE_LABEL = { FT: 'ประจำ (FT)', PT: 'พาร์ทไทม์ (PT)', OS: 'เอาท์ซอร์ส (OS)' };
+const EMP_TYPE_COLOR = { FT: '#0d6efd', PT: '#198754', OS: '#8b5cf6' };
+let _employeeCache = [];
+let _employeePhotoUrls = {};   // PhotoPath → signed URL
+let _empEditId = null;         // _row_id ที่กำลังแก้ (null = เพิ่มใหม่)
+let _empPhotoBlob = null;      // รูปใหม่ที่เลือก (ย่อแล้ว) รออัปโหลดตอนกดบันทึก
+let _empPhotoRemove = false;   // กด "เอารูปออก"
+
+async function employeeLoad() {
+  const { data, error } = await _sb.from('employees').select('*').order('EmployeeCode');
+  const body = document.getElementById('employeeTableBody');
+  if (error) {
+    body.innerHTML = `<tr><td colspan="9" class="text-center py-4"><div class="text-danger fw-semibold mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่ได้สร้างตารางพนักงาน</div>
+      <div class="small text-muted">รัน <code>migration_2026-09-25_employees.sql</code> ใน Supabase SQL Editor ก่อน</div><div class="small text-muted mt-1">(${esc(error.message)})</div></td></tr>`;
+    return;
+  }
+  _employeeCache = data || [];
+  const paths = _employeeCache.map(e => e.PhotoPath).filter(Boolean);
+  _employeePhotoUrls = {};
+  if (paths.length) {
+    const { data: urls } = await _sb.storage.from(EMP_PHOTO_BUCKET).createSignedUrls(paths, 3600);
+    (urls || []).forEach(u => { if (u.signedUrl) _employeePhotoUrls[u.path] = u.signedUrl; });
+  }
+  employeeUpdateKPIs();
+  employeeRender();
+}
+function employeeUpdateKPIs() {
+  const active = _employeeCache.filter(e => e.Status !== 'ลาออก');
+  document.getElementById('emp-kpi-total').textContent = active.length;
+  ['FT', 'PT', 'OS'].forEach(t => { document.getElementById('emp-kpi-' + t.toLowerCase()).textContent = active.filter(e => e.EmployeeType === t).length; });
+}
+function _empInitials(e) { return esc(((e.NickName || e.FirstName || '?').trim().charAt(0) || '?').toUpperCase()); }
+function _empAvatar(e) {
+  const url = e.PhotoPath && _employeePhotoUrls[e.PhotoPath];
+  return url
+    ? `<img class="emp-avatar" src="${esc(url)}" alt="" onclick="employeeViewPhoto(${e._row_id})">`
+    : `<span class="emp-avatar">${_empInitials(e)}</span>`;
+}
+function employeeRender() {
+  const q = (document.getElementById('employeeSearch').value || '').trim().toLowerCase();
+  const type = document.getElementById('employeeFilterType').value;
+  const status = document.getElementById('employeeFilterStatus').value;
+  const rows = _employeeCache.filter(e => {
+    if (type && e.EmployeeType !== type) return false;
+    if (status && e.Status !== status) return false;
+    return !q || [e.EmployeeCode, e.FirstName, e.LastName, e.NickName, e.Position, e.Department].join(' ').toLowerCase().includes(q);
+  });
+  document.getElementById('employeeTableBody').innerHTML = rows.map(e => `<tr>
+    <td>${_empAvatar(e)}</td>
+    <td><span class="badge text-bg-secondary">${esc(e.EmployeeCode)}</span></td>
+    <td>${esc(e.FirstName)} ${esc(e.LastName)}${e.NickName ? ` <small class="text-muted">(${esc(e.NickName)})</small>` : ''}</td>
+    <td><span class="badge emp-type-badge" style="background:${EMP_TYPE_COLOR[e.EmployeeType] || '#94a3b8'}">${esc(EMP_TYPE_LABEL[e.EmployeeType] || e.EmployeeType || '—')}</span></td>
+    <td>${esc(e.Position || '—')}</td>
+    <td>${esc(e.Department || '—')}</td>
+    <td>${badge(e.Status || 'ทำงานอยู่', e.Status === 'ลาออก' ? 'secondary' : 'success')}</td>
+    <td>${esc(e.Phone || '—')}</td>
+    <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="employeeOpenModal(${e._row_id})" title="แก้ไข"><i class="fa-solid fa-pen-to-square"></i></button></td>
+  </tr>`).join('') || '<tr><td colspan="9" class="text-center text-muted py-4">ไม่พบข้อมูล</td></tr>';
+}
+function employeeViewPhoto(rowId) {
+  const e = _employeeCache.find(x => x._row_id === rowId);
+  const url = e?.PhotoPath && _employeePhotoUrls[e.PhotoPath];
+  if (!url) return;
+  Swal.fire({ imageUrl: url, imageAlt: '', title: `${esc(e.FirstName)} ${esc(e.LastName)}`,
+    text: [e.EmployeeCode, e.Position].filter(Boolean).join(' · '), showConfirmButton: false, showCloseButton: true });
+}
+function _empSetPreview(url, fallback) {
+  document.getElementById('empm-photo-preview').innerHTML = url ? `<img src="${esc(url)}" alt="">` : (fallback || '<i class="fa-solid fa-user"></i>');
+  document.getElementById('empm-photo-remove').style.display = url ? '' : 'none';
+}
+function employeeOpenModal(rowId = null) {
+  const e = rowId ? _employeeCache.find(x => x._row_id === rowId) : null;
+  _empEditId = e ? e._row_id : null;
+  _empPhotoBlob = null;
+  _empPhotoRemove = false;
+  document.getElementById('empm-photo-file').value = '';
+  _modalClearErrors(['empm-code', 'empm-first', 'empm-last']);
+  document.getElementById('empm-title').innerHTML = e
+    ? '<i class="fa-solid fa-pen-to-square me-2"></i>แก้ไขข้อมูลพนักงาน'
+    : '<i class="fa-solid fa-circle-plus me-2"></i>เพิ่มพนักงานใหม่';
+  const set = (id, v) => { document.getElementById(id).value = v ?? ''; };
+  set('empm-code', e?.EmployeeCode); set('empm-type', e?.EmployeeType || 'FT');
+  set('empm-first', e?.FirstName); set('empm-last', e?.LastName); set('empm-nick', e?.NickName);
+  set('empm-position', e?.Position); set('empm-dept', e?.Department); set('empm-start', e?.StartDate);
+  set('empm-phone', e?.Phone); set('empm-status', e?.Status || 'ทำงานอยู่'); set('empm-note', e?.Note);
+  // ตัวเลือกตำแหน่ง/แผนกจากที่เคยกรอกไว้ — พิมพ์ใหม่ได้เสมอ
+  const opts = key => [...new Set(_employeeCache.map(x => x[key]).filter(Boolean))].map(v => `<option value="${esc(v)}">`).join('');
+  document.getElementById('empPositionList').innerHTML = opts('Position');
+  document.getElementById('empDeptList').innerHTML = opts('Department');
+  _empSetPreview(e?.PhotoPath && _employeePhotoUrls[e.PhotoPath]);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('employeeModal')).show();
+}
+// ย่อรูปฝั่งเบราว์เซอร์ก่อนอัปโหลด (ด้านยาวสุด 480px, JPEG 85%) — รูปจากมือถือ 3–5 MB เหลือ ~50–100 KB
+async function _empResizeImage(file, maxSide = 480) {
+  const img = await new Promise((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error('อ่านไฟล์รูปไม่ได้'));
+    i.src = URL.createObjectURL(file);
+  });
+  const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.naturalWidth * scale);
+  canvas.height = Math.round(img.naturalHeight * scale);
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  URL.revokeObjectURL(img.src);
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+}
+async function employeePickPhoto(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { Swal.fire('ไฟล์ไม่ถูกต้อง', 'เลือกไฟล์รูปภาพเท่านั้น', 'warning'); return; }
+  try {
+    _empPhotoBlob = await _empResizeImage(file);
+    _empPhotoRemove = false;
+    _empSetPreview(URL.createObjectURL(_empPhotoBlob));
+  } catch (err) { Swal.fire('ใช้รูปนี้ไม่ได้', err.message, 'error'); }
+}
+function employeeRemovePhoto() {
+  _empPhotoBlob = null;
+  _empPhotoRemove = true;
+  document.getElementById('empm-photo-file').value = '';
+  _empSetPreview(null);
+}
+async function employeeSave() {
+  _modalClearErrors(['empm-code', 'empm-first', 'empm-last']);
+  const val = id => document.getElementById(id).value.trim();
+  const code = val('empm-code');
+  if (!code) { _modalShowError('empm-code', 'กรอกรหัสพนักงาน'); return; }
+  if (_employeeCache.some(e => e.EmployeeCode === code && e._row_id !== _empEditId)) { _modalShowError('empm-code', 'รหัสนี้มีอยู่แล้ว'); return; }
+  if (!val('empm-first')) { _modalShowError('empm-first', 'กรอกชื่อจริง'); return; }
+  if (!val('empm-last')) { _modalShowError('empm-last', 'กรอกนามสกุล'); return; }
+  const payload = {
+    EmployeeCode: code, EmployeeType: val('empm-type') || 'FT', FirstName: val('empm-first'), LastName: val('empm-last'),
+    NickName: val('empm-nick') || null, Position: val('empm-position') || null, Department: val('empm-dept') || null,
+    StartDate: val('empm-start') || null, Phone: val('empm-phone') || null, Status: val('empm-status') || 'ทำงานอยู่',
+    Note: val('empm-note') || null,
+  };
+  const btn = document.getElementById('empm-save-btn');
+  const btnHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>กำลังบันทึก...';
+  try {
+    // 1) บันทึกข้อมูล — .select() เพื่อได้ _row_id ของคนใหม่ไปตั้งชื่อไฟล์รูป
+    const q = _empEditId
+      ? _sb.from('employees').update(payload).eq('_row_id', _empEditId).select()
+      : _sb.from('employees').insert(payload).select();
+    const { data, error } = await q;
+    if (error) { Swal.fire('บันทึกไม่สำเร็จ', error.code === '23505' ? `รหัส "${esc(code)}" ถูกใช้แล้ว` : error.message, 'error'); return; }
+    const saved = data[0];
+    if (!_empEditId) _empEditId = saved._row_id;   // ถ้าอัปโหลดรูปพลาด กดบันทึกซ้ำจะไม่สร้างคนซ้ำ
+    const oldPath = saved.PhotoPath;
+    // 2) รูป: อัปโหลดรูปใหม่ / เอารูปออก แล้วค่อยลบไฟล์เก่า (ลบทีหลังสุด — ถ้าขั้นก่อนหน้าพลาด รูปเดิมยังอยู่)
+    let newPath = oldPath;
+    if (_empPhotoBlob) {
+      newPath = `emp-${saved._row_id}-${Date.now()}.jpg`;
+      const up = await _sb.storage.from(EMP_PHOTO_BUCKET).upload(newPath, _empPhotoBlob, { contentType: 'image/jpeg' });
+      if (up.error) { Swal.fire('บันทึกข้อมูลแล้ว แต่อัปโหลดรูปไม่สำเร็จ', up.error.message + ' — กดบันทึกอีกครั้งเพื่อลองใหม่', 'warning'); return; }
+    } else if (_empPhotoRemove) {
+      newPath = null;
+    }
+    if (newPath !== oldPath) {
+      const ok = await sbRun(_sb.from('employees').update({ PhotoPath: newPath }).eq('_row_id', saved._row_id), 'บันทึกรูปไม่สำเร็จ');
+      if (ok === null) return;
+      if (oldPath) await _sb.storage.from(EMP_PHOTO_BUCKET).remove([oldPath]);
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = btnHtml;
+  }
+  bootstrap.Modal.getInstance(document.getElementById('employeeModal')).hide();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'บันทึกแล้ว', showConfirmButton: false, timer: 1500 });
+  employeeLoad();
+}
+
 // ── คำขอสมัครใช้งาน (แอดมิน) — ตาราง signup_requests (migration_2026-09-25_signup_requests.sql) ──
 let _signupreqCache = [];
 const _SIGNUP_STATUS_BADGE = { 'รอตรวจสอบ': 'warning', 'สร้างแล้ว': 'success', 'ปฏิเสธ': 'danger' };
