@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BM Flow — BLM Herbal MES</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+:root {
+  --glass-bg: rgba(255,255,255,0.95);
+  /* สี CI จริงของ Blooming Company Limited — สุ่มตัวอย่างพิกเซลจากโลโก้ assets/logo-blooming.webp
+     โดยตรง (เฉลี่ยพื้นที่สีน้ำเงิน/สีชมพูของโลโก้) ไม่ใช่ค่ากะประมาณด้วยตา */
+  --primary-blue: #264984;       /* น้ำเงินเข้ม จากส่วนเงาของตัว "B" */
+  --brand-blue: #4d8fc2;         /* น้ำเงินกลาง ใช้กับ gradient/hover */
+  --brand-blue-light: #a2c4e3;   /* น้ำเงินอ่อน ไฮไลต์ */
+  --accent-pink: #e86e7a;        /* ชมพูดอกไม้ในโลโก้ ใช้เป็น accent เท่านั้น
+                                     ไม่ใช้แทนสีสถานะ (success/warning/danger เดิมยังคงความหมายเดิม) */
+  --sidebar-width: 210px;
+}
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--brand-blue) 100%) fixed;
+  min-height: 100vh; margin: 0; display: flex;
+  overflow: hidden; height: 100vh;
+}
+.sidebar {
+  width: var(--sidebar-width);
+  background: #f0f4f9;
+  border-right: 1px solid #d7e3ef;
+  height: 100vh; position: fixed;
+  padding: 18px 12px; color: var(--primary-blue); z-index: 1000;
+  display: flex; flex-direction: column;
+}
+.sidebar-brand { padding: 4px 8px 12px; text-align: center; }
+.sidebar-brand img { max-width: 150px; width: 100%; height: auto; display: block; margin: 0 auto 8px; }
+.sidebar-brand .brand-name { font-weight: 700; font-size: .95rem; color: var(--primary-blue); }
+.sidebar-brand small { display: block; font-weight: 400; font-size: .68rem; color: #64748b; }
+.sidebar-brand-bar { height: 3px; border-radius: 2px; margin: 0 8px 14px; background: linear-gradient(90deg, var(--primary-blue), var(--brand-blue), var(--accent-pink)); }
+.sidebar .nav-link { color: #475569; border-radius: 8px; padding: 9px 12px; transition: all .2s; font-size: .88rem; }
+.sidebar .nav-link:hover { background: #dce8f5; color: var(--primary-blue); }
+.sidebar-scroll { overflow-y: auto; overflow-x: hidden; min-height: 0; flex: 1; }
+.nav-group-header {
+  display: flex; align-items: center; justify-content: space-between;
+  color: #64748b; font-size: .70rem; font-weight: 600; letter-spacing: .05em;
+  padding: 4px 8px; margin-bottom: 2px; cursor: pointer; border-radius: 6px; user-select: none;
+}
+.nav-group-header:hover { background: #dce8f5; color: var(--primary-blue); }
+.nav-group-chevron { font-size: .65rem; transition: transform .2s; }
+.nav-group-header.collapsed .nav-group-chevron { transform: rotate(-90deg); }
+.nav-group-body { overflow: hidden; }
+.nav-group-body.collapsed { display: none; }
+.sidebar .nav-link.active { background: var(--primary-blue); color: #fff; font-weight: 600; }
+.sidebar-footer { flex-shrink: 0; border-top: 1px solid #d7e3ef; padding-top: 10px; font-size: .78rem; color: #64748b; }
+.main-content { margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.page-header { flex-shrink: 0; padding: 20px 30px 16px 30px; }
+.sticky-toolbar { flex-shrink: 0; padding: 0 30px; }
+.scroll-content { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 0 30px 30px 30px; }
+.glass-card { background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 8px; border: 1px solid rgba(180,195,210,0.4); box-shadow: 0 4px 12px rgba(0,0,0,.08); padding: 16px; margin-bottom: 16px; }
+.table thead { background-color: var(--primary-blue); color: white; }
+.table thead th { font-weight: 600; font-size: .86rem; padding: 10px 12px; }
+.table tbody td { font-size: .86rem; vertical-align: middle; }
+.table-hover tbody tr:hover { background: #f0f6fb; }
+.table td:last-child { white-space: nowrap; }
+.page-view { display: none; }
+.page-view.active { display: flex; flex-direction: column; height: 100%; animation: pageFadeIn .18s ease; }
+@keyframes pageFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.form-label { font-weight: 600; color: #1e293b; font-size: .9rem; }
+.modal-content { border-radius: 16px; border: none; overflow: hidden; }
+.modal-header-brand { background: var(--primary-blue); color: #fff; border-bottom: none; }
+.modal-header-brand .modal-title { font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; }
+.modal-header-brand .btn-close { opacity: .9; }
+.modal-footer-light { background: #f8f9fa; }
+.form-label .text-danger { font-weight: 700; }
+.btn-brand { background: var(--primary-blue); border-color: var(--primary-blue); color: #fff; }
+.btn-brand:hover { background: #1b3766; border-color: #1b3766; color: #fff; }
+.btn { padding: 8px 18px; font-size: .92rem; }
+.btn-success { background: var(--primary-blue); border-color: var(--primary-blue); }
+.btn-success:hover { background: #1b3766; border-color: #1b3766; }
+.btn-sm { padding: 1px 14px !important; font-size: .85rem !important; }
+.kpi-card { background: white; border-radius: 10px; padding: 14px 18px; border-left: 4px solid var(--primary-blue); box-shadow: 0 2px 8px rgba(0,0,0,.06); cursor: default; }
+.kpi-card .kpi-num { font-size: 1.6rem; font-weight: 700; color: var(--primary-blue); }
+.kpi-card .kpi-label { font-size: .74rem; color: #64748b; }
+.kpi-card.kpi-warn { border-left-color: #f59e0b; }
+.kpi-card.kpi-warn .kpi-num { color: #b45309; }
+.kpi-card.kpi-danger { border-left-color: #dc2626; }
+.kpi-card.kpi-danger .kpi-num { color: #b91c1c; }
+/* สิทธิ์: พนักงาน (operator) ไม่เห็นปุ่มลบทุกปุ่ม — ทุกฟังก์ชันลบในแอปนี้ชื่อลงท้าย "Delete(" (rmMasterDelete,
+   bomDeleteLine, bomDeleteProduct ...) ตั้งชื่อฟังก์ชันลบใหม่ให้มี "Delete(" เสมอ ไม่งั้นจะหลุดกฎนี้
+   ซ่อนแค่ระดับ UI — ตัวบังคับจริงคือ RLS "supervisor_can_delete" (migration_2026-09-25_user_roles.sql) */
+body.role-operator [onclick*="Delete("] { display: none !important; }
+.role-badge { font-size: .68rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+.role-desc { border-left: 4px solid #cbd5e1; padding: 8px 12px; background: #fff; border-radius: 8px; height: 100%; }
+.kpi-card.bom-kpi-active { outline: 2px solid #f59e0b; background: #fffbeb; }
+.bom-card-head { cursor: pointer; }
+.bom-card-head:hover b { color: var(--primary-blue); }
+.bom-mat-dropdown { max-height: 220px; overflow-y: auto; display: none; width: calc(100% - 1.5rem); z-index: 1060; }
+.kpi-section-label { font-weight: 700; color: #fff; font-size: .82rem; letter-spacing: .01em; margin-bottom: 6px; }
+.search-clear-btn { display: none; }
+.search-input:not(:placeholder-shown) ~ .search-clear-icon { display: block; }
+.search-wrap { position: relative; display: inline-block; }
+.search-wrap .search-input { padding-right: 28px; }
+.search-clear-icon { display: none; position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; font-size: .85rem; }
+.search-clear-icon:hover { color: #64748b; }
+#loginGate { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary-blue) 0%, var(--brand-blue) 100%); z-index: 3000; }
+.login-card { background: #fff; border-radius: 16px; padding: 36px 34px; width: 340px; box-shadow: 0 10px 40px rgba(0,0,0,.25); text-align: center; }
+.login-card img { max-width: 150px; width: 100%; height: auto; margin: 0 auto 14px; }
+.login-card .login-bar { height: 3px; border-radius: 2px; margin: 0 0 18px; background: linear-gradient(90deg, var(--primary-blue), var(--brand-blue), var(--accent-pink)); }
+.login-card h3 { color: var(--primary-blue); font-weight: 700; margin-bottom: 2px; }
+.login-card .sub { color: #64748b; font-size: .82rem; margin-bottom: 20px; }
+.login-card .mb-2, .login-card button { text-align: left; }
+#appShell { display: none; width: 100%; height: 100vh; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN GATE ═══════════════ -->
+<div id="loginGate">
+  <div class="login-card">
+    <img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
+    <div class="login-bar"></div>
+    <h3>BM Flow</h3>
+    <div class="sub">BLM Herbal MES — ระบบผลิตลูกประคบสด</div>
+    <div class="mb-2">
+      <label class="form-label">อีเมล</label>
+      <input type="email" id="loginEmail" class="form-control" placeholder="you@company.com">
+    </div>
+    <div class="mb-2">
+      <label class="form-label">รหัสผ่าน</label>
+      <input type="password" id="loginPassword" class="form-control" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')loginSubmit()">
+    </div>
+    <div id="loginError" class="text-danger small mb-2" style="display:none;"></div>
+    <button class="btn btn-success w-100" id="loginSubmitBtn" onclick="loginSubmit()">เข้าสู่ระบบ</button>
+    <div class="text-center text-muted small mt-3">ขอบัญชีผู้ใช้จากผู้ดูแลระบบ (สร้างผ่าน Supabase Dashboard → Authentication)</div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP SHELL ═══════════════ -->
+<div id="appShell">
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
+    <div class="brand-name">BM Flow</div>
+    <small>BLM Herbal MES</small>
+  </div>
+  <div class="sidebar-brand-bar"></div>
+  <div class="sidebar-scroll">
+    <ul class="nav flex-column">
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('dashboard');return false;" id="navlink-dashboard"><i class="fa-solid fa-gauge-high me-2"></i>ภาพรวม</a></li>
+    </ul>
+
+    <div class="nav-group-header" onclick="toggleNavGroup(this)"><span>Inventory</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
+    <ul class="nav flex-column nav-group-body">
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('received');return false;" id="navlink-received"><i class="fa-solid fa-inbox me-2"></i>Received</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('fgreceive');return false;" id="navlink-fgreceive"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง</a></li>
+    </ul>
+
+    <div class="nav-group-header" onclick="toggleNavGroup(this)"><span>Stock</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
+    <ul class="nav flex-column nav-group-body">
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockrm');return false;" id="navlink-stockrm"><i class="fa-solid fa-leaf me-2"></i>Raw Material</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockpkg');return false;" id="navlink-stockpkg"><i class="fa-solid fa-boxes-packing me-2"></i>Packaging</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockfg');return false;" id="navlink-stockfg"><i class="fa-solid fa-warehouse me-2"></i>Finished Goods</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('waste');return false;" id="navlink-waste"><i class="fa-solid fa-trash me-2"></i>Waste</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockcard');return false;" id="navlink-stockcard"><i class="fa-solid fa-clipboard-list me-2"></i>Stock Card</a></li>
+    </ul>
+
+    <div class="nav-group-header" onclick="toggleNavGroup(this)"><span>Production</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
+    <ul class="nav flex-column nav-group-body">
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('plan');return false;" id="navlink-plan"><i class="fa-solid fa-calendar-days me-2"></i>แผนผลิต / MO</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('issue');return false;" id="navlink-issue"><i class="fa-solid fa-dolly me-2"></i>เบิกวัตถุดิบเข้าสาย</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('prodrecord');return false;" id="navlink-prodrecord"><i class="fa-solid fa-industry me-2"></i>บันทึกผลิต</a></li>
+    </ul>
+
+    <div class="nav-group-header" onclick="toggleNavGroup(this)"><span>งานขาย</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
+    <ul class="nav flex-column nav-group-body">
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('co');return false;" id="navlink-co"><i class="fa-solid fa-file-invoice me-2"></i>คำสั่งซื้อลูกค้า</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('fgout');return false;" id="navlink-fgout"><i class="fa-solid fa-truck me-2"></i>เบิก FG / จัดส่ง</a></li>
+    </ul>
+
+    <div class="nav-group-header collapsed" onclick="toggleNavGroup(this)"><span>Master</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
+    <ul class="nav flex-column nav-group-body collapsed">
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('rmmaster');return false;" id="navlink-rmmaster"><i class="fa-solid fa-seedling me-2"></i>วัตถุดิบ / แพ็คเกจจิ้ง (Master)</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('bom');return false;" id="navlink-bom"><i class="fa-solid fa-flask me-2"></i>สูตรแม่บท (BOM Master)</a></li>
+    </ul>
+
+    <!-- แอดมินเท่านั้น (ซ่อน/แสดงใน _applyRolePermissions) -->
+    <div id="navgroup-admin" style="display:none">
+      <div class="nav-group-header" onclick="toggleNavGroup(this)"><span>ผู้ดูแลระบบ</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
+      <ul class="nav flex-column nav-group-body">
+        <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('userroles');return false;" id="navlink-userroles"><i class="fa-solid fa-user-shield me-2"></i>สิทธิ์การใช้งาน</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="d-flex align-items-center gap-1 mb-1">
+      <div id="currentUserEmail" class="text-truncate"></div>
+      <span id="currentUserRole"></span>
+    </div>
+    <a href="#" onclick="logout();return false;"><i class="fa-solid fa-right-from-bracket me-1"></i>ออกจากระบบ</a>
+  </div>
+</div>
+
+<div class="main-content">
+
+  <!-- ═══════════════ DASHBOARD ═══════════════ -->
+  <div class="page-view" id="page-dashboard">
+    <div class="page-header"><h4 class="mb-0 text-white">ภาพรวม</h4><div class="text-white-50 small">สรุปสถานะการผลิต/สต็อก วันนี้</div></div>
+    <div class="scroll-content">
+      <div class="row g-3 mb-3" id="dashKpiRow"></div>
+      <div class="glass-card">
+        <h6 class="mb-3"><i class="fa-solid fa-hourglass-half me-2 text-warning"></i>ล็อตสินค้าใกล้หมดอายุ</h6>
+        <div class="table-responsive"><table class="table table-hover mb-0">
+          <thead><tr><th>สินค้า</th><th>Lot</th><th>คงเหลือ</th><th>วันหมดอายุ</th><th>เหลือ</th></tr></thead>
+          <tbody id="dashExpiringBody"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ RECEIVED (วัตถุดิบ + แพ็คเกจจิ้ง รวมหน้าเดียว) ═══════════════ -->
+  <div class="page-view" id="page-received">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white">รับเข้าคลัง</h4><div class="text-white-50 small">บันทึกรับวัตถุดิบและแพ็คเกจจิ้งเข้าคลัง</div></div>
+      <button class="btn btn-success" onclick="receivedOpenForm()"><i class="fa-solid fa-plus me-1"></i>รับเข้าคลัง</button>
+    </div>
+    <div class="sticky-toolbar d-flex gap-2 mb-2">
+      <select class="form-select w-auto" id="receivedCategoryFilter" onchange="receivedRenderTable()">
+        <option value="">-- ทุกหมวดหมู่ --</option>
+        <option value="วัตถุดิบ">วัตถุดิบ</option>
+        <option value="แพ็คเกจจิ้ง">แพ็คเกจจิ้ง</option>
+      </select>
+      <div class="search-wrap"><input class="form-control search-input" id="receivedSearch" placeholder="ค้นหา..." oninput="receivedRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('receivedSearch').value='';receivedRenderTable()"></i></div>
+    </div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>เลขที่รับ</th><th>หมวดหมู่</th><th>รายการ</th><th>จำนวน</th><th>ซัพพลายเออร์</th><th>Lot</th><th>วันเก็บเกี่ยว</th><th>วันที่รับ</th><th>จัดการ</th></tr></thead>
+      <tbody id="receivedTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ STOCK RM ═══════════════ -->
+  <div class="page-view" id="page-stockrm">
+    <div class="page-header"><h4 class="mb-0 text-white">สต็อกวัตถุดิบ</h4><div class="text-white-50 small">ยอดคงเหลือวัตถุดิบสมุนไพรปัจจุบัน</div></div>
+    <div class="sticky-toolbar"><div class="search-wrap mb-2"><input class="form-control search-input" id="stockRmSearch" placeholder="ค้นหา..." oninput="stockRmRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockRmSearch').value='';stockRmRenderTable()"></i></div></div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>รหัส</th><th>วัตถุดิบ</th><th>คงเหลือ</th><th>หน่วย</th><th>ขั้นต่ำ</th><th>สถานะ</th></tr></thead>
+      <tbody id="stockRmTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ STOCK PACKAGING ═══════════════ -->
+  <div class="page-view" id="page-stockpkg">
+    <div class="page-header"><h4 class="mb-0 text-white">สต็อกแพ็คเกจจิ้ง</h4><div class="text-white-50 small">ยอดคงเหลือวัสดุบรรจุภัณฑ์ปัจจุบัน</div></div>
+    <div class="sticky-toolbar"><div class="search-wrap mb-2"><input class="form-control search-input" id="stockPkgSearch" placeholder="ค้นหา..." oninput="stockPkgRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockPkgSearch').value='';stockPkgRenderTable()"></i></div></div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>รหัส</th><th>แพ็คเกจจิ้ง</th><th>คงเหลือ</th><th>หน่วย</th><th>ขั้นต่ำ</th><th>สถานะ</th></tr></thead>
+      <tbody id="stockPkgTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ PLAN / MO ═══════════════ -->
+  <div class="page-view" id="page-plan">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white">แผนผลิต / คำสั่งผลิต (MO)</h4><div class="text-white-50 small">วางแผนผลิตลูกประคบตามคำสั่งซื้อหรือสต็อกล่วงหน้า</div></div>
+      <button class="btn btn-success" onclick="planOpenForm()"><i class="fa-solid fa-plus me-1"></i>สร้าง MO</button>
+    </div>
+    <div class="sticky-toolbar"><div class="search-wrap mb-2"><input class="form-control search-input" id="planSearch" placeholder="ค้นหา..." oninput="planRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('planSearch').value='';planRenderTable()"></i></div></div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>กะ</th><th>อ้างอิง CO</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+      <tbody id="planTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ ISSUE PRODUCTION ═══════════════ -->
+  <div class="page-view" id="page-issue">
+    <div class="page-header"><h4 class="mb-0 text-white">เบิกวัตถุดิบเข้าสายผลิต</h4><div class="text-white-50 small">เลือก MO ที่ยังไม่เบิก ระบบคำนวณวัตถุดิบตามสูตรให้อัตโนมัติ</div></div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>จัดการ</th></tr></thead>
+      <tbody id="issueMoTableBody"></tbody>
+    </table></div></div>
+    <div class="glass-card"><h6 class="mb-3">ประวัติการเบิกวัตถุดิบ</h6><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>เลขที่เบิก</th><th>MO</th><th>วัตถุดิบ</th><th class="text-end">สำหรับผลิต</th><th class="text-end">ตามสูตร</th><th class="text-end">Scrap</th><th class="text-end">เบิกจริง</th><th>วันที่เบิก</th></tr></thead>
+      <tbody id="issueHistTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ PRODUCTION RECORD ═══════════════ -->
+  <div class="page-view" id="page-prodrecord">
+    <div class="page-header"><h4 class="mb-0 text-white">บันทึกผลิต</h4><div class="text-white-50 small">บันทึกผลการผลิตจริง ออก Lot / วันผลิต / วันหมดอายุ</div></div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>จัดการ</th></tr></thead>
+      <tbody id="prodReadyTableBody"></tbody>
+    </table></div></div>
+    <div class="glass-card"><h6 class="mb-3">ประวัติการบันทึกผลิต</h6><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>เลขที่ผลิต</th><th>สินค้า</th><th>จำนวนที่ผลิตได้</th><th>Lot</th><th>วันผลิต</th><th>วันหมดอายุ</th><th>จัดการ</th></tr></thead>
+      <tbody id="prodHistTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ FG RECEIVE ═══════════════ -->
+  <div class="page-view" id="page-fgreceive">
+    <div class="page-header"><h4 class="mb-0 text-white">รับสินค้าสำเร็จรูปเข้าคลัง</h4><div class="text-white-50 small">รับลูกประคบที่บันทึกผลิตแล้วเข้าคลัง FG</div></div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>เลขที่ผลิต</th><th>สินค้า</th><th>Lot</th><th>จำนวนผลิตได้</th><th>วันหมดอายุ</th><th>จัดการ</th></tr></thead>
+      <tbody id="fgReceiveReadyTableBody"></tbody>
+    </table></div></div>
+    <div class="glass-card"><h6 class="mb-3">ประวัติการรับเข้าคลัง</h6><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>เลขที่รับ</th><th>สินค้า</th><th>Lot</th><th>จำนวน</th><th>วันที่รับ</th></tr></thead>
+      <tbody id="fgReceiveHistTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ STOCK FG ═══════════════ -->
+  <div class="page-view" id="page-stockfg">
+    <div class="page-header"><h4 class="mb-0 text-white">สต็อกสินค้าสำเร็จรูป</h4><div class="text-white-50 small">ยอดคงเหลือแยกตาม Lot / วันหมดอายุ</div></div>
+    <div class="sticky-toolbar"><div class="search-wrap mb-2"><input class="form-control search-input" id="stockFgSearch" placeholder="ค้นหา..." oninput="stockFgRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockFgSearch').value='';stockFgRenderTable()"></i></div></div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>สินค้า</th><th>Lot</th><th>คงเหลือ</th><th>วันผลิต</th><th>วันหมดอายุ</th><th>สถานะ</th></tr></thead>
+      <tbody id="stockFgTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ CUSTOMER ORDERS ═══════════════ -->
+  <div class="page-view" id="page-co">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white">คำสั่งซื้อลูกค้า</h4><div class="text-white-50 small">รับคำสั่งซื้อจากลูกค้า/ฝ่ายขาย</div></div>
+      <button class="btn btn-success" onclick="coOpenForm()"><i class="fa-solid fa-plus me-1"></i>รับคำสั่งซื้อ</button>
+    </div>
+    <div class="sticky-toolbar"><div class="search-wrap mb-2"><input class="form-control search-input" id="coSearch" placeholder="ค้นหา..." oninput="coRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('coSearch').value='';coRenderTable()"></i></div></div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>เลขที่ CO</th><th>ลูกค้า</th><th>สินค้า</th><th>สั่งซื้อ</th><th>เบิกไปแล้ว</th><th>วันที่ต้องการ</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+      <tbody id="coTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ FG WITHDRAW / DELIVERY ═══════════════ -->
+  <div class="page-view" id="page-fgout">
+    <div class="page-header"><h4 class="mb-0 text-white">เบิก FG / จัดส่ง</h4><div class="text-white-50 small">เบิกสินค้าตาม CO (FEFO ตามวันหมดอายุจริง) และติดตามสถานะจัดส่ง</div></div>
+    <div class="scroll-content">
+      <div class="glass-card"><h6 class="mb-3">คำสั่งซื้อที่ยังค้างส่ง</h6><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>เลขที่ CO</th><th>ลูกค้า</th><th>สินค้า</th><th>ค้างส่ง</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+        <tbody id="fgoutCoTableBody"></tbody>
+      </table></div></div>
+      <div class="glass-card"><h6 class="mb-3">รายการจัดส่ง</h6><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>เลขที่จัดส่ง</th><th>CO</th><th>สินค้า/Lot</th><th>จำนวน</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+        <tbody id="deliveryTableBody"></tbody>
+      </table></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ STOCK CARD ═══════════════ -->
+  <div class="page-view" id="page-stockcard">
+    <div class="page-header"><h4 class="mb-0 text-white">Stock Card</h4><div class="text-white-50 small">ประวัติการเคลื่อนไหวรายการ (รับ/เบิก) แบบไล่ยอดคงเหลือ</div></div>
+    <div class="sticky-toolbar d-flex gap-2 mb-2">
+      <select class="form-select w-auto" id="scType" onchange="stockCardLoadItems()"><option value="rm">วัตถุดิบ</option><option value="pkg">แพ็คเกจจิ้ง</option><option value="fg">สินค้าสำเร็จรูป</option></select>
+      <select class="form-select w-auto" id="scItem" onchange="stockCardRender()"></select>
+    </div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>วันที่</th><th>รายการ</th><th>อ้างอิง</th><th>รับเข้า</th><th>เบิกออก</th><th>คงเหลือ</th></tr></thead>
+      <tbody id="stockCardTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ WASTE ═══════════════ -->
+  <div class="page-view" id="page-waste">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white">บันทึกของเสีย</h4><div class="text-white-50 small">บันทึกวัตถุดิบ/แพ็คเกจจิ้ง/สินค้าที่เสียหาย ตัดออกจากสต็อกอัตโนมัติ</div></div>
+      <button class="btn btn-success" onclick="wasteOpenForm()"><i class="fa-solid fa-plus me-1"></i>บันทึกของเสีย</button>
+    </div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>เลขที่</th><th>ประเภท</th><th>รายการ</th><th>จำนวน</th><th>สาเหตุ</th><th>วันที่</th><th>จัดการ</th></tr></thead>
+      <tbody id="wasteTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ RM MASTER ═══════════════ -->
+  <div class="page-view" id="page-rmmaster">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white">วัตถุดิบ / แพ็คเกจจิ้ง (Master)</h4><div class="text-white-50 small">รายการวัตถุดิบและวัสดุบรรจุภัณฑ์ทั้งหมด</div></div>
+      <button class="btn btn-success" onclick="rmMasterOpenForm()"><i class="fa-solid fa-plus me-1"></i>เพิ่มรายการ</button>
+    </div>
+    <div class="sticky-toolbar mb-2"><select class="form-select w-auto" id="rmMasterCategoryFilter" onchange="rmMasterRenderTable()">
+      <option value="">-- ทุกหมวดหมู่ --</option>
+      <option value="วัตถุดิบ">วัตถุดิบ</option>
+      <option value="แพ็คเกจจิ้ง">แพ็คเกจจิ้ง</option>
+    </select></div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>รหัส</th><th>ชื่อรายการ</th><th>หมวดหมู่</th><th>หน่วย</th><th>สต็อกขั้นต่ำ</th><th>ซัพพลายเออร์</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead>
+      <tbody id="rmMasterTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ BOM MASTER (สินค้า + สูตรการผลิต รวมหน้าเดียว) ═══════════════ -->
+  <div class="page-view" id="page-bom">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-sitemap me-2"></i>สูตรแม่บท (BOM Master)</h4><div class="text-white-50 small">รายละเอียดสินค้าสำเร็จรูปและสูตรการผลิต (ส่วนผสมต่อสินค้า 1 หน่วย)</div></div>
+      <button class="btn btn-success" onclick="bomOpenLineModal()"><i class="fa-solid fa-circle-plus me-1"></i>เพิ่มสินค้าใหม่</button>
+    </div>
+    <div class="sticky-toolbar"><div class="d-flex gap-2 align-items-center mb-2">
+      <div class="search-wrap" style="width:380px;max-width:100%"><input class="form-control search-input" id="bomSearch" placeholder="ค้นหา รหัส/ชื่อสินค้า / วัตถุดิบ..." oninput="bomRenderCards()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('bomSearch').value='';bomRenderCards()"></i></div>
+      <button class="btn btn-outline-light btn-sm" onclick="bomLoad()"><i class="fa-solid fa-rotate me-1"></i>รีเฟรช</button>
+    </div></div>
+    <div class="scroll-content">
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-num" id="bom-kpi-products">—</div><div class="kpi-label">สินค้าทั้งหมด</div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-num" id="bom-kpi-lines">—</div><div class="kpi-label">รายการในสูตรทั้งหมด</div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi-card kpi-warn" id="bom-kpi-noformula-card" style="cursor:pointer" onclick="bomToggleFilterNoFormula()" title="คลิกเพื่อกรองเฉพาะสินค้าที่ยังไม่มีสูตร"><div class="kpi-num" id="bom-kpi-noformula">—</div><div class="kpi-label">ยังไม่มีสูตร</div></div></div>
+      </div>
+      <div id="bomCards"><div class="text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังโหลด...</div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ สิทธิ์การใช้งาน (แอดมินเท่านั้น) — แบบหน้า "จัดการผู้ใช้" ของ ProFlow ═══════════════ -->
+  <div class="page-view" id="page-userroles">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-user-shield me-2"></i>สิทธิ์การใช้งาน</h4><div class="text-white-50 small">กำหนดระดับสิทธิ์ของผู้ใช้แต่ละคน (แอดมินเท่านั้น)</div></div>
+      <button class="btn btn-outline-light btn-sm" onclick="userrolesLoad()"><i class="fa-solid fa-rotate me-1"></i>รีเฟรช</button>
+    </div>
+    <div class="scroll-content">
+      <div class="row g-3 mb-3" id="userrolesKpis"></div>
+      <div class="glass-card">
+        <div class="row g-2">
+          <div class="col-md-4"><div class="role-desc" style="border-left-color:#64748b"><div class="fw-bold mb-1"><span class="role-badge text-bg-secondary">พนักงาน</span> operator</div><div class="small text-muted">ดู / เพิ่ม / แก้ไขข้อมูลได้ทุกหน้า แต่ <b>ลบไม่ได้</b> (ไม่เห็นปุ่มลบ)</div></div></div>
+          <div class="col-md-4"><div class="role-desc" style="border-left-color:#0ea5e9"><div class="fw-bold mb-1"><span class="role-badge text-bg-info">หัวหน้างาน</span> supervisor</div><div class="small text-muted">ทำได้เท่าพนักงาน + <b>ลบข้อมูลได้</b></div></div></div>
+          <div class="col-md-4"><div class="role-desc" style="border-left-color:var(--primary-blue)"><div class="fw-bold mb-1"><span class="role-badge text-bg-primary">แอดมิน</span> admin</div><div class="small text-muted">ทำได้ทุกอย่าง + <b>จัดการสิทธิ์ผู้ใช้</b> ในหน้านี้</div></div></div>
+        </div>
+      </div>
+      <div class="glass-card p-0 overflow-hidden">
+        <div class="table-responsive"><table class="table table-hover mb-0">
+          <thead><tr><th>Username</th><th>อีเมลเข้าสู่ระบบ</th><th>ชื่อแสดงผล</th><th style="width:210px">ระดับสิทธิ์</th><th>แก้ไขล่าสุด</th></tr></thead>
+          <tbody id="userrolesTableBody"><tr><td colspan="5" class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังโหลด...</td></tr></tbody>
+        </table></div>
+      </div>
+      <div class="glass-card">
+        <h6 class="mb-2"><i class="fa-solid fa-user-plus me-2"></i>วิธีเพิ่มผู้ใช้ใหม่ (ให้น้องในทีม)</h6>
+        <ol class="small mb-0 ps-3">
+          <li>เปิด <a href="https://supabase.com/dashboard/project/mdoqkqvgkpnsmrybzbwn/auth/users" target="_blank" rel="noopener">Supabase → Authentication → Users</a> → กด <b>Add user</b> → <b>Create new user</b></li>
+          <li>กรอกอีเมล + รหัสผ่าน และติ๊ก <b>Auto Confirm User</b> (ไม่งั้นจะ login ไม่ได้จนกว่าจะยืนยันอีเมล)</li>
+          <li>กลับมาหน้านี้กด <b>รีเฟรช</b> — ผู้ใช้ใหม่จะขึ้นเป็น <b>พนักงาน</b> อัตโนมัติ แล้วค่อยปรับสิทธิ์/ตั้งชื่อแสดงผล</li>
+          <li>แจ้งอีเมล + รหัสผ่านให้น้องเอง (ระบบไม่ส่งอีเมลให้)</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════ MODAL: วัตถุดิบ / แพ็คเกจจิ้ง (Master) ═══════════════ -->
+<div class="modal fade" id="rmMasterModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-circle-plus me-2" id="rmm-icon"></i><span id="rmm-title">เพิ่มวัตถุดิบใหม่</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">รหัส<span class="text-danger">*</span></label>
+            <input id="rmm-id" class="form-control">
+            <div class="invalid-feedback" id="rmm-id-err"></div>
+          </div>
+          <div class="col-6">
+            <label class="form-label">ประเภท</label>
+            <select id="rmm-cat" class="form-select">
+              <option value="วัตถุดิบ">วัตถุดิบ</option>
+              <option value="แพ็คเกจจิ้ง">แพ็คเกจจิ้ง</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">ชื่อรายการ<span class="text-danger">*</span></label>
+            <input id="rmm-name" class="form-control">
+            <div class="invalid-feedback" id="rmm-name-err"></div>
+          </div>
+          <div class="col-4">
+            <label class="form-label">หน่วย (UOM)</label>
+            <select id="rmm-unit" class="form-select">
+              <option value="กรัม">กรัม</option>
+              <option value="กิโลกรัม">กิโลกรัม</option>
+              <option value="ลิตร">ลิตร</option>
+              <option value="ชิ้น">ชิ้น</option>
+            </select>
+          </div>
+          <div class="col-4">
+            <label class="form-label">สต็อกขั้นต่ำ</label>
+            <input id="rmm-min" type="number" step="any" class="form-control">
+          </div>
+          <div class="col-4">
+            <label class="form-label">Supplier</label>
+            <input id="rmm-supplier" class="form-control">
+          </div>
+          <div class="col-12">
+            <label class="form-label">หมายเหตุ</label>
+            <textarea id="rmm-note" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="rmMasterModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: สินค้า (Master) ═══════════════ -->
+<div class="modal fade" id="fgMasterModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-spa me-2" id="fgm-icon"></i><span id="fgm-title">เพิ่มสินค้า</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-5">
+            <label class="form-label">รหัส FG<span class="text-danger">*</span></label>
+            <input id="fgm-id" class="form-control">
+            <div class="invalid-feedback" id="fgm-id-err"></div>
+          </div>
+          <div class="col-md-7">
+            <label class="form-label">ชื่อสินค้า<span class="text-danger">*</span></label>
+            <input id="fgm-name" class="form-control">
+            <div class="invalid-feedback" id="fgm-name-err"></div>
+          </div>
+          <div class="col-6">
+            <label class="form-label">หน่วย</label>
+            <input id="fgm-unit" class="form-control" placeholder="เช่น ลูก">
+          </div>
+          <div class="col-6">
+            <label class="form-label">อายุสินค้า (วัน)</label>
+            <input id="fgm-shelf" type="number" class="form-control">
+          </div>
+          <div class="col-12">
+            <label class="form-label">หมายเหตุ</label>
+            <textarea id="fgm-note" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="fgMasterModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: สูตรการผลิต (BOM) — เพิ่มสินค้าใหม่ / เพิ่มวัตถุดิบหลายแถว / แก้ไข 1 แถว (แบบ ProFlow) ═══════════════ -->
+<div class="modal fade" id="bomModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title" id="bomm-title"><i class="fa-solid fa-sitemap me-2"></i>เพิ่มสินค้าใหม่</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- สินค้า: กรอกได้เฉพาะตอนเพิ่มสินค้าใหม่ -->
+        <div id="bomm-new-fields" class="row g-3 mb-1">
+          <div class="col-md-3">
+            <label class="form-label">รหัส FG<span class="text-danger">*</span></label>
+            <input id="bomm-fg-id" class="form-control">
+            <div class="invalid-feedback" id="bomm-fg-id-err"></div>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">ชื่อสินค้า<span class="text-danger">*</span></label>
+            <input id="bomm-fg-name" class="form-control">
+            <div class="invalid-feedback" id="bomm-fg-name-err"></div>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">หน่วย</label>
+            <input id="bomm-fg-unit" class="form-control" placeholder="ลูก">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">อายุ (วัน)</label>
+            <input id="bomm-fg-shelf" type="number" min="0" class="form-control">
+          </div>
+        </div>
+        <div id="bomm-info-bar" class="alert alert-light border py-2 mb-3 d-none" style="font-size:.88rem"></div>
+        <hr>
+        <div id="bomm-rows"></div>
+        <datalist id="bomPrepStepList"></datalist>
+        <button type="button" id="bomm-add-row-btn" class="btn btn-sm btn-outline-primary" onclick="bomAddMaterialRow()">
+          <i class="fa-solid fa-plus me-1"></i>เพิ่มรายการวัตถุดิบ / แพ็คเกจจิ้ง
+        </button>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" id="bomm-save-btn" onclick="bomLineSubmit()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: รับเข้าคลัง ═══════════════ -->
+<div class="modal fade" id="receivedModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-inbox me-2"></i>รับเข้าคลัง</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">รายการ</label>
+            <select id="rcv-rm" class="form-select"></select>
+          </div>
+          <div class="col-4">
+            <label class="form-label">จำนวน<span class="text-danger">*</span></label>
+            <input id="rcv-qty" type="number" step="any" class="form-control">
+            <div class="invalid-feedback" id="rcv-qty-err"></div>
+          </div>
+          <div class="col-4">
+            <label class="form-label">ซัพพลายเออร์</label>
+            <input id="rcv-supplier" class="form-control">
+          </div>
+          <div class="col-4">
+            <label class="form-label">Lot</label>
+            <input id="rcv-lot" class="form-control">
+          </div>
+          <div class="col-6">
+            <label class="form-label">วันเก็บเกี่ยว (ถ้ามี)</label>
+            <input id="rcv-harvest" type="date" class="form-control">
+          </div>
+          <div class="col-6">
+            <label class="form-label">วันที่รับเข้าคลัง</label>
+            <input id="rcv-receive" type="date" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="receivedModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: คำสั่งซื้อลูกค้า ═══════════════ -->
+<div class="modal fade" id="coModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-file-invoice me-2"></i>รับคำสั่งซื้อลูกค้า</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">ชื่อลูกค้า<span class="text-danger">*</span></label>
+            <input id="com-cust" class="form-control">
+            <div class="invalid-feedback" id="com-cust-err"></div>
+          </div>
+          <div class="col-6">
+            <label class="form-label">สินค้า</label>
+            <select id="com-fg" class="form-select"></select>
+          </div>
+          <div class="col-6">
+            <label class="form-label">จำนวนสั่งซื้อ<span class="text-danger">*</span></label>
+            <input id="com-qty" type="number" step="any" class="form-control">
+            <div class="invalid-feedback" id="com-qty-err"></div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">วันที่ต้องการรับสินค้า</label>
+            <input id="com-need" type="date" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="coModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: สร้างคำสั่งผลิต (MO) ═══════════════ -->
+<div class="modal fade" id="planModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-calendar-days me-2"></i>สร้างคำสั่งผลิต (MO)</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">สินค้า</label>
+            <select id="pln-fg" class="form-select"></select>
+          </div>
+          <div class="col-6">
+            <label class="form-label">จำนวนที่จะผลิต<span class="text-danger">*</span></label>
+            <input id="pln-qty" type="number" step="any" class="form-control">
+            <div class="invalid-feedback" id="pln-qty-err"></div>
+          </div>
+          <div class="col-6">
+            <label class="form-label">วันที่ผลิต</label>
+            <input id="pln-date" type="date" class="form-control">
+          </div>
+          <div class="col-6">
+            <label class="form-label">กะ</label>
+            <select id="pln-shift" class="form-select"><option>เช้า</option><option>บ่าย</option><option>โอที</option></select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">อ้างอิงคำสั่งซื้อ (ถ้ามี)</label>
+            <select id="pln-co" class="form-select"></select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="planModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>สร้าง MO</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: เบิกวัตถุดิบเข้าสาย ═══════════════ -->
+<div class="modal fade" id="issueModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-dolly me-2"></i><span id="issue-title">เบิกวัตถุดิบเข้าสาย</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3 align-items-end mb-3">
+          <div class="col-md-4">
+            <label class="form-label">จำนวนที่จะผลิต<span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input id="issue-forqty" type="number" min="0" step="any" class="form-control" oninput="issueRecalc()">
+              <span class="input-group-text" id="issue-forqty-unit">ลูก</span>
+            </div>
+            <div class="invalid-feedback d-block" id="issue-forqty-err"></div>
+          </div>
+          <div class="col-md-8 small text-muted" id="issue-info"></div>
+        </div>
+        <div class="table-responsive"><table class="table table-sm mb-0 align-middle">
+          <thead><tr><th>วัตถุดิบ / แพ็คเกจจิ้ง</th><th class="text-end">ตามสูตร</th><th>ขั้นตอนเตรียม (%Scrap)</th><th class="text-end">ต้องเตรียม (รวม Scrap)</th><th class="text-end">คงเหลือในคลัง</th><th style="width:170px">เบิกจริง</th></tr></thead>
+          <tbody id="issue-rows"></tbody>
+        </table></div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="issueModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>ยืนยันเบิก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: บันทึกผลิต ═══════════════ -->
+<div class="modal fade" id="prodRecordModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-industry me-2"></i><span id="pr-title">บันทึกผลิต</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">จำนวนที่ผลิตได้จริง<span class="text-danger">*</span></label>
+            <input id="pr-qty" type="number" step="any" class="form-control">
+            <div class="invalid-feedback" id="pr-qty-err"></div>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Lot<span class="text-danger">*</span></label>
+            <input id="pr-lot" class="form-control">
+            <div class="invalid-feedback" id="pr-lot-err"></div>
+          </div>
+          <div class="col-6">
+            <label class="form-label">วันผลิต</label>
+            <input id="pr-mfg" type="date" class="form-control" onchange="document.getElementById('pr-exp').value = addDays(this.value, window._prShelfDays ?? 5)">
+          </div>
+          <div class="col-6">
+            <label class="form-label">วันหมดอายุ</label>
+            <input id="pr-exp" type="date" class="form-control">
+          </div>
+          <div class="col-12">
+            <label class="form-label">ผู้บันทึก/ผู้ผลิต</label>
+            <input id="pr-by" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="prodRecordModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: รับ FG เข้าคลัง ═══════════════ -->
+<div class="modal fade" id="fgReceiveModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-box-open me-2"></i><span id="fgr-title">รับ FG เข้าคลัง</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">จำนวนรับเข้า<span class="text-danger">*</span></label>
+            <input id="fgr-qty" type="number" step="any" class="form-control">
+            <div class="invalid-feedback" id="fgr-qty-err"></div>
+          </div>
+          <div class="col-6">
+            <label class="form-label">วันที่รับเข้าคลัง</label>
+            <input id="fgr-date" type="date" class="form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="fgReceiveModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: เบิกสินค้า (FG out) ═══════════════ -->
+<div class="modal fade" id="fgoutModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-truck me-2"></i><span id="fgo-title">เบิกสินค้า</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="small text-muted mb-2" id="fgo-hint"></div>
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Lot (เรียงตามวันหมดอายุก่อน — FEFO)</label>
+            <select id="fgo-lot" class="form-select"></select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">จำนวนที่เบิก<span class="text-danger">*</span></label>
+            <input id="fgo-qty" type="number" step="any" class="form-control">
+            <div class="invalid-feedback" id="fgo-qty-err"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="fgoutModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>ยืนยันเบิก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: บันทึกของเสีย ═══════════════ -->
+<div class="modal fade" id="wasteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-trash me-2"></i>บันทึกของเสีย — เลือกรายการ</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">รายการ</label>
+            <select id="wst-item" class="form-select"></select>
+          </div>
+          <div class="col-6">
+            <label class="form-label">จำนวน<span class="text-danger">*</span></label>
+            <input id="wst-qty" type="number" step="any" class="form-control">
+            <div class="invalid-feedback" id="wst-qty-err"></div>
+          </div>
+          <div class="col-6">
+            <label class="form-label">วันที่</label>
+            <input id="wst-date" type="date" class="form-control">
+          </div>
+          <div class="col-12">
+            <label class="form-label">สาเหตุ<span class="text-danger">*</span></label>
+            <input id="wst-reason" class="form-control" placeholder="เช่น เสียหาย, หมดอายุ, ผลิตพลาด">
+            <div class="invalid-feedback" id="wst-reason-err"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="wasteModalNext()"><i class="fa-solid fa-arrow-right me-1"></i>ถัดไป</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: บันทึกของเสีย — เลือก Lot (เฉพาะสินค้าสำเร็จรูป) ═══════════════ -->
+<div class="modal fade" id="wasteLotModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-trash me-2"></i>เลือก Lot ที่จะตัดเป็นของเสีย</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Lot</label>
+            <select id="wstl-lot" class="form-select"></select>
+            <div class="invalid-feedback" id="wstl-lot-err"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="wasteLotModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// SUPABASE CONFIG — แก้ 2 ค่านี้หลังสร้าง Supabase project ใหม่แล้ว
+// (Project Settings → API → Project URL / anon public key), แล้วรัน schema.sql ใน SQL Editor
+// ═══════════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://mdoqkqvgkpnsmrybzbwn.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kb3FrcXZna3Buc21yeWJ6YnduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzMzA5NzMsImV4cCI6MjEwNTkwNjk3M30.f1_XyuVccNrIkPLdz_Xuf3SX71uFAF5q69StJdOsce0';
+const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const MO_STATUS = ['วางแผน','เบิกวัตถุดิบแล้ว','ผลิตแล้ว','ปิดงาน'];
+const CO_STATUS_BADGE = { 'สั่งผลิตแล้ว':'secondary', 'กำลังเบิก':'info', 'ส่งบางส่วน':'warning', 'ส่งสำเร็จ':'success' };
+const MO_STATUS_BADGE = { 'วางแผน':'secondary', 'เบิกวัตถุดิบแล้ว':'info', 'ผลิตแล้ว':'primary', 'ปิดงาน':'success' };
+const DELIVERY_STATUS_BADGE = { 'รอจัดส่ง':'secondary', 'จัดส่งแล้ว':'info', 'ส่งถึงแล้ว':'success' };
+const _coDoneStatuses = ['ส่งสำเร็จ'];
+const EXPIRING_SOON_DAYS = 2;
+
+// ── generic helpers ──────────────────────────────────────
+async function sbRun(promise, errMsg) {
+  const { data, error } = await promise;
+  if (error) { console.error(error); Swal.fire('เกิดข้อผิดพลาด', (errMsg||'') + ': ' + error.message, 'error'); return null; }
+  // insert/update/upsert WITHOUT .select() return data:null on success (Supabase default —
+  // no "return=representation"), which every caller's `ok === null` check would otherwise
+  // misread as an error and skip the steps after it (adjustStock*, .hide(), xxxLoad()) —
+  // found 2026-09-25 via a receive that logged to rm_receive but silently never touched
+  // stock_balance. Coalesce to `true` so only a real error yields null; reads (which always
+  // chain .select() and get back an array, never bare null) are unaffected.
+  return data ?? true;
+}
+async function sbDelete(table, idCol, idVal) {
+  const { data, error } = await _sb.from(table).delete().eq(idCol, idVal).select();
+  if (error) { Swal.fire('ผิดพลาด', error.message, 'error'); return false; }
+  // RLS ที่ไม่อนุญาต DELETE ไม่ส่ง error กลับมา — แค่ลบได้ 0 แถว จึงต้องบอกเรื่องสิทธิ์ไว้ในข้อความนี้ด้วย
+  if (!data || data.length === 0) { Swal.fire('ลบไม่สำเร็จ', 'ไม่พบรายการที่จะลบ หรือคุณไม่มีสิทธิ์ลบ (ต้องเป็นหัวหน้างานขึ้นไป)', 'error'); return false; }
+  return true;
+}
+function genId(prefix) {
+  const d = new Date();
+  const ymd = String(d.getFullYear()).slice(2) + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  const rand = Math.random().toString(36).slice(2,6).toUpperCase();
+  return `${prefix}-${ymd}-${rand}`;
+}
+function fmtDate(s) { if (!s) return '-'; const d = new Date(s); return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }); }
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function addDays(dateStr, n) { const d = new Date(dateStr); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function daysUntil(dateStr) { const d = new Date(dateStr); const t = new Date(todayStr()); return Math.round((d-t)/86400000); }
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function badge(text, cls) { return `<span class="badge text-bg-${cls||'secondary'}">${esc(text)}</span>`; }
+function _modalClearErrors(ids) { ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('is-invalid'); }); }
+function _modalShowError(fieldId, msg) {
+  const el = document.getElementById(fieldId);
+  el.classList.add('is-invalid');
+  const errEl = document.getElementById(fieldId + '-err');
+  if (errEl) errEl.textContent = msg;
+  el.focus();
+}
+
+async function adjustStockRM(rmId, deltaQty, unit) {
+  const { data: cur } = await _sb.from('stock_balance').select('*').eq('RM_ID', rmId).maybeSingle();
+  const newQty = (cur?.Qty || 0) + deltaQty;
+  await _sb.from('stock_balance').upsert({ RM_ID: rmId, Qty: newQty, Unit: unit || cur?.Unit || 'กก.', UpdatedAt: new Date().toISOString() });
+}
+async function adjustStockFG(fgId, lot, deltaQty, mfgDate, expDate) {
+  const { data: cur } = await _sb.from('stock_fg').select('*').eq('FG_ID', fgId).eq('Lot', lot).maybeSingle();
+  const newQty = (cur?.Qty || 0) + deltaQty;
+  await _sb.from('stock_fg').upsert({ FG_ID: fgId, Lot: lot, Qty: newQty, MfgDate: mfgDate || cur?.MfgDate, ExpDate: expDate || cur?.ExpDate, UpdatedAt: new Date().toISOString() });
+}
+
+// ── auth ──────────────────────────────────────────────────
+async function loginSubmit() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginSubmitBtn');
+  errEl.style.display = 'none'; btn.disabled = true;
+  const { error } = await _sb.auth.signInWithPassword({ email, password });
+  btn.disabled = false;
+  if (error) { errEl.textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'; errEl.style.display = 'block'; }
+}
+// reload หลัง logout เพื่อล้าง cache ทุกหน้า + role ของคนเดิม (ไม่งั้นคนถัดไปที่ login เครื่องเดียวกันจะเห็นสิทธิ์คนก่อน)
+async function logout() { await _sb.auth.signOut(); location.reload(); }
+
+// ── สิทธิ์ 3 ระดับ (แบบ ProFlow) — ดู migration_2026-09-25_user_roles.sql ──
+// rank ต้องตรงกับ current_role_rank() ใน SQL เป๊ะๆ (operator=1, supervisor=2, admin=3) แก้ต้องแก้ทั้งสองที่
+const _ROLE_RANK = { operator: 1, supervisor: 2, admin: 3 };
+const _ROLE_LABEL = { operator: 'พนักงาน', supervisor: 'หัวหน้างาน', admin: 'แอดมิน' };
+const _ROLE_BADGE = { operator: 'secondary', supervisor: 'info', admin: 'primary' };
+let _currentUser = null;   // { id, email, name, role, rolesReady }
+function _hasRole(minRole) { return (_ROLE_RANK[_currentUser?.role] || 1) >= (_ROLE_RANK[minRole] || 1); }
+function _roleBadge(role) { return `<span class="role-badge text-bg-${_ROLE_BADGE[role] || 'secondary'}">${_ROLE_LABEL[role] || role}</span>`; }
+async function _loadMyRole(user) {
+  const { data, error } = await _sb.from('user_roles').select('*').eq('id', user.id).maybeSingle();
+  // ยังไม่ได้รัน migration (ไม่มีตาราง user_roles) → DB ยังเปิดสิทธิ์เต็มทุกคนอยู่ จึงให้ UI เต็มสิทธิ์ตามจริง
+  // (ถ้าบังคับเป็นพนักงาน ปุ่มลบจะหายทั้งที่ DB ยังลบได้) และหน้าสิทธิ์จะแจ้งให้รัน SQL
+  if (error) return { role: 'admin', rolesReady: false, name: user.email };
+  // มีตารางแล้วแต่ไม่มีแถวของคนนี้ = operator ตรงกับ current_role_rank() ฝั่ง DB
+  return { role: data?.Role || 'operator', rolesReady: true, name: data?.DisplayName || user.email };
+}
+function _applyRolePermissions() {
+  document.body.classList.toggle('role-operator', !_hasRole('supervisor'));
+  document.getElementById('navgroup-admin').style.display = _hasRole('admin') ? '' : 'none';
+  document.getElementById('currentUserEmail').textContent = _currentUser.name;
+  document.getElementById('currentUserEmail').title = _currentUser.email;
+  document.getElementById('currentUserRole').innerHTML = _currentUser.rolesReady ? _roleBadge(_currentUser.role) : '';
+}
+
+let _appInited = false;
+_sb.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    document.getElementById('loginGate').style.display = 'none';
+    document.getElementById('appShell').style.display = 'flex';
+    // callback นี้ห้าม await การเรียก Supabase ตรงๆ (supabase-js v2 จะค้าง) — แตกไปทำนอก callback
+    if (!_appInited) {
+      _appInited = true;
+      setTimeout(async () => {
+        _currentUser = { id: session.user.id, email: session.user.email, ...(await _loadMyRole(session.user)) };
+        _applyRolePermissions();
+        initApp();
+      }, 0);
+    }
+  } else {
+    document.getElementById('loginGate').style.display = 'flex';
+    document.getElementById('appShell').style.display = 'none';
+  }
+});
+
+// ── nav ───────────────────────────────────────────────────
+function toggleNavGroup(el) { el.classList.toggle('collapsed'); el.nextElementSibling.classList.toggle('collapsed'); }
+const PAGE_LOADERS = {
+  dashboard: dashboardLoad, received: receivedLoad, stockrm: stockRmLoad, stockpkg: stockPkgLoad,
+  plan: planLoad, issue: issueLoad, prodrecord: prodRecordLoad,
+  fgreceive: fgReceiveLoad, stockfg: stockFgLoad, stockcard: stockCardLoad,
+  co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
+  rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad,
+};
+async function showPage(name) {
+  document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.sidebar .nav-link').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const link = document.getElementById('navlink-' + name); if (link) link.classList.add('active');
+  if (PAGE_LOADERS[name]) await PAGE_LOADERS[name]();
+}
+function initApp() { showPage('dashboard'); }
+
+// ═══════════════════════════════════════════════════════════
+// สิทธิ์การใช้งาน (แอดมินเท่านั้น) — แบบหน้า "จัดการผู้ใช้" ของ ProFlow + แก้ชื่อแสดงผลได้
+// การสร้างบัญชีทำที่ Supabase Dashboard เท่านั้น (ต้องใช้ service_role key ซึ่งเก็บในหน้าเว็บ static ไม่ได้)
+// trigger on_auth_user_created_add_role สร้างแถว user_roles (operator) ให้เองทันทีที่สร้างบัญชี
+// ═══════════════════════════════════════════════════════════
+let _userrolesCache = [];
+async function userrolesLoad() {
+  const body = document.getElementById('userrolesTableBody');
+  if (!_hasRole('admin')) {
+    body.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">หน้านี้สำหรับแอดมินเท่านั้น</td></tr>';
+    document.getElementById('userrolesKpis').innerHTML = '';
+    return;
+  }
+  const { data, error } = await _sb.from('user_roles').select('*').order('Email');
+  if (error) {
+    body.innerHTML = `<tr><td colspan="5" class="text-center py-4"><div class="text-danger fw-semibold mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่ได้ตั้งค่าระบบสิทธิ์</div>
+      <div class="small text-muted">รันไฟล์ <code>migration_2026-09-25_user_roles.sql</code> ใน Supabase SQL Editor ก่อน แล้ว logout / login ใหม่</div>
+      <div class="small text-muted mt-1">(${esc(error.message)})</div></td></tr>`;
+    document.getElementById('userrolesKpis').innerHTML = '';
+    return;
+  }
+  _userrolesCache = data || [];
+  userrolesRender();
+}
+function userrolesRender() {
+  const count = r => _userrolesCache.filter(u => u.Role === r).length;
+  document.getElementById('userrolesKpis').innerHTML = [
+    { num: _userrolesCache.length, label: 'ผู้ใช้ทั้งหมด', cls: '' },
+    { num: count('admin'), label: 'แอดมิน', cls: '' },
+    { num: count('supervisor'), label: 'หัวหน้างาน', cls: '' },
+    { num: count('operator'), label: 'พนักงาน', cls: '' },
+  ].map(k => `<div class="col-6 col-md-3"><div class="kpi-card ${k.cls}"><div class="kpi-num">${k.num}</div><div class="kpi-label">${k.label}</div></div></div>`).join('');
+  document.getElementById('userrolesTableBody').innerHTML = _userrolesCache.map(u => {
+    const isMe = u.id === _currentUser?.id;
+    return `<tr>
+      <td class="fw-semibold">${esc((u.Email || '').split('@')[0] || '—')}${isMe ? ' <span class="badge text-bg-light border">คุณ</span>' : ''}</td>
+      <td class="text-muted small">${esc(u.Email || '—')}</td>
+      <td><input class="form-control form-control-sm" value="${esc(u.DisplayName || '')}" placeholder="ตั้งชื่อแสดงผล..."
+        data-id="${esc(u.id)}" onchange="userrolesUpdateName(this.dataset.id, this.value)"></td>
+      <td>
+        <select class="form-select form-select-sm" data-id="${esc(u.id)}" onchange="userrolesUpdateRole(this.dataset.id, this.value)" ${isMe ? 'disabled title="เปลี่ยนสิทธิ์ตัวเองไม่ได้ (กันแอดมินล็อกตัวเองออก) — ให้แอดมินคนอื่นเปลี่ยนให้"' : ''}>
+          ${['operator', 'supervisor', 'admin'].map(v => `<option value="${v}" ${u.Role === v ? 'selected' : ''}>${_ROLE_LABEL[v]}</option>`).join('')}
+        </select>
+      </td>
+      <td class="small text-muted">${u.UpdatedAt ? fmtDate(u.UpdatedAt) : '-'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="text-center text-muted py-4">ยังไม่มีผู้ใช้</td></tr>';
+}
+async function userrolesUpdateRole(id, newRole) {
+  const u = _userrolesCache.find(x => x.id === id);
+  const c = await Swal.fire({ title: 'ยืนยันเปลี่ยนสิทธิ์?', icon: 'warning',
+    html: `<b>${esc(u?.DisplayName || u?.Email || id)}</b><br>${_roleBadge(u?.Role)} → ${_roleBadge(newRole)}`,
+    showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) { userrolesRender(); return; }   // คืน <select> เป็นค่าเดิม
+  // .select() เพื่อเช็คว่าอัปเดตได้จริง — RLS ที่ไม่ผ่านจะไม่ error แค่อัปเดต 0 แถว
+  const { data, error } = await _sb.from('user_roles').update({ Role: newRole, UpdatedAt: new Date().toISOString() }).eq('id', id).select();
+  if (error || !data?.length) { Swal.fire('เปลี่ยนสิทธิ์ไม่สำเร็จ', error?.message || 'ไม่มีสิทธิ์แก้ไข (ต้องเป็นแอดมิน)', 'error'); userrolesLoad(); return; }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'เปลี่ยนสิทธิ์แล้ว — มีผลทันทีที่ผู้ใช้นั้นรีเฟรชหน้า', showConfirmButton: false, timer: 2500 });
+  userrolesLoad();
+}
+async function userrolesUpdateName(id, name) {
+  const { data, error } = await _sb.from('user_roles').update({ DisplayName: name.trim() || null, UpdatedAt: new Date().toISOString() }).eq('id', id).select();
+  if (error || !data?.length) { Swal.fire('บันทึกชื่อไม่สำเร็จ', error?.message || 'ไม่มีสิทธิ์แก้ไข', 'error'); userrolesLoad(); return; }
+  if (id === _currentUser.id) { _currentUser.name = name.trim() || _currentUser.email; _applyRolePermissions(); }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'บันทึกชื่อแล้ว', showConfirmButton: false, timer: 1500 });
+  userrolesLoad();
+}
+
+// ═══════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════
+async function dashboardLoad() {
+  const [rmStock, rmMaster, moToday, coOpen, stockFg] = await Promise.all([
+    sbRun(_sb.from('stock_balance').select('*'), 'โหลดสต็อกวัตถุดิบ'),
+    sbRun(_sb.from('rm_master').select('*'), 'โหลดวัตถุดิบ'),
+    sbRun(_sb.from('manufacturing_orders').select('*').eq('PlanDate', todayStr()), 'โหลด MO วันนี้'),
+    sbRun(_sb.from('customer_orders').select('*').not('Status', 'in', '("ส่งสำเร็จ")'), 'โหลด CO ค้างส่ง'),
+    sbRun(_sb.from('stock_fg').select('*, product_master(FG_Name)').gt('Qty', 0), 'โหลดสต็อก FG'),
+  ]);
+  const rmMap = Object.fromEntries((rmMaster||[]).map(r => [r.RM_ID, r]));
+  const lowStockCount = (rmStock||[]).filter(s => s.Qty < (rmMap[s.RM_ID]?.MinStock ?? 0)).length;
+  const expiringSoon = (stockFg||[]).filter(s => s.ExpDate && daysUntil(s.ExpDate) <= EXPIRING_SOON_DAYS).sort((a,b) => new Date(a.ExpDate) - new Date(b.ExpDate));
+
+  document.getElementById('dashKpiRow').innerHTML = [
+    { label: 'วัตถุดิบต่ำกว่าขั้นต่ำ', num: lowStockCount, cls: lowStockCount > 0 ? 'kpi-danger' : '' },
+    { label: 'MO วันนี้', num: (moToday||[]).length, cls: '' },
+    { label: 'ล็อต FG ใกล้/หมดอายุ', num: expiringSoon.length, cls: expiringSoon.length > 0 ? 'kpi-warn' : '' },
+    { label: 'คำสั่งซื้อค้างส่ง', num: (coOpen||[]).length, cls: '' },
+  ].map(k => `<div class="col-6 col-md-3"><div class="kpi-card ${k.cls}"><div class="kpi-num">${k.num}</div><div class="kpi-label">${k.label}</div></div></div>`).join('');
+
+  document.getElementById('dashExpiringBody').innerHTML = expiringSoon.slice(0,10).map(s => {
+    const d = daysUntil(s.ExpDate);
+    const dTxt = d < 0 ? `หมดอายุแล้ว ${-d} วัน` : (d === 0 ? 'หมดอายุวันนี้' : `อีก ${d} วัน`);
+    return `<tr><td>${esc(s.product_master?.FG_Name || s.FG_ID)}</td><td>${esc(s.Lot)}</td><td>${s.Qty}</td><td>${fmtDate(s.ExpDate)}</td><td>${badge(dTxt, d <= 0 ? 'danger' : 'warning')}</td></tr>`;
+  }).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มีล็อตใกล้หมดอายุ</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// RM MASTER
+// ═══════════════════════════════════════════════════════════
+let _rmMasterCache = [];
+async function rmMasterLoad() {
+  _rmMasterCache = await sbRun(_sb.from('rm_master').select('*').order('RM_Name'), 'โหลดวัตถุดิบ') || [];
+  rmMasterRenderTable();
+}
+function rmMasterRenderTable() {
+  const filter = document.getElementById('rmMasterCategoryFilter').value;
+  const rows = _rmMasterCache.filter(r => !filter || r.Category === filter);
+  document.getElementById('rmMasterTableBody').innerHTML = rows.map(r => `
+    <tr><td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}</td><td>${badge(r.Category, r.Category === 'แพ็คเกจจิ้ง' ? 'info' : 'secondary')}</td><td>${esc(r.Unit)}</td><td>${r.MinStock ?? 0}</td><td>${esc(r.Supplier||'-')}</td><td>${esc(r.Note||'')}</td>
+    <td><button class="btn btn-sm btn-outline-primary me-1" onclick="rmMasterOpenForm('${r.RM_ID}')"><i class="fa-solid fa-pen"></i></button>
+    <button class="btn btn-sm btn-outline-danger" onclick="rmMasterDelete('${r.RM_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+    || '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
+}
+let _rmMasterEditId = null;
+function rmMasterOpenForm(id) {
+  _rmMasterEditId = id || null;
+  const row = id ? _rmMasterCache.find(r => r.RM_ID === id) : null;
+  _modalClearErrors(['rmm-id', 'rmm-name']);
+  document.getElementById('rmm-icon').className = id ? 'fa-solid fa-pen me-2' : 'fa-solid fa-circle-plus me-2';
+  document.getElementById('rmm-title').textContent = id ? 'แก้ไขรายการ' : 'เพิ่มวัตถุดิบใหม่';
+  const idInput = document.getElementById('rmm-id');
+  idInput.value = row?.RM_ID || genId('RM');
+  idInput.disabled = !!id;
+  document.getElementById('rmm-cat').value = row?.Category === 'แพ็คเกจจิ้ง' ? 'แพ็คเกจจิ้ง' : 'วัตถุดิบ';
+  document.getElementById('rmm-name').value = row?.RM_Name || '';
+  document.getElementById('rmm-unit').value = row?.Unit || 'กรัม';
+  document.getElementById('rmm-min').value = row?.MinStock ?? '';
+  document.getElementById('rmm-supplier').value = row?.Supplier || '';
+  document.getElementById('rmm-note').value = row?.Note || '';
+  new bootstrap.Modal(document.getElementById('rmMasterModal')).show();
+}
+async function rmMasterModalSave() {
+  _modalClearErrors(['rmm-id', 'rmm-name']);
+  const rmId = document.getElementById('rmm-id').value.trim();
+  const name = document.getElementById('rmm-name').value.trim();
+  if (!rmId) { _modalShowError('rmm-id', 'กรอกรหัส'); return; }
+  if (!_rmMasterEditId && _rmMasterCache.some(r => r.RM_ID === rmId)) { _modalShowError('rmm-id', 'รหัสนี้มีอยู่แล้ว กรุณาใช้รหัสอื่น'); return; }
+  if (!name) { _modalShowError('rmm-name', 'กรอกชื่อรายการ'); return; }
+  const payload = {
+    RM_ID: _rmMasterEditId || rmId, RM_Name: name, Category: document.getElementById('rmm-cat').value,
+    Unit: document.getElementById('rmm-unit').value || 'กรัม', MinStock: parseFloat(document.getElementById('rmm-min').value) || 0,
+    Supplier: document.getElementById('rmm-supplier').value.trim() || null, Note: document.getElementById('rmm-note').value.trim() || null,
+  };
+  const ok = await sbRun(_sb.from('rm_master').upsert(payload), 'บันทึกไม่สำเร็จ');
+  if (ok === null) return;
+  bootstrap.Modal.getInstance(document.getElementById('rmMasterModal')).hide();
+  rmMasterLoad();
+}
+async function rmMasterDelete(id) {
+  const c = await Swal.fire({ title: 'ลบวัตถุดิบนี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  if (await sbDelete('rm_master', 'RM_ID', id)) rmMasterLoad();
+}
+
+// ═══════════════════════════════════════════════════════════
+// FG MASTER — ข้อมูลสินค้าสำเร็จรูป (product_master) ไม่มีหน้าของตัวเองแล้ว — แสดง/แก้ไขผ่านการ์ดสินค้า
+// ในหน้า "สูตรแม่บท (BOM Master)" (ปุ่มดินสอบนหัวการ์ด → fgMasterOpenForm)
+// ═══════════════════════════════════════════════════════════
+let _fgMasterCache = [];
+async function fgMasterLoad() {
+  _fgMasterCache = await sbRun(_sb.from('product_master').select('*').order('FG_Name'), 'โหลดสินค้า') || [];
+}
+// parseInt(x) || 5 จะทำให้ใส่ 0 ไม่ได้ — แยกเช็ค NaN แทน
+function _parseShelfDays(v) { const n = parseInt(v); return Number.isNaN(n) ? 5 : n; }
+let _fgMasterEditId = null;
+function fgMasterOpenForm(id) {
+  _fgMasterEditId = id || null;
+  const row = id ? _fgMasterCache.find(r => r.FG_ID === id) : null;
+  _modalClearErrors(['fgm-id', 'fgm-name']);
+  document.getElementById('fgm-icon').className = id ? 'fa-solid fa-pen me-2' : 'fa-solid fa-spa me-2';
+  document.getElementById('fgm-title').textContent = id ? 'แก้ไขข้อมูลสินค้า' : 'เพิ่มสินค้า';
+  // รหัส FG เป็น PK ที่ตารางอื่น (bom/MO/CO/stock_fg ฯลฯ) อ้างถึง — แก้ได้เฉพาะตอนสร้างใหม่ ล็อกไว้ตอนแก้ไข
+  const idInput = document.getElementById('fgm-id');
+  idInput.value = row?.FG_ID || genId('FG');
+  idInput.disabled = !!id;
+  document.getElementById('fgm-name').value = row?.FG_Name || '';
+  document.getElementById('fgm-unit').value = row?.Unit || 'ลูก';
+  document.getElementById('fgm-shelf').value = row?.ShelfLifeDays ?? 5;
+  document.getElementById('fgm-note').value = row?.Note || '';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('fgMasterModal')).show();
+}
+async function fgMasterModalSave() {
+  _modalClearErrors(['fgm-id', 'fgm-name']);
+  const fgId = document.getElementById('fgm-id').value.trim();
+  const name = document.getElementById('fgm-name').value.trim();
+  if (!fgId) { _modalShowError('fgm-id', 'กรอกรหัส FG'); return; }
+  if (!_fgMasterEditId && _fgMasterCache.some(r => r.FG_ID === fgId)) { _modalShowError('fgm-id', 'รหัสนี้มีอยู่แล้ว กรุณาใช้รหัสอื่น'); return; }
+  if (!name) { _modalShowError('fgm-name', 'กรอกชื่อสินค้า'); return; }
+  const payload = {
+    FG_ID: _fgMasterEditId || fgId, FG_Name: name,
+    Unit: document.getElementById('fgm-unit').value.trim() || 'ลูก',
+    ShelfLifeDays: _parseShelfDays(document.getElementById('fgm-shelf').value),
+    Note: document.getElementById('fgm-note').value.trim() || null,
+  };
+  const ok = await sbRun(_sb.from('product_master').upsert(payload), 'บันทึกสินค้าไม่สำเร็จ');
+  if (ok === null) return;
+  bootstrap.Modal.getInstance(document.getElementById('fgMasterModal')).hide();
+  bomLoad();
+}
+
+// ═══════════════════════════════════════════════════════════
+// BOM
+// ═══════════════════════════════════════════════════════════
+// หน้าตาแบบหน้า BOM ของ ProFlow (การ์ดต่อสินค้า กางดูสูตรได้, KPI, ค้นหา, โมดัลเพิ่มหลายแถว + ค้นหาวัตถุดิบ)
+// แต่ตัดส่วนที่ผูกกับไลน์ผลิตออกทั้งหมด (AllowedLines/กำลังผลิตต่อวัน/จำนวนคน) ตามที่ผู้ใช้ขอ 2026-09-25
+// ต่างจาก ProFlow: ข้อมูลสินค้าอยู่ใน product_master แยกจาก bom (ProFlow เก็บซ้ำทุกแถวใน bom) จึงแสดงสินค้าที่
+// ยังไม่มีสูตรได้ด้วย และการ์ดอิง _fgMasterCache เป็นหลัก ไม่ใช่ group จากแถว bom
+// ═══════════════════════════════════════════════════════════
+let _bomCache = [];
+let _bomLastGroups = [];          // ผล render ล่าสุด — ปุ่มบนการ์ดอ้างอิงด้วย index (ไม่ฝังรหัสที่ผู้ใช้พิมพ์เองลง onclick)
+let _bomExpandedSet = new Set();  // FG_ID ที่กางอยู่ (ค่าเริ่มต้นพับทั้งหมด)
+let _bomFilterNoFormula = false;
+let _bomRowSeq = 0;               // เลขรันของแถวในโมดัล ไม่ reuse กันชนกันตอนลบแถวกลาง
+let _bomMultiRowMode = true;      // true = เพิ่มได้หลายแถว, false = แก้ไขรายการเดิม 1 แถว
+let _bomModalFgId = null;         // สินค้าที่กำลังเพิ่ม/แก้รายการ (null = โหมดเพิ่มสินค้าใหม่)
+let _bomEditId = null;            // BOM_ID ที่กำลังแก้ไข (null = เพิ่มใหม่)
+const _BOM_CAT_ORDER = { 'วัตถุดิบ': 0, 'แพ็คเกจจิ้ง': 1 };
+
+// ── %Scrap ขั้นตอนเตรียมสมุนไพร (bom.ScrapSteps = [{step, pct}]) ──
+// ผู้ใช้เลือก (2026-09-25): ตั้งไว้ใน BOM, ขั้นตอนปรับได้ต่อวัตถุดิบ, หลายขั้น "บวกกันตรงๆ" (ไม่ทบ)
+// %Scrap = ส่วนที่ "หายไปจริง" ระหว่างเตรียม → ต้องเตรียม = ต้องใช้ ÷ (1 − %Scrap) ให้เหลือพอดีหลังสูญหาย
+// เช่น ไพล 10 KG, ล้าง 10% + บดย่อย 10% = 20% → เตรียม 10 ÷ 0.8 = 12.5 KG (หาย 2.5 เหลือ 10 พอดี)
+// (เดิมใช้ 10 × 1.2 = 12 ตามตัวอย่างแรกของผู้ใช้ — ผู้ใช้เปลี่ยนเป็นแบบหารนี้ 2026-09-25 เพราะ 12 × 0.8 เหลือแค่ 9.6)
+// %Scrap รวมต้อง < 100 (bomLineSubmit ตรวจไว้) ไม่งั้นหารด้วย 0/ติดลบ
+// ใช้ร่วมกันทั้งหน้า BOM Master และหน้าเบิกวัตถุดิบ (issueOpenForm) — แก้สูตรที่นี่ที่เดียว
+const BOM_PREP_STEP_PRESETS = ['ล้าง', 'บดย่อย', 'ปอกเปลือก', 'หั่น', 'คัดแยก', 'ตาก / อบแห้ง'];
+const BOM_DEFAULT_PREP_STEPS = ['ล้าง', 'บดย่อย'];
+function _bomScrapSteps(b) { return Array.isArray(b?.ScrapSteps) ? b.ScrapSteps : []; }
+function _bomScrapTotal(steps) { return (steps || []).reduce((s, x) => s + (parseFloat(x.pct) || 0), 0); }
+function _bomWithScrap(qty, pct) {
+  if (!(pct < 100)) return NaN;
+  return Math.round(qty / (1 - pct / 100) * 10000) / 10000;
+}
+function _bomScrapFormula(base, pct) { return `${_bomFmtQty(base)} ÷ ${_bomFmtQty(100 - pct)}%`; }
+function _bomScrapChips(steps) {
+  return steps.length
+    ? steps.map(s => `<span class="badge bg-light text-dark border me-1">${esc(s.step)} ${_bomFmtQty(s.pct)}%</span>`).join('')
+    : '<span class="text-muted">—</span>';
+}
+
+async function bomLoad() {
+  let bomRows;
+  [, , bomRows] = await Promise.all([
+    fgMasterLoad(),
+    rmMasterLoad(),
+    sbRun(_sb.from('bom').select('*'), 'โหลดสูตรการผลิต'),
+  ]);
+  _bomCache = bomRows || [];
+  bomUpdateKPIs();
+  bomRenderCards();
+}
+function _bomCatBadge(cat) { return badge(cat || 'วัตถุดิบ', cat === 'แพ็คเกจจิ้ง' ? 'info' : 'secondary'); }
+function _bomFmtQty(n) { return (parseFloat(n) || 0).toLocaleString(undefined, { maximumFractionDigits: 4 }); }
+
+function _bomGroupByProduct() {
+  const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  return _fgMasterCache.map(fg => {
+    const lines = _bomCache.filter(b => b.FG_ID === fg.FG_ID).map(b => ({ ...b, rm: rmMap[b.RM_ID] || null }))
+      .sort((a, b) => ((_BOM_CAT_ORDER[a.rm?.Category] ?? 0) - (_BOM_CAT_ORDER[b.rm?.Category] ?? 0))
+        || (a.rm?.RM_Name || '').localeCompare(b.rm?.RM_Name || ''));
+    return { ...fg, lines };
+  });
+}
+function bomUpdateKPIs() {
+  const groups = _bomGroupByProduct();
+  document.getElementById('bom-kpi-products').textContent = groups.length.toLocaleString();
+  document.getElementById('bom-kpi-lines').textContent = _bomCache.length.toLocaleString();
+  document.getElementById('bom-kpi-noformula').textContent = groups.filter(g => !g.lines.length).length.toLocaleString();
+}
+function bomToggleFilterNoFormula() {
+  _bomFilterNoFormula = !_bomFilterNoFormula;
+  document.getElementById('bom-kpi-noformula-card').classList.toggle('bom-kpi-active', _bomFilterNoFormula);
+  bomRenderCards();
+}
+function bomToggleExpand(gi) {
+  const id = _bomLastGroups[gi]?.FG_ID;
+  if (!id) return;
+  if (_bomExpandedSet.has(id)) _bomExpandedSet.delete(id); else _bomExpandedSet.add(id);
+  bomRenderCards();
+}
+
+function bomRenderCards() {
+  const q = (document.getElementById('bomSearch')?.value || '').trim().toLowerCase();
+  const groups = _bomGroupByProduct().filter(g => {
+    if (_bomFilterNoFormula && g.lines.length) return false;
+    if (!q) return true;
+    if ([g.FG_ID, g.FG_Name].join(' ').toLowerCase().includes(q)) return true;
+    return g.lines.some(l => [l.RM_ID, l.rm?.RM_Name].join(' ').toLowerCase().includes(q));
+  });
+  _bomLastGroups = groups;
+  const box = document.getElementById('bomCards');
+  if (!groups.length) {
+    box.innerHTML = `<div class="glass-card text-center py-5 text-muted">${_fgMasterCache.length ? 'ไม่พบข้อมูล' : 'ยังไม่มีสินค้า — กด "เพิ่มสินค้าใหม่" เพื่อเริ่มต้น'}</div>`;
+    return;
+  }
+  box.innerHTML = groups.map((g, gi) => {
+    const expanded = _bomExpandedSet.has(g.FG_ID);
+    const pkgCount = g.lines.filter(l => l.rm?.Category === 'แพ็คเกจจิ้ง').length;
+    const rmCount = g.lines.length - pkgCount;
+    const rowsHtml = g.lines.map((l, li) => {
+      const unitMismatch = l.rm && l.Unit !== l.rm.Unit;
+      const steps = _bomScrapSteps(l);
+      const scrapPct = _bomScrapTotal(steps);
+      return `<tr>
+        <td><span class="badge text-bg-secondary">${esc(l.RM_ID)}</span></td>
+        <td>${l.rm ? esc(l.rm.RM_Name) : '<span class="text-danger">(ไม่พบใน Master)</span>'}
+          ${l.Note ? `<div class="text-muted small">${esc(l.Note)}</div>` : ''}</td>
+        <td class="text-end">${_bomFmtQty(l.QtyPerUnit)}</td>
+        <td>${_bomScrapChips(steps)}</td>
+        <td class="text-end">${scrapPct ? _bomFmtQty(scrapPct) + '%' : '<span class="text-muted">—</span>'}</td>
+        <td class="text-end fw-semibold">${_bomFmtQty(_bomWithScrap(parseFloat(l.QtyPerUnit) || 0, scrapPct))}</td>
+        <td>${esc(l.Unit)}${unitMismatch ? ` <i class="fa-solid fa-triangle-exclamation text-warning" title="หน่วยในสูตร (${esc(l.Unit)}) ไม่ตรงกับหน่วยใน Master (${esc(l.rm.Unit)}) — ตอนเบิกวัตถุดิบระบบไม่แปลงหน่วยให้ ควรแก้ให้ตรงกัน"></i>` : ''}</td>
+        <td>${_bomCatBadge(l.rm?.Category)}</td>
+        <td class="text-center">
+          <button class="btn btn-outline-primary btn-sm me-1" onclick="bomOpenLineModal(${gi},${li})" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-outline-danger btn-sm" onclick="bomDeleteLine(${gi},${li})" title="ลบ"><i class="fa-solid fa-trash"></i></button>
+        </td></tr>`;
+    }).join('');
+    return `<div class="glass-card mb-2">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 bom-card-head" onclick="bomToggleExpand(${gi})">
+        <div>
+          <span class="badge text-bg-primary me-2">${esc(g.FG_ID)}</span>
+          <b>${esc(g.FG_Name)}</b>
+          <span class="badge bg-light text-dark border ms-2">หน่วย: ${esc(g.Unit || '—')}</span>
+          <span class="badge bg-light text-dark border ms-1"><i class="fa-regular fa-clock me-1"></i>อายุ ${g.ShelfLifeDays ?? '—'} วัน</span>
+          ${g.lines.length
+            ? `<span class="text-muted ms-2 small">วัตถุดิบ ${rmCount} · แพ็คเกจจิ้ง ${pkgCount} รายการ</span>`
+            : `<span class="badge text-bg-warning ms-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่มีสูตร</span>`}
+        </div>
+        <div class="d-flex gap-1">
+          <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation();fgMasterOpenForm(_bomLastGroups[${gi}].FG_ID)" title="แก้ไขข้อมูลสินค้า"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation();bomOpenLineModal(${gi})" title="เพิ่มวัตถุดิบ / แพ็คเกจจิ้ง"><i class="fa-solid fa-plus"></i></button>
+          <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();bomDeleteProduct(${gi})" title="ลบสินค้า"><i class="fa-solid fa-trash"></i></button>
+          <button class="btn btn-sm btn-outline-secondary" title="${expanded ? 'ย่อ' : 'ดูรายละเอียด'}"><i class="fa-solid fa-chevron-${expanded ? 'up' : 'down'}"></i></button>
+        </div>
+      </div>
+      ${!expanded ? '' : `
+      ${g.Note ? `<div class="small text-muted mt-2"><i class="fa-regular fa-note-sticky me-1"></i>${esc(g.Note)}</div>` : ''}
+      ${g.lines.length ? `
+      <div class="table-responsive mt-3"><table class="table table-sm table-hover mb-0">
+        <thead><tr><th>รหัส</th><th>ชื่อวัตถุดิบ / แพ็คเกจจิ้ง</th><th class="text-end">ใช้ต่อ 1 ${esc(g.Unit || 'หน่วย')}</th><th>ขั้นตอนเตรียม (%Scrap)</th><th class="text-end">รวม Scrap</th><th class="text-end">ต้องเตรียม / 1 ${esc(g.Unit || 'หน่วย')}</th><th>หน่วย</th><th>ประเภท</th><th class="text-center" style="width:100px">จัดการ</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table></div>`
+      : `<div class="text-center text-muted py-3 small">ยังไม่มีรายการในสูตร — กดปุ่ม <i class="fa-solid fa-plus"></i> เพื่อเพิ่มวัตถุดิบ / แพ็คเกจจิ้ง</div>`}`}
+    </div>`;
+  }).join('');
+}
+
+// ── ค้นหาวัตถุดิบ/แพ็คเกจจิ้งจาก Master (ต่อแถวในโมดัล, seq = data-seq ของแถว) ──
+function bomSearchMaterial(seq, q) {
+  const dd = document.getElementById(`bomm-mat-dd-${seq}`);
+  // พิมพ์ใหม่ = ยกเลิกรายการที่เลือกไว้ ต้องเลือกจากรายการใหม่อีกครั้ง (กันชื่อในช่องกับรหัสที่บันทึกไม่ตรงกัน)
+  document.getElementById(`bomm-rm-id-${seq}`).value = '';
+  document.getElementById(`bomm-unit-${seq}`).value = '';
+  document.getElementById(`bomm-mat-hint-${seq}`).innerHTML = '';
+  document.getElementById(`bomm-scrap-wrap-${seq}`).classList.add('d-none');
+  q = (q || '').trim().toLowerCase();
+  if (!q) { dd.style.display = 'none'; return; }
+  const results = _rmMasterCache.filter(m =>
+    (m.RM_Name || '').toLowerCase().includes(q) || (m.RM_ID || '').toLowerCase().includes(q)).slice(0, 10);
+  dd.innerHTML = results.length
+    ? results.map(m => `<button type="button" class="list-group-item list-group-item-action py-1 px-2" style="font-size:.84rem"
+        data-rm="${esc(m.RM_ID)}" onclick="bomSelectMaterial(${seq}, this.dataset.rm)">
+        <span class="badge text-bg-secondary me-1">${esc(m.RM_ID)}</span>${esc(m.RM_Name)} ${_bomCatBadge(m.Category)}
+        <span class="text-muted small ms-1">(${esc(m.Unit)})</span></button>`).join('')
+    : '<div class="list-group-item small text-muted">ไม่พบใน Master — เพิ่มที่หน้า "วัตถุดิบ / แพ็คเกจจิ้ง (Master)" ก่อน</div>';
+  dd.style.display = 'block';
+}
+function bomSelectMaterial(seq, rmId) {
+  const m = _rmMasterCache.find(r => r.RM_ID === rmId);
+  if (!m) return;
+  document.getElementById(`bomm-mat-search-${seq}`).value = m.RM_Name;
+  document.getElementById(`bomm-rm-id-${seq}`).value = m.RM_ID;
+  // หน่วยในสูตรล็อกให้ตรงกับ Master เสมอ — หน้าเบิกวัตถุดิบ (issueOpenForm) คูณ QtyPerUnit × PlanQty แล้วหักสต็อก
+  // ตรงๆ โดยไม่แปลงหน่วย ถ้าสูตรเป็น "กรัม" แต่สต็อกเป็น "กิโลกรัม" จะหักผิด 1000 เท่า
+  document.getElementById(`bomm-unit-${seq}`).value = m.Unit;
+  document.getElementById(`bomm-mat-hint-${seq}`).innerHTML = `รหัส: ${esc(m.RM_ID)} · ${_bomCatBadge(m.Category)}`;
+  document.getElementById(`bomm-mat-dd-${seq}`).style.display = 'none';
+  document.getElementById(`bomm-mat-search-${seq}`).classList.remove('is-invalid');
+  // วัตถุดิบ (สมุนไพร) มีขั้นตอนเตรียม — ตั้งต้นให้ ล้าง + บดย่อย ถ้าแถวนี้ยังไม่มีขั้นตอนเลย; แพ็คเกจจิ้งไม่มี
+  const isHerb = m.Category !== 'แพ็คเกจจิ้ง';
+  document.getElementById(`bomm-scrap-wrap-${seq}`).classList.toggle('d-none', !isHerb);
+  if (isHerb && !document.querySelector(`#bomm-steps-${seq} .bomm-step`)) {
+    BOM_DEFAULT_PREP_STEPS.forEach(s => bomAddScrapStep(seq, s, ''));
+  }
+  _bomUpdateScrapSummary(seq);
+}
+function bomAddScrapStep(seq, step = '', pct = '') {
+  const wrap = document.createElement('div');
+  wrap.className = 'input-group input-group-sm mb-1 bomm-step';
+  wrap.style.maxWidth = '440px';
+  wrap.innerHTML = `
+    <input class="form-control bomm-step-name" list="bomPrepStepList" placeholder="ชื่อขั้นตอน เช่น ล้าง" value="${esc(step)}">
+    <input type="number" class="form-control bomm-step-pct" style="max-width:110px" min="0" step="any" placeholder="0"
+      value="${esc(pct)}" oninput="_bomUpdateScrapSummary(${seq})">
+    <span class="input-group-text">%</span>
+    <button type="button" class="btn btn-outline-danger" style="padding:0 10px !important" title="ลบขั้นตอน"
+      onclick="this.closest('.bomm-step').remove();_bomUpdateScrapSummary(${seq})"><i class="fa-solid fa-xmark"></i></button>`;
+  document.getElementById(`bomm-steps-${seq}`).appendChild(wrap);
+  _bomUpdateScrapSummary(seq);
+}
+// อ่านขั้นตอนจากฟอร์ม — ข้ามแถวที่ไม่มีชื่อขั้นตอน, % ว่าง = 0
+function _bomReadScrapSteps(seq) {
+  return [...document.querySelectorAll(`#bomm-steps-${seq} .bomm-step`)].map(el => ({
+    step: el.querySelector('.bomm-step-name').value.trim(),
+    pct: parseFloat(el.querySelector('.bomm-step-pct').value) || 0,
+  })).filter(s => s.step);
+}
+function _bomUpdateScrapSummary(seq) {
+  const sumEl = document.getElementById(`bomm-scrap-sum-${seq}`);
+  if (!sumEl) return;
+  const total = _bomScrapTotal(_bomReadScrapSteps(seq));
+  const qty = parseFloat(document.getElementById(`bomm-qty-${seq}`).value) || 0;
+  const unit = document.getElementById(`bomm-unit-${seq}`).value;
+  if (total >= 100) { sumEl.innerHTML = `<span class="text-danger">รวม Scrap ${_bomFmtQty(total)}% — ต้องน้อยกว่า 100%</span>`; return; }
+  sumEl.innerHTML = `รวม Scrap <b>${_bomFmtQty(total)}%</b>` + (qty
+    ? ` → ต้องเตรียมสด <b>${_bomFmtQty(_bomWithScrap(qty, total))} ${esc(unit)}</b> ต่อสินค้า 1 หน่วย <span class="text-muted">(${_bomScrapFormula(qty, total)} — หายระหว่างเตรียมแล้วเหลือ ${_bomFmtQty(qty)} พอดี)</span>`
+    : '');
+}
+document.addEventListener('click', e => {
+  document.querySelectorAll('.bom-mat-dropdown').forEach(dd => {
+    if (!dd.contains(e.target) && !e.target.classList.contains('bomm-mat-search')) dd.style.display = 'none';
+  });
+});
+
+function _bomLineRowHTML(seq) {
+  return `<div class="bom-line-row border rounded p-3 mb-2 position-relative" data-seq="${seq}">
+    <button type="button" class="btn btn-sm btn-outline-danger bom-row-remove-btn position-absolute d-none"
+      style="top:6px;right:6px;padding:0 8px !important" onclick="bomRemoveMaterialRow(${seq})" title="ลบแถวนี้"><i class="fa-solid fa-xmark"></i></button>
+    <div class="row g-3">
+      <div class="col-md-6 position-relative">
+        <label class="form-label">วัตถุดิบ / แพ็คเกจจิ้ง<span class="text-danger">*</span></label>
+        <input class="form-control bomm-mat-search" id="bomm-mat-search-${seq}" placeholder="พิมพ์รหัสหรือชื่อเพื่อค้นหาจาก Master..."
+          autocomplete="off" oninput="bomSearchMaterial(${seq}, this.value)">
+        <div class="invalid-feedback" id="bomm-mat-search-${seq}-err"></div>
+        <div id="bomm-mat-dd-${seq}" class="list-group position-absolute shadow bom-mat-dropdown"></div>
+        <input type="hidden" id="bomm-rm-id-${seq}">
+        <small id="bomm-mat-hint-${seq}" class="text-muted"></small>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">ปริมาณต่อ 1 หน่วยสินค้า<span class="text-danger">*</span></label>
+        <input type="number" id="bomm-qty-${seq}" class="form-control" min="0" step="any" oninput="_bomUpdateScrapSummary(${seq})">
+        <div class="invalid-feedback" id="bomm-qty-${seq}-err"></div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">หน่วย (ตาม Master)</label>
+        <input id="bomm-unit-${seq}" class="form-control bg-light" readonly tabindex="-1" placeholder="—">
+      </div>
+      <!-- ขั้นตอนเตรียม + %Scrap — แสดงเฉพาะหมวด "วัตถุดิบ" (แพ็คเกจจิ้งไม่ผ่านการล้าง/บด) -->
+      <div class="col-12 d-none" id="bomm-scrap-wrap-${seq}">
+        <div class="rounded p-2" style="background:#f8fafc;border:1px dashed #cbd5e1">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-semibold small"><i class="fa-solid fa-mortar-pestle me-1"></i>ขั้นตอนเตรียม & %Scrap (สูญหายระหว่างเตรียม)</span>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="bomAddScrapStep(${seq})"><i class="fa-solid fa-plus me-1"></i>เพิ่มขั้นตอน</button>
+          </div>
+          <div id="bomm-steps-${seq}"></div>
+          <div class="small mt-1" id="bomm-scrap-sum-${seq}"></div>
+        </div>
+      </div>
+      <div class="col-12">
+        <input id="bomm-note-${seq}" class="form-control form-control-sm" placeholder="หมายเหตุ (ไม่บังคับ)">
+      </div>
+    </div>
+  </div>`;
+}
+function _bomUpdateRowRemoveButtons() {
+  const rows = document.querySelectorAll('#bomm-rows .bom-line-row');
+  rows.forEach(r => r.querySelector('.bom-row-remove-btn').classList.toggle('d-none', !_bomMultiRowMode || rows.length <= 1));
+}
+function bomAddMaterialRow() {
+  const seq = _bomRowSeq++;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = _bomLineRowHTML(seq).trim();
+  document.getElementById('bomm-rows').appendChild(wrap.firstChild);
+  _bomUpdateRowRemoveButtons();
+  return seq;
+}
+function bomRemoveMaterialRow(seq) {
+  const box = document.getElementById('bomm-rows');
+  if (box.children.length <= 1) return;
+  box.querySelector(`.bom-line-row[data-seq="${seq}"]`)?.remove();
+  _bomUpdateRowRemoveButtons();
+}
+function _bomSetModalProduct(fg) {
+  // สลับโมดัลเป็นโหมด "สินค้าที่มีอยู่แล้ว" (ซ่อนช่องกรอกสินค้า แสดงแถบชื่อสินค้าแทน)
+  _bomModalFgId = fg.FG_ID;
+  document.getElementById('bomm-new-fields').classList.add('d-none');
+  const bar = document.getElementById('bomm-info-bar');
+  bar.classList.remove('d-none');
+  bar.innerHTML = `<i class="fa-solid fa-spa me-1"></i><b>${esc(fg.FG_Name)}</b> <span class="badge text-bg-secondary ms-1">${esc(fg.FG_ID)}</span>
+    <span class="text-muted ms-2">ปริมาณที่กรอก = ใช้ต่อสินค้า 1 ${esc(fg.Unit || 'หน่วย')}</span>`;
+}
+
+// gi = index ใน _bomLastGroups, li = index รายการในสูตร
+// ไม่ส่งอะไร = เพิ่มสินค้าใหม่ (+สูตร) · ส่ง gi = เพิ่มรายการให้สินค้าเดิม · ส่ง gi+li = แก้ไขรายการเดิม 1 แถว
+function bomOpenLineModal(gi = null, li = null) {
+  const group = gi !== null ? _bomLastGroups[gi] : null;
+  document.getElementById('bomm-rows').innerHTML = '';
+  _bomRowSeq = 0;
+  _bomEditId = null;
+  _modalClearErrors(['bomm-fg-id', 'bomm-fg-name']);
+  // ชื่อขั้นตอนให้เลือก = ค่าตั้งต้น + ชื่อที่เคยใช้ในสูตรอื่นแล้ว (พิมพ์ชื่อใหม่เองได้เสมอ)
+  const usedSteps = _bomCache.flatMap(b => _bomScrapSteps(b).map(s => s.step));
+  document.getElementById('bomPrepStepList').innerHTML = [...new Set([...BOM_PREP_STEP_PRESETS, ...usedSteps])]
+    .map(s => `<option value="${esc(s)}">`).join('');
+  const title = document.getElementById('bomm-title');
+  if (group) {
+    _bomSetModalProduct(group);
+  } else {
+    _bomModalFgId = null;
+    document.getElementById('bomm-new-fields').classList.remove('d-none');
+    document.getElementById('bomm-info-bar').classList.add('d-none');
+    document.getElementById('bomm-fg-id').value = genId('FG');
+    document.getElementById('bomm-fg-name').value = '';
+    document.getElementById('bomm-fg-unit').value = 'ลูก';
+    document.getElementById('bomm-fg-shelf').value = 5;
+  }
+
+  if (group && li !== null) {
+    const l = group.lines[li];
+    if (!l) return;
+    _bomEditId = l.BOM_ID;
+    _bomMultiRowMode = false;
+    title.innerHTML = '<i class="fa-solid fa-pen me-2"></i>แก้ไขรายการในสูตร';
+    const seq = bomAddMaterialRow();
+    if (l.rm) bomSelectMaterial(seq, l.RM_ID);
+    else {
+      document.getElementById(`bomm-mat-search-${seq}`).value = l.RM_ID;
+      document.getElementById(`bomm-rm-id-${seq}`).value = l.RM_ID;
+      document.getElementById(`bomm-unit-${seq}`).value = l.Unit;
+    }
+    if (l.rm && l.Unit !== l.rm.Unit) {
+      document.getElementById(`bomm-mat-hint-${seq}`).innerHTML +=
+        ` <span class="text-danger">· หน่วยเดิมในสูตรคือ "${esc(l.Unit)}" — ตรวจปริมาณให้เป็นหน่วย "${esc(l.rm.Unit)}" ก่อนบันทึก</span>`;
+    }
+    document.getElementById(`bomm-qty-${seq}`).value = l.QtyPerUnit ?? '';
+    document.getElementById(`bomm-note-${seq}`).value = l.Note || '';
+    const steps = _bomScrapSteps(l);
+    if (steps.length) {
+      document.getElementById(`bomm-steps-${seq}`).innerHTML = '';
+      steps.forEach(s => bomAddScrapStep(seq, s.step, s.pct));
+    }
+    _bomUpdateScrapSummary(seq);
+  } else {
+    _bomMultiRowMode = true;
+    title.innerHTML = group
+      ? '<i class="fa-solid fa-plus me-2"></i>เพิ่มวัตถุดิบ / แพ็คเกจจิ้ง'
+      : '<i class="fa-solid fa-sitemap me-2"></i>เพิ่มสินค้าใหม่';
+    bomAddMaterialRow();
+  }
+  document.getElementById('bomm-add-row-btn').classList.toggle('d-none', !_bomMultiRowMode);
+  _bomUpdateRowRemoveButtons();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('bomModal')).show();
+}
+
+async function bomLineSubmit() {
+  let fgId = _bomModalFgId;
+  let newProduct = null;
+  if (!fgId) {
+    _modalClearErrors(['bomm-fg-id', 'bomm-fg-name']);
+    const id = document.getElementById('bomm-fg-id').value.trim();
+    const name = document.getElementById('bomm-fg-name').value.trim();
+    if (!id) { _modalShowError('bomm-fg-id', 'กรอกรหัส FG'); return; }
+    if (_fgMasterCache.some(f => f.FG_ID === id)) { _modalShowError('bomm-fg-id', 'รหัสนี้มีอยู่แล้ว กรุณาใช้รหัสอื่น'); return; }
+    if (!name) { _modalShowError('bomm-fg-name', 'กรอกชื่อสินค้า'); return; }
+    newProduct = {
+      FG_ID: id, FG_Name: name,
+      Unit: document.getElementById('bomm-fg-unit').value.trim() || 'ลูก',
+      ShelfLifeDays: _parseShelfDays(document.getElementById('bomm-fg-shelf').value),
+    };
+    fgId = id;
+  }
+
+  // อ่านทุกแถว — แถวที่ว่างทั้งแถวข้ามไป (สินค้าใหม่บันทึกได้โดยยังไม่มีสูตร แล้วค่อยมาเพิ่มทีหลัง)
+  const existingRm = new Set(_bomCache.filter(b => b.FG_ID === fgId && b.BOM_ID !== _bomEditId).map(b => b.RM_ID));
+  const seen = new Set();
+  const payloads = [];
+  for (const rowEl of document.querySelectorAll('#bomm-rows .bom-line-row')) {
+    const seq = rowEl.dataset.seq;
+    const searchId = `bomm-mat-search-${seq}`, qtyId = `bomm-qty-${seq}`;
+    _modalClearErrors([searchId, qtyId]);
+    const searchVal = document.getElementById(searchId).value.trim();
+    const qtyRaw = document.getElementById(qtyId).value;
+    let rmId = document.getElementById(`bomm-rm-id-${seq}`).value;
+    if (!rmId && !searchVal && qtyRaw === '') continue;
+    if (!rmId) {
+      // พิมพ์ตรงกับรหัส/ชื่อใน Master เป๊ะแต่ไม่ได้คลิกเลือก — รับได้
+      const s = searchVal.toLowerCase();
+      const m = _rmMasterCache.find(r => (r.RM_ID || '').toLowerCase() === s || (r.RM_Name || '').toLowerCase() === s);
+      if (!m) { _modalShowError(searchId, 'เลือกรายการจาก Master (พิมพ์แล้วคลิกเลือกจากรายการ)'); return; }
+      rmId = m.RM_ID;
+    }
+    const rm = _rmMasterCache.find(r => r.RM_ID === rmId);
+    const qty = parseFloat(qtyRaw);
+    if (!(qty > 0)) { _modalShowError(qtyId, 'กรอกปริมาณมากกว่า 0'); return; }
+    if (seen.has(rmId)) { _modalShowError(searchId, 'เลือกรายการนี้ซ้ำในฟอร์ม — รวมปริมาณไว้แถวเดียว'); return; }
+    if (existingRm.has(rmId)) { _modalShowError(searchId, 'มีรายการนี้ในสูตรของสินค้านี้อยู่แล้ว — แก้ไขรายการเดิมแทน'); return; }
+    seen.add(rmId);
+    const isHerb = rm?.Category !== 'แพ็คเกจจิ้ง';
+    const scrapSteps = isHerb ? _bomReadScrapSteps(seq) : [];
+    if (scrapSteps.some(s => s.pct < 0)) { _modalShowError(searchId, '%Scrap ต้องไม่ติดลบ'); return; }
+    if (_bomScrapTotal(scrapSteps) >= 100) { _modalShowError(searchId, '%Scrap รวมทุกขั้นตอนต้องน้อยกว่า 100%'); return; }
+    payloads.push({
+      BOM_ID: _bomEditId || genId('BOM'), FG_ID: fgId, RM_ID: rmId, QtyPerUnit: qty,
+      ScrapSteps: scrapSteps,
+      Unit: rm?.Unit || document.getElementById(`bomm-unit-${seq}`).value || 'กรัม',
+      Note: document.getElementById(`bomm-note-${seq}`).value.trim() || null,
+    });
+  }
+  if (!payloads.length && !newProduct) { Swal.fire('กรอกข้อมูลไม่ครบ', 'เลือกวัตถุดิบ / แพ็คเกจจิ้ง อย่างน้อย 1 รายการ', 'warning'); return; }
+
+  const saveBtn = document.getElementById('bomm-save-btn');
+  const saveHtml = saveBtn.innerHTML;
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>กำลังบันทึก...';
+  try {
+    if (newProduct) {
+      const ok = await sbRun(_sb.from('product_master').insert(newProduct), 'บันทึกสินค้าไม่สำเร็จ');
+      if (ok === null) return;
+      // สินค้าเข้า DB แล้ว — สลับโมดัลเป็นโหมดสินค้าเดิม ถ้าขั้นบันทึกสูตรด้านล่างพลาด กดบันทึกซ้ำจะไม่สร้างสินค้าซ้ำ
+      _fgMasterCache.push(newProduct);
+      _bomSetModalProduct(newProduct);
+    }
+    if (payloads.length) {
+      const q = _bomEditId
+        ? _sb.from('bom').update(payloads[0]).eq('BOM_ID', _bomEditId)
+        : _sb.from('bom').insert(payloads);
+      const ok = await sbRun(q, 'บันทึกสูตรไม่สำเร็จ');
+      if (ok === null) return;
+    }
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = saveHtml;
+  }
+  bootstrap.Modal.getInstance(document.getElementById('bomModal')).hide();
+  _bomExpandedSet.add(fgId);
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 1800,
+    title: _bomEditId ? 'แก้ไขสำเร็จ' : newProduct ? 'เพิ่มสินค้าสำเร็จ' : `เพิ่ม ${payloads.length} รายการสำเร็จ` });
+  bomLoad();
+}
+
+async function bomDeleteLine(gi, li) {
+  const g = _bomLastGroups[gi], l = g?.lines[li];
+  if (!l) return;
+  const c = await Swal.fire({ title: 'ลบรายการนี้ออกจากสูตร?', icon: 'warning',
+    html: `<b>${esc(l.rm?.RM_Name || l.RM_ID)}</b><br>สินค้า: ${esc(g.FG_Name)}`,
+    showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  if (await sbDelete('bom', 'BOM_ID', l.BOM_ID)) bomLoad();
+}
+
+// ลบสินค้า = ลบสูตรทั้งหมดของสินค้า + ตัวสินค้า — เช็คก่อนว่าไม่มีธุรกรรมอ้างถึง (FK จะ block การลบ product_master
+// อยู่แล้ว แต่ถ้าปล่อยให้ชนตอนท้าย สูตรจะถูกลบไปก่อนแล้วโดยสินค้ายังอยู่ จึงต้องเช็คก่อนลบอะไรทั้งสิ้น)
+const _BOM_FG_REF_TABLES = [
+  ['customer_orders', 'คำสั่งซื้อ'], ['manufacturing_orders', 'แผนผลิต/MO'], ['production_records', 'บันทึกผลิต'],
+  ['stock_fg', 'สต็อก FG'], ['fg_receive', 'รับ FG'], ['fg_withdraw', 'เบิก FG'], ['waste_log', 'ของเสีย'],
+];
+async function bomDeleteProduct(gi) {
+  const g = _bomLastGroups[gi];
+  if (!g) return;
+  const counts = await Promise.all(_BOM_FG_REF_TABLES.map(([t]) =>
+    _sb.from(t).select('FG_ID', { count: 'exact', head: true }).eq('FG_ID', g.FG_ID)));
+  const failed = counts.find(r => r.error);
+  if (failed) { Swal.fire('ผิดพลาด', failed.error.message, 'error'); return; }
+  const used = _BOM_FG_REF_TABLES.filter((_, i) => counts[i].count > 0).map(([, label], i) => label);
+  if (used.length) {
+    Swal.fire('ลบไม่ได้', `สินค้านี้ถูกใช้งานแล้วใน: ${used.join(', ')}<br>ลบได้เฉพาะสินค้าที่ยังไม่มีธุรกรรม`, 'info');
+    return;
+  }
+  const c = await Swal.fire({ title: 'ลบสินค้านี้ทั้งหมด?', icon: 'warning',
+    html: `<b>${esc(g.FG_Name)}</b> <span class="badge text-bg-secondary">${esc(g.FG_ID)}</span><br>จะลบสินค้าและรายการในสูตรทั้งหมด ${g.lines.length} รายการ`,
+    showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบทั้งหมด', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  if (g.lines.length) {
+    const ok = await sbRun(_sb.from('bom').delete().eq('FG_ID', g.FG_ID), 'ลบสูตรไม่สำเร็จ');
+    if (ok === null) return;
+  }
+  if (await sbDelete('product_master', 'FG_ID', g.FG_ID)) { _bomExpandedSet.delete(g.FG_ID); bomLoad(); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// RECEIVED — รับวัตถุดิบ+แพ็คเกจจิ้งรวมหน้าเดียว (ตาราง rm_receive เดิม แยกแค่ "หมวดหมู่" ในตาราง/ฟิลเตอร์)
+// ═══════════════════════════════════════════════════════════
+let _receivedCache = [];
+async function receivedLoad() {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  _receivedCache = await sbRun(_sb.from('rm_receive').select('*').order('ReceiveDate', { ascending: false }), 'โหลดประวัติรับเข้าคลัง') || [];
+  receivedRenderTable();
+}
+function receivedRenderTable() {
+  const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  const catFilter = document.getElementById('receivedCategoryFilter').value;
+  const q = (document.getElementById('receivedSearch').value || '').toLowerCase();
+  const rows = _receivedCache.filter(r => {
+    const cat = rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
+    return (!catFilter || cat === catFilter) && (!q || JSON.stringify(r).toLowerCase().includes(q));
+  });
+  document.getElementById('receivedTableBody').innerHTML = rows.map(r => {
+    const cat = rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
+    return `<tr><td>${esc(r.Receive_ID)}</td><td>${badge(cat, cat==='แพ็คเกจจิ้ง'?'info':'secondary')}</td><td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td><td>${r.Qty} ${esc(r.Unit)}</td><td>${esc(r.Supplier||'-')}</td><td>${esc(r.Lot||'-')}</td><td>${fmtDate(r.HarvestDate)}</td><td>${fmtDate(r.ReceiveDate)}</td>
+    <td><button class="btn btn-sm btn-outline-danger" onclick="receivedDelete('${r.Receive_ID}','${r.RM_ID}',${r.Qty})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+  }).join('') || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
+}
+function receivedOpenForm() {
+  if (!_rmMasterCache.length) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบ/แพ็คเกจจิ้งใน "วัตถุดิบ / แพ็คเกจจิ้ง (Master)" ก่อน', 'info'); return; }
+  _modalClearErrors(['rcv-qty']);
+  document.getElementById('rcv-rm').innerHTML = _rmMasterCache.map(r => `<option value="${esc(r.RM_ID)}">[${esc(r.Category||'วัตถุดิบ')}] ${esc(r.RM_Name)} (${esc(r.Unit)})</option>`).join('');
+  document.getElementById('rcv-qty').value = '';
+  document.getElementById('rcv-supplier').value = '';
+  document.getElementById('rcv-lot').value = '';
+  document.getElementById('rcv-harvest').value = todayStr();
+  document.getElementById('rcv-receive').value = todayStr();
+  new bootstrap.Modal(document.getElementById('receivedModal')).show();
+}
+async function receivedModalSave() {
+  _modalClearErrors(['rcv-qty']);
+  const qty = parseFloat(document.getElementById('rcv-qty').value);
+  if (!qty || qty <= 0) { _modalShowError('rcv-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  const rmId = document.getElementById('rcv-rm').value;
+  const rm = _rmMasterCache.find(r => r.RM_ID === rmId);
+  const payload = {
+    Receive_ID: genId(rm?.Category === 'แพ็คเกจจิ้ง' ? 'PC' : 'RC'), RM_ID: rmId, Qty: qty, Unit: rm?.Unit || '',
+    Supplier: document.getElementById('rcv-supplier').value.trim() || null, Lot: document.getElementById('rcv-lot').value.trim() || null,
+    HarvestDate: document.getElementById('rcv-harvest').value || null, ReceiveDate: document.getElementById('rcv-receive').value || todayStr(),
+  };
+  const ok = await sbRun(_sb.from('rm_receive').insert(payload), 'บันทึกรับเข้าคลังไม่สำเร็จ');
+  if (ok === null) return;
+  await adjustStockRM(rmId, qty, rm?.Unit);
+  bootstrap.Modal.getInstance(document.getElementById('receivedModal')).hide();
+  await receivedLoad();
+  await stockRmLoad();
+}
+async function receivedDelete(id, rmId, qty) {
+  const c = await Swal.fire({ title: 'ลบรายการรับนี้?', text: 'สต็อกจะถูกปรับลดตามจำนวนนี้ด้วย', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  if (await sbDelete('rm_receive', 'Receive_ID', id)) {
+    await adjustStockRM(rmId, -qty);
+    await receivedLoad();
+    await stockRmLoad();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// STOCK RM / STOCK PACKAGING — share stock_balance (แยกด้วย rm_master.Category)
+// ═══════════════════════════════════════════════════════════
+let _stockRmCache = [];
+async function stockRmLoad() {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  _stockRmCache = await sbRun(_sb.from('stock_balance').select('*'), 'โหลดสต็อก') || [];
+  stockRmRenderTable();
+  stockPkgRenderTable();
+}
+function _stockRenderByCategory(category, searchInputId, tbodyId) {
+  const q = (document.getElementById(searchInputId).value || '').toLowerCase();
+  const rows = _rmMasterCache.filter(r => (r.Category || 'วัตถุดิบ') === category && (!q || r.RM_Name.toLowerCase().includes(q)));
+  document.getElementById(tbodyId).innerHTML = rows.map(r => {
+    const s = _stockRmCache.find(x => x.RM_ID === r.RM_ID);
+    const qty = s?.Qty ?? 0;
+    const low = qty < (r.MinStock ?? 0);
+    return `<tr><td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}</td><td>${qty}</td><td>${esc(r.Unit)}</td><td>${r.MinStock ?? 0}</td><td>${low ? badge('ต่ำกว่าขั้นต่ำ','danger') : badge('ปกติ','success')}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
+}
+function stockRmRenderTable() { _stockRenderByCategory('วัตถุดิบ', 'stockRmSearch', 'stockRmTableBody'); }
+function stockPkgRenderTable() { _stockRenderByCategory('แพ็คเกจจิ้ง', 'stockPkgSearch', 'stockPkgTableBody'); }
+async function stockPkgLoad() { await stockRmLoad(); }
+
+// ═══════════════════════════════════════════════════════════
+// CUSTOMER ORDERS
+// ═══════════════════════════════════════════════════════════
+let _coCache = [];
+async function coLoad() {
+  if (!_fgMasterCache.length) await fgMasterLoad();
+  const [orders, withdraws] = await Promise.all([
+    sbRun(_sb.from('customer_orders').select('*').order('OrderDate', { ascending: false }), 'โหลดคำสั่งซื้อ'),
+    sbRun(_sb.from('fg_withdraw').select('*'), 'โหลดการเบิก'),
+  ]);
+  _coCache = orders || [];
+  window._fgWithdrawCache = withdraws || [];
+  coRenderTable();
+}
+function coWithdrawnQty(orderId) { return (window._fgWithdrawCache||[]).filter(w => w.Order_ID === orderId).reduce((s,w) => s + Number(w.Qty), 0); }
+function coRenderTable() {
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const q = (document.getElementById('coSearch').value || '').toLowerCase();
+  const rows = _coCache.filter(c => !q || JSON.stringify(c).toLowerCase().includes(q));
+  document.getElementById('coTableBody').innerHTML = rows.map(c => `
+    <tr><td>${esc(c.Order_ID)}</td><td>${esc(c.CustomerName)}</td><td>${esc(fgMap[c.FG_ID]?.FG_Name || c.FG_ID)}</td><td>${c.OrderQty}</td><td>${coWithdrawnQty(c.Order_ID)}</td><td>${fmtDate(c.NeedDate)}</td><td>${badge(c.Status, CO_STATUS_BADGE[c.Status])}</td>
+    <td><button class="btn btn-sm btn-outline-danger" onclick="coDelete('${c.Order_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+    || '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มีคำสั่งซื้อ</td></tr>';
+}
+function coOpenForm() {
+  if (!_fgMasterCache.length) { Swal.fire('ยังไม่มีสินค้า', 'กรุณาเพิ่มสินค้าใน "สูตรแม่บท (BOM Master)" ก่อน', 'info'); return; }
+  _modalClearErrors(['com-cust', 'com-qty']);
+  document.getElementById('com-cust').value = '';
+  document.getElementById('com-fg').innerHTML = _fgMasterCache.map(f => `<option value="${esc(f.FG_ID)}">${esc(f.FG_Name)}</option>`).join('');
+  document.getElementById('com-qty').value = '';
+  document.getElementById('com-need').value = todayStr();
+  new bootstrap.Modal(document.getElementById('coModal')).show();
+}
+async function coModalSave() {
+  _modalClearErrors(['com-cust', 'com-qty']);
+  const cust = document.getElementById('com-cust').value.trim();
+  const qty = parseFloat(document.getElementById('com-qty').value);
+  if (!cust) { _modalShowError('com-cust', 'กรอกชื่อลูกค้า'); return; }
+  if (!qty || qty <= 0) { _modalShowError('com-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  const payload = {
+    Order_ID: genId('CO'), CustomerName: cust, FG_ID: document.getElementById('com-fg').value, OrderQty: qty,
+    OrderDate: todayStr(), NeedDate: document.getElementById('com-need').value || null, Status: 'สั่งผลิตแล้ว',
+  };
+  const ok = await sbRun(_sb.from('customer_orders').insert(payload), 'บันทึกคำสั่งซื้อไม่สำเร็จ');
+  if (ok === null) return;
+  bootstrap.Modal.getInstance(document.getElementById('coModal')).hide();
+  coLoad();
+}
+async function coDelete(id) {
+  const c = await Swal.fire({ title: 'ลบคำสั่งซื้อนี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  if (await sbDelete('customer_orders', 'Order_ID', id)) coLoad();
+}
+
+// ═══════════════════════════════════════════════════════════
+// PLAN / MO
+// ═══════════════════════════════════════════════════════════
+let _planCache = [];
+async function planLoad() {
+  if (!_fgMasterCache.length) await fgMasterLoad();
+  if (!_coCache.length) await coLoad();
+  _planCache = await sbRun(_sb.from('manufacturing_orders').select('*').order('PlanDate', { ascending: false }), 'โหลดแผนผลิต') || [];
+  planRenderTable();
+}
+function planRenderTable() {
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const q = (document.getElementById('planSearch').value || '').toLowerCase();
+  const rows = _planCache.filter(p => !q || JSON.stringify(p).toLowerCase().includes(q));
+  document.getElementById('planTableBody').innerHTML = rows.map(p => `
+    <tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${p.PlanQty}</td><td>${fmtDate(p.PlanDate)}</td><td>${esc(p.Shift||'-')}</td><td>${esc(p.Order_ID||'-')}</td><td>${badge(p.Status, MO_STATUS_BADGE[p.Status])}</td>
+    <td>${p.Status === 'วางแผน' ? `<button class="btn btn-sm btn-outline-danger" onclick="planDelete('${p.MO_ID}')"><i class="fa-solid fa-trash"></i></button>` : ''}</td></tr>`).join('')
+    || '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มีแผนผลิต</td></tr>';
+}
+function planOpenForm() {
+  if (!_fgMasterCache.length) { Swal.fire('ยังไม่มีสินค้า', 'กรุณาเพิ่มสินค้าใน "สูตรแม่บท (BOM Master)" ก่อน', 'info'); return; }
+  _modalClearErrors(['pln-qty']);
+  document.getElementById('pln-fg').innerHTML = _fgMasterCache.map(f => `<option value="${esc(f.FG_ID)}">${esc(f.FG_Name)}</option>`).join('');
+  document.getElementById('pln-qty').value = '';
+  document.getElementById('pln-date').value = todayStr();
+  document.getElementById('pln-shift').value = 'เช้า';
+  const openCo = _coCache.filter(c => !_coDoneStatuses.includes(c.Status));
+  document.getElementById('pln-co').innerHTML = '<option value="">-- ไม่อ้างอิง CO (ผลิตสต็อกล่วงหน้า) --</option>' + openCo.map(c => `<option value="${esc(c.Order_ID)}">${esc(c.Order_ID)} — ${esc(c.CustomerName)}</option>`).join('');
+  new bootstrap.Modal(document.getElementById('planModal')).show();
+}
+async function planModalSave() {
+  _modalClearErrors(['pln-qty']);
+  const qty = parseFloat(document.getElementById('pln-qty').value);
+  if (!qty || qty <= 0) { _modalShowError('pln-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  const payload = {
+    MO_ID: genId('MO'), FG_ID: document.getElementById('pln-fg').value, Order_ID: document.getElementById('pln-co').value || null,
+    PlanQty: qty, PlanDate: document.getElementById('pln-date').value || todayStr(), Shift: document.getElementById('pln-shift').value, Status: 'วางแผน',
+  };
+  const ok = await sbRun(_sb.from('manufacturing_orders').insert(payload), 'สร้าง MO ไม่สำเร็จ');
+  if (ok === null) return;
+  bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
+  planLoad();
+}
+async function planDelete(id) {
+  const c = await Swal.fire({ title: 'ลบ MO นี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  if (await sbDelete('manufacturing_orders', 'MO_ID', id)) planLoad();
+}
+
+// ═══════════════════════════════════════════════════════════
+// ISSUE PRODUCTION — เบิกวัตถุดิบเข้าสาย ตาม BOM × PlanQty
+// ═══════════════════════════════════════════════════════════
+async function issueLoad() {
+  if (!_planCache.length) await planLoad();
+  if (!_bomCache.length) await bomLoad();
+  if (!_stockRmCache.length) await stockRmLoad();
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const pending = _planCache.filter(p => p.Status === 'วางแผน');
+  document.getElementById('issueMoTableBody').innerHTML = pending.map(p => `
+    <tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${p.PlanQty}</td><td>${fmtDate(p.PlanDate)}</td>
+    <td><button class="btn btn-sm btn-success" onclick="issueOpenForm('${p.MO_ID}')"><i class="fa-solid fa-dolly me-1"></i>เบิกวัตถุดิบ</button></td></tr>`).join('')
+    || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มี MO รอเบิกวัตถุดิบ</td></tr>';
+
+  const hist = await sbRun(_sb.from('issue_production').select('*').order('IssueDate', { ascending: false }).limit(100), 'โหลดประวัติการเบิก') || [];
+  const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  document.getElementById('issueHistTableBody').innerHTML = hist.map(h => `
+    <tr><td>${esc(h.Issue_ID)}</td><td>${esc(h.MO_ID)}</td><td>${esc(rmMap[h.RM_ID]?.RM_Name || h.RM_ID)}</td>
+    <td class="text-end">${h.ForQty != null ? _bomFmtQty(h.ForQty) : '-'}</td>
+    <td class="text-end">${h.QtyBase != null ? _bomFmtQty(h.QtyBase) : '-'}</td>
+    <td class="text-end">${h.ScrapPct ? _bomFmtQty(h.ScrapPct) + '%' : '-'}</td>
+    <td class="text-end fw-semibold">${_bomFmtQty(h.QtyIssued)} ${esc(h.Unit||'')}</td><td>${fmtDate(h.IssueDate)}</td></tr>`).join('')
+    || '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+}
+// ขั้นที่ 2 ของโฟลผลิตลูกประคบ: เตรียมวัตถุดิบเข้าไลน์ — จำนวนลูกตั้งต้นจาก MO.PlanQty (แก้ได้) แล้วคำนวณ
+// ต้องเตรียม = QtyPerUnit × จำนวน ÷ (1 − %Scrap รวมของขั้นตอนเตรียมใน BOM/100) — สูตรกลางอยู่ที่ _bomWithScrap
+let _issueMoId = null;
+let _issueNeed = [];
+function issueOpenForm(moId) {
+  const mo = _planCache.find(p => p.MO_ID === moId);
+  const fg = _fgMasterCache.find(f => f.FG_ID === mo.FG_ID);
+  const need = _bomCache.filter(b => b.FG_ID === mo.FG_ID).map(b => {
+    const rm = _rmMasterCache.find(r => r.RM_ID === b.RM_ID);
+    const stock = _stockRmCache.find(s => s.RM_ID === b.RM_ID);
+    const steps = _bomScrapSteps(b);
+    return { RM_ID: b.RM_ID, name: rm?.RM_Name || b.RM_ID, category: rm?.Category, unit: b.Unit,
+      qtyPerUnit: parseFloat(b.QtyPerUnit) || 0, steps, scrapPct: _bomScrapTotal(steps), available: parseFloat(stock?.Qty) || 0 };
+  }).sort((a, b) => (_BOM_CAT_ORDER[a.category] ?? 0) - (_BOM_CAT_ORDER[b.category] ?? 0));
+  if (!need.length) { Swal.fire('ยังไม่มีสูตร', 'สินค้านี้ยังไม่มีสูตรการผลิต (BOM) กรุณาตั้งค่าก่อน', 'info'); return; }
+  _issueMoId = moId;
+  _issueNeed = need;
+  document.getElementById('issue-title').textContent = `เตรียมวัตถุดิบเข้าไลน์ผลิต — ${moId}`;
+  document.getElementById('issue-forqty').value = mo.PlanQty;
+  document.getElementById('issue-forqty-unit').textContent = fg?.Unit || 'หน่วย';
+  document.getElementById('issue-forqty-err').textContent = '';
+  document.getElementById('issue-info').innerHTML = `สินค้า: <b>${esc(fg?.FG_Name || mo.FG_ID)}</b> · แผนใน MO: ${_bomFmtQty(mo.PlanQty)} ${esc(fg?.Unit || '')}<br>
+    ช่อง "เบิกจริง" ตั้งต้นเท่ากับ "ต้องเตรียม (รวม Scrap)" — แก้ได้ถ้าเตรียมจริงต่างจากนี้ (สต็อกตัดตามช่องเบิกจริง)`;
+  document.getElementById('issue-rows').innerHTML = need.map((n, i) => `
+    <tr>
+      <td><div class="fw-semibold">${esc(n.name)}</div><div>${_bomCatBadge(n.category)}</div></td>
+      <td class="text-end" id="issue-base-${i}"></td>
+      <td>${n.category === 'แพ็คเกจจิ้ง' ? '<span class="text-muted">—</span>' : _bomScrapChips(n.steps)}
+        ${n.scrapPct ? `<div class="small text-muted">รวม ${_bomFmtQty(n.scrapPct)}%</div>` : ''}</td>
+      <td class="text-end fw-semibold" id="issue-req-${i}"></td>
+      <td class="text-end" id="issue-avail-${i}"></td>
+      <td><div class="input-group input-group-sm">
+        <input type="number" step="any" min="0" class="form-control" id="issue-qty-${i}" oninput="issueCheckStock(${i})">
+        <span class="input-group-text">${esc(n.unit)}</span></div></td>
+    </tr>`).join('');
+  issueRecalc();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('issueModal')).show();
+}
+// เปลี่ยนจำนวนลูก → คำนวณทุกแถวใหม่ และรีเซ็ตช่องเบิกจริงเป็นค่าที่คำนวณได้
+function issueRecalc() {
+  const forQty = parseFloat(document.getElementById('issue-forqty').value) || 0;
+  _issueNeed.forEach((n, i) => {
+    n.base = Math.round(n.qtyPerUnit * forQty * 10000) / 10000;
+    n.required = _bomWithScrap(n.qtyPerUnit * forQty, n.scrapPct);
+    document.getElementById(`issue-base-${i}`).textContent = `${_bomFmtQty(n.base)} ${n.unit}`;
+    document.getElementById(`issue-req-${i}`).innerHTML = `${_bomFmtQty(n.required)} ${esc(n.unit)}`
+      + (n.scrapPct ? `<div class="small text-muted fw-normal">${_bomScrapFormula(n.base, n.scrapPct)}</div>` : '');
+    document.getElementById(`issue-qty-${i}`).value = n.required;
+    issueCheckStock(i);
+  });
+}
+function issueCheckStock(i) {
+  const n = _issueNeed[i];
+  const qty = parseFloat(document.getElementById(`issue-qty-${i}`).value) || 0;
+  const short = qty > n.available;
+  document.getElementById(`issue-avail-${i}`).innerHTML = `${_bomFmtQty(n.available)} ${esc(n.unit)}`
+    + (short ? `<div class="small text-danger">ขาด ${_bomFmtQty(Math.round((qty - n.available) * 10000) / 10000)}</div>` : '');
+}
+async function issueModalSave() {
+  const forQty = parseFloat(document.getElementById('issue-forqty').value);
+  if (!(forQty > 0)) { document.getElementById('issue-forqty-err').textContent = 'กรอกจำนวนที่จะผลิตมากกว่า 0'; return; }
+  const rows = _issueNeed.map((n, i) => ({ ...n, issueQty: parseFloat(document.getElementById(`issue-qty-${i}`).value) || 0 }))
+    .filter(n => n.issueQty > 0);
+  if (!rows.length) { Swal.fire('ไม่มีรายการเบิก', 'กรอกจำนวนเบิกอย่างน้อย 1 รายการ', 'warning'); return; }
+  const short = rows.filter(n => n.issueQty > n.available);
+  if (short.length) {
+    const c = await Swal.fire({ icon: 'warning', title: 'สต็อกไม่พอบางรายการ',
+      html: short.map(n => `${esc(n.name)}: เบิก ${_bomFmtQty(n.issueQty)} / คงเหลือ ${_bomFmtQty(n.available)} ${esc(n.unit)}`).join('<br>') + '<br><br>ยืนยันเบิกต่อ? (สต็อกจะติดลบ)',
+      showCancelButton: true, confirmButtonText: 'เบิกต่อ', cancelButtonText: 'กลับไปแก้' });
+    if (!c.isConfirmed) return;
+  }
+  // insert ทุกแถวในคำสั่งเดียว (all-or-nothing) ก่อน แล้วค่อยตัดสต็อก — กันกรณีบันทึกไม่สำเร็จแต่สต็อกถูกตัดไปแล้ว
+  const ok = await sbRun(_sb.from('issue_production').insert(rows.map(n => ({
+    Issue_ID: genId('ISS'), MO_ID: _issueMoId, RM_ID: n.RM_ID, QtyIssued: n.issueQty, Unit: n.unit,
+    ForQty: forQty, QtyBase: n.base, ScrapPct: n.scrapPct, IssueDate: todayStr(),
+  }))), 'บันทึกการเบิกไม่สำเร็จ');
+  if (ok === null) return;
+  for (const n of rows) await adjustStockRM(n.RM_ID, -n.issueQty);
+  await sbRun(_sb.from('manufacturing_orders').update({ Status: 'เบิกวัตถุดิบแล้ว' }).eq('MO_ID', _issueMoId), 'อัปเดตสถานะ MO ไม่สำเร็จ');
+  bootstrap.Modal.getInstance(document.getElementById('issueModal')).hide();
+  await Promise.all([planLoad(), stockRmLoad()]);
+  issueLoad();
+}
+
+// ═══════════════════════════════════════════════════════════
+// PRODUCTION RECORD
+// ═══════════════════════════════════════════════════════════
+async function prodRecordLoad() {
+  if (!_planCache.length) await planLoad();
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const ready = _planCache.filter(p => p.Status === 'เบิกวัตถุดิบแล้ว');
+  document.getElementById('prodReadyTableBody').innerHTML = ready.map(p => `
+    <tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${p.PlanQty}</td><td>${fmtDate(p.PlanDate)}</td>
+    <td><button class="btn btn-sm btn-success" onclick="prodRecordOpenForm('${p.MO_ID}')"><i class="fa-solid fa-industry me-1"></i>บันทึกผลิต</button></td></tr>`).join('')
+    || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มี MO รอบันทึกผลิต</td></tr>';
+
+  const hist = await sbRun(_sb.from('production_records').select('*').order('MfgDate', { ascending: false }).limit(100), 'โหลดประวัติการผลิต') || [];
+  window._prodRecordCache = hist;
+  document.getElementById('prodHistTableBody').innerHTML = hist.map(h => `
+    <tr><td>${esc(h.Prod_ID)}</td><td>${esc(fgMap[h.FG_ID]?.FG_Name || h.FG_ID)}</td><td>${h.QtyProduced}</td><td>${esc(h.ProdLot)}</td><td>${fmtDate(h.MfgDate)}</td><td>${fmtDate(h.ExpDate)}</td>
+    <td><button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+    || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+}
+let _prodMoId = null;
+function prodRecordOpenForm(moId) {
+  const mo = _planCache.find(p => p.MO_ID === moId);
+  const fg = _fgMasterCache.find(f => f.FG_ID === mo.FG_ID);
+  const mfgDefault = todayStr();
+  const expDefault = addDays(mfgDefault, fg?.ShelfLifeDays ?? 5);
+  _prodMoId = moId;
+  window._prShelfDays = fg?.ShelfLifeDays ?? 5;
+  _modalClearErrors(['pr-qty', 'pr-lot']);
+  document.getElementById('pr-title').textContent = `บันทึกผลิต ${moId}`;
+  document.getElementById('pr-qty').value = mo.PlanQty;
+  document.getElementById('pr-lot').value = genId('LOT');
+  document.getElementById('pr-mfg').value = mfgDefault;
+  document.getElementById('pr-exp').value = expDefault;
+  document.getElementById('pr-by').value = '';
+  new bootstrap.Modal(document.getElementById('prodRecordModal')).show();
+}
+async function prodRecordModalSave() {
+  _modalClearErrors(['pr-qty', 'pr-lot']);
+  const qty = parseFloat(document.getElementById('pr-qty').value);
+  const lot = document.getElementById('pr-lot').value.trim();
+  if (!qty || qty <= 0) { _modalShowError('pr-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  if (!lot) { _modalShowError('pr-lot', 'กรอก Lot'); return; }
+  const payload = {
+    Prod_ID: genId('PR'), MO_ID: _prodMoId, FG_ID: _planCache.find(p => p.MO_ID === _prodMoId).FG_ID, QtyProduced: qty, ProdLot: lot,
+    MfgDate: document.getElementById('pr-mfg').value || todayStr(), ExpDate: document.getElementById('pr-exp').value || todayStr(),
+    ProducedBy: document.getElementById('pr-by').value.trim() || null,
+  };
+  const ok = await sbRun(_sb.from('production_records').insert(payload), 'บันทึกผลิตไม่สำเร็จ');
+  if (ok === null) return;
+  await sbRun(_sb.from('manufacturing_orders').update({ Status: 'ผลิตแล้ว' }).eq('MO_ID', _prodMoId), 'อัปเดตสถานะ MO ไม่สำเร็จ');
+  bootstrap.Modal.getInstance(document.getElementById('prodRecordModal')).hide();
+  await planLoad();
+  prodRecordLoad();
+}
+async function prodRecordDelete(id) {
+  const c = await Swal.fire({ title: 'ลบรายการนี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  if (await sbDelete('production_records', 'Prod_ID', id)) prodRecordLoad();
+}
+
+// ═══════════════════════════════════════════════════════════
+// FG RECEIVE
+// ═══════════════════════════════════════════════════════════
+async function fgReceiveLoad() {
+  if (!window._prodRecordCache) await prodRecordLoad();
+  const fgReceived = await sbRun(_sb.from('fg_receive').select('*').order('ReceiveDate', { ascending: false }), 'โหลดประวัติรับ FG') || [];
+  const receivedProdIds = new Set(fgReceived.map(r => r.Prod_ID));
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const ready = (window._prodRecordCache||[]).filter(p => !receivedProdIds.has(p.Prod_ID));
+  document.getElementById('fgReceiveReadyTableBody').innerHTML = ready.map(p => `
+    <tr><td>${esc(p.Prod_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${esc(p.ProdLot)}</td><td>${p.QtyProduced}</td><td>${fmtDate(p.ExpDate)}</td>
+    <td><button class="btn btn-sm btn-success" onclick="fgReceiveOpenForm('${p.Prod_ID}')"><i class="fa-solid fa-box-open me-1"></i>รับเข้าคลัง</button></td></tr>`).join('')
+    || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีรายการรอรับเข้าคลัง</td></tr>';
+  document.getElementById('fgReceiveHistTableBody').innerHTML = fgReceived.map(r => `
+    <tr><td>${esc(r.FGReceive_ID)}</td><td>${esc(fgMap[r.FG_ID]?.FG_Name || r.FG_ID)}</td><td>${esc(r.Lot)}</td><td>${r.Qty}</td><td>${fmtDate(r.ReceiveDate)}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+}
+let _fgReceiveProdId = null;
+function fgReceiveOpenForm(prodId) {
+  const p = (window._prodRecordCache||[]).find(x => x.Prod_ID === prodId);
+  _fgReceiveProdId = prodId;
+  _modalClearErrors(['fgr-qty']);
+  document.getElementById('fgr-title').textContent = `รับ FG เข้าคลัง (${prodId})`;
+  document.getElementById('fgr-qty').value = p.QtyProduced;
+  document.getElementById('fgr-date').value = todayStr();
+  new bootstrap.Modal(document.getElementById('fgReceiveModal')).show();
+}
+async function fgReceiveModalSave() {
+  _modalClearErrors(['fgr-qty']);
+  const qty = parseFloat(document.getElementById('fgr-qty').value);
+  if (!qty || qty <= 0) { _modalShowError('fgr-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  const p = (window._prodRecordCache||[]).find(x => x.Prod_ID === _fgReceiveProdId);
+  const payload = {
+    FGReceive_ID: genId('FGR'), Prod_ID: _fgReceiveProdId, FG_ID: p.FG_ID, Lot: p.ProdLot, Qty: qty,
+    MfgDate: p.MfgDate, ExpDate: p.ExpDate, ReceiveDate: document.getElementById('fgr-date').value || todayStr(),
+  };
+  const ok = await sbRun(_sb.from('fg_receive').insert(payload), 'รับ FG เข้าคลังไม่สำเร็จ');
+  if (ok === null) return;
+  await adjustStockFG(p.FG_ID, p.ProdLot, qty, p.MfgDate, p.ExpDate);
+  bootstrap.Modal.getInstance(document.getElementById('fgReceiveModal')).hide();
+  fgReceiveLoad();
+}
+
+// ═══════════════════════════════════════════════════════════
+// STOCK FG
+// ═══════════════════════════════════════════════════════════
+let _stockFgCache = [];
+async function stockFgLoad() {
+  if (!_fgMasterCache.length) await fgMasterLoad();
+  _stockFgCache = await sbRun(_sb.from('stock_fg').select('*').order('ExpDate'), 'โหลดสต็อก FG') || [];
+  stockFgRenderTable();
+}
+function stockFgRenderTable() {
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const q = (document.getElementById('stockFgSearch').value || '').toLowerCase();
+  const rows = _stockFgCache.filter(s => !q || (fgMap[s.FG_ID]?.FG_Name||'').toLowerCase().includes(q) || (s.Lot||'').toLowerCase().includes(q));
+  document.getElementById('stockFgTableBody').innerHTML = rows.map(s => {
+    const d = s.ExpDate ? daysUntil(s.ExpDate) : null;
+    let statusHtml = badge('ปกติ','success');
+    if (d !== null) { if (d < 0) statusHtml = badge('หมดอายุแล้ว','danger'); else if (d <= EXPIRING_SOON_DAYS) statusHtml = badge(`ใกล้หมดอายุ (${d} วัน)`,'warning'); }
+    return `<tr><td>${esc(fgMap[s.FG_ID]?.FG_Name || s.FG_ID)}</td><td>${esc(s.Lot)}</td><td>${s.Qty}</td><td>${fmtDate(s.MfgDate)}</td><td>${fmtDate(s.ExpDate)}</td><td>${statusHtml}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีสต็อก</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// FG WITHDRAW / DELIVERY
+// ═══════════════════════════════════════════════════════════
+async function fgoutLoad() {
+  if (!_coCache.length) await coLoad();
+  if (!_stockFgCache.length) await stockFgLoad();
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const openCo = _coCache.filter(c => !_coDoneStatuses.includes(c.Status));
+  document.getElementById('fgoutCoTableBody').innerHTML = openCo.map(c => {
+    const remain = c.OrderQty - coWithdrawnQty(c.Order_ID);
+    return `<tr><td>${esc(c.Order_ID)}</td><td>${esc(c.CustomerName)}</td><td>${esc(fgMap[c.FG_ID]?.FG_Name || c.FG_ID)}</td><td>${remain}</td><td>${badge(c.Status, CO_STATUS_BADGE[c.Status])}</td>
+    <td>${remain > 0 ? `<button class="btn btn-sm btn-success" onclick="fgoutOpenForm('${c.Order_ID}')"><i class="fa-solid fa-dolly me-1"></i>เบิกสินค้า</button>` : ''}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีคำสั่งซื้อค้างส่ง</td></tr>';
+
+  const deliveries = await sbRun(_sb.from('delivery').select('*').order('CreatedAt', { ascending: false }).limit(100), 'โหลดรายการจัดส่ง') || [];
+  const withdraws = await sbRun(_sb.from('fg_withdraw').select('*'), 'โหลดรายการเบิก') || [];
+  const wdMap = Object.fromEntries(withdraws.map(w => [w.WD_ID, w]));
+  document.getElementById('deliveryTableBody').innerHTML = deliveries.map(d => {
+    const wd = wdMap[d.WD_Ref];
+    const label = wd ? `${esc(fgMap[wd.FG_ID]?.FG_Name || wd.FG_ID)} / ${esc(wd.Lot)}` : '-';
+    let nextBtn = '';
+    if (d.Status === 'รอจัดส่ง') nextBtn = `<button class="btn btn-sm btn-outline-primary" onclick="deliveryAdvance('${d.Delivery_ID}','จัดส่งแล้ว')">จัดส่งแล้ว</button>`;
+    else if (d.Status === 'จัดส่งแล้ว') nextBtn = `<button class="btn btn-sm btn-outline-success" onclick="deliveryAdvance('${d.Delivery_ID}','ส่งถึงแล้ว')">ส่งถึงแล้ว</button>`;
+    return `<tr><td>${esc(d.Delivery_ID)}</td><td>${esc(d.Order_ID||'-')}</td><td>${label}</td><td>${d.QtyDelivered}</td><td>${badge(d.Status, DELIVERY_STATUS_BADGE[d.Status])}</td><td>${nextBtn}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีรายการจัดส่ง</td></tr>';
+}
+let _fgoutOrderId = null;
+let _fgoutLots = [];
+function fgoutOpenForm(orderId) {
+  const co = _coCache.find(c => c.Order_ID === orderId);
+  const remain = co.OrderQty - coWithdrawnQty(orderId);
+  const lots = _stockFgCache.filter(s => s.FG_ID === co.FG_ID && s.Qty > 0).sort((a,b) => new Date(a.ExpDate) - new Date(b.ExpDate));
+  if (!lots.length) { Swal.fire('ไม่มีสต็อก', 'สินค้านี้ไม่มีสต็อกคงเหลือให้เบิก', 'info'); return; }
+  _fgoutOrderId = orderId;
+  _fgoutLots = lots;
+  _modalClearErrors(['fgo-qty']);
+  document.getElementById('fgo-title').textContent = `เบิกสินค้าสำหรับ ${orderId}`;
+  document.getElementById('fgo-hint').textContent = `ค้างส่ง ${remain} หน่วย — ระบบเรียงล็อตตามวันหมดอายุก่อน (FEFO)`;
+  document.getElementById('fgo-lot').innerHTML = lots.map(l => `<option value="${esc(l.Lot)}">${esc(l.Lot)} — คงเหลือ ${l.Qty} · หมดอายุ ${fmtDate(l.ExpDate)}</option>`).join('');
+  document.getElementById('fgo-qty').value = Math.min(remain, lots[0].Qty);
+  new bootstrap.Modal(document.getElementById('fgoutModal')).show();
+}
+async function fgoutModalSave() {
+  _modalClearErrors(['fgo-qty']);
+  const qty = parseFloat(document.getElementById('fgo-qty').value);
+  const lot = document.getElementById('fgo-lot').value;
+  const lotRow = _fgoutLots.find(l => l.Lot === lot);
+  if (!qty || qty <= 0) { _modalShowError('fgo-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  if (qty > lotRow.Qty) { _modalShowError('fgo-qty', 'จำนวนเกินสต็อกคงเหลือของล็อตนี้'); return; }
+  const orderId = _fgoutOrderId;
+  const co = _coCache.find(c => c.Order_ID === orderId);
+  const wdId = genId('WD');
+  const ok = await sbRun(_sb.from('fg_withdraw').insert({ WD_ID: wdId, Order_ID: orderId, FG_ID: co.FG_ID, Lot: lot, Qty: qty, WithdrawDate: todayStr() }), 'บันทึกการเบิกไม่สำเร็จ');
+  if (ok === null) return;
+  await adjustStockFG(co.FG_ID, lot, -qty);
+  await sbRun(_sb.from('delivery').insert({ Delivery_ID: genId('DEL'), WD_Ref: wdId, Order_ID: orderId, QtyDelivered: qty, Status: 'รอจัดส่ง' }), 'สร้างรายการจัดส่งไม่สำเร็จ');
+
+  const alreadyWithdrawn = coWithdrawnQty(orderId) + qty;
+  let newStatus = co.Status;
+  if (co.Status === 'สั่งผลิตแล้ว') newStatus = 'กำลังเบิก';
+  if (alreadyWithdrawn < co.OrderQty && co.Status !== 'ส่งบางส่วน') newStatus = 'ส่งบางส่วน';
+  await sbRun(_sb.from('customer_orders').update({ Status: newStatus }).eq('Order_ID', orderId), 'อัปเดตสถานะคำสั่งซื้อไม่สำเร็จ');
+
+  bootstrap.Modal.getInstance(document.getElementById('fgoutModal')).hide();
+  await Promise.all([coLoad(), stockFgLoad()]);
+  fgoutLoad();
+}
+async function deliveryAdvance(deliveryId, newStatus) {
+  const patch = { Status: newStatus };
+  if (newStatus === 'ส่งถึงแล้ว') patch.DeliveryDate = todayStr();
+  const delivered = await sbRun(_sb.from('delivery').update(patch).eq('Delivery_ID', deliveryId).select(), 'อัปเดตสถานะจัดส่งไม่สำเร็จ');
+  if (!delivered) return;
+  if (newStatus === 'ส่งถึงแล้ว') {
+    const d = delivered[0];
+    if (d.Order_ID) {
+      const allForOrder = await sbRun(_sb.from('delivery').select('*').eq('Order_ID', d.Order_ID).eq('Status', 'ส่งถึงแล้ว'), 'ตรวจสอบยอดจัดส่ง');
+      const sumDelivered = (allForOrder||[]).reduce((s,x) => s + Number(x.QtyDelivered), 0);
+      const co = _coCache.find(c => c.Order_ID === d.Order_ID);
+      if (co && sumDelivered >= co.OrderQty) {
+        await sbRun(_sb.from('customer_orders').update({ Status: 'ส่งสำเร็จ', CompletedAt: new Date().toISOString() }).eq('Order_ID', d.Order_ID), 'ปิดคำสั่งซื้อไม่สำเร็จ');
+      }
+    }
+  }
+  await coLoad();
+  fgoutLoad();
+}
+
+// ═══════════════════════════════════════════════════════════
+// STOCK CARD
+// ═══════════════════════════════════════════════════════════
+async function stockCardLoad() {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  if (!_fgMasterCache.length) await fgMasterLoad();
+  stockCardLoadItems();
+}
+function stockCardLoadItems() {
+  const type = document.getElementById('scType').value;
+  const sel = document.getElementById('scItem');
+  let items;
+  if (type === 'fg') items = _fgMasterCache.map(f => ({ id: f.FG_ID, name: f.FG_Name }));
+  else {
+    const cat = type === 'pkg' ? 'แพ็คเกจจิ้ง' : 'วัตถุดิบ';
+    items = _rmMasterCache.filter(r => (r.Category || 'วัตถุดิบ') === cat).map(r => ({ id: r.RM_ID, name: r.RM_Name }));
+  }
+  sel.innerHTML = items.map(i => `<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('');
+  stockCardRender();
+}
+async function stockCardRender() {
+  const type = document.getElementById('scType').value;
+  const id = document.getElementById('scItem').value;
+  const tbody = document.getElementById('stockCardTableBody');
+  if (!id) { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>'; return; }
+  let entries = [];
+  if (type === 'fg') {
+    const [recv, wd, waste] = await Promise.all([
+      sbRun(_sb.from('fg_receive').select('*').eq('FG_ID', id), 'โหลด Stock Card'),
+      sbRun(_sb.from('fg_withdraw').select('*').eq('FG_ID', id), 'โหลด Stock Card'),
+      sbRun(_sb.from('waste_log').select('*').eq('FG_ID', id).eq('ItemType', 'FG'), 'โหลด Stock Card'),
+    ]);
+    entries = [
+      ...(recv||[]).map(r => ({ date: r.ReceiveDate, label: 'รับเข้าคลัง', ref: r.FGReceive_ID, in: r.Qty, out: 0 })),
+      ...(wd||[]).map(r => ({ date: r.WithdrawDate, label: 'เบิกส่งลูกค้า', ref: r.WD_ID, in: 0, out: r.Qty })),
+      ...(waste||[]).map(r => ({ date: r.WasteDate, label: 'ของเสีย', ref: r.Waste_ID, in: 0, out: r.Qty })),
+    ];
+  } else {
+    const [recv, iss, waste] = await Promise.all([
+      sbRun(_sb.from('rm_receive').select('*').eq('RM_ID', id), 'โหลด Stock Card'),
+      sbRun(_sb.from('issue_production').select('*').eq('RM_ID', id), 'โหลด Stock Card'),
+      sbRun(_sb.from('waste_log').select('*').eq('RM_ID', id).eq('ItemType', 'MATERIAL'), 'โหลด Stock Card'),
+    ]);
+    entries = [
+      ...(recv||[]).map(r => ({ date: r.ReceiveDate, label: 'รับเข้าคลัง', ref: r.Receive_ID, in: r.Qty, out: 0 })),
+      ...(iss||[]).map(r => ({ date: r.IssueDate, label: 'เบิกเข้าสาย', ref: r.Issue_ID, in: 0, out: r.QtyIssued })),
+      ...(waste||[]).map(r => ({ date: r.WasteDate, label: 'ของเสีย', ref: r.Waste_ID, in: 0, out: r.Qty })),
+    ];
+  }
+  entries.sort((a,b) => new Date(a.date) - new Date(b.date));
+  let balance = 0;
+  const rowsHtml = entries.map(e => { balance += e.in - e.out; return `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.label)}</td><td>${esc(e.ref)}</td><td>${e.in || '-'}</td><td>${e.out || '-'}</td><td>${balance}</td></tr>`; }).join('');
+  tbody.innerHTML = rowsHtml || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีการเคลื่อนไหว</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// WASTE — บันทึกของเสีย, ตัดสต็อกทันที (stock_balance สำหรับวัตถุดิบ/แพ็คเกจจิ้ง, stock_fg ตาม Lot สำหรับสินค้า)
+// ═══════════════════════════════════════════════════════════
+let _wasteCache = [];
+async function wasteLoad() {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  if (!_fgMasterCache.length) await fgMasterLoad();
+  _wasteCache = await sbRun(_sb.from('waste_log').select('*').order('WasteDate', { ascending: false }), 'โหลดประวัติของเสีย') || [];
+  wasteRenderTable();
+}
+function wasteRenderTable() {
+  const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  document.getElementById('wasteTableBody').innerHTML = _wasteCache.map(w => {
+    const isFg = w.ItemType === 'FG';
+    const itemName = isFg ? (fgMap[w.FG_ID]?.FG_Name || w.FG_ID) + (w.Lot ? ` (Lot ${w.Lot})` : '') : (rmMap[w.RM_ID]?.RM_Name || w.RM_ID);
+    const typeLabel = isFg ? 'สินค้าสำเร็จรูป' : (rmMap[w.RM_ID]?.Category || 'วัตถุดิบ');
+    return `<tr><td>${esc(w.Waste_ID)}</td><td>${badge(typeLabel, isFg ? 'primary' : (typeLabel==='แพ็คเกจจิ้ง'?'info':'secondary'))}</td><td>${esc(itemName)}</td><td>${w.Qty} ${esc(w.Unit||'')}</td><td>${esc(w.Reason)}</td><td>${fmtDate(w.WasteDate)}</td>
+    <td><button class="btn btn-sm btn-outline-danger" onclick="wasteDelete('${w.Waste_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+  }).join('') || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
+}
+let _wasteForm = null;
+function wasteOpenForm() {
+  const matOpts = _rmMasterCache.map(r => `<option value="M:${esc(r.RM_ID)}">[${esc(r.Category||'วัตถุดิบ')}] ${esc(r.RM_Name)}</option>`).join('');
+  const fgOpts = _fgMasterCache.map(f => `<option value="F:${esc(f.FG_ID)}">[สินค้าสำเร็จรูป] ${esc(f.FG_Name)}</option>`).join('');
+  if (!matOpts && !fgOpts) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบหรือสินค้าก่อน', 'info'); return; }
+  _modalClearErrors(['wst-qty', 'wst-reason']);
+  document.getElementById('wst-item').innerHTML = matOpts + fgOpts;
+  document.getElementById('wst-qty').value = '';
+  document.getElementById('wst-reason').value = '';
+  document.getElementById('wst-date').value = todayStr();
+  new bootstrap.Modal(document.getElementById('wasteModal')).show();
+}
+async function wasteModalNext() {
+  _modalClearErrors(['wst-qty', 'wst-reason']);
+  const qty = parseFloat(document.getElementById('wst-qty').value);
+  const reason = document.getElementById('wst-reason').value.trim();
+  if (!qty || qty <= 0) { _modalShowError('wst-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  if (!reason) { _modalShowError('wst-reason', 'กรอกสาเหตุ'); return; }
+  const [kind, itemId] = document.getElementById('wst-item').value.split(':');
+  _wasteForm = { kind, itemId, qty, reason, date: document.getElementById('wst-date').value || todayStr() };
+
+  if (kind === 'M') {
+    const rm = _rmMasterCache.find(r => r.RM_ID === itemId);
+    const payload = { Waste_ID: genId('WS'), ItemType: 'MATERIAL', RM_ID: itemId, Qty: qty, Unit: rm?.Unit || '', Reason: reason, WasteDate: _wasteForm.date };
+    const ok = await sbRun(_sb.from('waste_log').insert(payload), 'บันทึกของเสียไม่สำเร็จ');
+    if (ok === null) return;
+    await adjustStockRM(itemId, -qty);
+    bootstrap.Modal.getInstance(document.getElementById('wasteModal')).hide();
+    await stockRmLoad();
+    wasteLoad();
+  } else {
+    if (!_stockFgCache.length) await stockFgLoad();
+    const lots = _stockFgCache.filter(s => s.FG_ID === itemId && s.Qty > 0).sort((a,b) => new Date(a.ExpDate) - new Date(b.ExpDate));
+    if (!lots.length) { Swal.fire('ไม่มีสต็อก', 'สินค้านี้ไม่มีสต็อกคงเหลือให้ตัดเป็นของเสีย', 'info'); return; }
+    _wasteForm.lots = lots;
+    document.getElementById('wstl-lot').innerHTML = lots.map(l => `<option value="${esc(l.Lot)}">${esc(l.Lot)} — คงเหลือ ${l.Qty} · หมดอายุ ${fmtDate(l.ExpDate)}</option>`).join('');
+    _modalClearErrors(['wstl-lot']);
+    bootstrap.Modal.getInstance(document.getElementById('wasteModal')).hide();
+    new bootstrap.Modal(document.getElementById('wasteLotModal')).show();
+  }
+}
+async function wasteLotModalSave() {
+  _modalClearErrors(['wstl-lot']);
+  const lot = document.getElementById('wstl-lot').value;
+  const lotRow = _wasteForm.lots.find(l => l.Lot === lot);
+  if (_wasteForm.qty > lotRow.Qty) { _modalShowError('wstl-lot', 'จำนวนเกินสต็อกคงเหลือของล็อตนี้'); return; }
+  const payload = { Waste_ID: genId('WS'), ItemType: 'FG', FG_ID: _wasteForm.itemId, Lot: lot, Qty: _wasteForm.qty, Unit: _fgMasterCache.find(f => f.FG_ID === _wasteForm.itemId)?.Unit || '', Reason: _wasteForm.reason, WasteDate: _wasteForm.date };
+  const ok = await sbRun(_sb.from('waste_log').insert(payload), 'บันทึกของเสียไม่สำเร็จ');
+  if (ok === null) return;
+  await adjustStockFG(_wasteForm.itemId, lot, -_wasteForm.qty);
+  bootstrap.Modal.getInstance(document.getElementById('wasteLotModal')).hide();
+  await stockFgLoad();
+  wasteLoad();
+}
+async function wasteDelete(id) {
+  const w = _wasteCache.find(x => x.Waste_ID === id);
+  const c = await Swal.fire({ title: 'ลบรายการของเสียนี้?', text: 'สต็อกจะถูกคืนกลับตามจำนวนนี้', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  if (await sbDelete('waste_log', 'Waste_ID', id)) {
+    if (w.ItemType === 'FG') { await adjustStockFG(w.FG_ID, w.Lot, w.Qty); await stockFgLoad(); }
+    else { await adjustStockRM(w.RM_ID, w.Qty); await stockRmLoad(); }
+    wasteLoad();
+  }
+}
+</script>
+</body>
+</html>
