@@ -112,7 +112,8 @@ body.role-operator [onclick*="Delete("] { display: none !important; }
 .login-card .login-bar { height: 3px; border-radius: 2px; margin: 0 0 18px; background: linear-gradient(90deg, var(--primary-blue), var(--brand-blue), var(--accent-pink)); }
 .login-card h3 { color: var(--primary-blue); font-weight: 700; margin-bottom: 2px; }
 .login-card .sub { color: #64748b; font-size: .82rem; margin-bottom: 20px; }
-.login-card .mb-2, .login-card button { text-align: left; }
+.login-card .mb-2, .login-card button, .login-card form { text-align: left; }
+.login-card { max-height: 94vh; overflow-y: auto; }
 #appShell { display: none; width: 100%; height: 100vh; }
 </style>
 </head>
@@ -124,18 +125,58 @@ body.role-operator [onclick*="Delete("] { display: none !important; }
     <img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
     <div class="login-bar"></div>
     <h3>BM Flow</h3>
-    <div class="sub">BLM Herbal MES — ระบบผลิตลูกประคบสด</div>
-    <div class="mb-2">
-      <label class="form-label">อีเมล</label>
-      <input type="email" id="loginEmail" class="form-control" placeholder="you@company.com">
+    <div class="sub">BLM Herbal MES — ระบบจัดการการผลิตสมุนไพร</div>
+
+    <!-- มุมมอง 1: เข้าสู่ระบบ -->
+    <div id="loginGateLoginView">
+      <div class="mb-2">
+        <label class="form-label">Username หรืออีเมล</label>
+        <input type="text" id="loginEmail" class="form-control" placeholder="เช่น Somch.K" autocomplete="username">
+      </div>
+      <div class="mb-2">
+        <label class="form-label">รหัสผ่าน</label>
+        <input type="password" id="loginPassword" class="form-control" placeholder="รหัสผ่าน" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginSubmit()">
+      </div>
+      <div id="loginError" class="text-danger small mb-2" style="display:none;"></div>
+      <button class="btn btn-success w-100" id="loginSubmitBtn" onclick="loginSubmit()">เข้าสู่ระบบ</button>
+      <div class="text-center small mt-3">
+        <a href="#" onclick="_loginGateShowSignup();return false;"><i class="fa-solid fa-user-plus me-1"></i>ยังไม่มีบัญชี? ขอรหัสเข้าใช้งาน</a>
+      </div>
     </div>
-    <div class="mb-2">
-      <label class="form-label">รหัสผ่าน</label>
-      <input type="password" id="loginPassword" class="form-control" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')loginSubmit()">
+
+    <!-- มุมมอง 2: ขอรหัส (ส่งคำขอให้แอดมิน ไม่ได้สร้างบัญชีทันที) -->
+    <div id="loginGateSignupView" style="display:none">
+      <div class="text-muted small mb-3 text-center">กรอกข้อมูลเพื่อส่งคำขอ — แอดมินจะติดต่อกลับพร้อม Username / รหัสผ่าน</div>
+      <form onsubmit="event.preventDefault(); signupRequestSubmit();">
+        <div class="row g-2">
+          <div class="col-6 mb-1">
+            <label class="form-label small">ชื่อจริง (อังกฤษ)<span class="text-danger">*</span></label>
+            <input type="text" id="signup-f-firstname" class="form-control form-control-sm" required placeholder="Somchai" pattern="[A-Za-z .'\-]+" title="ภาษาอังกฤษเท่านั้น">
+          </div>
+          <div class="col-6 mb-1">
+            <label class="form-label small">นามสกุล (อังกฤษ)<span class="text-danger">*</span></label>
+            <input type="text" id="signup-f-lastname" class="form-control form-control-sm" required placeholder="Kittiwat" pattern="[A-Za-z .'\-]+" title="ภาษาอังกฤษเท่านั้น">
+          </div>
+        </div>
+        <div class="mb-1">
+          <label class="form-label small">รหัสพนักงาน<span class="text-danger">*</span></label>
+          <input type="text" id="signup-f-employeeid" class="form-control form-control-sm" required>
+        </div>
+        <div class="mb-1">
+          <label class="form-label small">เบอร์โทร</label>
+          <input type="tel" id="signup-f-phone" class="form-control form-control-sm">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">อีเมลจริง (สำหรับติดต่อกลับ)<span class="text-danger">*</span></label>
+          <input type="email" id="signup-f-email" class="form-control form-control-sm" required autocomplete="email">
+        </div>
+        <div id="signupError" class="text-danger small mb-2" style="display:none"></div>
+        <button type="submit" id="signupSubmitBtn" class="btn btn-success w-100">ส่งคำขอ</button>
+      </form>
+      <div class="text-center small mt-3">
+        <a href="#" onclick="_loginGateShowLogin();return false;">← กลับไปเข้าสู่ระบบ</a>
+      </div>
     </div>
-    <div id="loginError" class="text-danger small mb-2" style="display:none;"></div>
-    <button class="btn btn-success w-100" id="loginSubmitBtn" onclick="loginSubmit()">เข้าสู่ระบบ</button>
-    <div class="text-center text-muted small mt-3">ขอบัญชีผู้ใช้จากผู้ดูแลระบบ (สร้างผ่าน Supabase Dashboard → Authentication)</div>
   </div>
 </div>
 
@@ -191,6 +232,7 @@ body.role-operator [onclick*="Delete("] { display: none !important; }
     <div id="navgroup-admin" style="display:none">
       <div class="nav-group-header" onclick="toggleNavGroup(this)"><span>ผู้ดูแลระบบ</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
       <ul class="nav flex-column nav-group-body">
+        <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('signupreq');return false;" id="navlink-signupreq"><i class="fa-solid fa-user-plus me-2"></i>คำขอสมัครใช้งาน <span class="badge text-bg-danger ms-1" id="signupreqNavBadge" style="display:none"></span></a></li>
         <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('userroles');return false;" id="navlink-userroles"><i class="fa-solid fa-user-shield me-2"></i>สิทธิ์การใช้งาน</a></li>
       </ul>
     </div>
@@ -413,6 +455,36 @@ body.role-operator [onclick*="Delete("] { display: none !important; }
     </div>
   </div>
 
+  <!-- ═══════════════ คำขอสมัครใช้งาน (แอดมินเท่านั้น) — จากปุ่ม "ขอรหัส" หน้า login ═══════════════ -->
+  <div class="page-view" id="page-signupreq">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-user-plus me-2"></i>คำขอสมัครใช้งาน</h4><div class="text-white-50 small">คำขอรหัสจากหน้า login — สร้างบัญชีที่ Supabase แล้วกด "สร้างแล้ว"</div></div>
+      <button class="btn btn-outline-light btn-sm" onclick="signupreqLoad()"><i class="fa-solid fa-rotate me-1"></i>รีเฟรช</button>
+    </div>
+    <div class="sticky-toolbar"><div class="d-flex gap-2 mb-2">
+      <select class="form-select w-auto" id="signupreqFilter" onchange="signupreqRender()">
+        <option value="รอตรวจสอบ">รอตรวจสอบ</option>
+        <option value="">ทั้งหมด</option>
+        <option value="สร้างแล้ว">สร้างแล้ว</option>
+        <option value="ปฏิเสธ">ปฏิเสธ</option>
+      </select>
+    </div></div>
+    <div class="scroll-content">
+      <div class="glass-card small">
+        <i class="fa-solid fa-circle-info me-1 text-primary"></i>
+        สร้างบัญชีที่ <a href="https://supabase.com/dashboard/project/mdoqkqvgkpnsmrybzbwn/auth/users" target="_blank" rel="noopener">Supabase → Authentication → Users</a> → Add user → Create new user
+        ด้วย <b>Email</b> และ <b>Password</b> ตามคอลัมน์ในตาราง และติ๊ก <b>Auto Confirm User</b> เสมอ
+        — พนักงาน login ด้วย <b>Username</b> ได้เลย (ไม่ต้องพิมพ์ @blminternal.com) · ผู้ใช้ใหม่จะเป็นระดับ "พนักงาน" อัตโนมัติ
+      </div>
+      <div class="glass-card p-0 overflow-hidden">
+        <div class="table-responsive"><table class="table table-hover mb-0">
+          <thead><tr><th>วันที่ขอ</th><th>ชื่อ-นามสกุล</th><th>Username</th><th>Email ที่ต้องสร้าง</th><th>Password เริ่มต้น</th><th>เบอร์โทร</th><th>อีเมลติดต่อ</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
+          <tbody id="signupreqTableBody"><tr><td colspan="9" class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังโหลด...</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══════════════ สิทธิ์การใช้งาน (แอดมินเท่านั้น) — แบบหน้า "จัดการผู้ใช้" ของ ProFlow ═══════════════ -->
   <div class="page-view" id="page-userroles">
     <div class="page-header d-flex justify-content-between align-items-start">
@@ -438,7 +510,7 @@ body.role-operator [onclick*="Delete("] { display: none !important; }
         <h6 class="mb-2"><i class="fa-solid fa-user-plus me-2"></i>วิธีเพิ่มผู้ใช้ใหม่ (ให้น้องในทีม)</h6>
         <ol class="small mb-0 ps-3">
           <li>เปิด <a href="https://supabase.com/dashboard/project/mdoqkqvgkpnsmrybzbwn/auth/users" target="_blank" rel="noopener">Supabase → Authentication → Users</a> → กด <b>Add user</b> → <b>Create new user</b></li>
-          <li>กรอกอีเมล + รหัสผ่าน และติ๊ก <b>Auto Confirm User</b> (ไม่งั้นจะ login ไม่ได้จนกว่าจะยืนยันอีเมล)</li>
+          <li>กรอกอีเมล + รหัสผ่าน และติ๊ก <b>Auto Confirm User</b> (ไม่งั้นจะ login ไม่ได้จนกว่าจะยืนยันอีเมล) — ถ้าน้องกด "ขอรหัส" มาแล้ว ดู Email/Password ที่ต้องใช้ได้ในหน้า <a href="#" onclick="showPage('signupreq');return false;">คำขอสมัครใช้งาน</a></li>
           <li>กลับมาหน้านี้กด <b>รีเฟรช</b> — ผู้ใช้ใหม่จะขึ้นเป็น <b>พนักงาน</b> อัตโนมัติ แล้วค่อยปรับสิทธิ์/ตั้งชื่อแสดงผล</li>
           <li>แจ้งอีเมล + รหัสผ่านให้น้องเอง (ระบบไม่ส่งอีเมลให้)</li>
         </ol>
@@ -984,15 +1056,55 @@ async function adjustStockFG(fgId, lot, deltaQty, mfgDate, expDate) {
 }
 
 // ── auth ──────────────────────────────────────────────────
+// ── Username / ขอรหัส (แบบ ProFlow) ──
+// Username = 5 ตัวแรกของชื่อ + "." + ตัวแรกของนามสกุล (Somchai Kittiwat → Somch.K)
+// บัญชีจริงใน Supabase = username ตัวพิมพ์เล็ก + LOGIN_EMAIL_DOMAIN (โดเมนเดียวกับบัญชีแอดมิน paoblm@blminternal.com)
+// ช่อง login รับได้ทั้ง Username (ไม่มี @ → เติมโดเมนให้) และอีเมลเต็ม
+const LOGIN_EMAIL_DOMAIN = '@blminternal.com';
+function _computeUsername(firstName, lastName) {
+  const f = (firstName || '').trim().replace(/\s+/g, '').slice(0, 5);
+  const l = (lastName || '').trim().slice(0, 1).toUpperCase();
+  return f && l ? `${f.charAt(0).toUpperCase()}${f.slice(1).toLowerCase()}.${l}` : '';
+}
+function _usernameToEmail(u) { return u.trim().toLowerCase() + LOGIN_EMAIL_DOMAIN; }
+function _loginGateShowSignup() {
+  document.getElementById('loginGateLoginView').style.display = 'none';
+  document.getElementById('loginGateSignupView').style.display = 'block';
+}
+function _loginGateShowLogin() {
+  document.getElementById('loginGateSignupView').style.display = 'none';
+  document.getElementById('loginGateLoginView').style.display = 'block';
+}
+// ทำงานตอนยังไม่ login — signup_requests มี policy anon_can_submit (INSERT อย่างเดียว)
+// ห้ามต่อ .select() เพราะ anon ไม่มีสิทธิ์อ่านตารางนี้ (จะ error ทั้งที่ insert สำเร็จ)
+async function signupRequestSubmit() {
+  const val = id => document.getElementById(id).value.trim();
+  const errEl = document.getElementById('signupError');
+  const btn = document.getElementById('signupSubmitBtn');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  const { error } = await _sb.from('signup_requests').insert({
+    FirstName: val('signup-f-firstname'), LastName: val('signup-f-lastname'),
+    EmployeeID: val('signup-f-employeeid'), Phone: val('signup-f-phone') || null,
+    RealEmail: val('signup-f-email'),
+  });
+  btn.disabled = false;
+  if (error) { console.error(error); errEl.textContent = 'ส่งคำขอไม่สำเร็จ กรุณาลองใหม่ หรือติดต่อแอดมินโดยตรง'; errEl.style.display = 'block'; return; }
+  await Swal.fire({ icon: 'success', title: 'ส่งคำขอแล้ว', text: 'รอแอดมินติดต่อกลับพร้อม Username และรหัสผ่าน' });
+  document.getElementById('signup-f-firstname').closest('form').reset();
+  _loginGateShowLogin();
+}
+
 async function loginSubmit() {
-  const email = document.getElementById('loginEmail').value.trim();
+  const typed = document.getElementById('loginEmail').value.trim();
+  const email = typed.includes('@') ? typed : _usernameToEmail(typed);
   const password = document.getElementById('loginPassword').value;
   const errEl = document.getElementById('loginError');
   const btn = document.getElementById('loginSubmitBtn');
   errEl.style.display = 'none'; btn.disabled = true;
   const { error } = await _sb.auth.signInWithPassword({ email, password });
   btn.disabled = false;
-  if (error) { errEl.textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'; errEl.style.display = 'block'; }
+  if (error) { errEl.textContent = 'Username/อีเมล หรือรหัสผ่านไม่ถูกต้อง'; errEl.style.display = 'block'; }
 }
 // reload หลัง logout เพื่อล้าง cache ทุกหน้า + role ของคนเดิม (ไม่งั้นคนถัดไปที่ login เครื่องเดียวกันจะเห็นสิทธิ์คนก่อน)
 async function logout() { await _sb.auth.signOut(); location.reload(); }
@@ -1019,6 +1131,7 @@ function _applyRolePermissions() {
   document.getElementById('currentUserEmail').textContent = _currentUser.name;
   document.getElementById('currentUserEmail').title = _currentUser.email;
   document.getElementById('currentUserRole').innerHTML = _currentUser.rolesReady ? _roleBadge(_currentUser.role) : '';
+  if (_hasRole('admin')) signupreqRefreshBadge();   // จำนวนคำขอรอตรวจสอบบนเมนู
 }
 
 let _appInited = false;
@@ -1048,7 +1161,7 @@ const PAGE_LOADERS = {
   plan: planLoad, issue: issueLoad, prodrecord: prodRecordLoad,
   fgreceive: fgReceiveLoad, stockfg: stockFgLoad, stockcard: stockCardLoad,
   co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
-  rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad,
+  rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad,
 };
 async function showPage(name) {
   document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
@@ -1064,6 +1177,85 @@ function initApp() { showPage('dashboard'); }
 // การสร้างบัญชีทำที่ Supabase Dashboard เท่านั้น (ต้องใช้ service_role key ซึ่งเก็บในหน้าเว็บ static ไม่ได้)
 // trigger on_auth_user_created_add_role สร้างแถว user_roles (operator) ให้เองทันทีที่สร้างบัญชี
 // ═══════════════════════════════════════════════════════════
+// ── คำขอสมัครใช้งาน (แอดมิน) — ตาราง signup_requests (migration_2026-09-25_signup_requests.sql) ──
+let _signupreqCache = [];
+const _SIGNUP_STATUS_BADGE = { 'รอตรวจสอบ': 'warning', 'สร้างแล้ว': 'success', 'ปฏิเสธ': 'danger' };
+function _signupPassword(r) { return (r.EmployeeID || '').trim(); }
+async function signupreqRefreshBadge() {
+  const { count, error } = await _sb.from('signup_requests').select('_row_id', { count: 'exact', head: true }).eq('Status', 'รอตรวจสอบ');
+  const el = document.getElementById('signupreqNavBadge');
+  el.textContent = count || '';
+  el.style.display = !error && count ? '' : 'none';
+}
+async function signupreqLoad() {
+  const body = document.getElementById('signupreqTableBody');
+  if (!_hasRole('admin')) { body.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">หน้านี้สำหรับแอดมินเท่านั้น</td></tr>'; return; }
+  const { data, error } = await _sb.from('signup_requests').select('*').order('CreatedAt', { ascending: false }).limit(500);
+  if (error) {
+    body.innerHTML = `<tr><td colspan="9" class="text-center py-4"><div class="text-danger fw-semibold mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่ได้ตั้งค่าตารางคำขอสมัคร</div>
+      <div class="small text-muted">รัน <code>migration_2026-09-25_user_roles.sql</code> แล้วตามด้วย <code>migration_2026-09-25_signup_requests.sql</code> ใน Supabase SQL Editor</div>
+      <div class="small text-muted mt-1">(${esc(error.message)})</div></td></tr>`;
+    return;
+  }
+  _signupreqCache = data || [];
+  signupreqRender();
+  signupreqRefreshBadge();
+}
+function signupreqRender() {
+  const filter = document.getElementById('signupreqFilter').value;
+  const rows = _signupreqCache.filter(r => !filter || r.Status === filter);
+  document.getElementById('signupreqTableBody').innerHTML = rows.map(r => {
+    const username = _computeUsername(r.FirstName, r.LastName);
+    const pw = _signupPassword(r);
+    const pending = r.Status === 'รอตรวจสอบ';
+    return `<tr>
+      <td class="small text-nowrap">${r.CreatedAt ? new Date(r.CreatedAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</td>
+      <td>${esc(r.FirstName)} ${esc(r.LastName)}</td>
+      <td><span class="badge bg-light text-dark border">${esc(username || '—')}</span></td>
+      <td class="small"><code>${esc(username ? _usernameToEmail(username) : '—')}</code></td>
+      <td class="small"><code>${esc(pw)}</code>${pw.length < 6 ? '<div class="text-danger" style="font-size:.72rem">สั้นกว่า 6 ตัว — Supabase ไม่รับ ต้องตั้งรหัสอื่น</div>' : ''}</td>
+      <td class="small">${esc(r.Phone || '—')}</td>
+      <td class="small">${esc(r.RealEmail)}</td>
+      <td>${badge(r.Status, _SIGNUP_STATUS_BADGE[r.Status])}${r.ReviewNote ? `<div class="small text-muted">${esc(r.ReviewNote)}</div>` : ''}</td>
+      <td class="text-center">${pending ? `
+        <button class="btn btn-sm btn-outline-success me-1" onclick="signupreqApprove(${r._row_id})" title="สร้างบัญชีแล้ว"><i class="fa-solid fa-check"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="signupreqReject(${r._row_id})" title="ปฏิเสธ"><i class="fa-solid fa-xmark"></i></button>` : '<span class="text-muted small">—</span>'}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="9" class="text-center text-muted py-4">${filter ? `ไม่มีคำขอสถานะ "${esc(filter)}"` : 'ยังไม่มีคำขอ'}</td></tr>`;
+}
+async function signupreqApprove(rowId) {
+  const r = _signupreqCache.find(d => d._row_id === rowId);
+  if (!r) return;
+  const username = _computeUsername(r.FirstName, r.LastName);
+  const c = await Swal.fire({ icon: 'question', title: 'สร้างบัญชีใน Supabase แล้วใช่ไหม?',
+    html: `<div class="text-start"><b>${esc(r.FirstName)} ${esc(r.LastName)}</b><br>
+      Email: <code>${esc(_usernameToEmail(username))}</code><br>Password: <code>${esc(_signupPassword(r))}</code><br>
+      <span class="small text-muted">อย่าลืมแจ้ง Username <b>${esc(username)}</b> และรหัสผ่านให้พนักงาน (${esc(r.RealEmail)}${r.Phone ? ' / ' + esc(r.Phone) : ''})</span></div>`,
+    showCancelButton: true, confirmButtonText: 'สร้างแล้ว', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  const { data, error } = await _sb.from('signup_requests').update({ Status: 'สร้างแล้ว' }).eq('_row_id', rowId).select();
+  if (error || !data?.length) { Swal.fire('อัปเดตไม่สำเร็จ', error?.message || 'ไม่มีสิทธิ์ (ต้องเป็นแอดมิน)', 'error'); return; }
+  // ตั้งชื่อแสดงผลให้บัญชีที่เพิ่งสร้าง (ถ้าสร้างไว้แล้วจริงและ trigger สร้างแถว user_roles แล้ว) — ไม่เจอก็ไม่เป็นไร
+  await _sb.from('user_roles').update({ DisplayName: `${r.FirstName} ${r.LastName}`.trim() })
+    .eq('Email', _usernameToEmail(username)).is('DisplayName', null);
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'อัปเดตสถานะแล้ว', showConfirmButton: false, timer: 1500 });
+  signupreqLoad();
+}
+async function signupreqReject(rowId) {
+  const r = _signupreqCache.find(d => d._row_id === rowId);
+  if (!r) return;
+  const { value: reason } = await Swal.fire({ title: 'ปฏิเสธคำขอนี้?', icon: 'warning',
+    html: `<b>${esc(r.FirstName)} ${esc(r.LastName)}</b> — รหัสพนักงาน ${esc(r.EmployeeID)}`,
+    input: 'textarea', inputLabel: 'เหตุผลที่ปฏิเสธ', showCancelButton: true,
+    confirmButtonText: 'ยืนยันปฏิเสธ', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#d33',
+    inputValidator: v => !v?.trim() ? 'กรุณากรอกเหตุผล' : undefined });
+  if (!reason) return;
+  const { data, error } = await _sb.from('signup_requests').update({ Status: 'ปฏิเสธ', ReviewNote: reason.trim() }).eq('_row_id', rowId).select();
+  if (error || !data?.length) { Swal.fire('อัปเดตไม่สำเร็จ', error?.message || 'ไม่มีสิทธิ์ (ต้องเป็นแอดมิน)', 'error'); return; }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ปฏิเสธคำขอแล้ว', showConfirmButton: false, timer: 1500 });
+  signupreqLoad();
+}
+
 let _userrolesCache = [];
 async function userrolesLoad() {
   const body = document.getElementById('userrolesTableBody');
