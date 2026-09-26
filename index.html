@@ -176,6 +176,9 @@ img.emp-avatar { cursor: zoom-in; }
 .rcv-suggest .code { color: #64748b; font-size: .76rem; }
 .rcv-suggest mark { padding: 0; background: #fde68a; }
 
+/* ตาราง Received: เน้นยอดรับเข้า */
+.rcv-qty-cell .num { font-size: 1.08rem; font-weight: 700; color: var(--primary-blue); font-variant-numeric: tabular-nums; }
+.rcv-qty-cell .unit { font-size: .8rem; color: #64748b; }
 #rcv-exp-presets .btn { flex: 1 1 0; min-width: 0; padding: 3px 2px; font-size: .75rem; white-space: nowrap; }
 
 /* ── ใบรายงานรับ (แบบ ProFlow .mrrpt-*) — แนวนอน A4 ── */
@@ -222,6 +225,7 @@ table.rrpt-table .ord { text-align: center; color: #94a3b8; }
 table.rrpt-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 table.rrpt-table .qty { font-weight: 800; font-size: 13px; color: var(--primary-blue); }
 table.rrpt-table.sum th { background: #334155; }
+table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff; font-weight: 800; font-size: 11.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .rrpt-sum-title { font-size: 13px; font-weight: 800; color: var(--primary-blue); margin: 16px 0 6px; }
 .rrpt-foot { display: flex; justify-content: space-between; margin-top: auto; padding-top: 26px; font-size: 11px; color: #64748b; }
 .rrpt-sign { text-align: center; width: 30%; }
@@ -320,6 +324,8 @@ table.rrpt-table.sum th { background: #334155; }
   <div class="sidebar-scroll">
     <ul class="nav flex-column">
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('dashboard');return false;" id="navlink-dashboard"><i class="fa-solid fa-gauge-high me-2"></i>ภาพรวม</a></li>
+      <!-- คำขอแก้ไขทุกประเภท + คำขอสมัครใช้งาน รวมหน้าเดียว (ทุกคนเห็นคำขอของตัวเอง · แอดมินอนุมัติ) -->
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('rcvedit');return false;" id="navlink-rcvedit"><i class="fa-solid fa-pen-to-square me-2"></i>คำขอแก้ไข <span class="badge text-bg-danger ms-1" id="rcvEditNavBadge" style="display:none"></span></a></li>
     </ul>
 
     <div class="nav-group-header" onclick="toggleNavGroup(this)"><span>Inventory</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
@@ -362,7 +368,6 @@ table.rrpt-table.sum th { background: #334155; }
     <div id="navgroup-admin" style="display:none">
       <div class="nav-group-header" onclick="toggleNavGroup(this)"><span>Admin</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
       <ul class="nav flex-column nav-group-body">
-        <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('signupreq');return false;" id="navlink-signupreq"><i class="fa-solid fa-user-plus me-2"></i>คำขอสมัครใช้งาน <span class="badge text-bg-danger ms-1" id="signupreqNavBadge" style="display:none"></span></a></li>
         <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('userroles');return false;" id="navlink-userroles"><i class="fa-solid fa-user-shield me-2"></i>สิทธิ์การใช้งาน</a></li>
         <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('auditlog');return false;" id="navlink-auditlog"><i class="fa-solid fa-clock-rotate-left me-2"></i>Log การใช้งาน</a></li>
       </ul>
@@ -435,9 +440,21 @@ table.rrpt-table.sum th { background: #334155; }
         <option value="">-- ทุกหมวดหมู่ --</option><!-- ตัวเลือกเติมโดย _fillCategorySelects() -->
       </select>
       <div class="search-wrap"><input class="form-control search-input" id="receivedSearch" placeholder="ค้นหา..." oninput="receivedRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('receivedSearch').value='';receivedRenderTable()"></i></div>
+      <select class="form-select w-auto" id="receivedSort" onchange="receivedSortChanged()" title="เรียงลำดับ">
+        <option value="receive-desc">เรียง: วันที่รับ ใหม่ → เก่า</option>
+        <option value="receive-asc">เรียง: วันที่รับ เก่า → ใหม่</option>
+        <option value="created-desc">เรียง: บันทึกล่าสุดก่อน</option>
+        <option value="created-asc">เรียง: บันทึกเก่าสุดก่อน</option>
+        <option value="exp-asc">เรียง: หมดอายุก่อน</option>
+        <option value="name-asc">เรียง: ชื่อรายการ ก → ฮ</option>
+        <option value="supplier-asc">เรียง: ซัพพลายเออร์ ก → ฮ</option>
+        <option value="qty-desc">เรียง: จำนวนมาก → น้อย</option>
+      </select>
     </div>
-    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th>เลขที่รับ</th><th>หมวดหมู่</th><th>รายการ</th><th class="text-end">รับเข้า</th><th class="text-end">คงเหลือในล็อต</th><th>ซัพพลายเออร์</th><th>Lot</th><th>วันเก็บเกี่ยว</th><th>วันที่รับ</th><th>หมดอายุ</th><th>จัดการ</th></tr></thead>
+    <div class="scroll-content">
+    <div class="alert alert-warning align-items-center gap-2 py-2 mb-2 d-none" id="rcvEditBanner"></div>
+    <div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+      <thead><tr><th>วันที่รับ</th><th>หมวดหมู่</th><th>รายการ</th><th class="text-end">รับเข้า</th><th>ซัพพลายเออร์</th><th>Lot</th><th class="text-end">ราคา/หน่วย</th><th>หมดอายุ</th><th>จัดการ</th></tr></thead>
       <tbody id="receivedTableBody"></tbody>
     </table></div></div></div>
   </div>
@@ -488,7 +505,7 @@ table.rrpt-table.sum th { background: #334155; }
       <tbody id="issueMoTableBody"></tbody>
     </table></div></div>
     <div class="glass-card"><h6 class="mb-3">ประวัติการเบิกวัตถุดิบ</h6><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th>เลขที่เบิก</th><th>MO</th><th>วัตถุดิบ</th><th class="text-end">สำหรับผลิต</th><th class="text-end">ตามสูตร</th><th class="text-end">Scrap</th><th class="text-end">เบิกจริง</th><th>วันที่เบิก</th></tr></thead>
+      <thead><tr><th>เลขที่เบิก</th><th>MO</th><th>วัตถุดิบ</th><th class="text-end">สำหรับผลิต</th><th class="text-end">ตามสูตร</th><th class="text-end">Scrap</th><th class="text-end">เบิกจริง</th><th>วันที่เบิก</th><th class="text-center">จัดการ</th></tr></thead>
       <tbody id="issueHistTableBody"></tbody>
     </table></div></div></div>
   </div>
@@ -514,7 +531,7 @@ table.rrpt-table.sum th { background: #334155; }
       <tbody id="fgReceiveReadyTableBody"></tbody>
     </table></div></div>
     <div class="glass-card"><h6 class="mb-3">ประวัติการรับเข้าคลัง</h6><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th>เลขที่รับ</th><th>สินค้า</th><th>Lot</th><th>จำนวน</th><th>วันที่รับ</th></tr></thead>
+      <thead><tr><th>เลขที่รับ</th><th>สินค้า</th><th>Lot</th><th>จำนวน</th><th>วันที่รับ</th><th class="text-center">จัดการ</th></tr></thead>
       <tbody id="fgReceiveHistTableBody"></tbody>
     </table></div></div></div>
   </div>
@@ -710,6 +727,37 @@ table.rrpt-table.sum th { background: #334155; }
     </div>
   </div>
 
+  <!-- ═══════════════ คำขอแก้ไข (ทุกประเภท + คำขอสมัครใช้งาน · ทุกคนเห็นคำขอของตัวเอง · แอดมินอนุมัติ) — migration_2026-09-26_edit_requests_all.sql ═══════════════ -->
+  <div class="page-view" id="page-rcvedit">
+    <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-pen-to-square me-2"></i>คำขอแก้ไข</h4><div class="text-white-50 small">คำขอแก้ไขทุกประเภท + คำขอสมัครใช้งาน — ข้อมูลและสต็อกเปลี่ยนหลังแอดมินอนุมัติเท่านั้น</div></div>
+    <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 mb-2">
+      <select class="form-select w-auto" id="rcvEditType" onchange="rcvEditRender()">
+        <option value="">ทุกประเภท</option>
+        <option value="rm_receive">ใบรับเข้าคลัง</option>
+        <option value="issue_production">เบิกเข้าสาย</option>
+        <option value="production_records">บันทึกผลิต</option>
+        <option value="fg_receive">รับ FG เข้าคลัง</option>
+        <option value="waste_log">ของเสีย</option>
+        <option value="signup">สมัครใช้งาน</option>
+      </select>
+      <select class="form-select w-auto" id="rcvEditFilter" onchange="rcvEditRender()">
+        <option value="รออนุมัติ">รออนุมัติ</option>
+        <option value="">ทั้งหมด</option>
+        <option value="อนุมัติแล้ว">อนุมัติแล้ว</option>
+        <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+        <option value="ยกเลิก">ยกเลิก</option>
+      </select>
+      <div class="form-check form-switch align-self-center ms-1" id="rcvEditMineWrap">
+        <input class="form-check-input" type="checkbox" id="rcvEditMine" onchange="rcvEditRender()">
+        <label class="form-check-label text-white small" for="rcvEditMine">เฉพาะคำขอของฉัน</label>
+      </div>
+    </div></div>
+    <div class="scroll-content"><div class="glass-card p-0 overflow-hidden"><div class="table-responsive"><table class="table table-hover mb-0 align-middle">
+      <thead><tr><th>วันที่ขอ</th><th>ประเภท</th><th>รายการ</th><th>ขอแก้ (จาก → เป็น)</th><th>เหตุผล</th><th>ผู้ขอ</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
+      <tbody id="rcvEditTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
   <!-- ═══════════════ คำขอสมัครใช้งาน (แอดมินเท่านั้น) — จากปุ่ม "ขอรหัส" หน้า login ═══════════════ -->
   <div class="page-view" id="page-signupreq">
     <div class="page-header d-flex justify-content-between align-items-start">
@@ -765,7 +813,7 @@ table.rrpt-table.sum th { background: #334155; }
         <h6 class="mb-2"><i class="fa-solid fa-user-plus me-2"></i>วิธีเพิ่มผู้ใช้ใหม่ (ให้น้องในทีม)</h6>
         <ol class="small mb-0 ps-3">
           <li>เปิด <a href="https://supabase.com/dashboard/project/mdoqkqvgkpnsmrybzbwn/auth/users" target="_blank" rel="noopener">Supabase → Authentication → Users</a> → กด <b>Add user</b> → <b>Create new user</b></li>
-          <li>กรอกอีเมล + รหัสผ่าน และติ๊ก <b>Auto Confirm User</b> (ไม่งั้นจะ login ไม่ได้จนกว่าจะยืนยันอีเมล) — ถ้าน้องกด "ขอรหัส" มาแล้ว ดู Email/Password ที่ต้องใช้ได้ในหน้า <a href="#" onclick="showPage('signupreq');return false;">คำขอสมัครใช้งาน</a></li>
+          <li>กรอกอีเมล + รหัสผ่าน และติ๊ก <b>Auto Confirm User</b> (ไม่งั้นจะ login ไม่ได้จนกว่าจะยืนยันอีเมล) — ถ้าน้องกด "ขอรหัส" มาแล้ว ดู Email/Password ที่ต้องใช้ได้ในหน้า <a href="#" onclick="showPage('rcvedit');return false;">คำขอแก้ไข</a> (ประเภท "สมัครใช้งาน")</li>
           <li>กลับมาหน้านี้กด <b>รีเฟรช</b> — ผู้ใช้ใหม่จะขึ้นเป็น <b>พนักงาน</b> อัตโนมัติ แล้วค่อยปรับสิทธิ์/ตั้งชื่อแสดงผล</li>
           <li>แจ้งอีเมล + รหัสผ่านให้น้องเอง (ระบบไม่ส่งอีเมลให้)</li>
         </ol>
@@ -1105,14 +1153,21 @@ table.rrpt-table.sum th { background: #334155; }
 
 <!-- ═══════════════ MODAL: รับเข้าคลัง ═══════════════ -->
 <div class="modal fade" id="receivedModal" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
-        <h5 class="modal-title"><i class="fa-solid fa-inbox me-2"></i>รับเข้าคลัง</h5>
+        <h5 class="modal-title"><i class="fa-solid fa-inbox me-2" id="rcv-icon"></i><span id="rcv-title">รับเข้าคลัง</span></h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <div class="alert alert-info small py-2 mb-3 d-none" id="rcv-edit-info"></div>
         <div class="row g-3">
+          <!-- วันที่รับอยู่บนสุด (ผู้ใช้ขอ 2026-09-26) — กำหนดเลข Lot และเป็นฐานคำนวณวันหมดอายุเมื่อไม่มีวันที่ผลิต -->
+          <div class="col-md-4">
+            <label class="form-label">วันที่รับเข้าคลัง<span class="text-danger">*</span></label>
+            <input id="rcv-receive" type="date" class="form-control" onchange="rcvAutoLot(); rcvExpRecalc()">
+          </div>
+          <div class="w-100 m-0"></div>
           <div class="col-md-8 position-relative">
             <label class="form-label">รายการ<span class="text-danger">*</span></label>
             <input id="rcv-rm-search" class="form-control" placeholder="พิมพ์ชื่อหรือรหัสเพื่อค้นหา..." autocomplete="off"
@@ -1125,13 +1180,25 @@ table.rrpt-table.sum th { background: #334155; }
             <label class="form-label">รหัสสินค้า</label>
             <input id="rcv-code" class="form-control bg-light" readonly tabindex="-1" placeholder="ใส่ให้อัตโนมัติ">
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">จำนวน<span class="text-danger">*</span></label>
             <div class="input-group has-validation">
-              <input id="rcv-qty" type="number" step="any" class="form-control">
+              <input id="rcv-qty" type="number" step="any" class="form-control" oninput="rcvCalcAmount()">
               <span class="input-group-text" id="rcv-unit">—</span>
               <div class="invalid-feedback" id="rcv-qty-err"></div>
             </div>
+          </div>
+          <div class="col-md-4 col-6">
+            <label class="form-label">ราคา/หน่วย</label>
+            <div class="input-group has-validation">
+              <input id="rcv-price" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" oninput="rcvCalcAmount()">
+              <span class="input-group-text" id="rcv-price-unit">฿</span>
+              <div class="invalid-feedback" id="rcv-price-err"></div>
+            </div>
+          </div>
+          <div class="col-md-4 col-6">
+            <label class="form-label">มูลค่ารวม</label>
+            <input id="rcv-amount" class="form-control bg-light fw-bold text-end" readonly tabindex="-1" placeholder="คำนวณให้อัตโนมัติ">
           </div>
           <div class="col-md-6">
             <label class="form-label">ซัพพลายเออร์</label>
@@ -1140,19 +1207,13 @@ table.rrpt-table.sum th { background: #334155; }
           <div class="col-md-6">
             <label class="form-label">Lot</label>
             <input id="rcv-lot" class="form-control" oninput="this.dataset.auto=''">
+            <div class="form-text" style="font-size:.72rem" id="rcv-lot-hint"><i class="fa-solid fa-circle-info me-1"></i>อัตโนมัติ: ปีเดือนวัน-ครั้งที่ของรายการนี้ เช่น 260926-01 แก้เองได้</div>
           </div>
-          <div class="col-md-6 d-flex align-items-md-end">
-            <div class="form-text mb-md-2" style="font-size:.74rem"><i class="fa-solid fa-circle-info me-1"></i>Lot อัตโนมัติ: ปีเดือนวัน-ครั้งที่ของรายการนี้ เช่น 260926-01 แก้เองได้</div>
-          </div>
-          <div class="col-md-4 col-6">
-            <label class="form-label">วันเก็บเกี่ยว (ถ้ามี)</label>
+          <div class="col-md-6">
+            <label class="form-label">วันที่ผลิต (ถ้ามี)</label>
             <input id="rcv-harvest" type="date" class="form-control" onchange="rcvExpRecalc()">
           </div>
-          <div class="col-md-4 col-6">
-            <label class="form-label">วันที่รับเข้าคลัง</label>
-            <input id="rcv-receive" type="date" class="form-control" onchange="rcvAutoLot(); rcvExpRecalc()">
-          </div>
-          <div class="col-md-4">
+          <div class="col-md-6">
             <label class="form-label">วันหมดอายุ</label>
             <input id="rcv-exp" type="date" class="form-control" oninput="rcvExpPreset(null)">
             <div class="invalid-feedback" id="rcv-exp-err"></div>
@@ -1161,17 +1222,47 @@ table.rrpt-table.sum th { background: #334155; }
               <button type="button" class="btn btn-outline-primary" data-months="12" onclick="rcvExpPreset(12)">1 ปี</button>
               <button type="button" class="btn btn-outline-primary" data-months="24" onclick="rcvExpPreset(24)">2 ปี</button>
             </div>
-            <div class="form-text" style="font-size:.72rem" id="rcv-exp-hint">นับจากวันเก็บเกี่ยว (ไม่มี = นับจากวันที่รับ) · ใช้ตัดล็อต FEFO และเตือนใกล้หมดอายุ</div>
+            <div class="form-text" style="font-size:.72rem" id="rcv-exp-hint">นับจากวันที่ผลิต (ไม่มี = นับจากวันที่รับ) · ใช้ตัดล็อต FEFO และเตือนใกล้หมดอายุ</div>
           </div>
           <div class="col-12">
             <label class="form-label">หมายเหตุ</label>
             <textarea id="rcv-note" class="form-control" rows="2" placeholder="เช่น สภาพของที่รับ, เลขใบส่งของซัพพลายเออร์"></textarea>
           </div>
+          <div class="col-12 d-none" id="rcv-reason-wrap">
+            <label class="form-label">เหตุผลที่ขอแก้ไข<span class="text-danger">*</span></label>
+            <textarea id="rcv-reason" class="form-control" rows="2" placeholder="เช่น กรอกจำนวนผิด ชั่งจริงได้ 25 กก."></textarea>
+            <div class="invalid-feedback" id="rcv-reason-err"></div>
+          </div>
         </div>
       </div>
       <div class="modal-footer modal-footer-light">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-        <button type="button" class="btn btn-brand" onclick="receivedModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+        <button type="button" class="btn btn-brand" id="rcv-save-btn" onclick="receivedModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ฟอร์มขอแก้ไขกลาง (เบิกเข้าสาย / บันทึกผลิต / รับ FG / ของเสีย) — ช่องสร้างจาก EDIT_TYPES[type].form -->
+<div class="modal fade" id="editReqModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-pen-to-square me-2"></i><span id="erq-title">ขอแก้ไข</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info small py-2 mb-3" id="erq-info"></div>
+        <div class="row g-3" id="erq-fields"></div>
+        <div class="mt-3">
+          <label class="form-label">เหตุผลที่ขอแก้ไข<span class="text-danger">*</span></label>
+          <textarea id="erq-reason" class="form-control" rows="2" placeholder="เช่น กรอกจำนวนผิด"></textarea>
+          <div class="invalid-feedback" id="erq-reason-err"></div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" id="erq-save-btn" onclick="editReqSubmit()"><i class="fa-solid fa-paper-plane me-1"></i>ส่งคำขอแก้ไข</button>
       </div>
     </div>
   </div>
@@ -1740,6 +1831,7 @@ function _applyRolePermissions() {
   document.getElementById('currentUserEmail').title = _currentUser.email;
   document.getElementById('currentUserRole').innerHTML = _currentUser.rolesReady ? _roleBadge(_currentUser.role) : '';
   if (_hasRole('admin')) signupreqRefreshBadge();   // จำนวนคำขอรอตรวจสอบบนเมนู
+  rcvEditLoadPending();                               // จำนวนคำขอแก้ไข + คำขอสมัครใช้งานบนเมนู
 }
 
 let _appInited = false;
@@ -1770,6 +1862,7 @@ const PAGE_LOADERS = {
   fgreceive: fgReceiveLoad, stockfg: stockFgLoad, stockcard: stockCardLoad,
   co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
   rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad, employee: employeeLoad, auditlog: auditLoad, prep: prepLoad,
+  rcvedit: rcvEditLoad,
 };
 let _currentPage = 'dashboard';
 async function showPage(name) {
@@ -1807,6 +1900,7 @@ async function refreshCurrentPage() {
     await Promise.all([fgMasterLoad(), rmMasterLoad()]);
     if (PAGE_LOADERS[_currentPage]) await PAGE_LOADERS[_currentPage]();
     if (_hasRole('admin')) signupreqRefreshBadge();
+    if (!['received', 'rcvedit'].includes(_currentPage)) rcvEditLoadPending();   // 2 หน้านี้โหลดเองแล้ว
   } finally { _refreshing = false; }
 }
 // เพิ่มปุ่ม "รีเฟรช" ให้ทุกหน้าที่ยังไม่มี (ทำครั้งเดียวตอนเริ่มแอป แทนการแก้ HTML ทีละหน้า)
@@ -1859,7 +1953,11 @@ function _setRtStatus(status) {
 }
 function _realtimeSubscribe() {
   _sb.channel('bmflow-db')
-    .on('postgres_changes', { event: '*', schema: 'public' }, _realtimeQueueRefresh)
+    // คัดแยกตารางในตัวรับรวมเอง (ไม่สมัครแยกตาม table: ตารางที่ยังไม่ได้รัน SQL สร้าง อาจทำให้ช่องสัญญาณล้มทั้งช่อง)
+    .on('postgres_changes', { event: '*', schema: 'public' }, payload => {
+      if (payload.table === 'edit_requests' || payload.table === 'signup_requests') _rcvEditRealtime(payload);
+      _realtimeQueueRefresh();
+    })
     .subscribe(_setRtStatus);
 }
 document.addEventListener('hidden.bs.modal', () => setTimeout(_flushPendingRefresh, 50));
@@ -1878,6 +1976,7 @@ const _WRITE_ACTIONS = [
   'signupreqApprove', 'signupreqReject', 'userrolesUpdateRole', 'userrolesUpdateName',
   'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete',
   'rcvReportConfirm', 'rcvReportRename',
+  'rcvEditApprove', 'rcvEditReject', 'rcvEditCancel', 'rcvEditSignup', 'editReqSubmit',
 ];
 let _singleFlightRunning = 0;
 function _singleFlight(names) {
@@ -2107,7 +2206,7 @@ const AUDIT_TABLE_LABEL = {
   issue_production: 'เบิกวัตถุดิบเข้าสาย', production_records: 'บันทึกผลิต', fg_receive: 'รับ FG เข้าคลัง',
   fg_withdraw: 'เบิก FG', delivery: 'จัดส่ง', waste_log: 'Waste (ของเสีย)', employees: 'พนักงาน',
   user_roles: 'สิทธิ์การใช้งาน', signup_requests: 'คำขอสมัครใช้งาน', prep_orders: 'เตรียมวัตถุดิบ',
-  rm_rc_numbers: 'ใบรายงานรับ (RC No)',
+  rm_rc_numbers: 'ใบรายงานรับ (RC No)', rm_receive_edit_requests: 'คำขอแก้ไขใบรับ (เดิม)', edit_requests: 'คำขอแก้ไข',
 };
 const AUDIT_ACTION = {
   INSERT: ['เพิ่ม', 'success'], UPDATE: ['แก้ไข', 'warning'], DELETE: ['ลบ', 'danger'],
@@ -2119,13 +2218,14 @@ const AUDIT_FIELD_LABEL = {
   MinStock: 'ขั้นต่ำ', Supplier: 'ซัพพลายเออร์', Note: 'หมายเหตุ', Qty: 'จำนวน', QtyIssued: 'จำนวนเบิก', QtyProduced: 'จำนวนผลิต',
   QtyPerUnit: 'ปริมาณ/หน่วย', ScrapSteps: '%Scrap', PlanQty: 'จำนวนแผน', PlanDate: 'วันที่ผลิต', OrderQty: 'จำนวนสั่ง',
   CustomerName: 'ลูกค้า', Status: 'สถานะ', Lot: 'Lot', ProdLot: 'Lot ผลิต', ExpDate: 'วันหมดอายุ', MfgDate: 'วันผลิต',
-  ReceiveDate: 'วันที่รับ', HarvestDate: 'วันเก็บเกี่ยว', Reason: 'สาเหตุ', MO_ID: 'MO', Order_ID: 'CO', ShelfLifeDays: 'อายุ (วัน)',
+  ReceiveDate: 'วันที่รับ', HarvestDate: 'วันที่ผลิต', Reason: 'สาเหตุ', MO_ID: 'MO', Order_ID: 'CO', ShelfLifeDays: 'อายุ (วัน)',
   FirstName: 'ชื่อ', LastName: 'นามสกุล', NickName: 'ชื่อเล่น', Position: 'ตำแหน่ง', Department: 'แผนก', Phone: 'โทร',
   EmployeeType: 'ประเภท', PhotoPath: 'รูป', Role: 'ระดับสิทธิ์', DisplayName: 'ชื่อแสดงผล', Email: 'อีเมล',
   LotAlloc: 'ล็อตที่ใช้', ForQty: 'สำหรับผลิต', SourceRM_ID: 'ทำจาก', TargetRM_ID: 'เตรียมเป็น', QtyOut: 'เบิกไป',
   QtyBack: 'ได้กลับ', ActualLossPct: '%สูญเสียจริง', StdLossPct: '%มาตรฐาน', Steps: 'น้ำหนักแต่ละขั้น', SourceAlloc: 'ล็อตสดที่ใช้',
   PrepSteps: 'ขั้นตอนเตรียม', PrepDate: 'วันที่เตรียม', ScrapPct: '%Scrap', QtyDelivered: 'จำนวนส่ง', ReviewNote: 'หมายเหตุแอดมิน',
   RC_No: 'RC No', ItemCount: 'จำนวนรายการ', CreatedBy: 'ออกโดย',
+  Type: 'ประเภท', RecordID: 'รายการ', Changes: 'ขอแก้', Reason: 'เหตุผล', RequestedBy: 'ผู้ขอ', ReviewedBy: 'ผู้ตรวจ', UnitPrice: 'ราคา/หน่วย', SellPrice: 'ราคาขาย',
 };
 // ฟิลด์ที่แสดงเป็นสรุปสั้นตอน "เพิ่ม" / "ลบ" (เรียงตามลำดับความสำคัญ เอาเฉพาะที่มีค่า)
 const AUDIT_SUMMARY_FIELDS = ['RM_Name', 'FG_Name', 'FirstName', 'LastName', 'CustomerName', 'RM_ID', 'FG_ID', 'MO_ID',
@@ -2257,12 +2357,9 @@ async function _logSession(action) {
 let _signupreqCache = [];
 const _SIGNUP_STATUS_BADGE = { 'รอตรวจสอบ': 'warning', 'สร้างแล้ว': 'success', 'ปฏิเสธ': 'danger' };
 function _signupPassword(r) { return (r.EmployeeID || '').trim(); }
-async function signupreqRefreshBadge() {
-  const { count, error } = await _sb.from('signup_requests').select('_row_id', { count: 'exact', head: true }).eq('Status', 'รอตรวจสอบ');
-  const el = document.getElementById('signupreqNavBadge');
-  el.textContent = count || '';
-  el.style.display = !error && count ? '' : 'none';
-}
+// คำขอสมัครใช้งานย้ายไปแสดงรวมในหน้า "คำขอแก้ไข" แล้ว (2026-09-26) — ตัวเลขนับรวมที่เมนูนั้น
+// (เมนู "คำขอสมัครใช้งาน" เดิมถูกเอาออก หน้า page-signupreq ยังอยู่เผื่อเปิดตรง แต่ไม่มีลิงก์)
+async function signupreqRefreshBadge() { await rcvEditLoadPending(); }
 async function signupreqLoad() {
   const body = document.getElementById('signupreqTableBody');
   if (!_hasRole('admin')) { body.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">หน้านี้สำหรับแอดมินเท่านั้น</td></tr>'; return; }
@@ -2460,8 +2557,10 @@ async function dashboardLoad() {
     { n: lowStock.length, icon: 'fa-triangle-exclamation', text: 'วัตถุดิบต่ำกว่าขั้นต่ำ — ควรสั่งเพิ่ม', go: 'stockrm' },
   ];
   if (_hasRole('admin')) {
-    const { count } = await _sb.from('signup_requests').select('_row_id', { count: 'exact', head: true }).eq('Status', 'รอตรวจสอบ');
-    todos.push({ n: count || 0, icon: 'fa-user-plus', text: 'คำขอสมัครใช้งานรอตรวจสอบ', go: 'signupreq' });
+    // คำขอแก้ไขทุกประเภท + คำขอสมัครใช้งาน อยู่หน้า "คำขอแก้ไข" หน้าเดียว — ขึ้นเป็นงานค้างข้อแรก
+    await rcvEditLoadPending();
+    todos.unshift({ n: _rcvEditPending.length + _signupPendingCount, icon: 'fa-pen-to-square', text: 'คำขอรออนุมัติ (แก้ไข / สมัครใช้งาน)', go: 'rcvedit',
+      extra: _signupPendingCount ? `<span class="badge text-bg-info ms-1">สมัคร ${_signupPendingCount}</span>` : '' });
   }
   const active = todos.filter(t => t.n > 0);
   document.getElementById('dashTodoList').innerHTML = active.length
@@ -3241,9 +3340,62 @@ async function receivedLoad() {
   const [rows] = await Promise.all([
     sbRun(_sb.from('rm_receive').select('*').order('ReceiveDate', { ascending: false }), 'โหลดประวัติรับเข้าคลัง'),
     rmLotLoad(),
+    rcvEditLoadPending(),
   ]);
   _receivedCache = rows || [];
   receivedRenderTable();
+}
+// วันที่บันทึก = CreatedAt (เวลาที่กดบันทึกจริง) — แถวเก่าที่ไม่มี CreatedAt ใช้วันที่รับแทน
+function _rcvCreatedAt(r) { return r.CreatedAt || r.ReceiveDate || null; }
+function fmtDateLong(s) {
+  if (!s) return '-';
+  // วันที่ล้วน (YYYY-MM-DD) ต้องอ่านเป็นเวลาท้องถิ่น — new Date('2026-09-26') = เที่ยงคืน UTC อาจกลายเป็นวันก่อนหน้าในบางโซน
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T00:00:00') : new Date(s);
+  return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+// เรียงลำดับตาราง Received (เลือกจาก dropdown — จำค่าที่เลือกไว้ในเครื่อง)
+// v2: ค่าเริ่มต้นเปลี่ยนเป็น "วันที่รับ ใหม่ → เก่า" (2026-09-26) — เปลี่ยนชื่อ key ให้เครื่องที่เคยจำ "บันทึกล่าสุดก่อน" ได้ค่าใหม่
+const RECEIVED_SORT_KEY = 'bmflow.receivedSort.v2';
+try { const v = localStorage.getItem(RECEIVED_SORT_KEY); if (v) document.getElementById('receivedSort').value = v; } catch (e) {}
+function _toLocalDate(s) { return /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T00:00:00') : new Date(s); }
+function fmtDayMonth(s) { return s ? _toLocalDate(s).toLocaleDateString('th-TH', { day: 'numeric', month: 'long' }) : '-'; }   // 26 กันยายน
+// แถวหัวกลุ่ม "กันยายน 2569" (ตามเดือนของวันที่รับ) คั่นเมื่อเดือน/ปีเปลี่ยน — เฉพาะตอนเรียงตามวันที่รับ
+// (เรียงแบบอื่นเดือนสลับไปมา หัวกลุ่มจะซ้ำ)
+let _rcvLastGroup = null;
+function _rcvMonthGroupRow(s, sortMode) {
+  if (!s || !/^receive-/.test(sortMode)) return '';
+  const label = _toLocalDate(s).toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+  if (label === _rcvLastGroup) return '';
+  _rcvLastGroup = label;
+  return `<tr class="table-light"><td colspan="9" class="fw-bold text-primary py-1 small"><i class="fa-regular fa-calendar me-1"></i>${esc(label)}</td></tr>`;
+}
+// ชื่อที่คนอ่านเข้าใจแทนเลขที่รับ: "กฤษณาแห้ง · รับ 26 สิงหาคม 2569"
+function _rcvLabel(receiveId) {
+  const r = _receivedCache.find(x => x.Receive_ID === receiveId);
+  if (!r) return 'ใบรับเข้าคลัง';   // ยังไม่ได้โหลดรายการรับ (เช่นแอดมินอยู่หน้าอื่นตอนมีแจ้งเตือน)
+  const m = _rmMasterCache.find(x => x.RM_ID === r.RM_ID);
+  return `${m?.RM_Name || r.RM_ID} · รับ ${fmtDateLong(r.ReceiveDate)}`;
+}
+function receivedSortChanged() {
+  try { localStorage.setItem(RECEIVED_SORT_KEY, document.getElementById('receivedSort').value); } catch (e) {}
+  receivedRenderTable();
+}
+function _receivedSort(rows, rmMap) {
+  const mode = document.getElementById('receivedSort').value || 'receive-desc';
+  const t = r => new Date(_rcvCreatedAt(r) || 0).getTime();
+  const name = r => String(rmMap[r.RM_ID]?.RM_Name || r.RM_ID);
+  const cmp = {
+    'created-desc': (a, b) => t(b) - t(a),
+    'created-asc':  (a, b) => t(a) - t(b),
+    'receive-desc': (a, b) => String(b.ReceiveDate).localeCompare(String(a.ReceiveDate)) || t(b) - t(a),
+    'receive-asc':  (a, b) => String(a.ReceiveDate).localeCompare(String(b.ReceiveDate)) || t(a) - t(b),
+    'exp-asc':      (a, b) => (a.ExpDate ? 0 : 1) - (b.ExpDate ? 0 : 1) || String(a.ExpDate).localeCompare(String(b.ExpDate)),   // ไม่มีวันหมดอายุไว้ท้าย
+    'name-asc':     (a, b) => name(a).localeCompare(name(b), 'th') || t(b) - t(a),
+    'supplier-asc': (a, b) => (a.Supplier ? 0 : 1) - (b.Supplier ? 0 : 1) || String(a.Supplier || '').localeCompare(String(b.Supplier || ''), 'th') || t(b) - t(a),
+    'qty-desc':     (a, b) => (parseFloat(b.Qty) || 0) - (parseFloat(a.Qty) || 0),
+  }[mode];
+  if (cmp) rows.sort(cmp);
+  return rows;
 }
 function receivedRenderTable() {
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
@@ -3253,42 +3405,88 @@ function receivedRenderTable() {
     const cat = rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
     return catMatches(cat, catFilter) && (!q || JSON.stringify(r).toLowerCase().includes(q));
   });
+  _receivedSort(rows, rmMap);
+  const sortMode = document.getElementById('receivedSort').value;
+  _rcvLastGroup = null;
   const lotByRcv = Object.fromEntries(_rmLotCache.filter(l => l.Receive_ID).map(l => [l.Receive_ID, l]));
+  const pendingByRcv = Object.fromEntries(_rcvEditPending.filter(p => p.Type === 'rm_receive').map(p => [p.RecordID, p]));
+  _rcvEditRenderBanner();
   document.getElementById('receivedTableBody').innerHTML = rows.map(r => {
     const cat = rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
     const lot = lotByRcv[r.Receive_ID];
     const used = lot && lot.Qty < lot.QtyReceived;
-    const remain = !lot ? '<span class="text-muted">—</span>'
-      : lot.Qty <= 0 ? '<span class="badge text-bg-secondary">ใช้หมดแล้ว</span>'
-      : `${_bomFmtQty(lot.Qty)} ${esc(r.Unit)}`;
-    // ลบได้เฉพาะใบรับที่ล็อตยังไม่ถูกใช้ (ฝั่ง DB rm_receive_delete บังคับซ้ำอีกชั้น)
-    const action = used
+    const pending = pendingByRcv[r.Receive_ID];
+    // (คอลัมน์ "คงเหลือในล็อต" เอาออกตามที่ผู้ใช้ขอ 2026-09-26 — ดูคงเหลือรายล็อตได้ที่หน้าสต็อก)
+    // แก้ไข = ส่งคำขอให้แอดมินอนุมัติ (มีคำขอค้างอยู่ = ปุ่มพาไปดูคำขอนั้น) · ลบได้เฉพาะใบรับที่ล็อตยังไม่ถูกใช้
+    const editBtn = _editBtn('rm_receive', r.Receive_ID);
+    const delBtn = used
       ? `<span class="text-muted" title="ล็อตนี้ถูกเบิก/ตัดของเสียไปแล้ว ลบใบรับไม่ได้"><i class="fa-solid fa-lock"></i></span>`
       : `<button class="btn btn-sm btn-outline-danger" onclick="receivedDelete('${esc(r.Receive_ID)}')" title="ลบใบรับ"><i class="fa-solid fa-trash"></i></button>`;
+    const action = `<span class="text-nowrap">${editBtn}${delBtn}</span>`;
     const rcTag = r.RC_No ? `<div class="small text-primary" title="ออกใบรายงานรับแล้ว"><i class="fa-solid fa-file-lines me-1"></i>${esc(r.RC_No)}</div>` : '';
-    return `<tr><td>${esc(r.Receive_ID)}${rcTag}</td><td>${catBadge(cat)}</td><td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}${r.Note ? `<div class="small text-muted" style="white-space:normal;max-width:260px"><i class="fa-regular fa-note-sticky me-1"></i>${esc(r.Note)}</div>` : ''}</td>
-    <td class="text-end">${_bomFmtQty(r.Qty)} ${esc(r.Unit)}</td><td class="text-end">${remain}</td>
-    <td>${esc(r.Supplier||'-')}</td><td>${esc(r.Lot||'-')}</td><td>${fmtDate(r.HarvestDate)}</td><td>${fmtDate(r.ReceiveDate)}</td>
+    const pendTag = pending ? `<div><span class="badge text-bg-warning"><i class="fa-solid fa-hourglass-half me-1"></i>รออนุมัติแก้ไข</span></div>` : '';
+    // เลขที่รับ (Receive_ID) เป็นรหัสเบื้องหลัง ไม่แสดง — แสดงวันที่บันทึกแบบเดือนเต็ม (ผู้ใช้ขอ 2026-09-26) · ค้นหาด้วยเลขที่รับยังได้
+    // คอลัมน์แรก = วันที่รับ แสดง "26 กันยายน" (ไม่มีปี) — ปีอยู่ที่แถวหัวกลุ่ม "กันยายน 2569" · เวลาที่กดบันทึกอยู่ใน tooltip
+    const created = _rcvCreatedAt(r);
+    const groupRow = _rcvMonthGroupRow(r.ReceiveDate, sortMode);
+    return `${groupRow}<tr><td class="text-nowrap" title="รับ ${esc(fmtDateLong(r.ReceiveDate))} · บันทึกเมื่อ ${esc(created ? _toLocalDate(created).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }) : '-')}">${fmtDayMonth(r.ReceiveDate)}${rcTag}${pendTag}</td><td>${catBadge(cat)}</td><td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}${r.Note ? `<div class="small text-muted" style="white-space:normal;max-width:260px"><i class="fa-regular fa-note-sticky me-1"></i>${esc(r.Note)}</div>` : ''}</td>
+    <td class="text-end text-nowrap rcv-qty-cell"><span class="num">${_bomFmtQty(r.Qty)}</span> <span class="unit">${esc(r.Unit)}</span></td>
+    <td>${esc(r.Supplier||'-')}</td><td>${esc(r.Lot||'-')}</td>
+    <td class="text-end text-nowrap" ${r.HarvestDate ? `title="วันที่ผลิต ${esc(fmtDateLong(r.HarvestDate))}"` : ''}>${r.UnitPrice != null
+      ? `${_fmtBaht(r.UnitPrice)} ฿<div class="small text-muted">รวม ${_fmtBaht(r.UnitPrice * r.Qty)} ฿</div>` : '<span class="text-muted">—</span>'}</td>
     <td class="text-nowrap">${lot && lot.Qty > 0 ? _expBadge(r.ExpDate) : (r.ExpDate ? fmtDate(r.ExpDate) : '<span class="text-muted">—</span>')}</td>
     <td class="text-center">${action}</td></tr>`;
-  }).join('') || '<tr><td colspan="11" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
 }
-function receivedOpenForm() {
+// editId = เลขที่รับ → โหมด "ขอแก้ไข" (ฟอร์มเดียวกัน กรอกค่าเดิมไว้ + ช่องเหตุผล) ไม่ส่ง = รับเข้าใหม่
+let _rcvEditId = null;
+function receivedOpenForm(editId) {
   if (!_rmMasterCache.length) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบ/แพ็คเกจจิ้งใน "วัตถุดิบ / แพ็คเกจจิ้ง (Master)" ก่อน', 'info'); return; }
-  _modalClearErrors(['rcv-qty', 'rcv-rm-search', 'rcv-exp']);
-  rcvRmPick(null);
-  document.getElementById('rcv-qty').value = '';
-  const sup = document.getElementById('rcv-supplier'); sup.value = ''; sup.dataset.auto = '1';
-  const lot = document.getElementById('rcv-lot'); lot.value = ''; lot.dataset.auto = '1';
-  document.getElementById('rcv-harvest').value = todayStr();
-  document.getElementById('rcv-receive').value = todayStr();
-  document.getElementById('rcv-exp').value = '';
-  document.getElementById('rcv-note').value = '';
+  const row = editId ? _receivedCache.find(r => r.Receive_ID === editId) : null;
+  if (editId && !row) return;
+  _rcvEditId = row ? row.Receive_ID : null;
+  const g = id => document.getElementById(id);
+  _modalClearErrors(['rcv-qty', 'rcv-rm-search', 'rcv-exp', 'rcv-reason', 'rcv-price']);
+  const sup = g('rcv-supplier'), lot = g('rcv-lot');
+  // โหมดแก้ไข: ปิดการเติมอัตโนมัติทั้งหมด (ซัพพลายเออร์/Lot) — ผู้ใช้แก้เฉพาะช่องที่ผิด ค่าอื่นต้องคงเดิม
+  sup.dataset.auto = row ? '' : '1';
+  lot.dataset.auto = row ? '' : '1';
+  rcvRmPick(row ? row.RM_ID : null);
+  g('rcv-qty').value = row ? row.Qty : '';
+  g('rcv-price').value = row?.UnitPrice ?? '';
+  rcvCalcAmount();
+  sup.value = row ? (row.Supplier || '') : '';
+  lot.value = row ? (row.Lot || '') : '';
+  g('rcv-harvest').value = row ? (row.HarvestDate || '') : todayStr();
+  g('rcv-receive').value = row ? (row.ReceiveDate || '') : todayStr();
+  g('rcv-exp').value = row ? (row.ExpDate || '') : '';
+  g('rcv-note').value = row ? (row.Note || '') : '';
+  g('rcv-reason').value = '';
   rcvExpPreset(null);
-  const el = document.getElementById('receivedModal');
-  el.addEventListener('shown.bs.modal', () => document.getElementById('rcv-rm-search').focus(), { once: true });
+  // ล็อตถูกเบิก/ตัดไปแล้ว = เปลี่ยนรายการไม่ได้ (ฝั่ง DB ตรวจซ้ำตอนอนุมัติ) · ออกใบรายงานรับแล้ว = เปลี่ยนวันที่รับไม่ได้
+  const lotRow = row && _rmLotCache.find(l => l.Receive_ID === row.Receive_ID);
+  const usedQty = lotRow ? lotRow.QtyReceived - lotRow.Qty : 0;
+  g('rcv-rm-search').disabled = !!row && usedQty > 0;
+  g('rcv-receive').disabled = !!row?.RC_No;
+  const isAdmin = _hasRole('admin');
+  g('rcv-title').textContent = row ? `${isAdmin ? 'แก้ไข' : 'ขอแก้ไข'}ใบรับ — ${_rcvLabel(row.Receive_ID)}` : 'รับเข้าคลัง';
+  g('rcv-icon').className = row ? 'fa-solid fa-pen-to-square me-2' : 'fa-solid fa-inbox me-2';
+  g('rcv-reason-wrap').classList.toggle('d-none', !row);
+  g('rcv-lot-hint').classList.toggle('invisible', !!row);   // โหมดแก้ไขไม่เติม Lot อัตโนมัติ
+  const info = g('rcv-edit-info');
+  info.classList.toggle('d-none', !row);
+  if (row) info.innerHTML = (isAdmin
+      ? '<i class="fa-solid fa-user-shield me-1"></i>คุณเป็นแอดมิน — บันทึกแล้วมีผลทันที (ระบบเก็บประวัติว่าแก้จากอะไรเป็นอะไรไว้ในหน้า "คำขอแก้ไข")'
+      : '<i class="fa-solid fa-hourglass-half me-1"></i>แก้เฉพาะช่องที่ผิด แล้วกดส่งคำขอ — ใบรับและสต็อกจะยังไม่เปลี่ยนจนกว่าแอดมินจะอนุมัติ')
+    + (usedQty > 0 ? `<div class="mt-1"><i class="fa-solid fa-lock me-1"></i>ล็อตนี้ถูกเบิก/ตัดไปแล้ว ${_bomFmtQty(usedQty)} ${esc(row.Unit)} — เปลี่ยนรายการไม่ได้ และลดจำนวนให้ต่ำกว่านี้ไม่ได้</div>` : '')
+    + (row.RC_No ? `<div class="mt-1"><i class="fa-solid fa-file-lines me-1"></i>ออกใบรายงานรับ ${esc(row.RC_No)} แล้ว — เปลี่ยนวันที่รับไม่ได้ · แก้ช่องอื่นแล้วให้พิมพ์ใบรายงานซ้ำ</div>` : '');
+  g('rcv-save-btn').innerHTML = row
+    ? (isAdmin ? '<i class="fa-solid fa-floppy-disk me-1"></i>บันทึกการแก้ไข' : '<i class="fa-solid fa-paper-plane me-1"></i>ส่งคำขอแก้ไข')
+    : '<i class="fa-solid fa-floppy-disk me-1"></i>บันทึก';
+  const el = g('receivedModal');
+  el.addEventListener('shown.bs.modal', () => (row ? g('rcv-qty') : g('rcv-rm-search')).focus(), { once: true });
   bootstrap.Modal.getOrCreateInstance(el).show();
-  rcvAutoLot();
+  if (!row) rcvAutoLot();
 }
 
 // ── ช่อง "รายการ" แบบพิมพ์ค้นหา (ชื่อ/รหัส) แล้วขึ้นแนะนำให้เลือก → ใส่รหัส/หน่วย/ซัพพลายเออร์ให้อัตโนมัติ ──
@@ -3354,6 +3552,7 @@ function rcvRmPick(id, keepText) {
   document.getElementById('rcv-rm').value = r?.RM_ID || '';
   document.getElementById('rcv-code').value = r?.RM_ID || '';
   document.getElementById('rcv-unit').textContent = r?.Unit || '—';
+  document.getElementById('rcv-price-unit').textContent = r?.Unit ? `฿/${r.Unit}` : '฿';
   if (!keepText) document.getElementById('rcv-rm-search').value = r?.RM_Name || '';
   // ซัพพลายเออร์: ใส่ค่าจาก Master ให้ ถ้าผู้ใช้ยังไม่ได้พิมพ์เอง
   const sup = document.getElementById('rcv-supplier');
@@ -3393,10 +3592,11 @@ async function rcvAutoLot() {
   if (lot.dataset.auto && document.getElementById('rcv-rm').value === rmId
       && (document.getElementById('rcv-receive').value || todayStr()) === date) lot.value = next;
 }
-// ── วันหมดอายุแบบกดเลือก 6 เดือน / 1 ปี / 2 ปี — บวกจากวันเก็บเกี่ยว ถ้าไม่มีบวกจากวันที่รับ ──
-// จำระยะที่เลือกไว้: เปลี่ยนวันเก็บเกี่ยว/วันที่รับทีหลัง วันหมดอายุคำนวณใหม่ตาม · แก้วันหมดอายุเองในช่อง = เลิกผูกกับปุ่ม
+// ── วันหมดอายุแบบกดเลือก 6 เดือน / 1 ปี / 2 ปี — บวกจากวันที่ผลิต ถ้าไม่มีบวกจากวันที่รับ ──
+// (ช่อง "วันที่ผลิต" = คอลัมน์ HarvestDate เดิม — เปลี่ยนแค่ชื่อที่แสดงจาก "วันเก็บเกี่ยว" ตามที่ผู้ใช้ขอ 2026-09-26)
+// จำระยะที่เลือกไว้: เปลี่ยนวันที่ผลิต/วันที่รับทีหลัง วันหมดอายุคำนวณใหม่ตาม · แก้วันหมดอายุเองในช่อง = เลิกผูกกับปุ่ม
 let _rcvExpMonths = null;
-const RCV_EXP_HINT = 'นับจากวันเก็บเกี่ยว (ไม่มี = นับจากวันที่รับ) · ใช้ตัดล็อต FEFO และเตือนใกล้หมดอายุ';
+const RCV_EXP_HINT = 'นับจากวันที่ผลิต (ไม่มี = นับจากวันที่รับ) · ใช้ตัดล็อต FEFO และเตือนใกล้หมดอายุ';
 // บวกเดือนแบบปฏิทิน: วันที่เกินสิ้นเดือนปัดเป็นวันสุดท้ายของเดือน (31 ส.ค. + 6 เดือน = 28/29 ก.พ. ไม่ล้นไป มี.ค.)
 function _addMonthsStr(dateStr, months) {
   const [y, m, d] = dateStr.split('-').map(Number);
@@ -3419,17 +3619,34 @@ function rcvExpRecalc() {
   document.getElementById('rcv-exp').value = exp;
   _modalClearErrors(['rcv-exp']);
   document.getElementById('rcv-exp-hint').innerHTML =
-    `= <b>${fmtDate(exp)}</b> · นับจาก${harvest ? 'วันเก็บเกี่ยว' : 'วันที่รับ'} ${fmtDate(base)}`;
+    `= <b>${fmtDate(exp)}</b> · นับจาก${harvest ? 'วันที่ผลิต' : 'วันที่รับ'} ${fmtDate(base)}`;
+}
+
+// ── ราคา/หน่วย + มูลค่ารวม (rm_receive.UnitPrice — migration_2026-09-26_receive_note_price.sql) ──
+// คืน null = ไม่ได้กรอก · false = กรอกผิด · ตัวเลข = ราคา (ปัด 2 ตำแหน่ง)
+function _rcvReadPrice() {
+  const raw = document.getElementById('rcv-price').value.trim();
+  if (raw === '') return null;
+  const v = Math.round(parseFloat(raw) * 100) / 100;
+  return v >= 0 ? v : false;
+}
+function rcvCalcAmount() {
+  const qty = parseFloat(document.getElementById('rcv-qty').value);
+  const price = _rcvReadPrice();
+  document.getElementById('rcv-amount').value = qty > 0 && typeof price === 'number' ? `${_fmtBaht(qty * price)} ฿` : '';
 }
 
 // รับเข้า = ฟังก์ชัน DB rm_receive_post (สร้างใบรับ + ล็อต + บวกยอดรวม ในคำสั่งเดียว)
 async function receivedModalSave() {
-  _modalClearErrors(['rcv-qty', 'rcv-exp', 'rcv-rm-search']);
+  if (_rcvEditId) return rcvEditSubmit();
+  _modalClearErrors(['rcv-qty', 'rcv-exp', 'rcv-rm-search', 'rcv-price']);
   const rmId = document.getElementById('rcv-rm').value;
   const rm = _rmMasterCache.find(r => r.RM_ID === rmId);
   if (!rm) { _modalShowError('rcv-rm-search', 'พิมพ์ค้นหาแล้วเลือกรายการจากรายการแนะนำ'); rcvRmSuggest(); return; }
   const qty = parseFloat(document.getElementById('rcv-qty').value);
   if (!qty || qty <= 0) { _modalShowError('rcv-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  const price = _rcvReadPrice();
+  if (price === false) { _modalShowError('rcv-price', 'กรอกราคาให้ถูกต้อง'); return; }
   const receiveDate = document.getElementById('rcv-receive').value || todayStr();
   const exp = document.getElementById('rcv-exp').value || null;
   if (exp && exp < receiveDate) { _modalShowError('rcv-exp', 'วันหมดอายุต้องไม่ก่อนวันที่รับเข้า'); return; }
@@ -3449,12 +3666,14 @@ async function receivedModalSave() {
     p_lot: document.getElementById('rcv-lot').value.trim() || null,
     p_harvest: document.getElementById('rcv-harvest').value || null, p_exp: exp, p_receive_date: receiveDate,
   };
-  // ส่ง p_note เฉพาะเมื่อกรอก — ฐานข้อมูลที่ยังไม่รัน migration_2026-09-26_receive_note.sql ยังรับของได้ตามเดิมถ้าไม่ใส่หมายเหตุ
+  // ส่ง p_note / p_unit_price เฉพาะเมื่อกรอก — ฐานข้อมูลที่ยังไม่รัน migration_2026-09-26_receive_note_price.sql
+  // ยังรับของได้ตามเดิมถ้าไม่ใส่หมายเหตุ/ราคา
   if (note) args.p_note = note;
+  if (price !== null) args.p_unit_price = price;
   const { error } = await _sb.rpc('rm_receive_post', args);
   if (error) {
-    if (note && error.code === 'PGRST202') {
-      Swal.fire('บันทึกหมายเหตุไม่ได้', 'ระบบยังไม่รองรับหมายเหตุตอนรับเข้า — แอดมินต้องรัน <code>migration_2026-09-26_receive_note.sql</code> ใน Supabase ก่อน (หรือลบหมายเหตุออกแล้วบันทึก)', 'error');
+    if ((note || price !== null) && error.code === 'PGRST202') {
+      Swal.fire('บันทึกหมายเหตุ/ราคาไม่ได้', 'ระบบยังไม่รองรับหมายเหตุและราคาตอนรับเข้า — แอดมินต้องรัน <code>migration_2026-09-26_receive_note_price.sql</code> ใน Supabase ก่อน (หรือลบหมายเหตุ/ราคาออกแล้วบันทึก)', 'error');
       return;
     }
     _rmLotRpcErr(error, 'บันทึกรับเข้าคลังไม่สำเร็จ'); return;
@@ -3462,6 +3681,373 @@ async function receivedModalSave() {
   bootstrap.Modal.getInstance(document.getElementById('receivedModal')).hide();
   await Promise.all([receivedLoad(), stockRmLoad()]);
 }
+// ═══════════════════════════════════════════════════════════
+// คำขอแก้ไข (รวมทุกประเภท) → แอดมินอนุมัติที่หน้าเดียว — migration_2026-09-26_edit_requests_all.sql
+// • ประเภท: ใบรับเข้าคลัง / เบิกเข้าสาย / บันทึกผลิต / รับ FG / ของเสีย (ตารางกลาง edit_requests)
+//   + คำขอสมัครใช้งาน (signup_requests — แสดงรวมในหน้านี้ให้แอดมิน ใช้ปุ่มเดิม signupreqApprove/Reject)
+// • ส่งคำขอ = edit_request_create (ฝั่ง DB เทียบค่าเดิมเอง เก็บ {ช่อง: [เดิม, ใหม่]}) — ยังไม่แตะข้อมูลจริง
+// • อนุมัติ = edit_request_approve ปรับรายการ + ล็อต + สต็อกในคำสั่งเดียว · แอดมินแก้เอง = ส่งคำขอแล้วอนุมัติทันที
+// • แจ้งเตือนแอดมิน: ตัวเลขบนเมนู + แถบบนหน้า Received + งานค้างหน้าภาพรวม + ป๊อปอัปทันที (Realtime)
+// ═══════════════════════════════════════════════════════════
+const EDIT_TYPES = {
+  rm_receive: { label: 'ใบรับเข้าคลัง', icon: 'fa-inbox', table: 'rm_receive', pk: 'Receive_ID',
+    fields: { RM_ID: 'รายการ', Qty: 'จำนวน', UnitPrice: 'ราคา/หน่วย', Supplier: 'ซัพพลายเออร์', Lot: 'Lot', HarvestDate: 'วันที่ผลิต',
+      ExpDate: 'วันหมดอายุ', ReceiveDate: 'วันที่รับ', Note: 'หมายเหตุ' } },   // ใช้ฟอร์ม receivedModal (โหมดแก้ไข)
+  issue_production: { label: 'เบิกเข้าสาย', icon: 'fa-dolly', table: 'issue_production', pk: 'Issue_ID',
+    fields: { QtyIssued: 'จำนวนเบิก', IssueDate: 'วันที่เบิก', Note: 'หมายเหตุ' },
+    form: [{ k: 'QtyIssued', type: 'number', unit: r => r.Unit, req: true }, { k: 'IssueDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
+    info: 'เบิกเพิ่ม = ตัดล็อตเพิ่มแบบ FEFO · เบิกลด = คืนเข้าล็อตที่ตัดมา — สต็อกปรับตอนแอดมินอนุมัติ' },
+  production_records: { label: 'บันทึกผลิต', icon: 'fa-industry', table: 'production_records', pk: 'Prod_ID',
+    fields: { QtyProduced: 'จำนวนผลิตได้', ProdLot: 'Lot ผลิต', MfgDate: 'วันผลิต', ExpDate: 'วันหมดอายุ', ProducedBy: 'ผู้ผลิต', Note: 'หมายเหตุ' },
+    form: [{ k: 'QtyProduced', type: 'number', req: true }, { k: 'ProdLot', type: 'text', req: true }, { k: 'MfgDate', type: 'date', req: true },
+      { k: 'ExpDate', type: 'date', req: true }, { k: 'ProducedBy', type: 'text' }, { k: 'Note', type: 'textarea' }],
+    info: 'ถ้ารับเข้าคลัง FG แล้ว เปลี่ยน Lot ไม่ได้ · วันผลิต/หมดอายุจะเปลี่ยนตามในสต็อก FG ด้วย' },
+  fg_receive: { label: 'รับ FG เข้าคลัง', icon: 'fa-box-open', table: 'fg_receive', pk: 'FGReceive_ID',
+    fields: { Qty: 'จำนวนรับ', ReceiveDate: 'วันที่รับ', Note: 'หมายเหตุ' },
+    form: [{ k: 'Qty', type: 'number', req: true }, { k: 'ReceiveDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
+    info: 'สต็อก FG ล็อตนี้ปรับตามส่วนต่างตอนแอดมินอนุมัติ (ลดได้ไม่เกินที่ยังเหลือในคลัง)' },
+  waste_log: { label: 'ของเสีย', icon: 'fa-trash-can', table: 'waste_log', pk: 'Waste_ID',
+    fields: { Qty: 'จำนวน', Reason: 'สาเหตุ', WasteDate: 'วันที่', Note: 'หมายเหตุ' },
+    form: [{ k: 'Qty', type: 'number', unit: r => r.Unit, req: true }, { k: 'Reason', type: 'text', req: true }, { k: 'WasteDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
+    info: 'เพิ่มจำนวน = ตัดสต็อกล็อตเดิมเพิ่ม · ลดจำนวน = คืนเข้าล็อตเดิม — ปรับตอนแอดมินอนุมัติ' },
+};
+const EDIT_NUM_FIELDS = ['Qty', 'QtyIssued', 'QtyProduced', 'UnitPrice'];
+const RCV_EDIT_STATUS_BADGE = { 'รออนุมัติ': 'warning', 'อนุมัติแล้ว': 'success', 'ไม่อนุมัติ': 'danger', 'ยกเลิก': 'secondary',
+  'รอตรวจสอบ': 'warning', 'สร้างแล้ว': 'success', 'ปฏิเสธ': 'danger' };
+const RCV_EDIT_SETUP_MSG = 'ยังไม่ได้ตั้งค่าคำขอแก้ไข — แอดมินต้องรัน <code>migration_2026-09-26_edit_requests_all.sql</code> ใน Supabase ก่อน';
+let _rcvEditPending = [];   // คำขอแก้ไขที่รออนุมัติทั้งหมด (ป้ายในตาราง / แถบแจ้งเตือน / ตัวเลขเมนู)
+let _signupPendingCount = 0; // คำขอสมัครใช้งานที่รอตรวจสอบ (แอดมินเท่านั้น)
+let _rcvEditCache = [];     // ทุกคำขอแก้ไข (หน้า "คำขอแก้ไข")
+let _editRecCache = {};     // {type: {id: แถวข้อมูลจริง}} ไว้แสดงชื่อรายการในหน้าคำขอ
+let _rcvEditReady = true;   // false = ยังไม่ได้รัน SQL
+function _rcvEditSetupErr(error) {
+  return error && (['PGRST202', 'PGRST205', '42P01'].includes(error.code) || /edit_request/.test(error.message || '') && /not find|does not exist|schema cache/i.test(error.message || ''));
+}
+async function rcvEditLoadPending() {
+  const reqs = [_sb.from('edit_requests').select('*').eq('Status', 'รออนุมัติ').order('RequestedAt')];
+  if (_hasRole('admin')) reqs.push(_sb.from('signup_requests').select('_row_id', { count: 'exact', head: true }).eq('Status', 'รอตรวจสอบ'));
+  const [ed, su] = await Promise.all(reqs);
+  _rcvEditReady = !_rcvEditSetupErr(ed.error);
+  _rcvEditPending = ed.error ? [] : (ed.data || []);
+  _signupPendingCount = su && !su.error ? (su.count || 0) : 0;
+  rcvEditRefreshBadge();
+}
+// คำขอแก้ไขรายการนี้ที่ยังรออนุมัติ (ไว้เปลี่ยนปุ่มแก้ไขเป็นนาฬิกาทราย)
+function _editPendingFor(type, id) { return _rcvEditPending.find(p => p.Type === type && p.RecordID === id); }
+// ปุ่มแก้ไขในตารางของแต่ละหน้า — มีคำขอค้าง = ปุ่มพาไปดูคำขอ
+function _editBtn(type, id) {
+  if (_editPendingFor(type, id)) return `<button class="btn btn-sm btn-warning me-1" onclick="showPage('rcvedit')" title="มีคำขอแก้ไขรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
+  const open = type === 'rm_receive' ? `receivedOpenForm('${esc(id)}')` : `editReqOpen('${type}','${esc(id)}')`;
+  return `<button class="btn btn-sm btn-outline-primary me-1" onclick="${open}" title="${_hasRole('admin') ? 'แก้ไข' : 'ขอแก้ไข (รอแอดมินอนุมัติ)'}"><i class="fa-solid fa-pen"></i></button>`;
+}
+// ตัวเลขบนเมนู: แอดมิน = คำขอแก้ไขรออนุมัติทั้งหมด + คำขอสมัครใช้งาน · คนอื่น = คำขอของตัวเองที่ยังรออยู่
+function rcvEditRefreshBadge() {
+  const n = _hasRole('admin') ? _rcvEditPending.length + _signupPendingCount : _rcvEditPending.filter(p => p.RequestedByID === _currentUser?.id).length;
+  const el = document.getElementById('rcvEditNavBadge');
+  el.textContent = n || '';
+  el.style.display = n ? '' : 'none';
+  el.className = 'badge ms-1 ' + (_hasRole('admin') ? 'text-bg-danger' : 'text-bg-warning');
+}
+function _rcvEditRenderBanner() {
+  const el = document.getElementById('rcvEditBanner');
+  const n = _rcvEditPending.length + _signupPendingCount;
+  const show = n > 0 && _hasRole('admin');
+  el.classList.toggle('d-none', !show);
+  el.classList.toggle('d-flex', show);
+  if (show) el.innerHTML = `<i class="fa-solid fa-bell"></i><span class="flex-grow-1">มีคำขอ <b>${n}</b> รายการ รอคุณอนุมัติ</span>
+    <button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')">ไปอนุมัติ <i class="fa-solid fa-chevron-right ms-1"></i></button>`;
+}
+function _rcvEditFmtVal(field, v) {
+  if (v === null || v === undefined || v === '') return '<span class="text-muted">(ว่าง)</span>';
+  if (field === 'RM_ID') { const m = _rmMasterCache.find(r => r.RM_ID === v); return esc(m ? `${m.RM_Name} (${v})` : v); }
+  if (/Date$/.test(field)) return esc(fmtDate(v));
+  if (field === 'UnitPrice') return esc(_fmtBaht(v)) + ' ฿';
+  if (EDIT_NUM_FIELDS.includes(field)) return esc(_bomFmtQty(v));
+  return esc(v);
+}
+function _rcvEditDiffHtml(changes, type = 'rm_receive') {
+  const labels = EDIT_TYPES[type]?.fields || {};
+  return Object.entries(changes || {}).map(([f, [from, to]]) =>
+    `<div class="small"><b>${esc(labels[f] || f)}:</b> <span class="text-danger text-decoration-line-through">${_rcvEditFmtVal(f, from)}</span>
+      <i class="fa-solid fa-arrow-right mx-1 text-muted"></i><span class="text-success fw-semibold">${_rcvEditFmtVal(f, to)}</span></div>`).join('');
+}
+// ชื่อรายการที่คนอ่านเข้าใจ (แทนเลขที่ภายใน) — [หัวข้อ, รายละเอียด]
+function _editRecLabel(type, rec) {
+  if (!rec) return ['(รายการถูกลบแล้ว)', ''];
+  const rm = id => _rmMasterCache.find(r => r.RM_ID === id)?.RM_Name || id;
+  const fg = id => _fgMasterCache.find(f => f.FG_ID === id)?.FG_Name || id;
+  switch (type) {
+    case 'rm_receive': return [rm(rec.RM_ID), `รับ ${fmtDateLong(rec.ReceiveDate)} · ${_bomFmtQty(rec.Qty)} ${rec.Unit || ''} · Lot ${rec.Lot || '-'}`];
+    case 'issue_production': return [rm(rec.RM_ID), `${rec.MO_ID} · เบิก ${_bomFmtQty(rec.QtyIssued)} ${rec.Unit || ''} · ${fmtDateLong(rec.IssueDate)}`];
+    case 'production_records': return [fg(rec.FG_ID), `Lot ${rec.ProdLot} · ${_bomFmtQty(rec.QtyProduced)} · ผลิต ${fmtDateLong(rec.MfgDate)}`];
+    case 'fg_receive': return [fg(rec.FG_ID), `Lot ${rec.Lot} · ${_bomFmtQty(rec.Qty)} · รับ ${fmtDateLong(rec.ReceiveDate)}`];
+    case 'waste_log': return [rec.ItemType === 'FG' ? fg(rec.FG_ID) : rm(rec.RM_ID), `${_bomFmtQty(rec.Qty)} ${rec.Unit || ''} · ${rec.Reason || ''} · ${fmtDateLong(rec.WasteDate)}`];
+  }
+  return ['', ''];
+}
+function _rcvLabelAny(type, id) {
+  const rec = _editRecCache[type]?.[id] || (type === 'rm_receive' ? _receivedCache.find(r => r.Receive_ID === id) : null);
+  return rec ? _editRecLabel(type, rec).join(' · ') : EDIT_TYPES[type]?.label || 'รายการ';
+}
+
+// ส่งคำขอ + (แอดมิน) อนุมัติทันที — ใช้ทั้งฟอร์มใบรับและฟอร์มกลาง
+async function _editSubmitRequest(type, id, p_new, reason) {
+  const { data: reqId, error } = await _sb.rpc('edit_request_create', { p_type: type, p_record_id: id, p_new, p_reason: reason });
+  if (error) { console.error(error); Swal.fire('ส่งคำขอไม่สำเร็จ', _rcvEditSetupErr(error) ? RCV_EDIT_SETUP_MSG : esc(error.message), 'error'); return false; }
+  if (_hasRole('admin')) {
+    const { error: apErr } = await _sb.rpc('edit_request_approve', { p_req_id: reqId, p_note: 'แอดมินแก้ไขเอง' });
+    if (apErr) {
+      Swal.fire('บันทึกคำขอแล้ว แต่ปรับข้อมูลไม่สำเร็จ', esc(apErr.message) + '<br><small>คำขอยังรออนุมัติอยู่ที่หน้า "คำขอแก้ไข"</small>', 'error');
+      return true;
+    }
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'แก้ไขแล้ว', showConfirmButton: false, timer: 2200 });
+  } else {
+    Swal.fire({ icon: 'success', title: 'ส่งคำขอแก้ไขแล้ว', text: 'ข้อมูลจะเปลี่ยนเมื่อแอดมินอนุมัติ — ติดตามได้ที่เมนู "คำขอแก้ไข"', timer: 3500, showConfirmButton: false });
+  }
+  return true;
+}
+// เทียบค่าเดิม → เหลือเฉพาะช่องที่เปลี่ยนจริง (ช่องที่ไม่ได้แตะ ไม่ส่ง)
+function _editChanged(old, all) {
+  const same = (k, v) => EDIT_NUM_FIELDS.includes(k)
+    ? ((old[k] ?? null) === null ? v === null : Number(old[k]) === v)
+    : (old[k] ?? null) === v;
+  return Object.fromEntries(Object.entries(all).filter(([k, v]) => !same(k, v)));
+}
+
+// ส่งคำขอจากฟอร์มใบรับ (โหมดแก้ไขของ receivedModal)
+async function rcvEditSubmit() {
+  const g = id => document.getElementById(id);
+  _modalClearErrors(['rcv-qty', 'rcv-exp', 'rcv-rm-search', 'rcv-reason']);
+  const rmId = g('rcv-rm').value;
+  if (!_rmMasterCache.some(r => r.RM_ID === rmId)) { _modalShowError('rcv-rm-search', 'พิมพ์ค้นหาแล้วเลือกรายการจากรายการแนะนำ'); return; }
+  const qty = parseFloat(g('rcv-qty').value);
+  if (!qty || qty <= 0) { _modalShowError('rcv-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  const receiveDate = g('rcv-receive').value;
+  const exp = g('rcv-exp').value || null;
+  if (exp && receiveDate && exp < receiveDate) { _modalShowError('rcv-exp', 'วันหมดอายุต้องไม่ก่อนวันที่รับเข้า'); return; }
+  const price = _rcvReadPrice();
+  if (price === false) { _modalShowError('rcv-price', 'กรอกราคาให้ถูกต้อง'); return; }
+  const reason = g('rcv-reason').value.trim();
+  if (!reason) { _modalShowError('rcv-reason', 'ระบุเหตุผลที่ขอแก้ไข ให้แอดมินใช้ประกอบการอนุมัติ'); return; }
+  const old = _receivedCache.find(r => r.Receive_ID === _rcvEditId) || {};
+  const p_new = _editChanged(old, { RM_ID: rmId, Qty: qty, UnitPrice: price, Supplier: g('rcv-supplier').value.trim() || null, Lot: g('rcv-lot').value.trim() || null,
+    HarvestDate: g('rcv-harvest').value || null, ExpDate: exp, ReceiveDate: receiveDate || null, Note: g('rcv-note').value.trim() || null });
+  if (!Object.keys(p_new).length) { Swal.fire('ไม่มีช่องไหนเปลี่ยน', 'แก้ข้อมูลช่องที่ผิดก่อนกดส่ง', 'info'); return; }
+  if (!(await _editSubmitRequest('rm_receive', _rcvEditId, p_new, reason))) return;
+  bootstrap.Modal.getInstance(g('receivedModal')).hide();
+  await Promise.all([receivedLoad(), stockRmLoad()]);
+}
+
+// ── ฟอร์มขอแก้ไขกลาง (เบิกเข้าสาย / บันทึกผลิต / รับ FG / ของเสีย) ──
+let _editForm = null;   // {type, id, row}
+async function editReqOpen(type, id) {
+  const t = EDIT_TYPES[type];
+  const { data: row, error } = await _sb.from(t.table).select('*').eq(t.pk, id).maybeSingle();
+  if (error || !row) { Swal.fire('โหลดรายการไม่ได้', esc(error?.message || 'ไม่พบรายการ'), 'error'); return; }
+  let lockLot = false;
+  if (type === 'production_records') {
+    const { count } = await _sb.from('fg_receive').select('FGReceive_ID', { count: 'exact', head: true }).eq('Prod_ID', id);
+    lockLot = count > 0;
+  }
+  _editForm = { type, id, row };
+  const isAdmin = _hasRole('admin');
+  const [title, detail] = _editRecLabel(type, row);
+  document.getElementById('erq-title').textContent = `${isAdmin ? 'แก้ไข' : 'ขอแก้ไข'}${t.label} — ${title}`;
+  document.getElementById('erq-info').innerHTML = `<div class="small text-muted mb-1">${esc(detail)}</div>`
+    + (isAdmin ? '<i class="fa-solid fa-user-shield me-1"></i>คุณเป็นแอดมิน — บันทึกแล้วมีผลทันที (ประวัติเก็บไว้ที่หน้า "คำขอแก้ไข")'
+               : '<i class="fa-solid fa-hourglass-half me-1"></i>แก้เฉพาะช่องที่ผิด แล้วกดส่งคำขอ — ข้อมูลจะยังไม่เปลี่ยนจนกว่าแอดมินจะอนุมัติ')
+    + `<div class="mt-1"><i class="fa-solid fa-circle-info me-1"></i>${esc(t.info)}</div>`;
+  document.getElementById('erq-fields').innerHTML = t.form.map(f => {
+    const v = row[f.k] ?? '';
+    const lbl = `${esc(t.fields[f.k])}${f.req ? '<span class="text-danger">*</span>' : ''}`;
+    const dis = f.k === 'ProdLot' && lockLot ? 'disabled title="รับเข้าคลัง FG แล้ว — เปลี่ยน Lot ไม่ได้"' : '';
+    const input = f.type === 'textarea'
+      ? `<textarea id="erq-f-${f.k}" class="form-control" rows="2">${esc(v)}</textarea>`
+      : f.unit ? `<div class="input-group has-validation"><input id="erq-f-${f.k}" type="${f.type}" step="any" class="form-control" value="${esc(v)}" ${dis}>
+          <span class="input-group-text">${esc(f.unit(row) || '')}</span><div class="invalid-feedback" id="erq-f-${f.k}-err"></div></div>`
+      : `<input id="erq-f-${f.k}" type="${f.type}" ${f.type === 'number' ? 'step="any"' : ''} class="form-control" value="${esc(v)}" ${dis}>`;
+    return `<div class="${f.type === 'textarea' ? 'col-12' : 'col-md-6'}"><label class="form-label">${lbl}</label>${input}
+      ${f.unit ? '' : `<div class="invalid-feedback" id="erq-f-${f.k}-err"></div>`}</div>`;
+  }).join('');
+  document.getElementById('erq-reason').value = '';
+  document.getElementById('erq-save-btn').innerHTML = isAdmin ? '<i class="fa-solid fa-floppy-disk me-1"></i>บันทึกการแก้ไข' : '<i class="fa-solid fa-paper-plane me-1"></i>ส่งคำขอแก้ไข';
+  _modalClearErrors(['erq-reason']);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('editReqModal')).show();
+}
+async function editReqSubmit() {
+  const { type, id, row } = _editForm || {};
+  if (!type) return;
+  const t = EDIT_TYPES[type];
+  const ids = t.form.map(f => `erq-f-${f.k}`);
+  _modalClearErrors([...ids, 'erq-reason']);
+  const all = {};
+  for (const f of t.form) {
+    const el = document.getElementById(`erq-f-${f.k}`);
+    const raw = el.value.trim();
+    let v = raw === '' ? null : raw;
+    if (f.type === 'number' && v !== null) {
+      v = parseFloat(raw);
+      if (!(v > 0)) { _modalShowError(el.id, 'กรอกจำนวนมากกว่า 0'); return; }
+    }
+    if (f.req && v === null) { _modalShowError(el.id, 'ช่องนี้ต้องไม่ว่าง'); return; }
+    all[f.k] = v;
+  }
+  if (all.ExpDate && all.MfgDate && all.ExpDate < all.MfgDate) { _modalShowError('erq-f-ExpDate', 'วันหมดอายุต้องไม่ก่อนวันผลิต'); return; }
+  const reason = document.getElementById('erq-reason').value.trim();
+  if (!reason) { _modalShowError('erq-reason', 'ระบุเหตุผลที่ขอแก้ไข ให้แอดมินใช้ประกอบการอนุมัติ'); return; }
+  const p_new = _editChanged(row, all);
+  if (!Object.keys(p_new).length) { Swal.fire('ไม่มีช่องไหนเปลี่ยน', 'แก้ข้อมูลช่องที่ผิดก่อนกดส่ง', 'info'); return; }
+  if (!(await _editSubmitRequest(type, id, p_new, reason))) return;
+  bootstrap.Modal.getInstance(document.getElementById('editReqModal')).hide();
+  _stockRmCache = []; _stockFgCache = []; _rmLotCache = [];
+  await rcvEditLoadPending();
+  if (PAGE_LOADERS[_currentPage]) await PAGE_LOADERS[_currentPage]();
+}
+
+// ── หน้า "คำขอแก้ไข" ──
+async function rcvEditLoad() {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  if (!_fgMasterCache.length) await fgMasterLoad();
+  const isAdmin = _hasRole('admin');
+  const [ed, su] = await Promise.all([
+    _sb.from('edit_requests').select('*').order('RequestedAt', { ascending: false }).limit(500),
+    isAdmin ? _sb.from('signup_requests').select('*').order('CreatedAt', { ascending: false }).limit(300) : Promise.resolve({ data: [] }),
+  ]);
+  const body = document.getElementById('rcvEditTableBody');
+  if (ed.error) {
+    body.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">${_rcvEditSetupErr(ed.error) ? RCV_EDIT_SETUP_MSG : 'โหลดไม่ได้ — ' + esc(ed.error.message)}</td></tr>`;
+    return;
+  }
+  _rcvEditCache = ed.data || [];
+  _signupreqCache = su.data || [];   // ใช้กับปุ่มเดิม signupreqApprove / signupreqReject
+  _rcvEditPending = _rcvEditCache.filter(r => r.Status === 'รออนุมัติ');
+  _signupPendingCount = _signupreqCache.filter(r => r.Status === 'รอตรวจสอบ').length;
+  // โหลดข้อมูลจริงของรายการที่ถูกขอแก้ (ชื่อรายการ/จำนวนล่าสุด) — ครั้งละประเภท
+  _editRecCache = {};
+  await Promise.all(Object.entries(EDIT_TYPES).map(async ([type, t]) => {
+    const ids = [...new Set(_rcvEditCache.filter(r => r.Type === type).map(r => r.RecordID))];
+    _editRecCache[type] = {};
+    if (!ids.length) return;
+    const { data } = await _sb.from(t.table).select('*').in(t.pk, ids);
+    (data || []).forEach(row => { _editRecCache[type][row[t.pk]] = row; });
+  }));
+  rcvEditRefreshBadge();
+  document.getElementById('rcvEditMineWrap').style.display = isAdmin ? '' : 'none';
+  document.querySelector('#rcvEditType option[value="signup"]').hidden = !isAdmin;
+  rcvEditRender();
+}
+function rcvEditRender() {
+  const f = document.getElementById('rcvEditFilter').value;
+  const typeF = document.getElementById('rcvEditType').value;
+  const isAdmin = _hasRole('admin');
+  const mine = !isAdmin || document.getElementById('rcvEditMine').checked;
+  const fmtTs = ts => ts ? new Date(ts).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+  // สถานะของคำขอสมัคร (รอตรวจสอบ/สร้างแล้ว/ปฏิเสธ) เทียบกับตัวกรองสถานะของคำขอแก้ไข
+  const signupStatusOf = { 'รออนุมัติ': 'รอตรวจสอบ', 'อนุมัติแล้ว': 'สร้างแล้ว', 'ไม่อนุมัติ': 'ปฏิเสธ', 'ยกเลิก': '__none' };
+  const items = [];
+  if (typeF !== 'signup') {
+    // ผู้ใช้ทั่วไปเห็นเฉพาะคำขอของตัวเอง · แอดมินเห็นทั้งหมด (สลับดูเฉพาะของตัวเองได้)
+    _rcvEditCache.filter(r => (!f || r.Status === f) && (!typeF || r.Type === typeF) && (!mine || r.RequestedByID === _currentUser?.id))
+      .forEach(r => items.push({ ts: r.RequestedAt, html: _rcvEditRowHtml(r, isAdmin, fmtTs) }));
+  }
+  if (isAdmin && !mine && (!typeF || typeF === 'signup')) {
+    _signupreqCache.filter(r => !f || r.Status === signupStatusOf[f])
+      .forEach(r => items.push({ ts: r.CreatedAt, html: _signupRowHtml(r, fmtTs) }));
+  }
+  items.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+  document.getElementById('rcvEditTableBody').innerHTML = items.map(i => i.html).join('')
+    || `<tr><td colspan="8" class="text-center text-muted py-4">${f === 'รออนุมัติ' ? 'ไม่มีคำขอรออนุมัติ' : 'ไม่มีคำขอ'}</td></tr>`;
+}
+function _rcvEditRowHtml(r, isAdmin, fmtTs) {
+  const t = EDIT_TYPES[r.Type] || { label: r.Type, icon: 'fa-pen' };
+  const [title, detail] = _editRecLabel(r.Type, _editRecCache[r.Type]?.[r.RecordID]);
+  const pending = r.Status === 'รออนุมัติ';
+  const actions = !pending ? '<span class="text-muted small">—</span>'
+    : (isAdmin ? `<button class="btn btn-sm btn-success me-1" onclick="rcvEditApprove(${r.Req_ID})"><i class="fa-solid fa-check me-1"></i>อนุมัติ</button>
+        <button class="btn btn-sm btn-outline-danger me-1" onclick="rcvEditReject(${r.Req_ID})"><i class="fa-solid fa-xmark me-1"></i>ไม่อนุมัติ</button>` : '')
+      + (r.RequestedByID === _currentUser?.id ? `<button class="btn btn-sm btn-outline-secondary" onclick="rcvEditCancel(${r.Req_ID})">ยกเลิกคำขอ</button>` : '');
+  const review = r.ReviewedAt ? `<div class="small text-muted mt-1">${esc(r.ReviewedBy || '')} · ${fmtTs(r.ReviewedAt)}${r.ReviewNote ? `<br>“${esc(r.ReviewNote)}”` : ''}</div>` : '';
+  return `<tr>
+    <td class="small text-nowrap">${fmtTs(r.RequestedAt)}</td>
+    <td class="text-nowrap"><span class="badge text-bg-light border"><i class="fa-solid ${t.icon} me-1"></i>${esc(t.label)}</span></td>
+    <td><b>${esc(title)}</b><div class="small text-muted">${esc(detail)}</div></td>
+    <td style="min-width:220px">${_rcvEditDiffHtml(r.Changes, r.Type)}</td>
+    <td class="small" style="white-space:normal;max-width:220px">${esc(r.Reason || '')}</td>
+    <td class="small">${esc(r.RequestedBy || '-')}</td>
+    <td>${badge(r.Status, RCV_EDIT_STATUS_BADGE[r.Status])}${review}</td>
+    <td class="text-center text-nowrap">${actions}</td></tr>`;
+}
+// คำขอสมัครใช้งาน (จากปุ่ม "ขอรหัส" หน้า login) — แอดมินสร้างบัญชีที่ Supabase แล้วกด "สร้างแล้ว"
+function _signupRowHtml(r, fmtTs) {
+  const username = _computeUsername(r.FirstName, r.LastName);
+  const pw = _signupPassword(r);
+  const pending = r.Status === 'รอตรวจสอบ';
+  return `<tr>
+    <td class="small text-nowrap">${fmtTs(r.CreatedAt)}</td>
+    <td class="text-nowrap"><span class="badge text-bg-light border"><i class="fa-solid fa-user-plus me-1"></i>สมัครใช้งาน</span></td>
+    <td><b>${esc(r.FirstName)} ${esc(r.LastName)}</b><div class="small text-muted">Username <b>${esc(username || '—')}</b>${r.Phone ? ` · ${esc(r.Phone)}` : ''} · ${esc(r.RealEmail || '')}</div></td>
+    <td class="small" style="min-width:220px">สร้างบัญชีที่ <a href="https://supabase.com/dashboard/project/mdoqkqvgkpnsmrybzbwn/auth/users" target="_blank" rel="noopener">Supabase → Users</a> (ติ๊ก Auto Confirm)<br>
+      Email <code>${esc(username ? _usernameToEmail(username) : '—')}</code> · Password <code>${esc(pw)}</code>${pw.length < 6 ? '<div class="text-danger" style="font-size:.72rem">รหัสสั้นกว่า 6 ตัว — Supabase ไม่รับ ต้องตั้งรหัสอื่น</div>' : ''}</td>
+    <td class="small">ขอรหัสเข้าใช้งาน</td>
+    <td class="small">${esc(r.FirstName)}</td>
+    <td>${badge(r.Status, RCV_EDIT_STATUS_BADGE[r.Status])}${r.ReviewNote ? `<div class="small text-muted">${esc(r.ReviewNote)}</div>` : ''}</td>
+    <td class="text-center text-nowrap">${pending ? `
+      <button class="btn btn-sm btn-success me-1" onclick="rcvEditSignup('approve', ${r._row_id})"><i class="fa-solid fa-check me-1"></i>สร้างแล้ว</button>
+      <button class="btn btn-sm btn-outline-danger" onclick="rcvEditSignup('reject', ${r._row_id})"><i class="fa-solid fa-xmark me-1"></i>ปฏิเสธ</button>` : '<span class="text-muted small">—</span>'}</td></tr>`;
+}
+async function rcvEditSignup(action, rowId) {
+  await (action === 'approve' ? signupreqApprove(rowId) : signupreqReject(rowId));
+  await rcvEditLoad();
+}
+async function rcvEditApprove(reqId) {
+  const r = _rcvEditCache.find(x => x.Req_ID === reqId);
+  const t = EDIT_TYPES[r?.Type] || {};
+  const c = await Swal.fire({ title: 'อนุมัติการแก้ไขนี้?', icon: 'question',
+    footer: esc(`${t.label || ''} · ${_rcvLabelAny(r?.Type, r?.RecordID)}`),
+    html: `<div class="text-start border rounded p-2 mb-2">${_rcvEditDiffHtml(r?.Changes, r?.Type)}</div><div class="small text-muted text-start">ข้อมูลและยอดสต็อกที่เกี่ยวข้องจะถูกปรับตามทันที</div>`,
+    input: 'text', inputPlaceholder: 'หมายเหตุถึงผู้ขอ (ไม่บังคับ)', showCancelButton: true,
+    confirmButtonText: 'อนุมัติ', confirmButtonColor: '#198754', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  const { error } = await _sb.rpc('edit_request_approve', { p_req_id: reqId, p_note: c.value || null });
+  if (error) { Swal.fire('อนุมัติไม่สำเร็จ', esc(error.message), 'error'); return; }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'อนุมัติแล้ว — ปรับข้อมูลและสต็อกแล้ว', showConfirmButton: false, timer: 2200 });
+  _receivedCache = []; _stockRmCache = []; _stockFgCache = []; _rmLotCache = []; _wasteCache = [];
+  await rcvEditLoad();
+}
+async function rcvEditReject(reqId) {
+  const c = await Swal.fire({ title: 'ไม่อนุมัติคำขอนี้?', input: 'text', inputPlaceholder: 'เหตุผล (แจ้งผู้ขอ)', icon: 'warning',
+    showCancelButton: true, confirmButtonText: 'ไม่อนุมัติ', confirmButtonColor: '#d33', cancelButtonText: 'ยกเลิก',
+    inputValidator: v => !v?.trim() ? 'กรุณาระบุเหตุผลให้ผู้ขอ' : undefined });
+  if (!c.isConfirmed) return;
+  const { error } = await _sb.rpc('edit_request_reject', { p_req_id: reqId, p_note: c.value.trim() });
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await rcvEditLoad();
+}
+async function rcvEditCancel(reqId) {
+  const c = await Swal.fire({ title: 'ยกเลิกคำขอแก้ไขนี้?', icon: 'question', showCancelButton: true, confirmButtonText: 'ยกเลิกคำขอ', cancelButtonText: 'ไม่' });
+  if (!c.isConfirmed) return;
+  const { error } = await _sb.rpc('edit_request_cancel', { p_req_id: reqId });
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await rcvEditLoad();
+}
+// แจ้งเตือนทันทีผ่าน Realtime: แอดมินเมื่อมีคำขอใหม่ (แก้ไข/สมัครใช้งาน) · ผู้ขอเมื่อคำขอของตัวเองถูกอนุมัติ/ไม่อนุมัติ
+function _rcvEditRealtime(payload) {
+  const n = payload.new || {};
+  const me = _currentUser?.id;
+  const go = () => showPage('rcvedit');
+  const toast = (icon, title, text) => Swal.fire({ toast: true, position: 'top-end', icon, title, text, showConfirmButton: false,
+    timer: 8000, timerProgressBar: true, didOpen: el => el.addEventListener('click', () => { Swal.close(); go(); }) });
+  if (payload.table === 'signup_requests') {
+    if (payload.eventType === 'INSERT' && _hasRole('admin')) toast('info', `คำขอสมัครใช้งานใหม่: ${n.FirstName || ''} ${n.LastName || ''}`, 'กดเพื่อดู');
+  } else if (payload.eventType === 'INSERT' && _hasRole('admin') && n.RequestedByID !== me) {
+    toast('info', `คำขอแก้ไข${EDIT_TYPES[n.Type]?.label || ''}ใหม่จาก ${n.RequestedBy || 'ผู้ใช้'}`, `${_rcvLabelAny(n.Type, n.RecordID)} — กดเพื่อดู`);
+  } else if (payload.eventType === 'UPDATE' && n.RequestedByID === me && ['อนุมัติแล้ว', 'ไม่อนุมัติ'].includes(n.Status) && n.ReviewNote !== 'แอดมินแก้ไขเอง') {
+    toast(n.Status === 'อนุมัติแล้ว' ? 'success' : 'error', `คำขอแก้ไข${EDIT_TYPES[n.Type]?.label || ''}: ${n.Status}`,
+      _rcvLabelAny(n.Type, n.RecordID) + (n.ReviewNote ? ` — ${n.ReviewNote}` : ''));
+  }
+  rcvEditLoadPending().then(() => { if (_currentPage === 'received') _rcvEditRenderBanner(); });
+}
+
 async function receivedDelete(id) {
   const rc = _receivedCache.find(r => r.Receive_ID === id)?.RC_No;
   const c = await Swal.fire({ title: 'ลบรายการรับนี้?', icon: 'warning',
@@ -3678,21 +4264,27 @@ function _rrptHtml() {
   const showSup = !_rrpt.supplier;   // ใบรวมทุกซัพพลายเออร์ → แสดงคอลัมน์ซัพพลายเออร์ด้วย
   const date = rows[0]?.ReceiveDate || document.getElementById('rrpt-date').value;
   const trs = rows.map((r, i) => `<tr>
-    <td class="ord">${i + 1}</td><td>${esc(r.Receive_ID)}</td><td>${esc(r.RM_ID)}</td>
+    <td class="ord">${i + 1}</td><td>${esc(r.RM_ID)}</td>
     <td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td><td>${esc(_rrptCat(catOf(r)))}</td>
     ${showSup ? `<td>${esc(r.Supplier || '-')}</td>` : ''}
     <td>${esc(r.Lot || '-')}</td><td>${_fmtDateEn(r.HarvestDate)}</td><td>${_fmtDateEn(r.ExpDate)}</td>
-    <td class="num qty">${_bomFmtQty(r.Qty)}</td><td>${esc(_rrptUnit(r.Unit))}</td><td>${esc(r.Note || '')}</td>
+    <td class="num qty">${_bomFmtQty(r.Qty)}</td><td>${esc(_rrptUnit(r.Unit))}</td>
+    <td class="num">${r.UnitPrice != null ? _fmtBaht(r.UnitPrice) : '-'}</td><td class="num">${r.UnitPrice != null ? _fmtBaht(r.UnitPrice * r.Qty) : '-'}</td>
+    <td>${esc(r.Note || '')}</td>
   </tr>`).join('');
-  // สรุปตามรายการ + หน่วย (หน่วยต่างกันบวกกันไม่ได้)
+  // สรุปตามรายการ + หน่วย (หน่วยต่างกันบวกกันไม่ได้) · มูลค่ารวมนับเฉพาะรายการที่มีราคา
   const sum = {};
+  let grand = 0, unpriced = 0;
   rows.forEach(r => {
     const k = r.RM_ID + '||' + (r.Unit || '');
-    sum[k] = sum[k] || { id: r.RM_ID, name: rmMap[r.RM_ID]?.RM_Name || r.RM_ID, cat: catOf(r), unit: r.Unit || '', lots: 0, qty: 0 };
+    sum[k] = sum[k] || { id: r.RM_ID, name: rmMap[r.RM_ID]?.RM_Name || r.RM_ID, cat: catOf(r), unit: r.Unit || '', lots: 0, qty: 0, amount: 0, priced: false };
     sum[k].lots++; sum[k].qty += parseFloat(r.Qty) || 0;
+    if (r.UnitPrice != null) { const a = r.UnitPrice * r.Qty; sum[k].amount += a; sum[k].priced = true; grand += a; } else unpriced++;
   });
   const sumRows = Object.values(sum).map(s => `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(_rrptCat(s.cat))}</td>
-    <td class="num">${s.lots}</td><td class="num qty">${_bomFmtQty(s.qty)}</td><td>${esc(_rrptUnit(s.unit))}</td></tr>`).join('');
+    <td class="num">${s.lots}</td><td class="num qty">${_bomFmtQty(s.qty)}</td><td>${esc(_rrptUnit(s.unit))}</td>
+    <td class="num">${s.priced ? _fmtBaht(s.amount) : '-'}</td></tr>`).join('')
+    + `<tr class="rrpt-total"><td colspan="6">Grand Total (THB)${unpriced ? ` <span class="small fw-normal">— ${unpriced} item(s) without price not included</span>` : ''}</td><td class="num">${_fmtBaht(grand)}</td></tr>`;
   const now = new Date();
   const sign = (en, th) => `<div class="rrpt-sign"><div class="line">${en}<div class="th">${th}</div></div><div class="date">Date ____ / ____ / ______</div></div>`;
   return `<div class="rrpt-page">
@@ -3715,14 +4307,14 @@ function _rrptHtml() {
     </div>
     ${rows.length ? `
     <table class="rrpt-table">
-      <thead><tr><th style="width:3%">No.</th><th>Receipt No.</th><th>Code</th><th style="width:20%">Description</th><th>Category</th>
-        ${showSup ? '<th>Supplier</th>' : ''}<th>Lot No.</th><th>Harvest Date</th><th>Exp. Date</th>
-        <th class="num">Qty</th><th>Unit</th><th style="width:14%">Remarks</th></tr></thead>
+      <thead><tr><th style="width:3%">No.</th><th>Code</th><th style="width:20%">Description</th><th>Category</th>
+        ${showSup ? '<th>Supplier</th>' : ''}<th>Lot No.</th><th>Mfg. Date</th><th>Exp. Date</th>
+        <th class="num">Qty</th><th>Unit</th><th class="num">Unit Price</th><th class="num">Amount</th><th style="width:12%">Remarks</th></tr></thead>
       <tbody>${trs}</tbody>
     </table>
     <div class="rrpt-sum-title">Summary by Item</div>
     <table class="rrpt-table sum">
-      <thead><tr><th>Code</th><th>Description</th><th>Category</th><th class="num">Lots</th><th class="num">Total Qty</th><th>Unit</th></tr></thead>
+      <thead><tr><th>Code</th><th>Description</th><th>Category</th><th class="num">Lots</th><th class="num">Total Qty</th><th>Unit</th><th class="num">Amount (THB)</th></tr></thead>
       <tbody>${sumRows}</tbody>
     </table>` : '<div class="rrpt-empty">No items for the selected date / supplier.</div>'}
     <div class="rrpt-foot">
@@ -4200,7 +4792,10 @@ async function issueLoad() {
     <td><button class="btn btn-sm btn-success" onclick="issueOpenForm('${p.MO_ID}')"><i class="fa-solid fa-dolly me-1"></i>เบิกวัตถุดิบ</button></td></tr>`).join('')
     || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มี MO รอเบิกวัตถุดิบ</td></tr>';
 
-  const hist = await sbRun(_sb.from('issue_production').select('*').order('IssueDate', { ascending: false }).limit(100), 'โหลดประวัติการเบิก') || [];
+  const [hist] = await Promise.all([
+    sbRun(_sb.from('issue_production').select('*').order('IssueDate', { ascending: false }).limit(100), 'โหลดประวัติการเบิก'),
+    rcvEditLoadPending(),   // ปุ่มแก้ไข: มีคำขอค้าง = นาฬิกาทราย
+  ]).then(([h]) => [h || []]);
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
   document.getElementById('issueHistTableBody').innerHTML = hist.map(h => `
     <tr><td>${esc(h.Issue_ID)}</td><td>${esc(h.MO_ID)}</td><td>${esc(rmMap[h.RM_ID]?.RM_Name || h.RM_ID)}</td>
@@ -4209,8 +4804,8 @@ async function issueLoad() {
     <td class="text-end">${h.ScrapPct ? _bomFmtQty(h.ScrapPct) + '%' : '-'}</td>
     <td class="text-end fw-semibold">${_bomFmtQty(h.QtyIssued)} ${esc(h.Unit||'')}
       ${Array.isArray(h.LotAlloc) && h.LotAlloc.length ? `<div class="small text-muted fw-normal">${_lotAllocText(h.LotAlloc)}</div>` : ''}</td>
-    <td>${fmtDate(h.IssueDate)}</td></tr>`).join('')
-    || '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+    <td>${fmtDate(h.IssueDate)}</td><td class="text-center">${_editBtn('issue_production', h.Issue_ID)}</td></tr>`).join('')
+    || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
 }
 // ขั้นที่ 2 ของโฟลผลิตลูกประคบ: เตรียมวัตถุดิบเข้าไลน์ — จำนวนลูกตั้งต้นจาก MO.PlanQty (แก้ได้) แล้วคำนวณ
 // ต้องเตรียม = QtyPerUnit × จำนวน ÷ (1 − %Scrap รวมของขั้นตอนเตรียมใน BOM/100) — สูตรกลางอยู่ที่ _bomWithScrap
@@ -4310,11 +4905,14 @@ async function prodRecordLoad() {
     <td><button class="btn btn-sm btn-success" onclick="prodRecordOpenForm('${p.MO_ID}')"><i class="fa-solid fa-industry me-1"></i>บันทึกผลิต</button></td></tr>`).join('')
     || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มี MO รอบันทึกผลิต</td></tr>';
 
-  const hist = await sbRun(_sb.from('production_records').select('*').order('MfgDate', { ascending: false }).limit(100), 'โหลดประวัติการผลิต') || [];
+  const [hist] = await Promise.all([
+    sbRun(_sb.from('production_records').select('*').order('MfgDate', { ascending: false }).limit(100), 'โหลดประวัติการผลิต'),
+    rcvEditLoadPending(),
+  ]).then(([h]) => [h || []]);
   window._prodRecordCache = hist;
   document.getElementById('prodHistTableBody').innerHTML = hist.map(h => `
     <tr><td>${esc(h.Prod_ID)}</td><td>${esc(fgMap[h.FG_ID]?.FG_Name || h.FG_ID)}</td><td>${h.QtyProduced}</td><td>${esc(h.ProdLot)}</td><td>${fmtDate(h.MfgDate)}</td><td>${fmtDate(h.ExpDate)}</td>
-    <td><button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+    <td class="text-nowrap">${_editBtn('production_records', h.Prod_ID)}<button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
     || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
 }
 let _prodMoId = null;
@@ -4363,7 +4961,10 @@ async function prodRecordDelete(id) {
 // ═══════════════════════════════════════════════════════════
 async function fgReceiveLoad() {
   if (!window._prodRecordCache) await prodRecordLoad();
-  const fgReceived = await sbRun(_sb.from('fg_receive').select('*').order('ReceiveDate', { ascending: false }), 'โหลดประวัติรับ FG') || [];
+  const [fgReceived] = await Promise.all([
+    sbRun(_sb.from('fg_receive').select('*').order('ReceiveDate', { ascending: false }), 'โหลดประวัติรับ FG'),
+    rcvEditLoadPending(),
+  ]).then(([h]) => [h || []]);
   const receivedProdIds = new Set(fgReceived.map(r => r.Prod_ID));
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const ready = (window._prodRecordCache||[]).filter(p => !receivedProdIds.has(p.Prod_ID));
@@ -4372,8 +4973,8 @@ async function fgReceiveLoad() {
     <td><button class="btn btn-sm btn-success" onclick="fgReceiveOpenForm('${p.Prod_ID}')"><i class="fa-solid fa-box-open me-1"></i>รับเข้าคลัง</button></td></tr>`).join('')
     || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีรายการรอรับเข้าคลัง</td></tr>';
   document.getElementById('fgReceiveHistTableBody').innerHTML = fgReceived.map(r => `
-    <tr><td>${esc(r.FGReceive_ID)}</td><td>${esc(fgMap[r.FG_ID]?.FG_Name || r.FG_ID)}</td><td>${esc(r.Lot)}</td><td>${r.Qty}</td><td>${fmtDate(r.ReceiveDate)}</td></tr>`).join('')
-    || '<tr><td colspan="5" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+    <tr><td>${esc(r.FGReceive_ID)}</td><td>${esc(fgMap[r.FG_ID]?.FG_Name || r.FG_ID)}</td><td>${esc(r.Lot)}</td><td>${r.Qty}</td><td>${fmtDate(r.ReceiveDate)}</td><td class="text-center">${_editBtn('fg_receive', r.FGReceive_ID)}</td></tr>`).join('')
+    || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
 }
 let _fgReceiveProdId = null;
 function fgReceiveOpenForm(prodId) {
@@ -4579,7 +5180,11 @@ let _wasteCache = [];
 async function wasteLoad() {
   if (!_rmMasterCache.length) await rmMasterLoad();
   if (!_fgMasterCache.length) await fgMasterLoad();
-  _wasteCache = await sbRun(_sb.from('waste_log').select('*').order('WasteDate', { ascending: false }), 'โหลดประวัติของเสีย') || [];
+  const [w] = await Promise.all([
+    sbRun(_sb.from('waste_log').select('*').order('WasteDate', { ascending: false }), 'โหลดประวัติของเสีย'),
+    rcvEditLoadPending(),
+  ]);
+  _wasteCache = w || [];
   wasteRenderTable();
 }
 function wasteRenderTable() {
@@ -4590,7 +5195,7 @@ function wasteRenderTable() {
     const itemName = (isFg ? (fgMap[w.FG_ID]?.FG_Name || w.FG_ID) : (rmMap[w.RM_ID]?.RM_Name || w.RM_ID)) + (w.Lot ? ` (Lot ${w.Lot})` : '');
     const typeLabel = isFg ? 'สินค้าสำเร็จรูป' : catLabel(rmMap[w.RM_ID]?.Category);
     return `<tr><td>${esc(w.Waste_ID)}</td><td>${isFg ? badge(typeLabel, 'primary') : catBadge(typeLabel)}</td><td>${esc(itemName)}</td><td>${w.Qty} ${esc(w.Unit||'')}</td><td>${esc(w.Reason)}</td><td>${fmtDate(w.WasteDate)}</td>
-    <td><button class="btn btn-sm btn-outline-danger" onclick="wasteDelete('${w.Waste_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+    <td class="text-nowrap">${_editBtn('waste_log', w.Waste_ID)}<button class="btn btn-sm btn-outline-danger" onclick="wasteDelete('${w.Waste_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
   }).join('') || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
 }
 let _wasteForm = null;
