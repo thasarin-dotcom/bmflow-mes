@@ -176,6 +176,8 @@ img.emp-avatar { cursor: zoom-in; }
 .rcv-suggest .code { color: #64748b; font-size: .76rem; }
 .rcv-suggest mark { padding: 0; background: #fde68a; }
 
+#rcv-exp-presets .btn { flex: 1 1 0; min-width: 0; padding: 3px 2px; font-size: .75rem; white-space: nowrap; }
+
 /* ── ใบรายงานรับ (แบบ ProFlow .mrrpt-*) — แนวนอน A4 ── */
 .rrpt-step { padding: 12px 18px; border-bottom: 1px solid #e7ecf5; background: #f8fafc; }
 .rrpt-step-title { font-size: .8rem; font-weight: 700; color: var(--primary-blue); display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
@@ -1131,17 +1133,22 @@ table.rrpt-table.sum th { background: #334155; }
           </div>
           <div class="col-md-4 col-6">
             <label class="form-label">วันเก็บเกี่ยว (ถ้ามี)</label>
-            <input id="rcv-harvest" type="date" class="form-control">
+            <input id="rcv-harvest" type="date" class="form-control" onchange="rcvExpRecalc()">
           </div>
           <div class="col-md-4 col-6">
             <label class="form-label">วันที่รับเข้าคลัง</label>
-            <input id="rcv-receive" type="date" class="form-control" onchange="rcvAutoLot()">
+            <input id="rcv-receive" type="date" class="form-control" onchange="rcvAutoLot(); rcvExpRecalc()">
           </div>
           <div class="col-md-4">
             <label class="form-label">วันหมดอายุ</label>
-            <input id="rcv-exp" type="date" class="form-control">
+            <input id="rcv-exp" type="date" class="form-control" oninput="rcvExpPreset(null)">
             <div class="invalid-feedback" id="rcv-exp-err"></div>
-            <div class="form-text" style="font-size:.72rem">สมุนไพรสดควรใส่เสมอ — ใช้ตัดล็อตแบบหมดอายุก่อนใช้ก่อน (FEFO) และเตือนหน้าภาพรวม</div>
+            <div class="btn-group btn-group-sm w-100 mt-1" role="group" id="rcv-exp-presets">
+              <button type="button" class="btn btn-outline-primary" data-months="6" onclick="rcvExpPreset(6)">6 เดือน</button>
+              <button type="button" class="btn btn-outline-primary" data-months="12" onclick="rcvExpPreset(12)">1 ปี</button>
+              <button type="button" class="btn btn-outline-primary" data-months="24" onclick="rcvExpPreset(24)">2 ปี</button>
+            </div>
+            <div class="form-text" style="font-size:.72rem" id="rcv-exp-hint">นับจากวันเก็บเกี่ยว (ไม่มี = นับจากวันที่รับ) · ใช้ตัดล็อต FEFO และเตือนใกล้หมดอายุ</div>
           </div>
         </div>
       </div>
@@ -3242,6 +3249,7 @@ function receivedOpenForm() {
   document.getElementById('rcv-harvest').value = todayStr();
   document.getElementById('rcv-receive').value = todayStr();
   document.getElementById('rcv-exp').value = '';
+  rcvExpPreset(null);
   const el = document.getElementById('receivedModal');
   el.addEventListener('shown.bs.modal', () => document.getElementById('rcv-rm-search').focus(), { once: true });
   bootstrap.Modal.getOrCreateInstance(el).show();
@@ -3350,6 +3358,35 @@ async function rcvAutoLot() {
   if (lot.dataset.auto && document.getElementById('rcv-rm').value === rmId
       && (document.getElementById('rcv-receive').value || todayStr()) === date) lot.value = next;
 }
+// ── วันหมดอายุแบบกดเลือก 6 เดือน / 1 ปี / 2 ปี — บวกจากวันเก็บเกี่ยว ถ้าไม่มีบวกจากวันที่รับ ──
+// จำระยะที่เลือกไว้: เปลี่ยนวันเก็บเกี่ยว/วันที่รับทีหลัง วันหมดอายุคำนวณใหม่ตาม · แก้วันหมดอายุเองในช่อง = เลิกผูกกับปุ่ม
+let _rcvExpMonths = null;
+const RCV_EXP_HINT = 'นับจากวันเก็บเกี่ยว (ไม่มี = นับจากวันที่รับ) · ใช้ตัดล็อต FEFO และเตือนใกล้หมดอายุ';
+// บวกเดือนแบบปฏิทิน: วันที่เกินสิ้นเดือนปัดเป็นวันสุดท้ายของเดือน (31 ส.ค. + 6 เดือน = 28/29 ก.พ. ไม่ล้นไป มี.ค.)
+function _addMonthsStr(dateStr, months) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const t = new Date(y, m - 1 + months, 1);
+  const last = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+  t.setDate(Math.min(d, last));
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+}
+function rcvExpPreset(months) {
+  _rcvExpMonths = months;
+  document.querySelectorAll('#rcv-exp-presets button').forEach(b => b.classList.toggle('active', Number(b.dataset.months) === months));
+  if (months) rcvExpRecalc();
+  else document.getElementById('rcv-exp-hint').textContent = RCV_EXP_HINT;
+}
+function rcvExpRecalc() {
+  if (!_rcvExpMonths) return;
+  const harvest = document.getElementById('rcv-harvest').value;
+  const base = harvest || document.getElementById('rcv-receive').value || todayStr();
+  const exp = _addMonthsStr(base, _rcvExpMonths);
+  document.getElementById('rcv-exp').value = exp;
+  _modalClearErrors(['rcv-exp']);
+  document.getElementById('rcv-exp-hint').innerHTML =
+    `= <b>${fmtDate(exp)}</b> · นับจาก${harvest ? 'วันเก็บเกี่ยว' : 'วันที่รับ'} ${fmtDate(base)}`;
+}
+
 // รับเข้า = ฟังก์ชัน DB rm_receive_post (สร้างใบรับ + ล็อต + บวกยอดรวม ในคำสั่งเดียว)
 async function receivedModalSave() {
   _modalClearErrors(['rcv-qty', 'rcv-exp', 'rcv-rm-search']);
