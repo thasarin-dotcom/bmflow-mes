@@ -166,6 +166,69 @@ img.emp-avatar { cursor: zoom-in; }
   .kpi-card .kpi-num { font-size: 1.3rem; }
   .page-header .text-white-50 { display: none; }
 }
+
+/* ── ใบรายงานรับ (แบบ ProFlow .mrrpt-*) — แนวนอน A4 ── */
+.rrpt-step { padding: 12px 18px; border-bottom: 1px solid #e7ecf5; background: #f8fafc; }
+.rrpt-step-title { font-size: .8rem; font-weight: 700; color: var(--primary-blue); display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+.rrpt-step-title .n { width: 20px; height: 20px; border-radius: 50%; background: var(--primary-blue); color: #fff; font-size: .68rem; display: flex; align-items: center; justify-content: center; }
+.rrpt-row { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.rrpt-row label { display: block; font-size: .7rem; color: #64748b; font-weight: 600; margin-bottom: 3px; }
+.rrpt-rcno { font-weight: 700; font-variant-numeric: tabular-nums; width: 160px; }
+.rrpt-pill { font-size: .7rem; font-weight: 700; padding: 5px 11px; border-radius: 999px; align-self: center; }
+.rrpt-pill.wait { background: #fef3c7; color: #92400e; }
+.rrpt-pill.ok { background: #dcfce7; color: #15803d; }
+.rrpt-pill.old { background: #dbeafe; color: #1e40af; }
+.rrpt-msg { font-size: .74rem; font-weight: 600; margin-top: 8px; border-radius: 8px; padding: 7px 10px; }
+.rrpt-msg.err { color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; }
+.rrpt-msg.warn { color: #b45309; background: #fff7ed; border: 1px solid #fed7aa; }
+.rrpt-msg button { border: 0; background: none; color: #1d4ed8; font-weight: 700; text-decoration: underline; padding: 0 2px; }
+.rrpt-history { margin-top: 8px; font-size: .74rem; }
+.rrpt-history summary { cursor: pointer; color: #64748b; font-weight: 600; }
+.rrpt-history table { width: 100%; margin-top: 6px; }
+.rrpt-history td, .rrpt-history th { padding: 4px 8px; border-bottom: 1px solid #e7ecf5; }
+.rrpt-history button { border: 0; background: none; color: #2563eb; font-size: .74rem; padding: 0 4px; }
+#rrpt-preview { background: #525659; padding: 20px; max-height: 58vh; overflow: auto; position: relative; }
+.rrpt-lock { position: absolute; inset: 0; background: rgba(30,41,59,.7); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; text-align: center; padding: 20px; }
+.rrpt-lock .box { border: 1px dashed rgba(255,255,255,.45); border-radius: 14px; padding: 22px 30px; background: rgba(255,255,255,.08); }
+.rrpt-page { font-family: 'Sarabun', sans-serif; font-size: 12px; color: #1e293b; width: 297mm; min-height: 210mm; box-sizing: border-box; padding: 12mm;
+  background: #fff; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,.4); display: flex; flex-direction: column; }
+.rrpt-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary-blue); padding-bottom: 10px; margin-bottom: 12px; }
+.rrpt-head img { height: 52px; width: auto; }
+.rrpt-company { font-size: 11px; color: #64748b; line-height: 1.5; }
+.rrpt-company b { color: #1e293b; font-size: 13px; }
+.rrpt-title { font-size: 21px; font-weight: 800; color: var(--primary-blue); text-align: right; }
+.rrpt-no { font-size: 19px; font-weight: 800; color: #dc2626; text-align: right; margin-top: 3px; }
+.rrpt-meta { font-size: 11px; color: #64748b; text-align: right; margin-top: 3px; }
+.rrpt-filters { display: flex; gap: 26px; align-items: baseline; margin-bottom: 10px; flex-wrap: wrap; }
+.rrpt-filters .lbl { font-size: 12px; color: #64748b; font-weight: 700; margin-right: 6px; }
+.rrpt-filters .val { font-size: 17px; color: var(--primary-blue); font-weight: 800; }
+.rrpt-filters .minor { font-size: 11px; color: #64748b; }
+table.rrpt-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+table.rrpt-table th { background: var(--primary-blue); color: #fff; padding: 6px 7px; text-align: left; font-weight: 700; font-size: 10.5px; }
+table.rrpt-table td { padding: 5px 7px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+table.rrpt-table tr { page-break-inside: avoid; break-inside: avoid; }
+table.rrpt-table .ord { text-align: center; color: #94a3b8; }
+table.rrpt-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+table.rrpt-table .qty { font-weight: 800; font-size: 13px; color: var(--primary-blue); }
+table.rrpt-table.sum th { background: #334155; }
+.rrpt-sum-title { font-size: 13px; font-weight: 800; color: var(--primary-blue); margin: 16px 0 6px; }
+.rrpt-foot { display: flex; justify-content: space-between; margin-top: auto; padding-top: 26px; font-size: 11px; color: #64748b; }
+.rrpt-sign { text-align: center; width: 30%; }
+.rrpt-sign .line { border-top: 1px solid #94a3b8; margin-top: 34px; padding-top: 4px; }
+.rrpt-empty { color: #dc2626; font-size: 12px; margin-top: 18px; }
+#rrpt-print-root { display: none; }
+@media print {
+  /* เฉพาะตอนกดปุ่มพิมพ์ใบรายงาน (body.print-rrpt) — ซ่อนแอปทั้งหมด และล้าง flex/overflow ของ body ที่ใช้บนจอ
+     (ไม่งั้นได้หน้าว่าง/พื้นสีน้ำเงิน) · กด Ctrl+P ที่หน้าอื่นตามปกติยังพิมพ์หน้าจอได้เหมือนเดิม */
+  body.print-rrpt { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+  body.print-rrpt > *:not(#rrpt-print-root) { display: none !important; }
+  body.print-rrpt #rrpt-print-root { display: block !important; }
+  /* margin 10mm ที่ @page (ไม่ใช่ padding ของ .rrpt-page) → รายการยาวเกินหน้าแรก หน้าต่อๆ ไปยังมีขอบกระดาษ
+     ห้ามตั้งทั้งสองที่พร้อมกัน ขอบจะบวกซ้อนเป็นสองเท่า (บั๊กเดียวกับที่เคยเจอใน ProFlow MR Report) */
+  @page rcvreport { size: A4 landscape; margin: 10mm; }
+  #rrpt-print-root .rrpt-page { page: rcvreport; box-shadow: none; margin: 0; padding: 0; width: auto; min-height: 189mm; }
+  table.rrpt-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
 </style>
 </head>
 <body>
@@ -348,15 +411,14 @@ img.emp-avatar { cursor: zoom-in; }
   <div class="page-view" id="page-received">
     <div class="page-header d-flex justify-content-between align-items-start">
       <div><h4 class="mb-0 text-white"><i class="fa-solid fa-inbox me-2"></i>Received</h4><div class="text-white-50 small">รับเข้าคลัง — บันทึกรับวัตถุดิบและแพ็คเกจจิ้ง</div></div>
-      <button class="btn btn-success" onclick="receivedOpenForm()"><i class="fa-solid fa-plus me-1"></i>รับเข้าคลัง</button>
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-light" onclick="rcvReportOpen()"><i class="fa-solid fa-print me-1"></i>ออกใบรายงานรับ</button>
+        <button class="btn btn-success" onclick="receivedOpenForm()"><i class="fa-solid fa-plus me-1"></i>รับเข้าคลัง</button>
+      </div>
     </div>
     <div class="sticky-toolbar d-flex gap-2 mb-2">
       <select class="form-select w-auto" id="receivedCategoryFilter" onchange="receivedRenderTable()">
-        <option value="">-- ทุกหมวดหมู่ --</option>
-        <option value="วัตถุดิบ">วัตถุดิบสด</option>
-        <option value="วัตถุดิบแห้ง">วัตถุดิบแห้ง</option>
-        <option value="วัตถุดิบพร้อมผลิต">วัตถุดิบพร้อมผลิต</option>
-        <option value="แพ็คเกจจิ้ง">แพ็คเกจจิ้ง</option>
+        <option value="">-- ทุกหมวดหมู่ --</option><!-- ตัวเลือกเติมโดย _fillCategorySelects() -->
       </select>
       <div class="search-wrap"><input class="form-control search-input" id="receivedSearch" placeholder="ค้นหา..." oninput="receivedRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('receivedSearch').value='';receivedRenderTable()"></i></div>
     </div>
@@ -371,7 +433,7 @@ img.emp-avatar { cursor: zoom-in; }
     <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-leaf me-2"></i>Raw Material</h4><div class="text-white-50 small">สต็อกวัตถุดิบ — ยอดคงเหลือสมุนไพรปัจจุบัน</div></div>
     <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 mb-2">
       <select class="form-select w-auto" id="stockRmCatFilter" onchange="stockRmRenderTable()">
-        <option value="">วัตถุดิบทั้งหมด</option><option value="วัตถุดิบ">วัตถุดิบสด</option><option value="วัตถุดิบแห้ง">วัตถุดิบแห้ง</option><option value="วัตถุดิบพร้อมผลิต">วัตถุดิบพร้อมผลิต</option>
+        <option value="">วัตถุดิบทั้งหมด</option><!-- ตัวเลือกเติมโดย _fillCategorySelects() -->
       </select>
       <div class="search-wrap"><input class="form-control search-input" id="stockRmSearch" placeholder="ค้นหา..." oninput="stockRmRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockRmSearch').value='';stockRmRenderTable()"></i></div>
     </div></div>
@@ -485,7 +547,7 @@ img.emp-avatar { cursor: zoom-in; }
   <div class="page-view" id="page-stockcard">
     <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-clipboard-list me-2"></i>Stock Card</h4><div class="text-white-50 small">ประวัติการเคลื่อนไหวรายการ (รับ/เบิก) แบบไล่ยอดคงเหลือ</div></div>
     <div class="sticky-toolbar d-flex gap-2 mb-2">
-      <select class="form-select w-auto" id="scType" onchange="stockCardLoadItems()"><option value="rm">วัตถุดิบสด</option><option value="dry">วัตถุดิบแห้ง</option><option value="prep">วัตถุดิบพร้อมผลิต</option><option value="pkg">แพ็คเกจจิ้ง</option><option value="fg">สินค้าสำเร็จรูป</option></select>
+      <select class="form-select w-auto" id="scType" onchange="stockCardLoadItems()"><option value="rm">วัตถุดิบสด</option><option value="dry">วัตถุดิบแห้ง</option><option value="chem">วัตถุดิบเคมี</option><option value="prep">วัตถุดิบพร้อมผลิต</option><option value="pkg">แพ็คเกจจิ้ง</option><option value="fg">สินค้าสำเร็จรูป</option></select>
       <select class="form-select w-auto" id="scItem" onchange="stockCardRender()"></select>
     </div>
     <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
@@ -513,11 +575,7 @@ img.emp-avatar { cursor: zoom-in; }
       <button class="btn btn-success" onclick="rmMasterOpenForm()"><i class="fa-solid fa-plus me-1"></i>เพิ่มรายการ</button>
     </div>
     <div class="sticky-toolbar mb-2"><select class="form-select w-auto" id="rmMasterCategoryFilter" onchange="rmMasterRenderTable()">
-      <option value="">-- ทุกหมวดหมู่ --</option>
-      <option value="วัตถุดิบ">วัตถุดิบสด</option>
-      <option value="วัตถุดิบแห้ง">วัตถุดิบแห้ง</option>
-      <option value="วัตถุดิบพร้อมผลิต">วัตถุดิบพร้อมผลิต</option>
-      <option value="แพ็คเกจจิ้ง">แพ็คเกจจิ้ง</option>
+      <option value="">-- ทุกหมวดหมู่ --</option><!-- ตัวเลือกเติมโดย _fillCategorySelects() -->
     </select></div>
     <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
       <thead><tr><th>รหัส</th><th>ชื่อรายการ</th><th>หมวดหมู่</th><th>หน่วย</th><th>สต็อกขั้นต่ำ</th><th>ซัพพลายเออร์</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead>
@@ -866,10 +924,7 @@ img.emp-avatar { cursor: zoom-in; }
           <div class="col-6">
             <label class="form-label">ประเภท</label>
             <select id="rmm-cat" class="form-select" onchange="rmMasterTogglePrep()">
-              <option value="วัตถุดิบ">วัตถุดิบ (สด)</option>
-              <option value="วัตถุดิบแห้ง">วัตถุดิบแห้ง</option>
-              <option value="วัตถุดิบพร้อมผลิต">วัตถุดิบพร้อมผลิต</option>
-              <option value="แพ็คเกจจิ้ง">แพ็คเกจจิ้ง</option>
+              <option value="วัตถุดิบ">วัตถุดิบสด</option><!-- ตัวเลือกเติมโดย _fillCategorySelects() -->
             </select>
           </div>
           <!-- เฉพาะ "วัตถุดิบพร้อมผลิต": ทำจากอะไร + %สูญเสียมาตรฐานแต่ละขั้น + อายุหลังเตรียม -->
@@ -1068,6 +1123,53 @@ img.emp-avatar { cursor: zoom-in; }
       <div class="modal-footer modal-footer-light">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
         <button type="button" class="btn btn-brand" onclick="receivedModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ใบรายงานรับ (แบบ ProFlow): เลือกวันที่/ซัพพลายเออร์ → ยืนยันเลข RC No → พิมพ์ -->
+<div class="modal fade" id="rcvReportModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-print me-2"></i>พิมพ์รายงานรับวัตถุดิบ / แพ็คเกจจิ้ง</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div class="rrpt-step">
+          <div class="rrpt-step-title"><span class="n">1</span>เลือกข้อมูลที่จะพิมพ์</div>
+          <div class="rrpt-row">
+            <div><label>วันที่รับ</label><input type="date" id="rrpt-date" class="form-control form-control-sm" onchange="rcvReportScopeChanged()"></div>
+            <div><label>ซัพพลายเออร์</label><select id="rrpt-supplier" class="form-select form-select-sm" onchange="rcvReportScopeChanged()"></select></div>
+          </div>
+          <div class="text-muted mt-2" style="font-size:.72rem">รายการที่เคยออกรายงานไปแล้วจะไม่ถูกดึงมารวมซ้ำ — รับเพิ่มทีหลังในวันเดียวกันจะออกเป็นใบใหม่เฉพาะรายการใหม่</div>
+        </div>
+        <div class="rrpt-step">
+          <div class="rrpt-step-title"><span class="n">2</span>เลขที่ RC No</div>
+          <div class="rrpt-row">
+            <div><label>เลขที่ (แก้ได้ก่อนยืนยัน)</label><input type="text" id="rrpt-rcno" class="form-control form-control-sm rrpt-rcno"></div>
+            <button type="button" class="btn btn-brand btn-sm" id="rrpt-confirm-btn" onclick="rcvReportConfirm()"><i class="fa-solid fa-check me-1"></i>ยืนยัน RC No</button>
+            <span class="rrpt-pill wait" id="rrpt-status">● ยังไม่ยืนยัน</span>
+          </div>
+          <div class="rrpt-msg err" id="rrpt-error" style="display:none"></div>
+          <div class="rrpt-msg warn" id="rrpt-warn" style="display:none"></div>
+          <details class="rrpt-history" id="rrpt-history-wrap">
+            <summary>ประวัติเลข RC ล่าสุด (พิมพ์ซ้ำ / แก้เลข)</summary>
+            <div class="table-responsive"><table>
+              <thead><tr><th>RC No</th><th>วันที่รับ</th><th>ซัพพลายเออร์</th><th class="text-end">รายการ</th><th>ออกโดย</th><th></th></tr></thead>
+              <tbody id="rrpt-history-body"></tbody>
+            </table></div>
+          </details>
+        </div>
+        <div id="rrpt-preview"></div>
+      </div>
+      <div class="modal-footer modal-footer-light justify-content-between">
+        <span class="text-danger small fw-bold" id="rrpt-print-hint">ต้องยืนยันเลข RC No ก่อนพิมพ์</span>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+          <button type="button" class="btn btn-brand" id="rrpt-print-btn" onclick="rcvReportPrint()" disabled><i class="fa-solid fa-print me-1"></i>พิมพ์ / บันทึกเป็น PDF</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1403,11 +1505,37 @@ const CAT_PREP = 'วัตถุดิบพร้อมผลิต';
 // วัตถุดิบแห้ง (2026-09-26): ซื้อมาแห้งแล้ว เช่น การบูร พิมเสน — ทำงานเหมือนวัตถุดิบสดทุกอย่าง (รับเข้า/Lot/FEFO/
 // เป็นต้นทางของพร้อมผลิตได้) ต่างแค่หมวด · ค่า 'วัตถุดิบ' ในฐานข้อมูล = วัตถุดิบสด (ชื่อเดิม ไม่เปลี่ยนค่าที่เก็บ)
 const CAT_DRY = 'วัตถุดิบแห้ง';
-const CAT_RAW_GROUP = ['วัตถุดิบ', CAT_DRY];   // วัตถุดิบที่รับจากภายนอก (สด + แห้ง) — ใช้เป็นต้นทางของพร้อมผลิตได้
-const CAT_BADGE = { 'วัตถุดิบ': 'secondary', [CAT_DRY]: 'warning', 'แพ็คเกจจิ้ง': 'info', [CAT_PREP]: 'success' };
+// วัตถุดิบเคมี (2026-09-26): เช่น การบูร พิมเสน เมนทอล — ทำงานเหมือนวัตถุดิบสด/แห้งทุกอย่าง ต่างแค่หมวด
+const CAT_CHEM = 'วัตถุดิบเคมี';
+const CAT_RAW_GROUP = ['วัตถุดิบ', CAT_DRY, CAT_CHEM];   // วัตถุดิบที่รับจากภายนอก (สด + แห้ง + เคมี) — เป็นต้นทางของพร้อมผลิตได้
+// โครงหมวด: "วัตถุดิบ" มีหมวดย่อย สด / แห้ง / เคมี / พร้อมผลิต · "แพ็คเกจจิ้ง" แยกต่างหาก
+const CAT_RAW_ALL = [...CAT_RAW_GROUP, CAT_PREP];
+const CAT_PKG = 'แพ็คเกจจิ้ง';
+const CAT_BADGE = { 'วัตถุดิบ': 'secondary', [CAT_DRY]: 'warning', [CAT_CHEM]: 'primary', [CAT_PKG]: 'info', [CAT_PREP]: 'success' };
 const CAT_LABEL = { 'วัตถุดิบ': 'วัตถุดิบสด' };
 function catLabel(cat) { cat = cat || 'วัตถุดิบ'; return CAT_LABEL[cat] || cat; }
 function catBadge(cat) { cat = cat || 'วัตถุดิบ'; return badge(catLabel(cat), CAT_BADGE[cat] || 'secondary'); }
+// ตัวกรองหมวด: '' = ทั้งหมด · '__raw' = วัตถุดิบทุกหมวดย่อย · อื่นๆ = หมวดนั้นตรงตัว (ค่าว่างในฐานข้อมูล = วัตถุดิบสด)
+const CAT_FILTER_RAW = '__raw';
+function catMatches(cat, filter) {
+  cat = cat || 'วัตถุดิบ';
+  return !filter || (filter === CAT_FILTER_RAW ? CAT_RAW_ALL.includes(cat) : cat === filter);
+}
+// ตัวเลือกหมวดของทุก dropdown สร้างจากที่เดียว — เพิ่มหมวดใหม่แก้แค่ CAT_RAW_ALL / CAT_BADGE / _BOM_CAT_ORDER
+// opts.all = ข้อความตัวเลือก "ทั้งหมด" (ไม่ใส่ = ไม่มี) · opts.rawAll = มีตัวเลือก "วัตถุดิบทุกหมวดย่อย" · opts.pkg = รวมแพ็คเกจจิ้ง
+function catOptionsHtml({ all, rawAll = false, pkg = true } = {}) {
+  const opt = (v, t) => `<option value="${esc(v)}">${esc(t)}</option>`;
+  return (all ? opt('', all) : '') +
+    `<optgroup label="วัตถุดิบ">${rawAll ? opt(CAT_FILTER_RAW, 'วัตถุดิบทั้งหมด') : ''}${CAT_RAW_ALL.map(c => opt(c, catLabel(c))).join('')}</optgroup>` +
+    (pkg ? `<optgroup label="บรรจุภัณฑ์">${opt(CAT_PKG, CAT_PKG)}</optgroup>` : '');
+}
+function _fillCategorySelects() {
+  const set = (id, o) => { const el = document.getElementById(id); if (el) { const v = el.value; el.innerHTML = catOptionsHtml(o); if (v && [...el.options].some(x => x.value === v)) el.value = v; } };
+  set('rmMasterCategoryFilter', { all: '-- ทุกหมวดหมู่ --', rawAll: true });
+  set('receivedCategoryFilter', { all: '-- ทุกหมวดหมู่ --', rawAll: true });
+  set('stockRmCatFilter', { all: 'วัตถุดิบทั้งหมด', pkg: false });
+  set('rmm-cat', {});
+}
 function _modalClearErrors(ids) { ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('is-invalid'); }); }
 function _modalShowError(fieldId, msg) {
   const el = document.getElementById(fieldId);
@@ -1610,6 +1738,7 @@ function toggleSidebar(open) {
   document.body.classList.toggle('sidebar-open', open ?? !document.body.classList.contains('sidebar-open'));
 }
 function initApp() {
+  _fillCategorySelects();
   _ensureRefreshButtons();
   _singleFlight(_WRITE_ACTIONS);
   _realtimeSubscribe();
@@ -1699,6 +1828,7 @@ const _WRITE_ACTIONS = [
   'rmMasterDelete', 'bomDeleteLine', 'bomDeleteProduct', 'receivedDelete', 'coDelete', 'planDelete', 'prodRecordDelete', 'wasteDelete',
   'signupreqApprove', 'signupreqReject', 'userrolesUpdateRole', 'userrolesUpdateName',
   'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete',
+  'rcvReportConfirm', 'rcvReportRename',
 ];
 let _singleFlightRunning = 0;
 function _singleFlight(names) {
@@ -1928,6 +2058,7 @@ const AUDIT_TABLE_LABEL = {
   issue_production: 'เบิกวัตถุดิบเข้าสาย', production_records: 'บันทึกผลิต', fg_receive: 'รับ FG เข้าคลัง',
   fg_withdraw: 'เบิก FG', delivery: 'จัดส่ง', waste_log: 'Waste (ของเสีย)', employees: 'พนักงาน',
   user_roles: 'สิทธิ์การใช้งาน', signup_requests: 'คำขอสมัครใช้งาน', prep_orders: 'เตรียมวัตถุดิบ',
+  rm_rc_numbers: 'ใบรายงานรับ (RC No)',
 };
 const AUDIT_ACTION = {
   INSERT: ['เพิ่ม', 'success'], UPDATE: ['แก้ไข', 'warning'], DELETE: ['ลบ', 'danger'],
@@ -1945,6 +2076,7 @@ const AUDIT_FIELD_LABEL = {
   LotAlloc: 'ล็อตที่ใช้', ForQty: 'สำหรับผลิต', SourceRM_ID: 'ทำจาก', TargetRM_ID: 'เตรียมเป็น', QtyOut: 'เบิกไป',
   QtyBack: 'ได้กลับ', ActualLossPct: '%สูญเสียจริง', StdLossPct: '%มาตรฐาน', Steps: 'น้ำหนักแต่ละขั้น', SourceAlloc: 'ล็อตสดที่ใช้',
   PrepSteps: 'ขั้นตอนเตรียม', PrepDate: 'วันที่เตรียม', ScrapPct: '%Scrap', QtyDelivered: 'จำนวนส่ง', ReviewNote: 'หมายเหตุแอดมิน',
+  RC_No: 'RC No', ItemCount: 'จำนวนรายการ', CreatedBy: 'ออกโดย',
 };
 // ฟิลด์ที่แสดงเป็นสรุปสั้นตอน "เพิ่ม" / "ลบ" (เรียงตามลำดับความสำคัญ เอาเฉพาะที่มีค่า)
 const AUDIT_SUMMARY_FIELDS = ['RM_Name', 'FG_Name', 'FirstName', 'LastName', 'CustomerName', 'RM_ID', 'FG_ID', 'MO_ID',
@@ -2314,7 +2446,7 @@ async function rmMasterLoad() {
 }
 function rmMasterRenderTable() {
   const filter = document.getElementById('rmMasterCategoryFilter').value;
-  const rows = _rmMasterCache.filter(r => !filter || r.Category === filter);
+  const rows = _rmMasterCache.filter(r => catMatches(r.Category, filter));
   document.getElementById('rmMasterTableBody').innerHTML = rows.map(r => `
     <tr><td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}</td><td>${catBadge(r.Category)}${r.SourceRM_ID ? `<div class="small text-muted">${r.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmMasterCache.find(x => x.RM_ID === r.SourceRM_ID)?.RM_Name || r.SourceRM_ID || '—')} · สูญเสีย ${_bomFmtQty(_bomScrapTotal(r.PrepSteps))}%</div>` : ''}</td><td>${esc(r.Unit)}</td><td>${r.MinStock ?? 0}</td><td>${esc(r.Supplier||'-')}</td><td>${esc(r.Note||'')}</td>
     <td><button class="btn btn-sm btn-outline-primary me-1" onclick="rmMasterOpenForm('${r.RM_ID}')"><i class="fa-solid fa-pen"></i></button>
@@ -2331,7 +2463,7 @@ function rmMasterOpenForm(id) {
   const idInput = document.getElementById('rmm-id');
   idInput.value = row?.RM_ID || genId('RM');
   _setCodeFieldAccess(idInput, 'rmm-id-help', !!id);
-  document.getElementById('rmm-cat').value = [CAT_PREP, CAT_DRY, 'แพ็คเกจจิ้ง'].includes(row?.Category) ? row.Category : 'วัตถุดิบ';
+  document.getElementById('rmm-cat').value = [...CAT_RAW_ALL, CAT_PKG].includes(row?.Category) ? row.Category : 'วัตถุดิบ';
   document.getElementById('rmm-name').value = row?.RM_Name || '';
   document.getElementById('rmm-unit').value = row?.Unit || 'กรัม';
   document.getElementById('rmm-min').value = row?.MinStock ?? '';
@@ -2555,7 +2687,7 @@ let _bomRowSeq = 0;               // เลขรันของแถวใน�
 let _bomMultiRowMode = true;      // true = เพิ่มได้หลายแถว, false = แก้ไขรายการเดิม 1 แถว
 let _bomModalFgId = null;         // สินค้าที่กำลังเพิ่ม/แก้รายการ (null = โหมดเพิ่มสินค้าใหม่)
 let _bomEditId = null;            // BOM_ID ที่กำลังแก้ไข (null = เพิ่มใหม่)
-const _BOM_CAT_ORDER = { [CAT_PREP]: 0, 'วัตถุดิบ': 1, [CAT_DRY]: 2, 'แพ็คเกจจิ้ง': 3 };
+const _BOM_CAT_ORDER = { [CAT_PREP]: 0, 'วัตถุดิบ': 1, [CAT_DRY]: 2, [CAT_CHEM]: 3, 'แพ็คเกจจิ้ง': 4 };
 
 // ── %Scrap ขั้นตอนเตรียมสมุนไพร (bom.ScrapSteps = [{step, pct}]) ──
 // ผู้ใช้เลือก (2026-09-25): ตั้งไว้ใน BOM, ขั้นตอนปรับได้ต่อวัตถุดิบ, หลายขั้น "บวกกันตรงๆ" (ไม่ทบ)
@@ -3036,7 +3168,7 @@ function receivedRenderTable() {
   const q = (document.getElementById('receivedSearch').value || '').toLowerCase();
   const rows = _receivedCache.filter(r => {
     const cat = rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
-    return (!catFilter || cat === catFilter) && (!q || JSON.stringify(r).toLowerCase().includes(q));
+    return catMatches(cat, catFilter) && (!q || JSON.stringify(r).toLowerCase().includes(q));
   });
   const lotByRcv = Object.fromEntries(_rmLotCache.filter(l => l.Receive_ID).map(l => [l.Receive_ID, l]));
   document.getElementById('receivedTableBody').innerHTML = rows.map(r => {
@@ -3050,7 +3182,8 @@ function receivedRenderTable() {
     const action = used
       ? `<span class="text-muted" title="ล็อตนี้ถูกเบิก/ตัดของเสียไปแล้ว ลบใบรับไม่ได้"><i class="fa-solid fa-lock"></i></span>`
       : `<button class="btn btn-sm btn-outline-danger" onclick="receivedDelete('${esc(r.Receive_ID)}')" title="ลบใบรับ"><i class="fa-solid fa-trash"></i></button>`;
-    return `<tr><td>${esc(r.Receive_ID)}</td><td>${catBadge(cat)}</td><td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td>
+    const rcTag = r.RC_No ? `<div class="small text-primary" title="ออกใบรายงานรับแล้ว"><i class="fa-solid fa-file-lines me-1"></i>${esc(r.RC_No)}</div>` : '';
+    return `<tr><td>${esc(r.Receive_ID)}${rcTag}</td><td>${catBadge(cat)}</td><td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td>
     <td class="text-end">${_bomFmtQty(r.Qty)} ${esc(r.Unit)}</td><td class="text-end">${remain}</td>
     <td>${esc(r.Supplier||'-')}</td><td>${esc(r.Lot||'-')}</td><td>${fmtDate(r.HarvestDate)}</td><td>${fmtDate(r.ReceiveDate)}</td>
     <td class="text-nowrap">${lot && lot.Qty > 0 ? _expBadge(r.ExpDate) : (r.ExpDate ? fmtDate(r.ExpDate) : '<span class="text-muted">—</span>')}</td>
@@ -3097,12 +3230,281 @@ async function receivedModalSave() {
   await Promise.all([receivedLoad(), stockRmLoad()]);
 }
 async function receivedDelete(id) {
-  const c = await Swal.fire({ title: 'ลบรายการรับนี้?', text: 'ล็อตนี้และยอดสต็อกจะถูกหักออกด้วย', icon: 'warning',
+  const rc = _receivedCache.find(r => r.Receive_ID === id)?.RC_No;
+  const c = await Swal.fire({ title: 'ลบรายการรับนี้?', icon: 'warning',
+    html: 'ล็อตนี้และยอดสต็อกจะถูกหักออกด้วย' + (rc ? `<div class="alert alert-warning small mt-3 mb-0 text-start">รายการนี้อยู่ในใบรายงานรับ <b>RC No ${esc(rc)}</b> แล้ว — ลบแล้วใบที่พิมพ์ไปจะไม่ตรงกับระบบ ให้พิมพ์ซ้ำจากเลขเดิมแทนใบเก่า</div>` : ''),
     showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
   const { error } = await _sb.rpc('rm_receive_delete', { p_receive_id: id });
   if (error) { _rmLotRpcErr(error, 'ลบไม่สำเร็จ'); return; }
   await Promise.all([receivedLoad(), stockRmLoad()]);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ใบรายงานรับ (แบบ ProFlow MR Report) — migration_2026-09-26_receive_report.sql
+// เลือกวันที่รับ + ซัพพลายเออร์ → ยืนยันเลข RC No → พิมพ์
+// • ยืนยัน = rm_report_issue: ออกเลขในทะเบียน rm_rc_numbers + stamp rm_receive.RC_No ในคำสั่งเดียว (กันเลขซ้ำ/ตีเลขซ้อน)
+// • ใบใหม่รวมเฉพาะรายการที่ "ยังไม่มีเลข" — รับเพิ่มทีหลังในวันเดียวกัน = ใบใหม่เฉพาะรายการใหม่ ไม่ดึงรายการเก่ามาปน
+// • สโคปที่ออกเลขครบแล้ว/กดจากประวัติ = พิมพ์ซ้ำจากเลขเดิม
+// ═══════════════════════════════════════════════════════════
+const RRPT_NO_SUPPLIER = '(ไม่ระบุซัพพลายเออร์)';
+let _rrpt = { rows: [], rcNo: '', confirmed: false, fromData: false, supplier: '' };
+let _rrptHistory = [];
+function _rrptSupplier(r) { return (r.Supplier || '').trim() || RRPT_NO_SUPPLIER; }
+function _rrptSetupErr(error) {
+  return error && (error.code === 'PGRST202' || error.code === 'PGRST205' || error.code === '42P01'
+    || (/rm_rc_numbers|rm_report_|RC_No/.test(error.message || '') && /not find|does not exist|schema cache/i.test(error.message || '')));
+}
+const RRPT_SETUP_MSG = 'ยังไม่ได้ตั้งค่าใบรายงานรับ — แอดมินต้องรัน <code>migration_2026-09-26_receive_report.sql</code> ใน Supabase ก่อน';
+function _rrptMsg(kind, html) {
+  const el = document.getElementById(kind === 'error' ? 'rrpt-error' : 'rrpt-warn');
+  el.innerHTML = html || '';
+  el.style.display = html ? '' : 'none';
+}
+
+async function rcvReportOpen() {
+  if (!_receivedCache.length) await receivedLoad();
+  // วันเริ่มต้น: วันนี้ถ้ามีรายการรับ ไม่งั้นวันล่าสุดที่ยังมีรายการรอออกรายงาน
+  const today = todayStr();
+  const pendingDate = _receivedCache.filter(r => !r.RC_No).map(r => r.ReceiveDate).sort().pop();
+  document.getElementById('rrpt-date').value = _receivedCache.some(r => r.ReceiveDate === today) ? today : (pendingDate || today);
+  document.getElementById('rrpt-supplier').innerHTML = '';
+  document.getElementById('rrpt-history-wrap').open = false;
+  // focus:false — ไม่งั้น focus trap ของ Bootstrap จะแย่งโฟกัสจากช่องกรอกของกล่อง "แก้เลข RC No" (Swal) ที่เปิดซ้อน
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('rcvReportModal'), { focus: false }).show();
+  rcvReportRenderHistory();
+  await rcvReportScopeChanged();
+}
+
+function _rrptFillSuppliers(dayRows) {
+  const sel = document.getElementById('rrpt-supplier');
+  const prev = sel.value;
+  const sups = [...new Set(dayRows.map(_rrptSupplier))]
+    .sort((a, b) => a === RRPT_NO_SUPPLIER ? 1 : b === RRPT_NO_SUPPLIER ? -1 : a.localeCompare(b, 'th'));
+  const cnt = s => dayRows.filter(r => _rrptSupplier(r) === s).length;
+  sel.innerHTML = `<option value="">ทั้งหมด (${dayRows.length} รายการ)</option>` +
+    sups.map(s => `<option value="${esc(s)}">${esc(s)} (${cnt(s)} รายการ)</option>`).join('');
+  if (sups.includes(prev)) sel.value = prev;
+}
+
+async function rcvReportScopeChanged() {
+  const date = document.getElementById('rrpt-date').value;
+  const dayRows = _receivedCache.filter(r => r.ReceiveDate === date);
+  _rrptFillSuppliers(dayRows);
+  const sup = document.getElementById('rrpt-supplier').value;
+  const scope = dayRows.filter(r => !sup || _rrptSupplier(r) === sup);
+  const pending = scope.filter(r => !r.RC_No);
+  const done = [...new Set(scope.map(r => r.RC_No).filter(Boolean))];
+  _rrptMsg('error', '');
+  if (!pending.length && done.length === 1) { await rcvReportShowRc(done[0], true); return; }   // ออกเลขครบแล้ว = พิมพ์ซ้ำ
+
+  _rrpt = { rows: pending, rcNo: '', confirmed: false, fromData: false, supplier: sup };
+  const links = done.map(n => `<button type="button" data-rc="${esc(n)}" onclick="rcvReportShowRc(this.dataset.rc)">${esc(n)}</button>`).join(', ');
+  _rrptMsg('warn', !done.length ? ''
+    : `⚠️ วันที่/ซัพพลายเออร์นี้ออกรายงานไปแล้ว: ${links} ` + (pending.length
+      ? `— ใบนี้รวมเฉพาะรายการใหม่ที่ยังไม่มีเลขอีก <b>${pending.length}</b> รายการ (รายการเดิมไม่ถูกดึงมาปน และไม่ถูกเปลี่ยนเลข)`
+      : '— ไม่มีรายการใหม่ที่ต้องออกเลข กดเลขเพื่อพิมพ์ซ้ำ'));
+  const rcInput = document.getElementById('rrpt-rcno');
+  rcInput.value = '';
+  _rrptApplyState();
+  if (pending.length) {
+    const suggested = await _rrptSuggestNo(date);
+    // ผู้ใช้อาจเปลี่ยนวันที่/ยืนยันไปแล้วระหว่างรอ — ใส่เลขเสนอเฉพาะเมื่อยังอยู่สโคปเดิมและยังไม่ได้พิมพ์เลขเอง
+    if (!_rrpt.confirmed && _rrpt.rows === pending && !rcInput.value) rcInput.value = suggested;
+  }
+}
+
+// เลขถัดไป = เลขลำดับสูงสุดของ "ปี/เดือน" ของวันที่รับ + 1 (อ่านจาก DB ทุกครั้ง กันชนกันข้ามเครื่อง)
+// ใช้ค่าสูงสุด ไม่ใช่นับจำนวนแบบ ProFlow — แก้เลขกลางเดือนแล้วการนับจะเสนอเลขที่ใช้ไปแล้ว
+async function _rrptSuggestNo(date) {
+  if (!date) return '';
+  const prefix = date.slice(0, 7).replace('-', '/');   // 2026-09-26 → 2026/09
+  const { data, error } = await _sb.from('rm_rc_numbers').select('RC_No').like('RC_No', `${prefix}%`);
+  if (error) return `${prefix}001`;
+  const re = new RegExp(`^${prefix.replace('/', '\\/')}(\\d+)$`);
+  const max = Math.max(0, ...(data || []).map(r => (r.RC_No.match(re) || [])[1]).filter(Boolean).map(Number));
+  return `${prefix}${String(max + 1).padStart(3, '0')}`;
+}
+
+// พิมพ์ซ้ำจากเลขเดิม (กดจากประวัติ / ลิงก์เตือน / สโคปที่ออกเลขครบแล้ว)
+async function rcvReportShowRc(rcNo, keepScope) {
+  let rec = _rrptHistory.find(h => h.RC_No === rcNo);
+  if (!rec) rec = (await _sb.from('rm_rc_numbers').select('*').eq('RC_No', rcNo).maybeSingle()).data;
+  if (!keepScope && rec) {
+    document.getElementById('rrpt-date').value = rec.ReceiveDate;
+    _rrptFillSuppliers(_receivedCache.filter(r => r.ReceiveDate === rec.ReceiveDate));
+    const sel = document.getElementById('rrpt-supplier');
+    sel.value = [...sel.options].some(o => o.value === (rec.Supplier || '')) ? (rec.Supplier || '') : '';
+    _rrptMsg('warn', '');
+  }
+  _rrptMsg('error', '');
+  _rrpt = { rows: _receivedCache.filter(r => r.RC_No === rcNo), rcNo, confirmed: true, fromData: true,
+            supplier: rec ? (rec.Supplier || '') : document.getElementById('rrpt-supplier').value };
+  document.getElementById('rrpt-rcno').value = rcNo;
+  _rrptApplyState();
+}
+
+function _rrptApplyState() {
+  const st = document.getElementById('rrpt-status');
+  const has = _rrpt.rows.length > 0;
+  if (_rrpt.confirmed) {
+    st.className = 'rrpt-pill ' + (_rrpt.fromData ? 'old' : 'ok');
+    st.textContent = _rrpt.fromData ? '✓ ออกเลขแล้ว (พิมพ์ซ้ำ)' : '✓ ยืนยันแล้ว (บันทึกแล้ว)';
+  } else {
+    st.className = 'rrpt-pill wait';
+    st.textContent = has ? '● ยังไม่ยืนยัน' : '— ไม่มีรายการรอออกรายงาน';
+  }
+  document.getElementById('rrpt-rcno').disabled = _rrpt.confirmed || !has;
+  document.getElementById('rrpt-confirm-btn').disabled = _rrpt.confirmed || !has;
+  document.getElementById('rrpt-print-btn').disabled = !(_rrpt.confirmed && has);
+  const hint = document.getElementById('rrpt-print-hint');
+  hint.style.display = _rrpt.confirmed ? 'none' : '';
+  hint.textContent = has ? 'ต้องยืนยันเลข RC No ก่อนพิมพ์' : 'ไม่มีรายการในวันที่ / ซัพพลายเออร์ที่เลือก';
+  _rrptRenderPreview();
+}
+
+async function rcvReportConfirm() {
+  _rrptMsg('error', '');
+  const no = document.getElementById('rrpt-rcno').value.trim();
+  if (!no) { _rrptMsg('error', 'กรุณากรอกเลข RC No'); return; }
+  if (!_rrpt.rows.length) { _rrptMsg('error', 'ไม่มีรายการใหม่ที่ต้องออกเลข RC No'); return; }
+  const { error } = await _sb.rpc('rm_report_issue', {
+    p_rc_no: no, p_date: document.getElementById('rrpt-date').value,
+    p_supplier: _rrpt.supplier || null, p_receive_ids: _rrpt.rows.map(r => r.Receive_ID),
+  });
+  if (error) {
+    console.error(error);
+    _rrptMsg('error', _rrptSetupErr(error) ? RRPT_SETUP_MSG : esc(error.message));
+    // มีคนออกเลข/ลบรายการไปก่อนเมื่อสักครู่ → ดึงข้อมูลล่าสุดแล้วคำนวณสโคปใหม่ (ข้อความ error ยังแสดงอยู่)
+    if (/รีเฟรช/.test(error.message || '')) {
+      const msg = document.getElementById('rrpt-error').innerHTML;
+      await receivedLoad(); await rcvReportScopeChanged(); _rrptMsg('error', msg);
+    }
+    return;
+  }
+  _rrpt.rows.forEach(r => { r.RC_No = no; });   // sync cache ฝั่งเว็บ (แถวเดียวกับ _receivedCache)
+  Object.assign(_rrpt, { rcNo: no, confirmed: true, fromData: false });
+  _rrptMsg('warn', '');
+  _rrptApplyState();
+  receivedRenderTable();
+  rcvReportRenderHistory();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `ออกเลข ${no} แล้ว — กดพิมพ์ได้เลย`, showConfirmButton: false, timer: 2200 });
+}
+
+async function rcvReportRenderHistory() {
+  const body = document.getElementById('rrpt-history-body');
+  const { data, error } = await _sb.from('rm_rc_numbers').select('*').order('CreatedAt', { ascending: false }).limit(30);
+  if (error) {
+    body.innerHTML = `<tr><td colspan="6" class="text-danger">${_rrptSetupErr(error) ? RRPT_SETUP_MSG : 'โหลดประวัติไม่ได้ — ' + esc(error.message)}</td></tr>`;
+    return;
+  }
+  _rrptHistory = data || [];
+  const canEdit = _hasRole('supervisor');
+  body.innerHTML = _rrptHistory.map(h => `<tr>
+    <td class="fw-bold">${esc(h.RC_No)}</td><td>${fmtDate(h.ReceiveDate)}</td><td>${esc(h.Supplier || 'ทั้งหมด')}</td>
+    <td class="text-end">${h.ItemCount ?? '-'}</td><td class="text-muted">${esc(h.CreatedBy || '-')}</td>
+    <td class="text-nowrap"><button type="button" data-rc="${esc(h.RC_No)}" onclick="rcvReportShowRc(this.dataset.rc)"><i class="fa-solid fa-print me-1"></i>พิมพ์ซ้ำ</button>
+      ${canEdit ? `<button type="button" data-rc="${esc(h.RC_No)}" onclick="rcvReportRename(this.dataset.rc)"><i class="fa-solid fa-pen me-1"></i>แก้เลข</button>` : ''}</td>
+  </tr>`).join('') || '<tr><td colspan="6" class="text-muted">ยังไม่มีเลข RC No</td></tr>';
+}
+
+async function rcvReportRename(oldNo) {
+  const { value } = await Swal.fire({ title: 'แก้เลข RC No', input: 'text', inputValue: oldNo,
+    text: 'รายการรับทุกรายการในใบนี้จะเปลี่ยนเลขตาม', showCancelButton: true, confirmButtonText: 'บันทึก', cancelButtonText: 'ยกเลิก',
+    inputValidator: v => !v?.trim() ? 'กรุณากรอกเลข RC No' : undefined });
+  if (!value || value.trim() === oldNo) return;
+  const newNo = value.trim();
+  const { error } = await _sb.rpc('rm_report_rename', { p_old: oldNo, p_new: newNo });
+  if (error) { Swal.fire('แก้เลขไม่สำเร็จ', _rrptSetupErr(error) ? RRPT_SETUP_MSG : esc(error.message), 'error'); return; }
+  _receivedCache.forEach(r => { if (r.RC_No === oldNo) r.RC_No = newNo; });
+  if (_rrpt.rcNo === oldNo) { _rrpt.rcNo = newNo; document.getElementById('rrpt-rcno').value = newNo; }
+  await rcvReportRenderHistory();
+  _rrptApplyState();
+  receivedRenderTable();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'แก้เลขแล้ว', showConfirmButton: false, timer: 2000 });
+}
+
+function _rrptHtml() {
+  const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  const catOf = r => rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
+  const rows = [..._rrpt.rows].sort((a, b) =>
+    (_BOM_CAT_ORDER[catOf(a)] ?? 9) - (_BOM_CAT_ORDER[catOf(b)] ?? 9)
+    || String(rmMap[a.RM_ID]?.RM_Name || a.RM_ID).localeCompare(String(rmMap[b.RM_ID]?.RM_Name || b.RM_ID), 'th')
+    || String(a.Receive_ID).localeCompare(String(b.Receive_ID)));
+  const showSup = !_rrpt.supplier;   // ใบรวมทุกซัพพลายเออร์ → แสดงคอลัมน์ซัพพลายเออร์ด้วย
+  const date = rows[0]?.ReceiveDate || document.getElementById('rrpt-date').value;
+  const trs = rows.map((r, i) => `<tr>
+    <td class="ord">${i + 1}</td><td>${esc(r.Receive_ID)}</td><td>${esc(r.RM_ID)}</td>
+    <td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td><td>${esc(catLabel(catOf(r)))}</td>
+    ${showSup ? `<td>${esc(r.Supplier || '-')}</td>` : ''}
+    <td>${esc(r.Lot || '-')}</td><td>${r.HarvestDate ? fmtDate(r.HarvestDate) : '-'}</td><td>${r.ExpDate ? fmtDate(r.ExpDate) : '-'}</td>
+    <td class="num qty">${_bomFmtQty(r.Qty)}</td><td>${esc(r.Unit || '')}</td><td></td>
+  </tr>`).join('');
+  // สรุปตามรายการ + หน่วย (หน่วยต่างกันบวกกันไม่ได้)
+  const sum = {};
+  rows.forEach(r => {
+    const k = r.RM_ID + '||' + (r.Unit || '');
+    sum[k] = sum[k] || { id: r.RM_ID, name: rmMap[r.RM_ID]?.RM_Name || r.RM_ID, cat: catOf(r), unit: r.Unit || '', lots: 0, qty: 0 };
+    sum[k].lots++; sum[k].qty += parseFloat(r.Qty) || 0;
+  });
+  const sumRows = Object.values(sum).map(s => `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(catLabel(s.cat))}</td>
+    <td class="num">${s.lots}</td><td class="num qty">${_bomFmtQty(s.qty)}</td><td>${esc(s.unit)}</td></tr>`).join('');
+  const now = new Date();
+  return `<div class="rrpt-page">
+    <div class="rrpt-head">
+      <div class="d-flex align-items-center gap-3">
+        <img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
+        <div class="rrpt-company"><b>Blooming Company Limited</b><br>BLM Herbal — แผนกคลังวัตถุดิบ</div>
+      </div>
+      <div>
+        <div class="rrpt-title">รายงานรับวัตถุดิบ / แพ็คเกจจิ้ง</div>
+        <div class="rrpt-no">RC No: ${_rrpt.confirmed ? esc(_rrpt.rcNo) : '(ยังไม่ยืนยัน)'}</div>
+        <div class="rrpt-meta">พิมพ์เมื่อ ${fmtDate(todayStr())} ${now.toTimeString().slice(0, 5)} น. · โดย ${esc(_currentUser?.name || _currentUser?.email || '-')}</div>
+      </div>
+    </div>
+    <div class="rrpt-filters">
+      <div><span class="lbl">วันที่รับ</span><span class="val">${fmtDate(date)}</span></div>
+      <div><span class="lbl">ซัพพลายเออร์</span><span class="val">${esc(_rrpt.supplier || 'ทั้งหมด')}</span></div>
+      <span class="minor">จำนวนรายการ: <b>${rows.length}</b></span>
+    </div>
+    ${rows.length ? `
+    <table class="rrpt-table">
+      <thead><tr><th style="width:3%">ลำดับ</th><th>เลขที่รับ</th><th>รหัส</th><th style="width:20%">รายการ</th><th>หมวด</th>
+        ${showSup ? '<th>ซัพพลายเออร์</th>' : ''}<th>Lot</th><th>วันเก็บเกี่ยว</th><th>วันหมดอายุ</th>
+        <th class="num">จำนวน</th><th>หน่วย</th><th style="width:14%">หมายเหตุ</th></tr></thead>
+      <tbody>${trs}</tbody>
+    </table>
+    <div class="rrpt-sum-title">สรุปยอดรวมตามรายการ</div>
+    <table class="rrpt-table sum">
+      <thead><tr><th>รหัส</th><th>รายการ</th><th>หมวด</th><th class="num">จำนวนล็อต</th><th class="num">จำนวนรวม</th><th>หน่วย</th></tr></thead>
+      <tbody>${sumRows}</tbody>
+    </table>` : '<div class="rrpt-empty">ไม่มีรายการในวันที่ / ซัพพลายเออร์ที่เลือก</div>'}
+    <div class="rrpt-foot">
+      <div class="rrpt-sign"><div class="line">ผู้รับของ / ผู้บันทึก</div></div>
+      <div class="rrpt-sign"><div class="line">ผู้ตรวจสอบ</div></div>
+      <div class="rrpt-sign"><div class="line">ผู้อนุมัติ</div></div>
+    </div>
+  </div>`;
+}
+function _rrptRenderPreview() {
+  const wrap = document.getElementById('rrpt-preview');
+  wrap.innerHTML = _rrptHtml();
+  if (!_rrpt.confirmed && _rrpt.rows.length) {
+    wrap.insertAdjacentHTML('beforeend', '<div class="rrpt-lock"><div class="box">🔒 กรุณายืนยันเลข RC No ก่อน<br>จึงจะพิมพ์ได้ (ดูตัวอย่างข้อมูลได้ตามปกติ)</div></div>');
+  }
+}
+// พิมพ์เฉพาะใบที่ยืนยันเลขแล้ว — ใส่เนื้อหาลง print root ตอนกดพิมพ์เท่านั้น แล้วล้างทิ้งหลังพิมพ์
+function rcvReportPrint() {
+  if (!_rrpt.confirmed || !_rrpt.rows.length) return;
+  document.getElementById('rrpt-print-root').innerHTML = _rrptHtml();
+  document.body.classList.add('print-rrpt');
+  const done = () => {
+    document.body.classList.remove('print-rrpt');
+    document.getElementById('rrpt-print-root').innerHTML = '';
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3138,7 +3540,7 @@ function _stockRenderByCategory(categories, searchInputId, tbodyId) {
     const status = qty < 0 ? badge('ติดลบ', 'danger') : low ? badge('ต่ำกว่าขั้นต่ำ', 'danger') : badge('ปกติ', 'success');
     const main = `<tr${lots.length ? ` style="cursor:pointer" data-rm="${esc(r.RM_ID)}" onclick="stockToggleLots(this.dataset.rm)" title="กดเพื่อดูรายล็อต"` : ''}>
       <td class="text-center text-muted">${lots.length ? `<i class="fa-solid fa-chevron-${expanded ? 'down' : 'right'}"></i>` : ''}</td>
-      <td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}${[CAT_PREP, CAT_DRY].includes(r.Category) ? ` ${catBadge(r.Category)}` : ''}</td><td class="text-end fw-semibold">${_bomFmtQty(qty)}</td><td>${esc(r.Unit)}</td>
+      <td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}${[CAT_PREP, CAT_DRY, CAT_CHEM].includes(r.Category) ? ` ${catBadge(r.Category)}` : ''}</td><td class="text-end fw-semibold">${_bomFmtQty(qty)}</td><td>${esc(r.Unit)}</td>
       <td class="text-end">${_bomFmtQty(r.MinStock ?? 0)}</td>
       <td>${lots.length ? `${lots.length} ล็อต` : '<span class="text-muted">—</span>'}</td>
       <td class="text-nowrap">${nearest ? _expBadge(nearest.ExpDate) : '<span class="text-muted">—</span>'}</td>
@@ -3875,7 +4277,7 @@ function stockCardLoadItems() {
   let items;
   if (type === 'fg') items = _fgMasterCache.map(f => ({ id: f.FG_ID, name: f.FG_Name }));
   else {
-    const cat = { pkg: 'แพ็คเกจจิ้ง', prep: CAT_PREP, dry: CAT_DRY }[type] || 'วัตถุดิบ';
+    const cat = { pkg: 'แพ็คเกจจิ้ง', prep: CAT_PREP, dry: CAT_DRY, chem: CAT_CHEM }[type] || 'วัตถุดิบ';
     items = _rmMasterCache.filter(r => (r.Category || 'วัตถุดิบ') === cat).map(r => ({ id: r.RM_ID, name: r.RM_Name }));
   }
   sel.innerHTML = items.map(i => `<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('');
@@ -3940,7 +4342,7 @@ function wasteRenderTable() {
   document.getElementById('wasteTableBody').innerHTML = _wasteCache.map(w => {
     const isFg = w.ItemType === 'FG';
     const itemName = (isFg ? (fgMap[w.FG_ID]?.FG_Name || w.FG_ID) : (rmMap[w.RM_ID]?.RM_Name || w.RM_ID)) + (w.Lot ? ` (Lot ${w.Lot})` : '');
-    const typeLabel = isFg ? 'สินค้าสำเร็จรูป' : (rmMap[w.RM_ID]?.Category || 'วัตถุดิบ');
+    const typeLabel = isFg ? 'สินค้าสำเร็จรูป' : catLabel(rmMap[w.RM_ID]?.Category);
     return `<tr><td>${esc(w.Waste_ID)}</td><td>${isFg ? badge(typeLabel, 'primary') : catBadge(typeLabel)}</td><td>${esc(itemName)}</td><td>${w.Qty} ${esc(w.Unit||'')}</td><td>${esc(w.Reason)}</td><td>${fmtDate(w.WasteDate)}</td>
     <td><button class="btn btn-sm btn-outline-danger" onclick="wasteDelete('${w.Waste_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
   }).join('') || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
@@ -4029,5 +4431,7 @@ async function wasteDelete(id) {
   }
 }
 </script>
+<!-- ที่พิมพ์ใบรายงานรับ — ต้องเป็นลูกตรงของ body (CSS @media print ซ่อนทุกอย่างที่ไม่ใช่ตัวนี้) -->
+<div id="rrpt-print-root"></div>
 </body>
 </html>
