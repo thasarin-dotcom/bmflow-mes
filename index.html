@@ -574,8 +574,11 @@ table.rrpt-table.sum th { background: #334155; }
       <div><h4 class="mb-0 text-white"><i class="fa-solid fa-seedling me-2"></i>วัตถุดิบ / แพ็คเกจจิ้ง (Master)</h4><div class="text-white-50 small">รายการวัตถุดิบและวัสดุบรรจุภัณฑ์ทั้งหมด</div></div>
       <button class="btn btn-success" onclick="rmMasterOpenForm()"><i class="fa-solid fa-plus me-1"></i>เพิ่มรายการ</button>
     </div>
-    <div class="sticky-toolbar mb-2"><select class="form-select w-auto" id="rmMasterCategoryFilter" onchange="rmMasterRenderTable()">
+    <div class="sticky-toolbar d-flex flex-wrap gap-2 mb-2"><select class="form-select w-auto" id="rmMasterCategoryFilter" onchange="rmMasterRenderTable()">
       <option value="">-- ทุกหมวดหมู่ --</option><!-- ตัวเลือกเติมโดย _fillCategorySelects() -->
+    </select>
+    <select class="form-select w-auto" id="rmMasterSupplierFilter" onchange="rmMasterRenderTable()">
+      <option value="">-- ทุกซัพพลายเออร์ --</option><!-- ตัวเลือกเติมโดย _rmMasterFillSuppliers() -->
     </select></div>
     <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
       <thead><tr><th>รหัส</th><th>ชื่อรายการ</th><th>หมวดหมู่</th><th>หน่วย</th><th>สต็อกขั้นต่ำ</th><th>ซัพพลายเออร์</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead>
@@ -962,6 +965,7 @@ table.rrpt-table.sum th { background: #334155; }
             <select id="rmm-unit" class="form-select">
               <option value="กรัม">กรัม</option>
               <option value="กิโลกรัม">กิโลกรัม</option>
+              <option value="มิลลิลิตร">มิลลิลิตร</option>
               <option value="ลิตร">ลิตร</option>
               <option value="ชิ้น">ชิ้น</option>
             </select>
@@ -2444,9 +2448,26 @@ async function rmMasterLoad() {
   _rmMasterCache = await sbRun(_sb.from('rm_master').select('*').order('RM_Name'), 'โหลดวัตถุดิบ') || [];
   rmMasterRenderTable();
 }
+const RM_NO_SUPPLIER = '__none';   // ค่าตัวกรอง "ไม่ระบุซัพพลายเออร์"
+// ข้อมูลจริงมีคนกรอก "-" แทนการเว้นว่าง → นับเป็น "ไม่ระบุ" เหมือนกัน
+function _rmSupplierKey(r) { const s = (r.Supplier || '').trim(); return !s || /^[-–—.]+$/.test(s) ? RM_NO_SUPPLIER : s; }
+// ตัวเลือกซัพพลายเออร์สร้างจากรายการในหมวดที่เลือกอยู่ (จำนวนในวงเล็บ = ตามหมวดนั้น) — คงค่าที่เลือกไว้ถ้ายังมีอยู่
+function _rmMasterFillSuppliers(catRows) {
+  const sel = document.getElementById('rmMasterSupplierFilter');
+  const prev = sel.value;
+  const cnt = {};
+  catRows.forEach(r => { const k = _rmSupplierKey(r); cnt[k] = (cnt[k] || 0) + 1; });
+  const keys = Object.keys(cnt).sort((a, b) => a === RM_NO_SUPPLIER ? 1 : b === RM_NO_SUPPLIER ? -1 : a.localeCompare(b, 'th'));
+  sel.innerHTML = `<option value="">-- ทุกซัพพลายเออร์ (${catRows.length}) --</option>` + keys.map(k =>
+    `<option value="${esc(k)}">${esc(k === RM_NO_SUPPLIER ? '(ไม่ระบุซัพพลายเออร์)' : k)} (${cnt[k]})</option>`).join('');
+  sel.value = keys.includes(prev) ? prev : '';
+  return sel.value;
+}
 function rmMasterRenderTable() {
   const filter = document.getElementById('rmMasterCategoryFilter').value;
-  const rows = _rmMasterCache.filter(r => catMatches(r.Category, filter));
+  const catRows = _rmMasterCache.filter(r => catMatches(r.Category, filter));
+  const sup = _rmMasterFillSuppliers(catRows);
+  const rows = catRows.filter(r => !sup || _rmSupplierKey(r) === sup);
   document.getElementById('rmMasterTableBody').innerHTML = rows.map(r => `
     <tr><td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}</td><td>${catBadge(r.Category)}${r.SourceRM_ID ? `<div class="small text-muted">${r.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmMasterCache.find(x => x.RM_ID === r.SourceRM_ID)?.RM_Name || r.SourceRM_ID || '—')} · สูญเสีย ${_bomFmtQty(_bomScrapTotal(r.PrepSteps))}%</div>` : ''}</td><td>${esc(r.Unit)}</td><td>${r.MinStock ?? 0}</td><td>${esc(r.Supplier||'-')}</td><td>${esc(r.Note||'')}</td>
     <td><button class="btn btn-sm btn-outline-primary me-1" onclick="rmMasterOpenForm('${r.RM_ID}')"><i class="fa-solid fa-pen"></i></button>
