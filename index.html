@@ -353,7 +353,9 @@ img.emp-avatar { cursor: zoom-in; }
     <div class="sticky-toolbar d-flex gap-2 mb-2">
       <select class="form-select w-auto" id="receivedCategoryFilter" onchange="receivedRenderTable()">
         <option value="">-- ทุกหมวดหมู่ --</option>
-        <option value="วัตถุดิบ">วัตถุดิบ</option>
+        <option value="วัตถุดิบ">วัตถุดิบสด</option>
+        <option value="วัตถุดิบแห้ง">วัตถุดิบแห้ง</option>
+        <option value="วัตถุดิบพร้อมผลิต">วัตถุดิบพร้อมผลิต</option>
         <option value="แพ็คเกจจิ้ง">แพ็คเกจจิ้ง</option>
       </select>
       <div class="search-wrap"><input class="form-control search-input" id="receivedSearch" placeholder="ค้นหา..." oninput="receivedRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('receivedSearch').value='';receivedRenderTable()"></i></div>
@@ -369,7 +371,7 @@ img.emp-avatar { cursor: zoom-in; }
     <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-leaf me-2"></i>Raw Material</h4><div class="text-white-50 small">สต็อกวัตถุดิบ — ยอดคงเหลือสมุนไพรปัจจุบัน</div></div>
     <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 mb-2">
       <select class="form-select w-auto" id="stockRmCatFilter" onchange="stockRmRenderTable()">
-        <option value="">วัตถุดิบทั้งหมด</option><option value="วัตถุดิบ">วัตถุดิบสด</option><option value="วัตถุดิบพร้อมผลิต">วัตถุดิบพร้อมผลิต</option>
+        <option value="">วัตถุดิบทั้งหมด</option><option value="วัตถุดิบ">วัตถุดิบสด</option><option value="วัตถุดิบแห้ง">วัตถุดิบแห้ง</option><option value="วัตถุดิบพร้อมผลิต">วัตถุดิบพร้อมผลิต</option>
       </select>
       <div class="search-wrap"><input class="form-control search-input" id="stockRmSearch" placeholder="ค้นหา..." oninput="stockRmRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockRmSearch').value='';stockRmRenderTable()"></i></div>
     </div></div>
@@ -483,7 +485,7 @@ img.emp-avatar { cursor: zoom-in; }
   <div class="page-view" id="page-stockcard">
     <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-clipboard-list me-2"></i>Stock Card</h4><div class="text-white-50 small">ประวัติการเคลื่อนไหวรายการ (รับ/เบิก) แบบไล่ยอดคงเหลือ</div></div>
     <div class="sticky-toolbar d-flex gap-2 mb-2">
-      <select class="form-select w-auto" id="scType" onchange="stockCardLoadItems()"><option value="rm">วัตถุดิบสด</option><option value="prep">วัตถุดิบพร้อมผลิต</option><option value="pkg">แพ็คเกจจิ้ง</option><option value="fg">สินค้าสำเร็จรูป</option></select>
+      <select class="form-select w-auto" id="scType" onchange="stockCardLoadItems()"><option value="rm">วัตถุดิบสด</option><option value="dry">วัตถุดิบแห้ง</option><option value="prep">วัตถุดิบพร้อมผลิต</option><option value="pkg">แพ็คเกจจิ้ง</option><option value="fg">สินค้าสำเร็จรูป</option></select>
       <select class="form-select w-auto" id="scItem" onchange="stockCardRender()"></select>
     </div>
     <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
@@ -512,7 +514,8 @@ img.emp-avatar { cursor: zoom-in; }
     </div>
     <div class="sticky-toolbar mb-2"><select class="form-select w-auto" id="rmMasterCategoryFilter" onchange="rmMasterRenderTable()">
       <option value="">-- ทุกหมวดหมู่ --</option>
-      <option value="วัตถุดิบ">วัตถุดิบ</option>
+      <option value="วัตถุดิบ">วัตถุดิบสด</option>
+      <option value="วัตถุดิบแห้ง">วัตถุดิบแห้ง</option>
       <option value="วัตถุดิบพร้อมผลิต">วัตถุดิบพร้อมผลิต</option>
       <option value="แพ็คเกจจิ้ง">แพ็คเกจจิ้ง</option>
     </select></div>
@@ -864,6 +867,7 @@ img.emp-avatar { cursor: zoom-in; }
             <label class="form-label">ประเภท</label>
             <select id="rmm-cat" class="form-select" onchange="rmMasterTogglePrep()">
               <option value="วัตถุดิบ">วัตถุดิบ (สด)</option>
+              <option value="วัตถุดิบแห้ง">วัตถุดิบแห้ง</option>
               <option value="วัตถุดิบพร้อมผลิต">วัตถุดิบพร้อมผลิต</option>
               <option value="แพ็คเกจจิ้ง">แพ็คเกจจิ้ง</option>
             </select>
@@ -873,7 +877,7 @@ img.emp-avatar { cursor: zoom-in; }
             <div class="rounded p-2" style="background:#f0fdf4;border:1px dashed #86efac">
               <div class="row g-2">
                 <div class="col-md-8">
-                  <label class="form-label">ทำจากวัตถุดิบสด<span class="text-danger">*</span></label>
+                  <label class="form-label">ทำจากวัตถุดิบ (สด / แห้ง)<span class="text-danger">*</span></label>
                   <select id="rmm-source" class="form-select" onchange="rmMasterSyncSourceUnit()"></select>
                   <div class="invalid-feedback" id="rmm-source-err"></div>
                 </div>
@@ -1395,8 +1399,14 @@ function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;',
 function badge(text, cls) { return `<span class="badge text-bg-${cls||'secondary'}">${esc(text)}</span>`; }
 // หมวดหมู่ rm_master: วัตถุดิบ (สด) / แพ็คเกจจิ้ง / วัตถุดิบพร้อมผลิต (ผ่านการคัด-ล้าง-อบ-บด-ย่อยแล้ว, migration_2026-09-25_prep.sql)
 const CAT_PREP = 'วัตถุดิบพร้อมผลิต';
-const CAT_BADGE = { 'วัตถุดิบ': 'secondary', 'แพ็คเกจจิ้ง': 'info', [CAT_PREP]: 'success' };
-function catBadge(cat) { cat = cat || 'วัตถุดิบ'; return badge(cat, CAT_BADGE[cat] || 'secondary'); }
+// วัตถุดิบแห้ง (2026-09-26): ซื้อมาแห้งแล้ว เช่น การบูร พิมเสน — ทำงานเหมือนวัตถุดิบสดทุกอย่าง (รับเข้า/Lot/FEFO/
+// เป็นต้นทางของพร้อมผลิตได้) ต่างแค่หมวด · ค่า 'วัตถุดิบ' ในฐานข้อมูล = วัตถุดิบสด (ชื่อเดิม ไม่เปลี่ยนค่าที่เก็บ)
+const CAT_DRY = 'วัตถุดิบแห้ง';
+const CAT_RAW_GROUP = ['วัตถุดิบ', CAT_DRY];   // วัตถุดิบที่รับจากภายนอก (สด + แห้ง) — ใช้เป็นต้นทางของพร้อมผลิตได้
+const CAT_BADGE = { 'วัตถุดิบ': 'secondary', [CAT_DRY]: 'warning', 'แพ็คเกจจิ้ง': 'info', [CAT_PREP]: 'success' };
+const CAT_LABEL = { 'วัตถุดิบ': 'วัตถุดิบสด' };
+function catLabel(cat) { cat = cat || 'วัตถุดิบ'; return CAT_LABEL[cat] || cat; }
+function catBadge(cat) { cat = cat || 'วัตถุดิบ'; return badge(catLabel(cat), CAT_BADGE[cat] || 'secondary'); }
 function _modalClearErrors(ids) { ids.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('is-invalid'); }); }
 function _modalShowError(fieldId, msg) {
   const el = document.getElementById(fieldId);
@@ -2320,7 +2330,7 @@ function rmMasterOpenForm(id) {
   const idInput = document.getElementById('rmm-id');
   idInput.value = row?.RM_ID || genId('RM');
   _setCodeFieldAccess(idInput, 'rmm-id-help', !!id);
-  document.getElementById('rmm-cat').value = [CAT_PREP, 'แพ็คเกจจิ้ง'].includes(row?.Category) ? row.Category : 'วัตถุดิบ';
+  document.getElementById('rmm-cat').value = [CAT_PREP, CAT_DRY, 'แพ็คเกจจิ้ง'].includes(row?.Category) ? row.Category : 'วัตถุดิบ';
   document.getElementById('rmm-name').value = row?.RM_Name || '';
   document.getElementById('rmm-unit').value = row?.Unit || 'กรัม';
   document.getElementById('rmm-min').value = row?.MinStock ?? '';
@@ -2328,9 +2338,9 @@ function rmMasterOpenForm(id) {
   document.getElementById('rmm-note').value = row?.Note || '';
   // ส่วนพร้อมผลิต
   _modalClearErrors(['rmm-source']);
-  document.getElementById('rmm-source').innerHTML = '<option value="">-- เลือกวัตถุดิบสด --</option>' +
-    _rmMasterCache.filter(r => (r.Category || 'วัตถุดิบ') === 'วัตถุดิบ' && r.RM_ID !== row?.RM_ID)
-      .map(r => `<option value="${esc(r.RM_ID)}">${esc(r.RM_Name)} (${esc(r.Unit)})</option>`).join('');
+  document.getElementById('rmm-source').innerHTML = '<option value="">-- เลือกวัตถุดิบต้นทาง (สด / แห้ง) --</option>' +
+    _rmMasterCache.filter(r => CAT_RAW_GROUP.includes(r.Category || 'วัตถุดิบ') && r.RM_ID !== row?.RM_ID)
+      .map(r => `<option value="${esc(r.RM_ID)}">${esc(r.RM_Name)} · ${esc(catLabel(r.Category))} (${esc(r.Unit)})</option>`).join('');
   document.getElementById('rmm-source').value = row?.SourceRM_ID || '';
   document.getElementById('rmm-shelf').value = row?.ShelfLifeDays ?? '';
   document.getElementById('rmm-steps').innerHTML = '';
@@ -2387,7 +2397,7 @@ async function rmMasterModalSave() {
   let prep = { SourceRM_ID: null, PrepSteps: [], ShelfLifeDays: null };
   if (cat === CAT_PREP) {
     const source = document.getElementById('rmm-source').value;
-    if (!source) { _modalShowError('rmm-source', 'เลือกวัตถุดิบสดที่ใช้ทำ'); return; }
+    if (!source) { _modalShowError('rmm-source', 'เลือกวัตถุดิบต้นทางที่ใช้ทำ'); return; }
     const steps = _rmmReadSteps();
     if (steps.some(s => s.pct < 0) || _bomScrapTotal(steps) >= 100) { _modalShowError('rmm-source', '%สูญเสียต้องไม่ติดลบ และรวมกันต้องน้อยกว่า 100%'); return; }
     rmMasterSyncSourceUnit();
@@ -2510,7 +2520,7 @@ let _bomRowSeq = 0;               // เลขรันของแถวใน�
 let _bomMultiRowMode = true;      // true = เพิ่มได้หลายแถว, false = แก้ไขรายการเดิม 1 แถว
 let _bomModalFgId = null;         // สินค้าที่กำลังเพิ่ม/แก้รายการ (null = โหมดเพิ่มสินค้าใหม่)
 let _bomEditId = null;            // BOM_ID ที่กำลังแก้ไข (null = เพิ่มใหม่)
-const _BOM_CAT_ORDER = { [CAT_PREP]: 0, 'วัตถุดิบ': 1, 'แพ็คเกจจิ้ง': 2 };
+const _BOM_CAT_ORDER = { [CAT_PREP]: 0, 'วัตถุดิบ': 1, [CAT_DRY]: 2, 'แพ็คเกจจิ้ง': 3 };
 
 // ── %Scrap ขั้นตอนเตรียมสมุนไพร (bom.ScrapSteps = [{step, pct}]) ──
 // ผู้ใช้เลือก (2026-09-25): ตั้งไว้ใน BOM, ขั้นตอนปรับได้ต่อวัตถุดิบ, หลายขั้น "บวกกันตรงๆ" (ไม่ทบ)
@@ -3015,7 +3025,7 @@ function receivedRenderTable() {
 function receivedOpenForm() {
   if (!_rmMasterCache.length) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบ/แพ็คเกจจิ้งใน "วัตถุดิบ / แพ็คเกจจิ้ง (Master)" ก่อน', 'info'); return; }
   _modalClearErrors(['rcv-qty']);
-  document.getElementById('rcv-rm').innerHTML = _rmMasterCache.map(r => `<option value="${esc(r.RM_ID)}">[${esc(r.Category||'วัตถุดิบ')}] ${esc(r.RM_Name)} (${esc(r.Unit)})</option>`).join('');
+  document.getElementById('rcv-rm').innerHTML = _rmMasterCache.map(r => `<option value="${esc(r.RM_ID)}">[${esc(catLabel(r.Category))}] ${esc(r.RM_Name)} (${esc(r.Unit)})</option>`).join('');
   document.getElementById('rcv-qty').value = '';
   document.getElementById('rcv-supplier').value = '';
   document.getElementById('rcv-lot').value = '';
@@ -3035,7 +3045,7 @@ async function receivedModalSave() {
   const receiveDate = document.getElementById('rcv-receive').value || todayStr();
   const exp = document.getElementById('rcv-exp').value || null;
   if (exp && exp < receiveDate) { _modalShowError('rcv-exp', 'วันหมดอายุต้องไม่ก่อนวันที่รับเข้า'); return; }
-  if (!exp && (rm?.Category || 'วัตถุดิบ') === 'วัตถุดิบ') {
+  if (!exp && CAT_RAW_GROUP.includes(rm?.Category || 'วัตถุดิบ')) {
     const c = await Swal.fire({ icon: 'question', title: 'ไม่ระบุวันหมดอายุ?',
       text: 'ล็อตที่ไม่มีวันหมดอายุจะถูกใช้ทีหลังสุด และไม่ขึ้นเตือนใกล้หมดอายุ', showCancelButton: true,
       confirmButtonText: 'บันทึกโดยไม่ระบุ', cancelButtonText: 'กลับไปใส่วันหมดอายุ' });
@@ -3093,7 +3103,7 @@ function _stockRenderByCategory(categories, searchInputId, tbodyId) {
     const status = qty < 0 ? badge('ติดลบ', 'danger') : low ? badge('ต่ำกว่าขั้นต่ำ', 'danger') : badge('ปกติ', 'success');
     const main = `<tr${lots.length ? ` style="cursor:pointer" data-rm="${esc(r.RM_ID)}" onclick="stockToggleLots(this.dataset.rm)" title="กดเพื่อดูรายล็อต"` : ''}>
       <td class="text-center text-muted">${lots.length ? `<i class="fa-solid fa-chevron-${expanded ? 'down' : 'right'}"></i>` : ''}</td>
-      <td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}${r.Category === CAT_PREP ? ` ${catBadge(CAT_PREP)}` : ''}</td><td class="text-end fw-semibold">${_bomFmtQty(qty)}</td><td>${esc(r.Unit)}</td>
+      <td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}${[CAT_PREP, CAT_DRY].includes(r.Category) ? ` ${catBadge(r.Category)}` : ''}</td><td class="text-end fw-semibold">${_bomFmtQty(qty)}</td><td>${esc(r.Unit)}</td>
       <td class="text-end">${_bomFmtQty(r.MinStock ?? 0)}</td>
       <td>${lots.length ? `${lots.length} ล็อต` : '<span class="text-muted">—</span>'}</td>
       <td class="text-nowrap">${nearest ? _expBadge(nearest.ExpDate) : '<span class="text-muted">—</span>'}</td>
@@ -3111,7 +3121,7 @@ function _stockRenderByCategory(categories, searchInputId, tbodyId) {
 }
 function stockRmRenderTable() {
   const f = document.getElementById('stockRmCatFilter').value;
-  _stockRenderByCategory(f ? [f] : ['วัตถุดิบ', CAT_PREP], 'stockRmSearch', 'stockRmTableBody');
+  _stockRenderByCategory(f ? [f] : [...CAT_RAW_GROUP, CAT_PREP], 'stockRmSearch', 'stockRmTableBody');
 }
 function stockPkgRenderTable() { _stockRenderByCategory(['แพ็คเกจจิ้ง'], 'stockPkgSearch', 'stockPkgTableBody'); }
 async function stockPkgLoad() { await stockRmLoad(); }
@@ -3324,7 +3334,7 @@ function prepIssueTargetChanged() {
   const std = _bomScrapTotal(t.PrepSteps);
   document.querySelectorAll('.prepi-unit').forEach(el => el.textContent = src?.Unit || t.Unit || '');
   document.getElementById('prepi-info').innerHTML =
-    `วัตถุดิบสด: <b>${esc(src?.RM_Name || t.SourceRM_ID)}</b> · คงเหลือ <b>${_bomFmtQty(stock)} ${esc(src?.Unit || '')}</b> ในล็อตที่มีของ ${_lotsFefo(t.SourceRM_ID).length} ล็อต<br>
+    `วัตถุดิบต้นทาง (${esc(catLabel(src?.Category))}): <b>${esc(src?.RM_Name || t.SourceRM_ID)}</b> · คงเหลือ <b>${_bomFmtQty(stock)} ${esc(src?.Unit || '')}</b> ในล็อตที่มีของ ${_lotsFefo(t.SourceRM_ID).length} ล็อต<br>
      ขั้นตอนมาตรฐาน: ${(t.PrepSteps || []).length ? t.PrepSteps.map(s => `${esc(s.step)} ${_bomFmtQty(s.pct)}%`).join(' → ') : '<span class="text-muted">ยังไม่ได้ตั้ง</span>'}
      · สูญเสียรวม <b>${_bomFmtQty(std)}%</b>${t.ShelfLifeDays != null ? ` · อายุหลังเตรียม ${t.ShelfLifeDays} วัน` : ''}`;
   prepIssueMoChanged();
@@ -3826,7 +3836,7 @@ function stockCardLoadItems() {
   let items;
   if (type === 'fg') items = _fgMasterCache.map(f => ({ id: f.FG_ID, name: f.FG_Name }));
   else {
-    const cat = type === 'pkg' ? 'แพ็คเกจจิ้ง' : type === 'prep' ? CAT_PREP : 'วัตถุดิบ';
+    const cat = { pkg: 'แพ็คเกจจิ้ง', prep: CAT_PREP, dry: CAT_DRY }[type] || 'วัตถุดิบ';
     items = _rmMasterCache.filter(r => (r.Category || 'วัตถุดิบ') === cat).map(r => ({ id: r.RM_ID, name: r.RM_Name }));
   }
   sel.innerHTML = items.map(i => `<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('');
@@ -3898,7 +3908,7 @@ function wasteRenderTable() {
 }
 let _wasteForm = null;
 function wasteOpenForm() {
-  const matOpts = _rmMasterCache.map(r => `<option value="M:${esc(r.RM_ID)}">[${esc(r.Category||'วัตถุดิบ')}] ${esc(r.RM_Name)}</option>`).join('');
+  const matOpts = _rmMasterCache.map(r => `<option value="M:${esc(r.RM_ID)}">[${esc(catLabel(r.Category))}] ${esc(r.RM_Name)}</option>`).join('');
   const fgOpts = _fgMasterCache.map(f => `<option value="F:${esc(f.FG_ID)}">[สินค้าสำเร็จรูป] ${esc(f.FG_Name)}</option>`).join('');
   if (!matOpts && !fgOpts) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบหรือสินค้าก่อน', 'info'); return; }
   _modalClearErrors(['wst-qty', 'wst-reason']);
