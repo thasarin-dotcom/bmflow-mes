@@ -225,7 +225,10 @@ table.rrpt-table.sum th { background: #334155; }
 .rrpt-sum-title { font-size: 13px; font-weight: 800; color: var(--primary-blue); margin: 16px 0 6px; }
 .rrpt-foot { display: flex; justify-content: space-between; margin-top: auto; padding-top: 26px; font-size: 11px; color: #64748b; }
 .rrpt-sign { text-align: center; width: 30%; }
-.rrpt-sign .line { border-top: 1px solid #94a3b8; margin-top: 34px; padding-top: 4px; }
+.rrpt-sign .line { border-top: 1px solid #94a3b8; margin-top: 34px; padding-top: 4px; color: #1e293b; font-weight: 600; }
+.rrpt-sign .line .th { font-size: 9.5px; color: #94a3b8; font-weight: 400; }
+.rrpt-sign .date { font-size: 10px; margin-top: 8px; }
+.rrpt-title-th { font-size: 11px; color: #64748b; text-align: right; }
 .rrpt-empty { color: #dc2626; font-size: 12px; margin-top: 18px; }
 #rrpt-print-root { display: none; }
 @media print {
@@ -1024,13 +1027,21 @@ table.rrpt-table.sum th { background: #334155; }
             <input id="fgm-name" class="form-control">
             <div class="invalid-feedback" id="fgm-name-err"></div>
           </div>
-          <div class="col-6">
+          <div class="col-md-3 col-6">
             <label class="form-label">หน่วย</label>
-            <input id="fgm-unit" class="form-control" placeholder="เช่น ลูก">
+            <input id="fgm-unit" class="form-control" placeholder="เช่น ลูก" oninput="fgMasterSyncPriceUnit()">
           </div>
-          <div class="col-6">
-            <label class="form-label">อายุสินค้า (วัน)</label>
+          <div class="col-md-3 col-6">
+            <label class="form-label">อายุ (วัน)</label>
             <input id="fgm-shelf" type="number" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">ราคาขาย</label>
+            <div class="input-group has-validation">
+              <input id="fgm-price" type="number" step="0.01" min="0" class="form-control" placeholder="0.00">
+              <span class="input-group-text" id="fgm-price-unit">บาท/ลูก</span>
+              <div class="invalid-feedback" id="fgm-price-err"></div>
+            </div>
           </div>
           <div class="col-12">
             <label class="form-label">หมายเหตุ</label>
@@ -1114,7 +1125,7 @@ table.rrpt-table.sum th { background: #334155; }
             <label class="form-label">รหัสสินค้า</label>
             <input id="rcv-code" class="form-control bg-light" readonly tabindex="-1" placeholder="ใส่ให้อัตโนมัติ">
           </div>
-          <div class="col-4">
+          <div class="col-md-6">
             <label class="form-label">จำนวน<span class="text-danger">*</span></label>
             <div class="input-group has-validation">
               <input id="rcv-qty" type="number" step="any" class="form-control">
@@ -1122,14 +1133,16 @@ table.rrpt-table.sum th { background: #334155; }
               <div class="invalid-feedback" id="rcv-qty-err"></div>
             </div>
           </div>
-          <div class="col-4">
+          <div class="col-md-6">
             <label class="form-label">ซัพพลายเออร์</label>
             <input id="rcv-supplier" class="form-control" oninput="this.dataset.auto=''">
           </div>
-          <div class="col-4">
+          <div class="col-md-6">
             <label class="form-label">Lot</label>
             <input id="rcv-lot" class="form-control" oninput="this.dataset.auto=''">
-            <div class="form-text" style="font-size:.72rem">อัตโนมัติ: ปีเดือนวัน-ครั้งที่ แก้เองได้</div>
+          </div>
+          <div class="col-md-6 d-flex align-items-md-end">
+            <div class="form-text mb-md-2" style="font-size:.74rem"><i class="fa-solid fa-circle-info me-1"></i>Lot อัตโนมัติ: ปีเดือนวัน-ครั้งที่ของรายการนี้ เช่น 260926-01 แก้เองได้</div>
           </div>
           <div class="col-md-4 col-6">
             <label class="form-label">วันเก็บเกี่ยว (ถ้ามี)</label>
@@ -1149,6 +1162,10 @@ table.rrpt-table.sum th { background: #334155; }
               <button type="button" class="btn btn-outline-primary" data-months="24" onclick="rcvExpPreset(24)">2 ปี</button>
             </div>
             <div class="form-text" style="font-size:.72rem" id="rcv-exp-hint">นับจากวันเก็บเกี่ยว (ไม่มี = นับจากวันที่รับ) · ใช้ตัดล็อต FEFO และเตือนใกล้หมดอายุ</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">หมายเหตุ</label>
+            <textarea id="rcv-note" class="form-control" rows="2" placeholder="เช่น สภาพของที่รับ, เลขใบส่งของซัพพลายเออร์"></textarea>
           </div>
         </div>
       </div>
@@ -2694,15 +2711,30 @@ function fgMasterOpenForm(id) {
   document.getElementById('fgm-unit').value = row?.Unit || 'ลูก';
   document.getElementById('fgm-shelf').value = row?.ShelfLifeDays ?? 5;
   document.getElementById('fgm-note').value = row?.Note || '';
+  document.getElementById('fgm-price').value = row?.SellPrice ?? '';
+  fgMasterSyncPriceUnit();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('fgMasterModal')).show();
 }
+function _fmtBaht(n) { return (parseFloat(n) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fgMasterSyncPriceUnit() {
+  document.getElementById('fgm-price-unit').textContent = 'บาท/' + (document.getElementById('fgm-unit').value.trim() || 'หน่วย');
+}
 async function fgMasterModalSave() {
-  _modalClearErrors(['fgm-id', 'fgm-name']);
+  _modalClearErrors(['fgm-id', 'fgm-name', 'fgm-price']);
   const fgId = document.getElementById('fgm-id').value.trim();
   const name = document.getElementById('fgm-name').value.trim();
   if (!fgId) { _modalShowError('fgm-id', 'กรอกรหัส FG'); return; }
   if (fgId !== _fgMasterEditId && _fgMasterCache.some(r => r.FG_ID === fgId)) { _modalShowError('fgm-id', 'รหัสนี้มีอยู่แล้ว กรุณาใช้รหัสอื่น'); return; }
   if (!name) { _modalShowError('fgm-name', 'กรอกชื่อสินค้า'); return; }
+  const priceRaw = document.getElementById('fgm-price').value.trim();
+  const price = priceRaw === '' ? null : Math.round(parseFloat(priceRaw) * 100) / 100;
+  if (priceRaw !== '' && !(price >= 0)) { _modalShowError('fgm-price', 'กรอกราคาให้ถูกต้อง'); return; }
+  // คอลัมน์ SellPrice มาจาก migration_2026-09-26_sell_price.sql — ถ้ายังไม่รัน SQL ส่วนแก้ข้อมูลอื่นยังบันทึกได้ (ไม่ส่งราคาเมื่อว่าง)
+  const priceSupported = _fgMasterCache.some(r => 'SellPrice' in r);
+  if (price !== null && !priceSupported && _fgMasterCache.length) {
+    Swal.fire('ยังใส่ราคาขายไม่ได้', 'แอดมินต้องรัน <code>migration_2026-09-26_sell_price.sql</code> ใน Supabase ก่อน (หรือลบราคาออกแล้วบันทึก)', 'error');
+    return;
+  }
   if (_fgMasterEditId && fgId !== _fgMasterEditId) {
     if (!(await _renameMasterCode('product_master', _fgMasterEditId, fgId, name))) return;
     _bomExpandedSet.delete(_fgMasterEditId); _bomExpandedSet.add(fgId);
@@ -2714,6 +2746,7 @@ async function fgMasterModalSave() {
     ShelfLifeDays: _parseShelfDays(document.getElementById('fgm-shelf').value),
     Note: document.getElementById('fgm-note').value.trim() || null,
   };
+  if (priceSupported || price !== null) payload.SellPrice = price;
   const ok = await sbRun(_sb.from('product_master').upsert(payload), 'บันทึกสินค้าไม่สำเร็จ');
   if (ok === null) return;
   bootstrap.Modal.getInstance(document.getElementById('fgMasterModal')).hide();
@@ -2845,6 +2878,7 @@ function bomRenderCards() {
           <b>${esc(g.FG_Name)}</b>
           <span class="badge bg-light text-dark border ms-2">หน่วย: ${esc(g.Unit || '—')}</span>
           <span class="badge bg-light text-dark border ms-1"><i class="fa-regular fa-clock me-1"></i>อายุ ${g.ShelfLifeDays ?? '—'} วัน</span>
+          ${g.SellPrice != null ? `<span class="badge bg-light text-success border ms-1"><i class="fa-solid fa-tag me-1"></i>${_fmtBaht(g.SellPrice)} บาท/${esc(g.Unit || 'หน่วย')}</span>` : ''}
           ${g.lines.length
             ? `<span class="text-muted ms-2 small">วัตถุดิบ ${rmCount} · แพ็คเกจจิ้ง ${pkgCount} รายการ</span>`
             : `<span class="badge text-bg-warning ms-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่มีสูตร</span>`}
@@ -3232,7 +3266,7 @@ function receivedRenderTable() {
       ? `<span class="text-muted" title="ล็อตนี้ถูกเบิก/ตัดของเสียไปแล้ว ลบใบรับไม่ได้"><i class="fa-solid fa-lock"></i></span>`
       : `<button class="btn btn-sm btn-outline-danger" onclick="receivedDelete('${esc(r.Receive_ID)}')" title="ลบใบรับ"><i class="fa-solid fa-trash"></i></button>`;
     const rcTag = r.RC_No ? `<div class="small text-primary" title="ออกใบรายงานรับแล้ว"><i class="fa-solid fa-file-lines me-1"></i>${esc(r.RC_No)}</div>` : '';
-    return `<tr><td>${esc(r.Receive_ID)}${rcTag}</td><td>${catBadge(cat)}</td><td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td>
+    return `<tr><td>${esc(r.Receive_ID)}${rcTag}</td><td>${catBadge(cat)}</td><td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}${r.Note ? `<div class="small text-muted" style="white-space:normal;max-width:260px"><i class="fa-regular fa-note-sticky me-1"></i>${esc(r.Note)}</div>` : ''}</td>
     <td class="text-end">${_bomFmtQty(r.Qty)} ${esc(r.Unit)}</td><td class="text-end">${remain}</td>
     <td>${esc(r.Supplier||'-')}</td><td>${esc(r.Lot||'-')}</td><td>${fmtDate(r.HarvestDate)}</td><td>${fmtDate(r.ReceiveDate)}</td>
     <td class="text-nowrap">${lot && lot.Qty > 0 ? _expBadge(r.ExpDate) : (r.ExpDate ? fmtDate(r.ExpDate) : '<span class="text-muted">—</span>')}</td>
@@ -3249,6 +3283,7 @@ function receivedOpenForm() {
   document.getElementById('rcv-harvest').value = todayStr();
   document.getElementById('rcv-receive').value = todayStr();
   document.getElementById('rcv-exp').value = '';
+  document.getElementById('rcv-note').value = '';
   rcvExpPreset(null);
   const el = document.getElementById('receivedModal');
   el.addEventListener('shown.bs.modal', () => document.getElementById('rcv-rm-search').focus(), { once: true });
@@ -3407,13 +3442,23 @@ async function receivedModalSave() {
   // Lot อัตโนมัติ: คำนวณใหม่จาก DB ตอนกดบันทึก (ระหว่างกรอกฟอร์ม อาจมีคนอื่นรับของวันเดียวกันไปก่อน)
   const lotEl = document.getElementById('rcv-lot');
   if (lotEl.dataset.auto) lotEl.value = _rcvNextLot(receiveDate, await _rcvFetchLotsOfDay(receiveDate, rmId));
-  const { error } = await _sb.rpc('rm_receive_post', {
+  const note = document.getElementById('rcv-note').value.trim();
+  const args = {
     p_receive_id: genId(rm?.Category === 'แพ็คเกจจิ้ง' ? 'PC' : 'RC'), p_rm_id: rmId, p_qty: qty, p_unit: rm?.Unit || null,
     p_supplier: document.getElementById('rcv-supplier').value.trim() || null,
     p_lot: document.getElementById('rcv-lot').value.trim() || null,
     p_harvest: document.getElementById('rcv-harvest').value || null, p_exp: exp, p_receive_date: receiveDate,
-  });
-  if (error) { _rmLotRpcErr(error, 'บันทึกรับเข้าคลังไม่สำเร็จ'); return; }
+  };
+  // ส่ง p_note เฉพาะเมื่อกรอก — ฐานข้อมูลที่ยังไม่รัน migration_2026-09-26_receive_note.sql ยังรับของได้ตามเดิมถ้าไม่ใส่หมายเหตุ
+  if (note) args.p_note = note;
+  const { error } = await _sb.rpc('rm_receive_post', args);
+  if (error) {
+    if (note && error.code === 'PGRST202') {
+      Swal.fire('บันทึกหมายเหตุไม่ได้', 'ระบบยังไม่รองรับหมายเหตุตอนรับเข้า — แอดมินต้องรัน <code>migration_2026-09-26_receive_note.sql</code> ใน Supabase ก่อน (หรือลบหมายเหตุออกแล้วบันทึก)', 'error');
+      return;
+    }
+    _rmLotRpcErr(error, 'บันทึกรับเข้าคลังไม่สำเร็จ'); return;
+  }
   bootstrap.Modal.getInstance(document.getElementById('receivedModal')).hide();
   await Promise.all([receivedLoad(), stockRmLoad()]);
 }
@@ -3612,6 +3657,17 @@ async function rcvReportRename(oldNo) {
   Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'แก้เลขแล้ว', showConfirmButton: false, timer: 2000 });
 }
 
+// ใบรายงานรับเป็นภาษาอังกฤษ (ผู้ใช้ขอ "ภาษาอังกฤษ 90%" 2026-09-26) — หัวข้อ/คอลัมน์/หมวด/หน่วย/วันที่เป็นอังกฤษ
+// ส่วนที่เป็นข้อมูลจริง (ชื่อรายการ ซัพพลายเออร์ หมายเหตุ) คงตามที่กรอก · ชื่อเอกสารและช่องเซ็นมีภาษาไทยตัวเล็กกำกับ
+const RRPT_CAT_EN = { 'วัตถุดิบ': 'Fresh', [CAT_DRY]: 'Dry', [CAT_CHEM]: 'Chemical', [CAT_PREP]: 'Ready-to-use', [CAT_PKG]: 'Packaging' };
+const RRPT_UNIT_EN = { 'กรัม': 'g', 'กิโลกรัม': 'kg', 'กก.': 'kg', 'มิลลิลิตร': 'mL', 'ลิตร': 'L', 'ชิ้น': 'pcs' };
+function _rrptCat(cat) { cat = cat || 'วัตถุดิบ'; return RRPT_CAT_EN[cat] || cat; }
+function _rrptUnit(u) { return RRPT_UNIT_EN[u] || u || ''; }
+function _fmtDateEn(s) {
+  if (!s) return '-';
+  const [y, m, d] = String(s).slice(0, 10).split('-').map(Number);
+  return `${String(d).padStart(2, '0')} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
+}
 function _rrptHtml() {
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
   const catOf = r => rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
@@ -3623,10 +3679,10 @@ function _rrptHtml() {
   const date = rows[0]?.ReceiveDate || document.getElementById('rrpt-date').value;
   const trs = rows.map((r, i) => `<tr>
     <td class="ord">${i + 1}</td><td>${esc(r.Receive_ID)}</td><td>${esc(r.RM_ID)}</td>
-    <td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td><td>${esc(catLabel(catOf(r)))}</td>
+    <td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td><td>${esc(_rrptCat(catOf(r)))}</td>
     ${showSup ? `<td>${esc(r.Supplier || '-')}</td>` : ''}
-    <td>${esc(r.Lot || '-')}</td><td>${r.HarvestDate ? fmtDate(r.HarvestDate) : '-'}</td><td>${r.ExpDate ? fmtDate(r.ExpDate) : '-'}</td>
-    <td class="num qty">${_bomFmtQty(r.Qty)}</td><td>${esc(r.Unit || '')}</td><td></td>
+    <td>${esc(r.Lot || '-')}</td><td>${_fmtDateEn(r.HarvestDate)}</td><td>${_fmtDateEn(r.ExpDate)}</td>
+    <td class="num qty">${_bomFmtQty(r.Qty)}</td><td>${esc(_rrptUnit(r.Unit))}</td><td>${esc(r.Note || '')}</td>
   </tr>`).join('');
   // สรุปตามรายการ + หน่วย (หน่วยต่างกันบวกกันไม่ได้)
   const sum = {};
@@ -3635,42 +3691,44 @@ function _rrptHtml() {
     sum[k] = sum[k] || { id: r.RM_ID, name: rmMap[r.RM_ID]?.RM_Name || r.RM_ID, cat: catOf(r), unit: r.Unit || '', lots: 0, qty: 0 };
     sum[k].lots++; sum[k].qty += parseFloat(r.Qty) || 0;
   });
-  const sumRows = Object.values(sum).map(s => `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(catLabel(s.cat))}</td>
-    <td class="num">${s.lots}</td><td class="num qty">${_bomFmtQty(s.qty)}</td><td>${esc(s.unit)}</td></tr>`).join('');
+  const sumRows = Object.values(sum).map(s => `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(_rrptCat(s.cat))}</td>
+    <td class="num">${s.lots}</td><td class="num qty">${_bomFmtQty(s.qty)}</td><td>${esc(_rrptUnit(s.unit))}</td></tr>`).join('');
   const now = new Date();
+  const sign = (en, th) => `<div class="rrpt-sign"><div class="line">${en}<div class="th">${th}</div></div><div class="date">Date ____ / ____ / ______</div></div>`;
   return `<div class="rrpt-page">
     <div class="rrpt-head">
       <div class="d-flex align-items-center gap-3">
         <img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
-        <div class="rrpt-company"><b>Blooming Company Limited</b><br>BLM Herbal — แผนกคลังวัตถุดิบ</div>
+        <div class="rrpt-company"><b>Blooming Company Limited</b><br>BLM Herbal — Raw Material Warehouse</div>
       </div>
       <div>
-        <div class="rrpt-title">รายงานรับวัตถุดิบ / แพ็คเกจจิ้ง</div>
-        <div class="rrpt-no">RC No: ${_rrpt.confirmed ? esc(_rrpt.rcNo) : '(ยังไม่ยืนยัน)'}</div>
-        <div class="rrpt-meta">พิมพ์เมื่อ ${fmtDate(todayStr())} ${now.toTimeString().slice(0, 5)} น. · โดย ${esc(_currentUser?.name || _currentUser?.email || '-')}</div>
+        <div class="rrpt-title">GOODS RECEIVING REPORT</div>
+        <div class="rrpt-title-th">รายงานรับวัตถุดิบ / แพ็คเกจจิ้ง</div>
+        <div class="rrpt-no">RC No: ${_rrpt.confirmed ? esc(_rrpt.rcNo) : '(Not confirmed)'}</div>
+        <div class="rrpt-meta">Printed ${_fmtDateEn(todayStr())} ${now.toTimeString().slice(0, 5)} · by ${esc(_currentUser?.name || _currentUser?.email || '-')}</div>
       </div>
     </div>
     <div class="rrpt-filters">
-      <div><span class="lbl">วันที่รับ</span><span class="val">${fmtDate(date)}</span></div>
-      <div><span class="lbl">ซัพพลายเออร์</span><span class="val">${esc(_rrpt.supplier || 'ทั้งหมด')}</span></div>
-      <span class="minor">จำนวนรายการ: <b>${rows.length}</b></span>
+      <div><span class="lbl">Receiving Date</span><span class="val">${_fmtDateEn(date)}</span></div>
+      <div><span class="lbl">Supplier</span><span class="val">${esc(!_rrpt.supplier ? 'All' : _rrpt.supplier === RRPT_NO_SUPPLIER ? 'Not specified' : _rrpt.supplier)}</span></div>
+      <span class="minor">Items: <b>${rows.length}</b></span>
     </div>
     ${rows.length ? `
     <table class="rrpt-table">
-      <thead><tr><th style="width:3%">ลำดับ</th><th>เลขที่รับ</th><th>รหัส</th><th style="width:20%">รายการ</th><th>หมวด</th>
-        ${showSup ? '<th>ซัพพลายเออร์</th>' : ''}<th>Lot</th><th>วันเก็บเกี่ยว</th><th>วันหมดอายุ</th>
-        <th class="num">จำนวน</th><th>หน่วย</th><th style="width:14%">หมายเหตุ</th></tr></thead>
+      <thead><tr><th style="width:3%">No.</th><th>Receipt No.</th><th>Code</th><th style="width:20%">Description</th><th>Category</th>
+        ${showSup ? '<th>Supplier</th>' : ''}<th>Lot No.</th><th>Harvest Date</th><th>Exp. Date</th>
+        <th class="num">Qty</th><th>Unit</th><th style="width:14%">Remarks</th></tr></thead>
       <tbody>${trs}</tbody>
     </table>
-    <div class="rrpt-sum-title">สรุปยอดรวมตามรายการ</div>
+    <div class="rrpt-sum-title">Summary by Item</div>
     <table class="rrpt-table sum">
-      <thead><tr><th>รหัส</th><th>รายการ</th><th>หมวด</th><th class="num">จำนวนล็อต</th><th class="num">จำนวนรวม</th><th>หน่วย</th></tr></thead>
+      <thead><tr><th>Code</th><th>Description</th><th>Category</th><th class="num">Lots</th><th class="num">Total Qty</th><th>Unit</th></tr></thead>
       <tbody>${sumRows}</tbody>
-    </table>` : '<div class="rrpt-empty">ไม่มีรายการในวันที่ / ซัพพลายเออร์ที่เลือก</div>'}
+    </table>` : '<div class="rrpt-empty">No items for the selected date / supplier.</div>'}
     <div class="rrpt-foot">
-      <div class="rrpt-sign"><div class="line">ผู้รับของ / ผู้บันทึก</div></div>
-      <div class="rrpt-sign"><div class="line">ผู้ตรวจสอบ</div></div>
-      <div class="rrpt-sign"><div class="line">ผู้อนุมัติ</div></div>
+      ${sign('Received by', 'ผู้รับของ / ผู้บันทึก')}
+      ${sign('Checked by', 'ผู้ตรวจสอบ')}
+      ${sign('Approved by', 'ผู้อนุมัติ')}
     </div>
   </div>`;
 }
