@@ -578,7 +578,7 @@ img.emp-avatar { cursor: zoom-in; }
   <!-- ═══════════════ เตรียมวัตถุดิบ: เบิกสด → คัด/ล้าง/อบ/บด/ย่อย → รับกลับเป็นพร้อมผลิต (migration_2026-09-25_prep.sql) ═══════════════ -->
   <div class="page-view" id="page-prep">
     <div class="page-header d-flex justify-content-between align-items-start">
-      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-mortar-pestle me-2"></i>เตรียมวัตถุดิบ</h4><div class="text-white-50 small">เบิกวัตถุดิบสดไปคัด / ล้าง / อบ / บด / ย่อย แล้วรับกลับเป็นวัตถุดิบพร้อมผลิต</div></div>
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-mortar-pestle me-2"></i>เตรียมวัตถุดิบ</h4><div class="text-white-50 small">เบิกวัตถุดิบไปคัด / ล้าง / อบ / บด / ย่อย แล้วรับกลับเป็นวัตถุดิบแห้ง หรือวัตถุดิบพร้อมผลิต</div></div>
       <button class="btn btn-success" onclick="prepOpenIssue()"><i class="fa-solid fa-circle-plus me-1"></i>เบิกไปเตรียม</button>
     </div>
     <div class="scroll-content">
@@ -769,7 +769,7 @@ img.emp-avatar { cursor: zoom-in; }
       <div class="modal-body">
         <div class="row g-3">
           <div class="col-md-7">
-            <label class="form-label">จะเตรียมเป็น (วัตถุดิบพร้อมผลิต)<span class="text-danger">*</span></label>
+            <label class="form-label">จะเตรียมเป็น (วัตถุดิบแห้ง / พร้อมผลิต)<span class="text-danger">*</span></label>
             <select id="prepi-target" class="form-select" onchange="prepIssueTargetChanged()"></select>
             <div class="invalid-feedback" id="prepi-target-err"></div>
           </div>
@@ -779,7 +779,7 @@ img.emp-avatar { cursor: zoom-in; }
           </div>
           <div class="col-12"><div class="alert alert-light border py-2 mb-0 small" id="prepi-info"></div></div>
           <div class="col-md-4">
-            <label class="form-label">ต้องการพร้อมผลิต</label>
+            <label class="form-label">ต้องการได้ (หลังเตรียม)</label>
             <div class="input-group"><input id="prepi-want" type="number" min="0" step="any" class="form-control" oninput="prepIssueCalc('want')"><span class="input-group-text prepi-unit">—</span></div>
             <div class="form-text" style="font-size:.72rem">กรอกช่องนี้ → ระบบคำนวณน้ำหนักสดที่ต้องเบิกให้</div>
           </div>
@@ -822,12 +822,12 @@ img.emp-avatar { cursor: zoom-in; }
         <div class="small mb-3" id="preps-sum"></div>
         <div class="row g-3 border-top pt-3">
           <div class="col-md-4">
-            <label class="form-label">น้ำหนักรับกลับ (พร้อมผลิต)</label>
+            <label class="form-label">น้ำหนักรับกลับ</label>
             <div class="input-group"><input id="preps-back" type="number" min="0" step="any" class="form-control" oninput="prepStepsCalc()"><span class="input-group-text" id="preps-unit">—</span></div>
             <div class="invalid-feedback d-block" id="preps-back-err"></div>
           </div>
           <div class="col-md-4">
-            <label class="form-label">Lot พร้อมผลิต</label>
+            <label class="form-label">Lot ที่ได้</label>
             <input id="preps-lot" class="form-control">
           </div>
           <div class="col-md-4">
@@ -877,15 +877,16 @@ img.emp-avatar { cursor: zoom-in; }
             <div class="rounded p-2" style="background:#f0fdf4;border:1px dashed #86efac">
               <div class="row g-2">
                 <div class="col-md-8">
-                  <label class="form-label">ทำจากวัตถุดิบ (สด / แห้ง)<span class="text-danger">*</span></label>
-                  <select id="rmm-source" class="form-select" onchange="rmMasterSyncSourceUnit()"></select>
+                  <label class="form-label" id="rmm-source-label">ทำจากวัตถุดิบ (สด / แห้ง)<span class="text-danger">*</span></label>
+                  <select id="rmm-source" class="form-select" onchange="rmMasterSyncSourceUnit();rmMasterTogglePrep()"></select>
                   <div class="invalid-feedback" id="rmm-source-err"></div>
+                  <div class="form-text" style="font-size:.72rem" id="rmm-source-hint"></div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 rmm-prep-detail">
                   <label class="form-label">อายุหลังเตรียม (วัน)</label>
                   <input id="rmm-shelf" type="number" min="0" class="form-control" placeholder="เช่น 30">
                 </div>
-                <div class="col-12">
+                <div class="col-12 rmm-prep-detail">
                   <div class="d-flex justify-content-between align-items-center mb-1">
                     <span class="fw-semibold small"><i class="fa-solid fa-mortar-pestle me-1"></i>ขั้นตอนเตรียม & %สูญเสียมาตรฐาน (ของน้ำหนักที่เบิก)</span>
                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="rmMasterAddPrepStep()"><i class="fa-solid fa-plus me-1"></i>เพิ่มขั้นตอน</button>
@@ -2315,7 +2316,7 @@ function rmMasterRenderTable() {
   const filter = document.getElementById('rmMasterCategoryFilter').value;
   const rows = _rmMasterCache.filter(r => !filter || r.Category === filter);
   document.getElementById('rmMasterTableBody').innerHTML = rows.map(r => `
-    <tr><td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}</td><td>${catBadge(r.Category)}${r.Category === CAT_PREP ? `<div class="small text-muted">ทำจาก ${esc(_rmMasterCache.find(x => x.RM_ID === r.SourceRM_ID)?.RM_Name || r.SourceRM_ID || '—')} · สูญเสีย ${_bomFmtQty(_bomScrapTotal(r.PrepSteps))}%</div>` : ''}</td><td>${esc(r.Unit)}</td><td>${r.MinStock ?? 0}</td><td>${esc(r.Supplier||'-')}</td><td>${esc(r.Note||'')}</td>
+    <tr><td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}</td><td>${catBadge(r.Category)}${r.SourceRM_ID ? `<div class="small text-muted">${r.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmMasterCache.find(x => x.RM_ID === r.SourceRM_ID)?.RM_Name || r.SourceRM_ID || '—')} · สูญเสีย ${_bomFmtQty(_bomScrapTotal(r.PrepSteps))}%</div>` : ''}</td><td>${esc(r.Unit)}</td><td>${r.MinStock ?? 0}</td><td>${esc(r.Supplier||'-')}</td><td>${esc(r.Note||'')}</td>
     <td><button class="btn btn-sm btn-outline-primary me-1" onclick="rmMasterOpenForm('${r.RM_ID}')"><i class="fa-solid fa-pen"></i></button>
     <button class="btn btn-sm btn-outline-danger" onclick="rmMasterDelete('${r.RM_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
     || '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
@@ -2336,21 +2337,53 @@ function rmMasterOpenForm(id) {
   document.getElementById('rmm-min').value = row?.MinStock ?? '';
   document.getElementById('rmm-supplier').value = row?.Supplier || '';
   document.getElementById('rmm-note').value = row?.Note || '';
-  // ส่วนพร้อมผลิต
+  // ส่วน "ทำจาก" (พร้อมผลิต = บังคับ / แห้ง = ไม่บังคับ: อบเองจากของสด หรือเว้นว่างถ้าซื้อมาแห้ง)
   _modalClearErrors(['rmm-source']);
-  document.getElementById('rmm-source').innerHTML = '<option value="">-- เลือกวัตถุดิบต้นทาง (สด / แห้ง) --</option>' +
-    _rmMasterCache.filter(r => CAT_RAW_GROUP.includes(r.Category || 'วัตถุดิบ') && r.RM_ID !== row?.RM_ID)
-      .map(r => `<option value="${esc(r.RM_ID)}">${esc(r.RM_Name)} · ${esc(catLabel(r.Category))} (${esc(r.Unit)})</option>`).join('');
-  document.getElementById('rmm-source').value = row?.SourceRM_ID || '';
+  document.getElementById('rmm-source').innerHTML = '';   // ล้างตัวเลือกของรายการก่อนหน้า ไม่งั้น toggle จะอ่านค่าเก่า
+  _rmmSourceSel = row?.SourceRM_ID || '';
   document.getElementById('rmm-shelf').value = row?.ShelfLifeDays ?? '';
   document.getElementById('rmm-steps').innerHTML = '';
-  const steps = Array.isArray(row?.PrepSteps) && row.PrepSteps.length ? row.PrepSteps : PREP_DEFAULT_STEPS.map(s => ({ step: s, pct: '' }));
-  steps.forEach(s => rmMasterAddPrepStep(s.step, s.pct));
+  _rmmStepsCat = null;
+  if (Array.isArray(row?.PrepSteps) && row.PrepSteps.length) {
+    row.PrepSteps.forEach(s => rmMasterAddPrepStep(s.step, s.pct));
+    _rmmStepsCat = row.Category;   // ขั้นตอนที่บันทึกไว้แล้ว — ห้ามเขียนทับด้วยค่าตั้งต้น
+  }
   rmMasterTogglePrep();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('rmMasterModal')).show();
 }
+// ขั้นตอนตั้งต้นตามปลายทาง: อบเป็นของแห้ง = คัด ล้าง อบ · พร้อมผลิต = คัด ล้าง อบ บด ย่อย
+const PREP_DEFAULT_STEPS_DRY = ['คัด', 'ล้าง', 'อบ'];
+let _rmmSourceSel = '';
+let _rmmStepsCat = null;   // หมวดที่ใช้ตั้งขั้นตอนตั้งต้นล่าสุด (null = ยังไม่ได้ตั้ง / ผู้ใช้ยังไม่กรอก %)
 function rmMasterTogglePrep() {
-  document.getElementById('rmm-prep-wrap').classList.toggle('d-none', document.getElementById('rmm-cat').value !== CAT_PREP);
+  const cat = document.getElementById('rmm-cat').value;
+  const isPrep = cat === CAT_PREP, isDry = cat === CAT_DRY;
+  document.getElementById('rmm-prep-wrap').classList.toggle('d-none', !isPrep && !isDry);
+  if (!isPrep && !isDry) return;
+  // ต้นทาง: พร้อมผลิตทำจากสดหรือแห้งก็ได้ / แห้งที่อบเองต้องทำจากของสดเท่านั้น
+  const srcSel = document.getElementById('rmm-source');
+  if (srcSel.options.length) _rmmSourceSel = srcSel.value;
+  const allowed = isDry ? ['วัตถุดิบ'] : CAT_RAW_GROUP;
+  srcSel.innerHTML = `<option value="">${isDry ? '— ไม่มี (ซื้อมาแห้งแล้ว) —' : '-- เลือกวัตถุดิบต้นทาง (สด / แห้ง) --'}</option>` +
+    _rmMasterCache.filter(r => allowed.includes(r.Category || 'วัตถุดิบ') && r.RM_ID !== _rmMasterEditId)
+      .map(r => `<option value="${esc(r.RM_ID)}">${esc(r.RM_Name)} · ${esc(catLabel(r.Category))} (${esc(r.Unit)})</option>`).join('');
+  srcSel.value = [...srcSel.options].some(o => o.value === _rmmSourceSel) ? _rmmSourceSel : '';
+  document.getElementById('rmm-source-label').innerHTML = isDry
+    ? 'อบเองจากวัตถุดิบสด <span class="text-muted fw-normal">(ไม่บังคับ)</span>'
+    : 'ทำจากวัตถุดิบ (สด / แห้ง)<span class="text-danger">*</span>';
+  document.getElementById('rmm-source-hint').textContent = isDry
+    ? 'ถ้าอบเอง: เลือกของสดต้นทาง แล้วใช้หน้า "เตรียมวัตถุดิบ" อบเป็นของแห้งได้ · ถ้าซื้อมาแห้ง: เว้นว่างไว้'
+    : '';
+  // รายละเอียดการเตรียม (อายุ / ขั้นตอน) — ของแห้งที่ซื้อมาไม่ต้องมี
+  const showDetail = isPrep || !!srcSel.value;
+  document.querySelectorAll('.rmm-prep-detail').forEach(el => el.classList.toggle('d-none', !showDetail));
+  // ตั้งขั้นตอนตั้งต้นใหม่เมื่อเปลี่ยนหมวด — เฉพาะตอนผู้ใช้ยังไม่ได้กรอก % เลย
+  const untouched = _rmmReadSteps().every(s => !s.pct);
+  if (showDetail && _rmmStepsCat !== cat && untouched) {
+    document.getElementById('rmm-steps').innerHTML = '';
+    (isDry ? PREP_DEFAULT_STEPS_DRY : PREP_DEFAULT_STEPS).forEach(s => rmMasterAddPrepStep(s, ''));
+    _rmmStepsCat = cat;
+  }
   _rmmUpdateStepsSum();
 }
 // หน่วยของรายการพร้อมผลิต = หน่วยของวัตถุดิบสดต้นทางเสมอ (%สูญเสีย = (เบิก − ได้กลับ) / เบิก ต้องหน่วยเดียวกัน)
@@ -2383,8 +2416,8 @@ function _rmmUpdateStepsSum() {
   if (!el) return;
   el.innerHTML = total >= 100
     ? `<span class="text-danger">รวม ${_bomFmtQty(total)}% — ต้องน้อยกว่า 100%</span>`
-    : `รวมสูญเสียมาตรฐาน <b>${_bomFmtQty(total)}%</b> → เบิกวัตถุดิบสด 10 ได้พร้อมผลิตประมาณ <b>${_bomFmtQty(Math.round(10 * (1 - total / 100) * 1000) / 1000)}</b>
-       · ต้องการพร้อมผลิต 10 ต้องเบิกสด <b>${_bomFmtQty(_bomWithScrap(10, total))}</b>`;
+    : `รวมสูญเสียมาตรฐาน <b>${_bomFmtQty(total)}%</b> → เบิกต้นทาง 10 ได้ประมาณ <b>${_bomFmtQty(Math.round(10 * (1 - total / 100) * 1000) / 1000)}</b>
+       · ต้องการได้ 10 ต้องเบิกต้นทาง <b>${_bomFmtQty(_bomWithScrap(10, total))}</b>`;
 }
 async function rmMasterModalSave() {
   _modalClearErrors(['rmm-id', 'rmm-name', 'rmm-source']);
@@ -2395,8 +2428,10 @@ async function rmMasterModalSave() {
   if (rmId !== _rmMasterEditId && _rmMasterCache.some(r => r.RM_ID === rmId)) { _modalShowError('rmm-id', 'รหัสนี้มีอยู่แล้ว กรุณาใช้รหัสอื่น'); return; }
   if (!name) { _modalShowError('rmm-name', 'กรอกชื่อรายการ'); return; }
   let prep = { SourceRM_ID: null, PrepSteps: [], ShelfLifeDays: null };
-  if (cat === CAT_PREP) {
-    const source = document.getElementById('rmm-source').value;
+  const sourceSel = document.getElementById('rmm-source').value;
+  // พร้อมผลิต: ต้องมีต้นทาง · แห้ง: มีต้นทาง = อบเอง (บันทึกขั้นตอนด้วย) / ไม่มี = ซื้อมาแห้ง
+  if (cat === CAT_PREP || (cat === CAT_DRY && sourceSel)) {
+    const source = sourceSel;
     if (!source) { _modalShowError('rmm-source', 'เลือกวัตถุดิบต้นทางที่ใช้ทำ'); return; }
     const steps = _rmmReadSteps();
     if (steps.some(s => s.pct < 0) || _bomScrapTotal(steps) >= 100) { _modalShowError('rmm-source', '%สูญเสียต้องไม่ติดลบ และรวมกันต้องน้อยกว่า 100%'); return; }
@@ -3239,7 +3274,11 @@ async function planDelete(id) {
 let _prepCache = [];
 let _prepEditId = null;
 const PREP_STATUS_BADGE = { 'กำลังเตรียม': 'warning', 'รับกลับแล้ว': 'success', 'ยกเลิก': 'secondary' };
-function _prepTargets() { return _rmMasterCache.filter(r => r.Category === CAT_PREP && r.SourceRM_ID); }
+// ปลายทางของการเตรียม: พร้อมผลิต หรือ วัตถุดิบแห้งที่อบเอง (มี SourceRM_ID) — ต่อเป็นทอดได้ สด → แห้ง → พร้อมผลิต
+function _prepTargets() {
+  return _rmMasterCache.filter(r => [CAT_PREP, CAT_DRY].includes(r.Category) && r.SourceRM_ID)
+    .sort((a, b) => ((_BOM_CAT_ORDER[a.Category] ?? 9) - (_BOM_CAT_ORDER[b.Category] ?? 9)) || (a.RM_Name || '').localeCompare(b.RM_Name || ''));
+}
 function _rmName(id) { return _rmMasterCache.find(r => r.RM_ID === id)?.RM_Name || id; }
 
 async function prepLoad() {
@@ -3310,11 +3349,11 @@ function prepRender() {
 function prepOpenIssue() {
   const targets = _prepTargets();
   if (!targets.length) {
-    Swal.fire('ยังไม่มีรายการพร้อมผลิต', 'เพิ่มรายการหมวด "วัตถุดิบพร้อมผลิต" (ระบุว่าทำจากวัตถุดิบสดตัวไหน) ที่หน้า Master → วัตถุดิบ / แพ็คเกจจิ้ง ก่อน', 'info');
+    Swal.fire('ยังไม่มีรายการปลายทาง', 'เพิ่มรายการหมวด "วัตถุดิบพร้อมผลิต" หรือ "วัตถุดิบแห้ง" ที่ระบุว่าทำ/อบจากวัตถุดิบตัวไหน ที่หน้า Master → วัตถุดิบ / แพ็คเกจจิ้ง ก่อน', 'info');
     return;
   }
   document.getElementById('prepi-target').innerHTML = targets.map(t =>
-    `<option value="${esc(t.RM_ID)}">${esc(t.RM_Name)} — ทำจาก ${esc(_rmName(t.SourceRM_ID))}</option>`).join('');
+    `<option value="${esc(t.RM_ID)}">[${esc(catLabel(t.Category))}] ${esc(t.RM_Name)} — ${t.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmName(t.SourceRM_ID))}</option>`).join('');
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   document.getElementById('prepi-mo').innerHTML = '<option value="">— ไม่อ้างอิง (เตรียมเก็บสต็อก) —</option>' +
     _planCache.filter(m => m.Status === 'วางแผน').map(m =>
@@ -3484,7 +3523,7 @@ async function prepReceiveSave() {
     p_lot: document.getElementById('preps-lot').value.trim() || null, p_exp: exp, p_note: document.getElementById('preps-note').value.trim() || null });
   if (error) { _rmLotRpcErr(error, 'รับกลับไม่สำเร็จ'); return; }
   bootstrap.Modal.getInstance(document.getElementById('prepStepModal')).hide();
-  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'รับกลับเข้าสต็อกพร้อมผลิตแล้ว', showConfirmButton: false, timer: 2000 });
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'รับกลับเข้าสต็อกแล้ว', showConfirmButton: false, timer: 2000 });
   await Promise.all([prepLoad(), stockRmLoad()]);
 }
 // ชื่อมี "Delete(" → ซ่อนจากระดับพนักงานด้วยกฎ CSS เดียวกับปุ่มลบ (ฝั่ง DB prep_cancel บังคับสิทธิ์ซ้ำ)
