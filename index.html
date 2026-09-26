@@ -167,6 +167,15 @@ img.emp-avatar { cursor: zoom-in; }
   .page-header .text-white-50 { display: none; }
 }
 
+/* ── ช่องค้นหารายการแบบพิมพ์แล้วขึ้นแนะนำ (ฟอร์มรับเข้าคลัง) ── */
+.rcv-suggest { position: absolute; left: calc(var(--bs-gutter-x) * .5); right: calc(var(--bs-gutter-x) * .5); top: 100%; z-index: 1070;
+  max-height: 280px; overflow-y: auto; box-shadow: 0 8px 24px rgba(15,23,42,.18); border-radius: 8px; display: none; }
+.rcv-suggest.show { display: block; }
+.rcv-suggest .list-group-item { padding: 7px 12px; font-size: .88rem; cursor: pointer; }
+.rcv-suggest .list-group-item.active { background: #e8f0fb; color: #1e293b; border-color: #d7e3ef; }
+.rcv-suggest .code { color: #64748b; font-size: .76rem; }
+.rcv-suggest mark { padding: 0; background: #fde68a; }
+
 /* ── ใบรายงานรับ (แบบ ProFlow .mrrpt-*) — แนวนอน A4 ── */
 .rrpt-step { padding: 12px 18px; border-bottom: 1px solid #e7ecf5; background: #f8fafc; }
 .rrpt-step-title { font-size: .8rem; font-weight: 700; color: var(--primary-blue); display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
@@ -1091,22 +1100,34 @@ table.rrpt-table.sum th { background: #334155; }
       </div>
       <div class="modal-body">
         <div class="row g-3">
-          <div class="col-12">
-            <label class="form-label">รายการ</label>
-            <select id="rcv-rm" class="form-select"></select>
+          <div class="col-md-8 position-relative">
+            <label class="form-label">รายการ<span class="text-danger">*</span></label>
+            <input id="rcv-rm-search" class="form-control" placeholder="พิมพ์ชื่อหรือรหัสเพื่อค้นหา..." autocomplete="off"
+                   oninput="rcvRmSearchInput()" onfocus="rcvRmSuggest()" onkeydown="rcvRmKey(event)" onblur="setTimeout(rcvRmHideSuggest, 150)">
+            <div class="invalid-feedback" id="rcv-rm-search-err"></div>
+            <div id="rcv-rm-suggest" class="list-group rcv-suggest"></div>
+            <input type="hidden" id="rcv-rm">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">รหัสสินค้า</label>
+            <input id="rcv-code" class="form-control bg-light" readonly tabindex="-1" placeholder="ใส่ให้อัตโนมัติ">
           </div>
           <div class="col-4">
             <label class="form-label">จำนวน<span class="text-danger">*</span></label>
-            <input id="rcv-qty" type="number" step="any" class="form-control">
-            <div class="invalid-feedback" id="rcv-qty-err"></div>
+            <div class="input-group has-validation">
+              <input id="rcv-qty" type="number" step="any" class="form-control">
+              <span class="input-group-text" id="rcv-unit">—</span>
+              <div class="invalid-feedback" id="rcv-qty-err"></div>
+            </div>
           </div>
           <div class="col-4">
             <label class="form-label">ซัพพลายเออร์</label>
-            <input id="rcv-supplier" class="form-control">
+            <input id="rcv-supplier" class="form-control" oninput="this.dataset.auto=''">
           </div>
           <div class="col-4">
             <label class="form-label">Lot</label>
-            <input id="rcv-lot" class="form-control">
+            <input id="rcv-lot" class="form-control" oninput="this.dataset.auto=''">
+            <div class="form-text" style="font-size:.72rem">อัตโนมัติ: ปีเดือนวัน-ครั้งที่ แก้เองได้</div>
           </div>
           <div class="col-md-4 col-6">
             <label class="form-label">วันเก็บเกี่ยว (ถ้ามี)</label>
@@ -1114,7 +1135,7 @@ table.rrpt-table.sum th { background: #334155; }
           </div>
           <div class="col-md-4 col-6">
             <label class="form-label">วันที่รับเข้าคลัง</label>
-            <input id="rcv-receive" type="date" class="form-control">
+            <input id="rcv-receive" type="date" class="form-control" onchange="rcvAutoLot()">
           </div>
           <div class="col-md-4">
             <label class="form-label">วันหมดอายุ</label>
@@ -3213,24 +3234,130 @@ function receivedRenderTable() {
 }
 function receivedOpenForm() {
   if (!_rmMasterCache.length) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบ/แพ็คเกจจิ้งใน "วัตถุดิบ / แพ็คเกจจิ้ง (Master)" ก่อน', 'info'); return; }
-  _modalClearErrors(['rcv-qty']);
-  document.getElementById('rcv-rm').innerHTML = _rmMasterCache.map(r => `<option value="${esc(r.RM_ID)}">[${esc(catLabel(r.Category))}] ${esc(r.RM_Name)} (${esc(r.Unit)})</option>`).join('');
+  _modalClearErrors(['rcv-qty', 'rcv-rm-search', 'rcv-exp']);
+  rcvRmPick(null);
   document.getElementById('rcv-qty').value = '';
-  document.getElementById('rcv-supplier').value = '';
-  document.getElementById('rcv-lot').value = '';
+  const sup = document.getElementById('rcv-supplier'); sup.value = ''; sup.dataset.auto = '1';
+  const lot = document.getElementById('rcv-lot'); lot.value = ''; lot.dataset.auto = '1';
   document.getElementById('rcv-harvest').value = todayStr();
   document.getElementById('rcv-receive').value = todayStr();
   document.getElementById('rcv-exp').value = '';
-  _modalClearErrors(['rcv-exp']);
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('receivedModal')).show();
+  const el = document.getElementById('receivedModal');
+  el.addEventListener('shown.bs.modal', () => document.getElementById('rcv-rm-search').focus(), { once: true });
+  bootstrap.Modal.getOrCreateInstance(el).show();
+  rcvAutoLot();
+}
+
+// ── ช่อง "รายการ" แบบพิมพ์ค้นหา (ชื่อ/รหัส) แล้วขึ้นแนะนำให้เลือก → ใส่รหัส/หน่วย/ซัพพลายเออร์ให้อัตโนมัติ ──
+let _rcvSuggestList = [], _rcvSuggestIdx = -1;
+function _rcvHighlight(text, q) {
+  const s = esc(text);
+  if (!q) return s;
+  const i = String(text).toLowerCase().indexOf(q);
+  return i < 0 ? s : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+}
+function rcvRmSearchInput() {
+  // พิมพ์แก้หลังเลือกไปแล้ว = ยกเลิกรายการที่เลือก (กันบันทึกผิดตัวเพราะชื่อในช่องไม่ตรงกับรายการที่เลือกไว้)
+  const picked = _rmMasterCache.find(r => r.RM_ID === document.getElementById('rcv-rm').value);
+  if (picked && document.getElementById('rcv-rm-search').value !== picked.RM_Name) rcvRmPick(null, true);
+  _modalClearErrors(['rcv-rm-search']);
+  rcvRmSuggest();
+}
+function rcvRmSuggest() {
+  const q = document.getElementById('rcv-rm-search').value.trim().toLowerCase();
+  const score = r => {
+    const n = (r.RM_Name || '').toLowerCase(), c = (r.RM_ID || '').toLowerCase();
+    if (!q) return 3;
+    if (c === q) return 0;
+    if (n.startsWith(q) || c.startsWith(q)) return 1;
+    return n.includes(q) || c.includes(q) || (r.Supplier || '').toLowerCase().includes(q) ? 2 : -1;
+  };
+  _rcvSuggestList = _rmMasterCache.map(r => [r, score(r)]).filter(x => x[1] >= 0)
+    .sort((a, b) => a[1] - b[1] || String(a[0].RM_Name).localeCompare(String(b[0].RM_Name), 'th'))
+    .slice(0, 40).map(x => x[0]);
+  _rcvSuggestIdx = q && _rcvSuggestList.length ? 0 : -1;
+  _rcvRenderSuggest(q);
+}
+function _rcvRenderSuggest(q) {
+  const box = document.getElementById('rcv-rm-suggest');
+  box.innerHTML = _rcvSuggestList.map((r, i) => `<div class="list-group-item list-group-item-action${i === _rcvSuggestIdx ? ' active' : ''}"
+      onmousedown="event.preventDefault(); rcvRmPick('${esc(r.RM_ID)}')">
+      ${catBadge(r.Category)} ${_rcvHighlight(r.RM_Name || '', q)}
+      <div class="code">${_rcvHighlight(r.RM_ID, q)} · ${esc(r.Unit || '')}${r.Supplier ? ' · ' + esc(r.Supplier) : ''}</div></div>`).join('')
+    || '<div class="list-group-item text-muted">ไม่พบรายการ — เพิ่มได้ที่หน้า Master → วัตถุดิบ / แพ็คเกจจิ้ง</div>';
+  box.classList.add('show');
+  box.querySelector('.active')?.scrollIntoView({ block: 'nearest' });
+}
+function rcvRmHideSuggest() { document.getElementById('rcv-rm-suggest').classList.remove('show'); }
+function rcvRmKey(e) {
+  const box = document.getElementById('rcv-rm-suggest');
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (!box.classList.contains('show')) { rcvRmSuggest(); return; }
+    const n = _rcvSuggestList.length;
+    if (!n) return;
+    _rcvSuggestIdx = (_rcvSuggestIdx + (e.key === 'ArrowDown' ? 1 : -1) + n) % n;
+    _rcvRenderSuggest(document.getElementById('rcv-rm-search').value.trim().toLowerCase());
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (box.classList.contains('show') && _rcvSuggestList[_rcvSuggestIdx]) rcvRmPick(_rcvSuggestList[_rcvSuggestIdx].RM_ID);
+  } else if (e.key === 'Escape' && box.classList.contains('show')) {
+    e.preventDefault(); e.stopPropagation(); rcvRmHideSuggest();   // Esc ปิดแค่รายการแนะนำ ไม่ปิดฟอร์ม
+  }
+}
+// เลือกรายการ (id = null → ล้าง) · keepText = ไม่ลบข้อความที่ผู้ใช้กำลังพิมพ์
+function rcvRmPick(id, keepText) {
+  const r = id ? _rmMasterCache.find(x => x.RM_ID === id) : null;
+  document.getElementById('rcv-rm').value = r?.RM_ID || '';
+  document.getElementById('rcv-code').value = r?.RM_ID || '';
+  document.getElementById('rcv-unit').textContent = r?.Unit || '—';
+  if (!keepText) document.getElementById('rcv-rm-search').value = r?.RM_Name || '';
+  // ซัพพลายเออร์: ใส่ค่าจาก Master ให้ ถ้าผู้ใช้ยังไม่ได้พิมพ์เอง
+  const sup = document.getElementById('rcv-supplier');
+  if (sup.dataset.auto) sup.value = (r?.Supplier || '').trim().replace(/^[-–—.]+$/, '');
+  rcvAutoLot();   // Lot นับแยกต่อรายการ → เปลี่ยนรายการแล้วต้องคำนวณใหม่
+  if (r) {
+    _modalClearErrors(['rcv-rm-search']);
+    rcvRmHideSuggest();
+    document.getElementById('rcv-qty').focus();
+  }
+}
+
+// ── Lot อัตโนมัติ: ปีเดือนวัน(ค.ศ. 2 หลัก)-ครั้งที่ของวันนั้น เช่น 260912-01 ──
+// "ครั้งที่" นับแยกต่อรายการ (ผู้ใช้เลือก 2026-09-26: ไพล -01, ขมิ้นก็ -01) — เลขถัดไป = เลขสูงสุดของรายการนั้นในวันนั้น + 1
+// ยังไม่เลือกรายการ = แสดง -01 ไว้ก่อน แล้วคำนวณใหม่ตอนเลือกรายการ/เปลี่ยนวันที่/กดบันทึก
+// ถ้าผู้ใช้แก้ Lot เอง (dataset.auto ว่าง) จะไม่ทับ
+function _rcvLotPrefix(date) { return (date || todayStr()).slice(2).replace(/-/g, ''); }   // 2026-09-12 → 260912
+function _rcvNextLot(date, lots) {
+  const prefix = _rcvLotPrefix(date);
+  const re = new RegExp(`^${prefix}-(\\d+)$`);
+  const max = Math.max(0, ...lots.map(l => (String(l || '').match(re) || [])[1]).filter(Boolean).map(Number));
+  return `${prefix}-${String(max + 1).padStart(2, '0')}`;
+}
+// อ่านจากฐานข้อมูลทุกครั้ง (ไม่ใช้ cache) — กันสองเครื่องรับของวันเดียวกันแล้วได้เลขเดียวกัน
+async function _rcvFetchLotsOfDay(date, rmId) {
+  if (!rmId) return [];
+  const { data, error } = await _sb.from('rm_receive').select('Lot').eq('RM_ID', rmId).like('Lot', `${_rcvLotPrefix(date)}-%`);
+  return error ? _receivedCache.filter(r => r.RM_ID === rmId).map(r => r.Lot) : (data || []).map(r => r.Lot);
+}
+async function rcvAutoLot() {
+  const lot = document.getElementById('rcv-lot');
+  if (!lot.dataset.auto) return;
+  const date = document.getElementById('rcv-receive').value || todayStr();
+  const rmId = document.getElementById('rcv-rm').value;
+  const next = _rcvNextLot(date, await _rcvFetchLotsOfDay(date, rmId));
+  // ระหว่างรอ DB ผู้ใช้อาจเปลี่ยนรายการ/วันที่/พิมพ์ Lot เอง — ใส่เฉพาะเมื่อยังตรงกับค่าปัจจุบัน
+  if (lot.dataset.auto && document.getElementById('rcv-rm').value === rmId
+      && (document.getElementById('rcv-receive').value || todayStr()) === date) lot.value = next;
 }
 // รับเข้า = ฟังก์ชัน DB rm_receive_post (สร้างใบรับ + ล็อต + บวกยอดรวม ในคำสั่งเดียว)
 async function receivedModalSave() {
-  _modalClearErrors(['rcv-qty', 'rcv-exp']);
-  const qty = parseFloat(document.getElementById('rcv-qty').value);
-  if (!qty || qty <= 0) { _modalShowError('rcv-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  _modalClearErrors(['rcv-qty', 'rcv-exp', 'rcv-rm-search']);
   const rmId = document.getElementById('rcv-rm').value;
   const rm = _rmMasterCache.find(r => r.RM_ID === rmId);
+  if (!rm) { _modalShowError('rcv-rm-search', 'พิมพ์ค้นหาแล้วเลือกรายการจากรายการแนะนำ'); rcvRmSuggest(); return; }
+  const qty = parseFloat(document.getElementById('rcv-qty').value);
+  if (!qty || qty <= 0) { _modalShowError('rcv-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
   const receiveDate = document.getElementById('rcv-receive').value || todayStr();
   const exp = document.getElementById('rcv-exp').value || null;
   if (exp && exp < receiveDate) { _modalShowError('rcv-exp', 'วันหมดอายุต้องไม่ก่อนวันที่รับเข้า'); return; }
@@ -3240,6 +3367,9 @@ async function receivedModalSave() {
       confirmButtonText: 'บันทึกโดยไม่ระบุ', cancelButtonText: 'กลับไปใส่วันหมดอายุ' });
     if (!c.isConfirmed) { document.getElementById('rcv-exp').focus(); return; }
   }
+  // Lot อัตโนมัติ: คำนวณใหม่จาก DB ตอนกดบันทึก (ระหว่างกรอกฟอร์ม อาจมีคนอื่นรับของวันเดียวกันไปก่อน)
+  const lotEl = document.getElementById('rcv-lot');
+  if (lotEl.dataset.auto) lotEl.value = _rcvNextLot(receiveDate, await _rcvFetchLotsOfDay(receiveDate, rmId));
   const { error } = await _sb.rpc('rm_receive_post', {
     p_receive_id: genId(rm?.Category === 'แพ็คเกจจิ้ง' ? 'PC' : 'RC'), p_rm_id: rmId, p_qty: qty, p_unit: rm?.Unit || null,
     p_supplier: document.getElementById('rcv-supplier').value.trim() || null,
