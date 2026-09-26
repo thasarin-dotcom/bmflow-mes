@@ -858,6 +858,7 @@ img.emp-avatar { cursor: zoom-in; }
             <label class="form-label">รหัส<span class="text-danger">*</span></label>
             <input id="rmm-id" class="form-control">
             <div class="invalid-feedback" id="rmm-id-err"></div>
+            <div class="form-text" style="font-size:.72rem" id="rmm-id-help"></div>
           </div>
           <div class="col-6">
             <label class="form-label">ประเภท</label>
@@ -941,6 +942,7 @@ img.emp-avatar { cursor: zoom-in; }
             <label class="form-label">รหัส FG<span class="text-danger">*</span></label>
             <input id="fgm-id" class="form-control">
             <div class="invalid-feedback" id="fgm-id-err"></div>
+            <div class="form-text" style="font-size:.72rem" id="fgm-id-help"></div>
           </div>
           <div class="col-md-7">
             <label class="form-label">ชื่อสินค้า<span class="text-danger">*</span></label>
@@ -2317,7 +2319,7 @@ function rmMasterOpenForm(id) {
   document.getElementById('rmm-title').textContent = id ? 'แก้ไขรายการ' : 'เพิ่มวัตถุดิบใหม่';
   const idInput = document.getElementById('rmm-id');
   idInput.value = row?.RM_ID || genId('RM');
-  idInput.disabled = !!id;
+  _setCodeFieldAccess(idInput, 'rmm-id-help', !!id);
   document.getElementById('rmm-cat').value = [CAT_PREP, 'แพ็คเกจจิ้ง'].includes(row?.Category) ? row.Category : 'วัตถุดิบ';
   document.getElementById('rmm-name').value = row?.RM_Name || '';
   document.getElementById('rmm-unit').value = row?.Unit || 'กรัม';
@@ -2380,7 +2382,7 @@ async function rmMasterModalSave() {
   const name = document.getElementById('rmm-name').value.trim();
   const cat = document.getElementById('rmm-cat').value;
   if (!rmId) { _modalShowError('rmm-id', 'กรอกรหัส'); return; }
-  if (!_rmMasterEditId && _rmMasterCache.some(r => r.RM_ID === rmId)) { _modalShowError('rmm-id', 'รหัสนี้มีอยู่แล้ว กรุณาใช้รหัสอื่น'); return; }
+  if (rmId !== _rmMasterEditId && _rmMasterCache.some(r => r.RM_ID === rmId)) { _modalShowError('rmm-id', 'รหัสนี้มีอยู่แล้ว กรุณาใช้รหัสอื่น'); return; }
   if (!name) { _modalShowError('rmm-name', 'กรอกชื่อรายการ'); return; }
   let prep = { SourceRM_ID: null, PrepSteps: [], ShelfLifeDays: null };
   if (cat === CAT_PREP) {
@@ -2391,6 +2393,11 @@ async function rmMasterModalSave() {
     rmMasterSyncSourceUnit();
     const shelf = parseInt(document.getElementById('rmm-shelf').value);
     prep = { SourceRM_ID: source, PrepSteps: steps, ShelfLifeDays: Number.isNaN(shelf) ? null : shelf };
+  }
+  // แอดมินแก้รหัสรายการเดิม → เปลี่ยนรหัสทุกตารางที่อ้างถึงก่อน แล้วค่อยบันทึกช่องอื่นด้วยรหัสใหม่
+  if (_rmMasterEditId && rmId !== _rmMasterEditId) {
+    if (!(await _renameMasterCode('rm_master', _rmMasterEditId, rmId, name))) return;
+    _rmMasterEditId = rmId;
   }
   const payload = {
     RM_ID: _rmMasterEditId || rmId, RM_Name: name, Category: cat,
@@ -2420,6 +2427,33 @@ async function fgMasterLoad() {
 // parseInt(x) || 5 จะทำให้ใส่ 0 ไม่ได้ — แยกเช็ค NaN แทน
 function _parseShelfDays(v) { const n = parseInt(v); return Number.isNaN(n) ? 5 : n; }
 let _fgMasterEditId = null;
+// ── ช่องรหัสตอนแก้ไขรายการเดิม: หัวหน้างาน + แอดมินแก้ได้ (เปลี่ยนตามทุกตารางผ่าน rename_master_code), พนักงานล็อกไว้ ──
+// รหัสเป็น primary key ที่ตารางอื่นอ้างถึงหลายตาราง จึงห้ามแก้ตรงๆ ที่ Master — ดู migration_2026-09-26_rename_code.sql
+// สิทธิ์ขั้นต่ำต้องตรงกับ current_role_rank() >= 2 ในฟังก์ชันนั้น
+function _setCodeFieldAccess(input, helpId, isEdit) {
+  const help = document.getElementById(helpId);
+  const canEdit = !isEdit || _hasRole('supervisor');
+  input.disabled = !canEdit;
+  help.innerHTML = !isEdit ? ''
+    : canEdit ? '<i class="fa-solid fa-circle-info me-1"></i>แก้รหัสได้ — ระบบจะเปลี่ยนรหัสในทุกรายการที่อ้างถึงให้ด้วย'
+    : '<i class="fa-solid fa-lock me-1"></i>แก้รหัสได้เฉพาะหัวหน้างาน / แอดมิน';
+}
+async function _renameMasterCode(table, oldId, newId, name) {
+  const c = await Swal.fire({ icon: 'warning', title: 'เปลี่ยนรหัส?',
+    html: `<b>${esc(name)}</b><br><code>${esc(oldId)}</code> → <code>${esc(newId)}</code>
+      <div class="small text-muted mt-2">ระบบจะเปลี่ยนรหัสในทุกรายการที่อ้างถึงรหัสนี้ (ใบรับ / สต็อก / ล็อต / สูตร / ประวัติเบิก / ของเสีย ฯลฯ) ให้พร้อมกัน</div>`,
+    showCancelButton: true, confirmButtonText: 'เปลี่ยนรหัส', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return false;
+  const { data, error } = await _sb.rpc('rename_master_code', { p_table: table, p_old: oldId, p_new: newId });
+  if (error) {
+    const notSetup = error.code === 'PGRST202';
+    Swal.fire('เปลี่ยนรหัสไม่สำเร็จ', notSetup ? 'แอดมินต้องรัน <code>migration_2026-09-26_rename_code.sql</code> ใน Supabase ก่อน' : esc(error.message), 'error');
+    return false;
+  }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500,
+    title: `เปลี่ยนรหัสแล้ว${data ? ` — อัปเดตตาม ${data} รายการ` : ''}` });
+  return true;
+}
 function fgMasterOpenForm(id) {
   _fgMasterEditId = id || null;
   const row = id ? _fgMasterCache.find(r => r.FG_ID === id) : null;
@@ -2429,7 +2463,7 @@ function fgMasterOpenForm(id) {
   // รหัส FG เป็น PK ที่ตารางอื่น (bom/MO/CO/stock_fg ฯลฯ) อ้างถึง — แก้ได้เฉพาะตอนสร้างใหม่ ล็อกไว้ตอนแก้ไข
   const idInput = document.getElementById('fgm-id');
   idInput.value = row?.FG_ID || genId('FG');
-  idInput.disabled = !!id;
+  _setCodeFieldAccess(idInput, 'fgm-id-help', !!id);
   document.getElementById('fgm-name').value = row?.FG_Name || '';
   document.getElementById('fgm-unit').value = row?.Unit || 'ลูก';
   document.getElementById('fgm-shelf').value = row?.ShelfLifeDays ?? 5;
@@ -2441,8 +2475,13 @@ async function fgMasterModalSave() {
   const fgId = document.getElementById('fgm-id').value.trim();
   const name = document.getElementById('fgm-name').value.trim();
   if (!fgId) { _modalShowError('fgm-id', 'กรอกรหัส FG'); return; }
-  if (!_fgMasterEditId && _fgMasterCache.some(r => r.FG_ID === fgId)) { _modalShowError('fgm-id', 'รหัสนี้มีอยู่แล้ว กรุณาใช้รหัสอื่น'); return; }
+  if (fgId !== _fgMasterEditId && _fgMasterCache.some(r => r.FG_ID === fgId)) { _modalShowError('fgm-id', 'รหัสนี้มีอยู่แล้ว กรุณาใช้รหัสอื่น'); return; }
   if (!name) { _modalShowError('fgm-name', 'กรอกชื่อสินค้า'); return; }
+  if (_fgMasterEditId && fgId !== _fgMasterEditId) {
+    if (!(await _renameMasterCode('product_master', _fgMasterEditId, fgId, name))) return;
+    _bomExpandedSet.delete(_fgMasterEditId); _bomExpandedSet.add(fgId);
+    _fgMasterEditId = fgId;
+  }
   const payload = {
     FG_ID: _fgMasterEditId || fgId, FG_Name: name,
     Unit: document.getElementById('fgm-unit').value.trim() || 'ลูก',
