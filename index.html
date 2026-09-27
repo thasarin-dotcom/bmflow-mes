@@ -103,6 +103,54 @@ img.emp-avatar { cursor: zoom-in; }
 .kpi-card.bom-kpi-active { outline: 2px solid #f59e0b; background: #fffbeb; }
 .bom-card-head { cursor: pointer; }
 .bom-card-head:hover b { color: var(--primary-blue); }
+
+/* ── หน้า Stock (Raw Material / Packaging / Finished Goods) — การ์ดแบบ ProFlow: หัวการ์ดกดขยายดูล็อต ──
+   ต่างจาก .glass-card ทั่วไปตรงที่ตัวการ์ดเอง padding เป็น 0 แล้วให้ .stock-card-head/.stock-lot-detail คุม padding
+   ของตัวเอง เพื่อให้เส้นคั่น border-top ของส่วนล็อตพาดเต็มความกว้างการ์ดพอดี (เหมือน ProFlow) */
+.stock-card { padding: 0; overflow: hidden; margin-bottom: 8px; }
+.stock-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .55rem .9rem; cursor: pointer; user-select: none; }
+.stock-card-head:hover { background: rgba(77,143,194,.06); }
+.stock-card-head .code { background: #1e293b; color: #fff; border-radius: 999px; padding: .28em .75em; font-weight: 700; font-size: .72rem; flex-shrink: 0; }
+.stock-card-head .name { font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+/* คลัสเตอร์ขวา: ล็อต/ยอด/มูลค่า/วันหมดอายุ/สถานะ/ปุ่ม/ลูกศร — ดันไปชิดขวาสุดด้วย margin-left:auto บนตัวแรก (.meta) */
+.stock-card-head .meta { font-size: .8rem; color: #64748b; white-space: nowrap; margin-left: auto; display: flex; align-items: center; gap: 0; }
+.stock-card-head .meta b { color: #1e293b; font-weight: 800; }
+.stock-card-head .meta .val { color: #16a34a; font-weight: 700; }
+.stock-card-head .meta .avg { color: #94a3b8; }
+.stock-card-head .meta .sep { margin: 0 .4em; color: #cbd5e1; }
+.stock-card-head .badge { border-radius: 999px; font-weight: 600; }
+.stock-card-head .chevron { font-size: .75rem; color: #94a3b8; transition: transform .2s; }
+.stock-card-head.expanded .chevron { transform: rotate(180deg); }
+.stock-card-low { border-left: 4px solid #dc3545; }
+.stock-card-warn { border-left: 4px solid #ffc107; }
+.stock-lot-detail { border-top: 1px solid #e5e7eb; }
+.stock-lot-detail table { font-size: .82rem; }
+@media (max-width: 767.98px) {
+  .stock-card-head .meta { white-space: normal; width: 100%; margin-left: 0; order: 3; }
+  .stock-card-head .name { max-width: 100%; }
+}
+
+/* ── ปฏิทินแผนผลิต (หน้า แผนผลิต/MO) — ผังเดียวกับปฏิทินของ ProFlow (grid 7 คอลัมน์, การ์ดต่อวัน, ชิปสีตามสถานะ) ──
+   min-width:0 ที่ .mocal-day จำเป็น: ค่าเริ่มต้นของ grid item คือ min-width:auto ซึ่งยึดตาม min-content ของลูก
+   (ชื่อสินค้ายาวใน .mocal-chip แม้จะ white-space:nowrap+ellipsis แล้วก็ตาม) ถ้าไม่ใส่ คอลัมน์ที่มีงานจะดันกว้าง
+   เกิน 1fr จนตารางทั้งแถวเพี้ยน คอลัมน์ "ส" โดนบีบ (เจอปัญหานี้ตอนพอร์ตมาจาก ProFlow เหมือนกัน) */
+.mocal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.mocal-dow { text-align: center; font-size: .75rem; font-weight: 700; color: #64748b; padding: .3rem 0; }
+.mocal-dow.mocal-dow-sun { color: #dc2626; }
+.mocal-day { min-height: 90px; min-width: 0; border: 1px solid #e5e7eb; border-radius: 8px; padding: .3rem; background: #fff; cursor: pointer; transition: box-shadow .15s; display: flex; flex-direction: column; gap: 3px; }
+.mocal-day:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+.mocal-day.mocal-outside { background: #f8fafc; opacity: .5; cursor: default; }
+.mocal-day.mocal-today { border-color: var(--primary-blue); border-width: 2px; }
+.mocal-day.mocal-sunday { background: #fef2f2; border-color: #fecaca; }
+.mocal-day.mocal-sunday .mocal-daynum { color: #dc2626; }
+.mocal-dayoff { font-size: .62rem; font-weight: 700; color: #dc2626; letter-spacing: .03em; text-transform: uppercase; }
+.mocal-daynum { font-size: .78rem; font-weight: 700; color: #334155; }
+.mocal-chip { font-size: .66rem; border-radius: 4px; padding: 1px 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid transparent; }
+.mocal-chip.st-plan { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+.mocal-chip.st-issued { background: #cffafe; color: #0e7490; border-color: #67e8f9; }
+.mocal-chip.st-produced { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+.mocal-chip.st-closed { background: #dcfce7; color: #15803d; border-color: #86efac; }
+.mocal-chip-more { font-size: .66rem; color: var(--primary-blue); font-weight: 600; }
 .bom-mat-dropdown { max-height: 220px; overflow-y: auto; display: none; width: calc(100% - 1.5rem); z-index: 1060; }
 .kpi-card.kpi-link { cursor: pointer; transition: transform .12s, box-shadow .12s; height: 100%; }
 .kpi-card.kpi-link:hover, .kpi-card.kpi-link:focus-visible { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.12); outline: none; }
@@ -345,7 +393,8 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
 
     <div class="nav-group-header" onclick="toggleNavGroup(this)"><span>Production</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
     <ul class="nav flex-column nav-group-body">
-      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('plan');return false;" id="navlink-plan"><i class="fa-solid fa-calendar-days me-2"></i>แผนผลิต / MO</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('calendar');return false;" id="navlink-calendar"><i class="fa-solid fa-calendar-days me-2"></i>แผนผลิต</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('plan');return false;" id="navlink-plan"><i class="fa-solid fa-clipboard-list me-2"></i>MO</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('prep');return false;" id="navlink-prep"><i class="fa-solid fa-mortar-pestle me-2"></i>เตรียมวัตถุดิบ</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('issue');return false;" id="navlink-issue"><i class="fa-solid fa-dolly me-2"></i>เบิกวัตถุดิบเข้าสาย</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('prodrecord');return false;" id="navlink-prodrecord"><i class="fa-solid fa-industry me-2"></i>บันทึกผลิต</a></li>
@@ -466,35 +515,95 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
       <select class="form-select w-auto" id="stockRmCatFilter" onchange="stockRmRenderTable()">
         <option value="">วัตถุดิบทั้งหมด</option><!-- ตัวเลือกเติมโดย _fillCategorySelects() -->
       </select>
+      <select class="form-select w-auto" id="stockRmStatusFilter" onchange="stockRmRenderTable()">
+        <option value="">ทุกสถานะ</option><option value="ok">ปกติ</option><option value="low">ต่ำกว่าขั้นต่ำ</option>
+      </select>
       <div class="search-wrap"><input class="form-control search-input" id="stockRmSearch" placeholder="ค้นหา..." oninput="stockRmRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockRmSearch').value='';stockRmRenderTable()"></i></div>
+      <select class="form-select w-auto" id="stockRmSort" onchange="stockRmRenderTable()" title="เรียงลำดับ">
+        <option value="">เรียง: ตามหมวดหมู่ (ค่าเริ่มต้น)</option>
+        <option value="code-asc">เรียง: รหัส ก → ฮ</option>
+        <option value="exp-asc">เรียง: ใกล้หมดอายุก่อน</option>
+        <option value="oldest-asc">เรียง: ของเก่าสุดก่อน (รับเข้าเก่าสุด)</option>
+      </select>
     </div></div>
-    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th style="width:36px"></th><th>รหัส</th><th>วัตถุดิบ</th><th class="text-end">คงเหลือ</th><th>หน่วย</th><th class="text-end">ขั้นต่ำ</th><th>ล็อตที่มีของ</th><th>หมดอายุใกล้สุด</th><th>สถานะ</th></tr></thead>
-      <tbody id="stockRmTableBody"></tbody>
-    </table></div></div></div>
+    <div class="scroll-content"><div id="stockRmCards"></div></div>
   </div>
 
   <!-- ═══════════════ STOCK PACKAGING ═══════════════ -->
   <div class="page-view" id="page-stockpkg">
     <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-boxes-packing me-2"></i>Packaging</h4><div class="text-white-50 small">สต็อกแพ็คเกจจิ้ง — ยอดคงเหลือวัสดุบรรจุภัณฑ์ปัจจุบัน</div></div>
-    <div class="sticky-toolbar"><div class="search-wrap mb-2"><input class="form-control search-input" id="stockPkgSearch" placeholder="ค้นหา..." oninput="stockPkgRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockPkgSearch').value='';stockPkgRenderTable()"></i></div></div>
-    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th style="width:36px"></th><th>รหัส</th><th>แพ็คเกจจิ้ง</th><th class="text-end">คงเหลือ</th><th>หน่วย</th><th class="text-end">ขั้นต่ำ</th><th>ล็อตที่มีของ</th><th>หมดอายุใกล้สุด</th><th>สถานะ</th></tr></thead>
-      <tbody id="stockPkgTableBody"></tbody>
-    </table></div></div></div>
+    <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 mb-2">
+      <select class="form-select w-auto" id="stockPkgStatusFilter" onchange="stockPkgRenderTable()">
+        <option value="">ทุกสถานะ</option><option value="ok">ปกติ</option><option value="low">ต่ำกว่าขั้นต่ำ</option>
+      </select>
+      <div class="search-wrap"><input class="form-control search-input" id="stockPkgSearch" placeholder="ค้นหา..." oninput="stockPkgRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockPkgSearch').value='';stockPkgRenderTable()"></i></div>
+      <select class="form-select w-auto" id="stockPkgSort" onchange="stockPkgRenderTable()" title="เรียงลำดับ">
+        <option value="">เรียง: ตามหมวดหมู่ (ค่าเริ่มต้น)</option>
+        <option value="code-asc">เรียง: รหัส ก → ฮ</option>
+        <option value="exp-asc">เรียง: ใกล้หมดอายุก่อน</option>
+        <option value="oldest-asc">เรียง: ของเก่าสุดก่อน (รับเข้าเก่าสุด)</option>
+      </select>
+    </div></div>
+    <div class="scroll-content"><div id="stockPkgCards"></div></div>
   </div>
 
-  <!-- ═══════════════ PLAN / MO ═══════════════ -->
+  <!-- ═══════════════ MO (คำสั่งผลิต) ═══════════════ -->
   <div class="page-view" id="page-plan">
     <div class="page-header d-flex justify-content-between align-items-start">
-      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-calendar-days me-2"></i>แผนผลิต / MO</h4><div class="text-white-50 small">คำสั่งผลิต — วางแผนตามคำสั่งซื้อหรือผลิตเก็บสต็อก</div></div>
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-clipboard-list me-2"></i>คำสั่งผลิต (MO)</h4><div class="text-white-50 small">วางแผนตามคำสั่งซื้อหรือผลิตเก็บสต็อก</div></div>
       <button class="btn btn-success" onclick="planOpenForm()"><i class="fa-solid fa-plus me-1"></i>สร้าง MO</button>
     </div>
     <div class="sticky-toolbar"><div class="search-wrap mb-2"><input class="form-control search-input" id="planSearch" placeholder="ค้นหา..." oninput="planRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('planSearch').value='';planRenderTable()"></i></div></div>
-    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>กะ</th><th>อ้างอิง CO</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
-      <tbody id="planTableBody"></tbody>
-    </table></div></div></div>
+    <div class="scroll-content">
+      <div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>Lot</th><th>อ้างอิง CO</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+        <tbody id="planTableBody"></tbody>
+      </table></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ แผนผลิต (ปฏิทิน) ═══════════════ -->
+  <div class="page-view" id="page-calendar">
+    <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-calendar-days me-2"></i>แผนผลิตรายวัน</h4><div class="text-white-50 small">ปฏิทินแผนผลิต — ดูว่าวันไหนผลิตอะไร Lot ไหน</div></div>
+    <div class="scroll-content">
+      <div class="glass-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="moCalChangeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+            <span class="fw-semibold" id="moCalMonthLabel" style="min-width:130px;text-align:center">-</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="moCalChangeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+          <button class="btn btn-success btn-sm" onclick="planOpenForm()"><i class="fa-solid fa-plus me-1"></i>สร้าง MO</button>
+        </div>
+        <div class="mocal-grid mb-1">
+          <div class="mocal-dow mocal-dow-sun">อา</div><div class="mocal-dow">จ</div><div class="mocal-dow">อ</div>
+          <div class="mocal-dow">พ</div><div class="mocal-dow">พฤ</div><div class="mocal-dow">ศ</div><div class="mocal-dow">ส</div>
+        </div>
+        <div class="mocal-grid" id="moCalBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: รายละเอียดแผนผลิตวันที่เลือก (ปฏิทิน) ═══════════════ -->
+  <div class="modal fade" id="moCalDayModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header modal-header-brand">
+          <h5 class="modal-title"><i class="fa-solid fa-calendar-day me-2"></i><span id="moCalDayTitle">แผนผลิตวันที่</span></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive"><table class="table table-hover mb-0">
+            <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>Lot</th><th>สถานะ</th></tr></thead>
+            <tbody id="moCalDayBody"></tbody>
+          </table></div>
+        </div>
+        <div class="modal-footer modal-footer-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+          <button type="button" class="btn btn-brand" onclick="bootstrap.Modal.getInstance(document.getElementById('moCalDayModal')).hide();planOpenForm()"><i class="fa-solid fa-plus me-1"></i>สร้าง MO</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ═══════════════ ISSUE PRODUCTION ═══════════════ -->
@@ -504,10 +613,7 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
       <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>จัดการ</th></tr></thead>
       <tbody id="issueMoTableBody"></tbody>
     </table></div></div>
-    <div class="glass-card"><h6 class="mb-3">ประวัติการเบิกวัตถุดิบ</h6><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th>เลขที่เบิก</th><th>MO</th><th>วัตถุดิบ</th><th class="text-end">สำหรับผลิต</th><th class="text-end">ตามสูตร</th><th class="text-end">Scrap</th><th class="text-end">เบิกจริง</th><th>วันที่เบิก</th><th class="text-center">จัดการ</th></tr></thead>
-      <tbody id="issueHistTableBody"></tbody>
-    </table></div></div></div>
+    <div class="glass-card"><h6 class="mb-3">ประวัติการเบิกวัตถุดิบ</h6><div id="issueHistCards"></div></div></div>
   </div>
 
   <!-- ═══════════════ PRODUCTION RECORD ═══════════════ -->
@@ -539,11 +645,16 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
   <!-- ═══════════════ STOCK FG ═══════════════ -->
   <div class="page-view" id="page-stockfg">
     <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-warehouse me-2"></i>Finished Goods</h4><div class="text-white-50 small">สต็อกสินค้าสำเร็จรูป — ยอดคงเหลือแยกตาม Lot / วันหมดอายุ</div></div>
-    <div class="sticky-toolbar"><div class="search-wrap mb-2"><input class="form-control search-input" id="stockFgSearch" placeholder="ค้นหา..." oninput="stockFgRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockFgSearch').value='';stockFgRenderTable()"></i></div></div>
-    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th>สินค้า</th><th>Lot</th><th>คงเหลือ</th><th>วันผลิต</th><th>วันหมดอายุ</th><th>สถานะ</th></tr></thead>
-      <tbody id="stockFgTableBody"></tbody>
-    </table></div></div></div>
+    <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 mb-2">
+      <div class="search-wrap"><input class="form-control search-input" id="stockFgSearch" placeholder="ค้นหา..." oninput="stockFgRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockFgSearch').value='';stockFgRenderTable()"></i></div>
+      <select class="form-select w-auto" id="stockFgSort" onchange="stockFgRenderTable()" title="เรียงลำดับ">
+        <option value="">เรียง: ชื่อสินค้า (ค่าเริ่มต้น)</option>
+        <option value="code-asc">เรียง: รหัส ก → ฮ</option>
+        <option value="exp-asc">เรียง: ใกล้หมดอายุก่อน</option>
+        <option value="oldest-asc">เรียง: ของเก่าสุดก่อน (ผลิตเก่าสุด)</option>
+      </select>
+    </div></div>
+    <div class="scroll-content"><div id="stockFgCards"></div></div>
   </div>
 
   <!-- ═══════════════ CUSTOMER ORDERS ═══════════════ -->
@@ -561,7 +672,10 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
 
   <!-- ═══════════════ FG WITHDRAW / DELIVERY ═══════════════ -->
   <div class="page-view" id="page-fgout">
-    <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-truck me-2"></i>เบิก FG / จัดส่ง</h4><div class="text-white-50 small">เบิกสินค้าตาม CO (FEFO ตามวันหมดอายุจริง) และติดตามสถานะจัดส่ง</div></div>
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-truck me-2"></i>เบิก FG / จัดส่ง</h4><div class="text-white-50 small">เบิกสินค้าตาม CO (FEFO ตามวันหมดอายุจริง) และติดตามสถานะจัดส่ง</div></div>
+      <button class="btn btn-success" onclick="genwdOpenForm()"><i class="fa-solid fa-plus me-1"></i>เพิ่มรายการเบิก</button>
+    </div>
     <div class="scroll-content">
       <div class="glass-card"><h6 class="mb-3">คำสั่งซื้อที่ยังค้างส่ง</h6><div class="table-responsive"><table class="table table-hover mb-0">
         <thead><tr><th>เลขที่ CO</th><th>ลูกค้า</th><th>สินค้า</th><th>ค้างส่ง</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
@@ -571,6 +685,53 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
         <thead><tr><th>เลขที่จัดส่ง</th><th>CO</th><th>สินค้า/Lot</th><th>จำนวน</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
         <tbody id="deliveryTableBody"></tbody>
       </table></div></div>
+      <div class="glass-card"><h6 class="mb-3">ประวัติการเบิกอื่น (ไม่ผูกกับ CO)</h6><div class="table-responsive"><table class="table table-hover mb-0">
+        <thead><tr><th>เลขที่เบิก</th><th>ประเภท</th><th>รายการ</th><th class="text-end">จำนวน</th><th>วัตถุประสงค์</th><th>วันที่</th><th class="text-center">จัดการ</th></tr></thead>
+        <tbody id="genwdHistTableBody"></tbody>
+      </table></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: เพิ่มรายการเบิก (วัตถุดิบ/แพ็คเกจจิ้ง/FG — ไม่ผูกกับ CO) ═══════════════ -->
+  <div class="modal fade" id="genwdModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header modal-header-brand">
+          <h5 class="modal-title"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>เพิ่มรายการเบิก</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">รายการ<span class="text-danger">*</span></label>
+              <select id="genwd-item" class="form-select" onchange="genwdItemChanged()"></select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">ล็อต<span class="text-danger">*</span></label>
+              <select id="genwd-lot" class="form-select"></select>
+              <div class="invalid-feedback d-block" id="genwd-lot-err"></div>
+            </div>
+            <div class="col-6">
+              <label class="form-label">จำนวน<span class="text-danger">*</span></label>
+              <div class="input-group"><input id="genwd-qty" type="number" min="0" step="any" class="form-control"><span class="input-group-text" id="genwd-unit">-</span></div>
+              <div class="invalid-feedback d-block" id="genwd-qty-err"></div>
+            </div>
+            <div class="col-6">
+              <label class="form-label">วันที่เบิก</label>
+              <input id="genwd-date" type="date" class="form-control">
+            </div>
+            <div class="col-12">
+              <label class="form-label">วัตถุประสงค์<span class="text-danger">*</span></label>
+              <input id="genwd-note" class="form-control" placeholder="เช่น ใช้ภายใน, ตัวอย่าง, โอนสาขา ฯลฯ">
+              <div class="invalid-feedback d-block" id="genwd-note-err"></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer modal-footer-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-brand" onclick="genwdModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -676,6 +837,27 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
     <div class="scroll-content">
       <div class="row g-3 mb-3" id="prepKpis"></div>
       <div class="glass-card">
+        <h6 class="mb-3"><i class="fa-solid fa-list-check me-2 text-primary"></i>วางแผนจาก MO — ต้องเตรียมอะไรบ้าง</h6>
+        <div class="row g-2 align-items-end mb-2">
+          <div class="col-md-7">
+            <label class="form-label small mb-1">เลือก MO ที่จะผลิต</label>
+            <select id="prepPlanMo" class="form-select" onchange="prepPlanMoChanged()"></select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small mb-1">จะผลิตจริง</label>
+            <div class="input-group"><input id="prepPlanQty" type="number" min="0" step="any" class="form-control" oninput="prepPlanCalc()"><span class="input-group-text" id="prepPlanQtyUnit">—</span></div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+          <div class="small text-muted" id="prepPlanInfo"></div>
+          <button class="btn btn-sm btn-success" id="prepPlanBulkBtn" onclick="prepPlanBulkIssue()" disabled><i class="fa-solid fa-layer-group me-1"></i>เบิกไปเตรียมทั้งหมด</button>
+        </div>
+        <div class="table-responsive"><table class="table table-hover mb-0">
+          <thead><tr><th>วัตถุดิบพร้อมผลิต</th><th class="text-end">ต้องใช้</th><th class="text-end">มีอยู่แล้ว</th><th class="text-end">ต้องเตรียมเพิ่ม</th><th class="text-center">จัดการ</th></tr></thead>
+          <tbody id="prepPlanBody"><tr><td colspan="5" class="text-center text-muted py-3">เลือก MO ที่จะผลิตก่อน</td></tr></tbody>
+        </table></div>
+      </div>
+      <div class="glass-card">
         <h6 class="mb-3"><i class="fa-solid fa-spinner me-2 text-warning"></i>กำลังเตรียม</h6>
         <div class="table-responsive"><table class="table table-hover mb-0">
           <thead><tr><th>ใบเตรียม</th><th>วันที่</th><th>จาก → เป็น</th><th class="text-end">เบิกไป</th><th>ล็อตสดที่ใช้</th><th>ความคืบหน้า</th><th>MO</th><th class="text-center">จัดการ</th></tr></thead>
@@ -738,6 +920,7 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
         <option value="production_records">บันทึกผลิต</option>
         <option value="fg_receive">รับ FG เข้าคลัง</option>
         <option value="waste_log">ของเสีย</option>
+        <option value="manufacturing_orders">แผนผลิต (MO)</option>
         <option value="signup">สมัครใช้งาน</option>
       </select>
       <select class="form-select w-auto" id="rcvEditFilter" onchange="rcvEditRender()">
@@ -969,7 +1152,7 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
   </div>
 </div>
 
-<datalist id="prepStepList"><option value="คัด"><option value="ล้าง"><option value="อบ"><option value="บด"><option value="ย่อย"><option value="ปอกเปลือก"><option value="หั่น"><option value="ตาก"><option value="ร่อน"></datalist>
+<datalist id="prepStepList"><option value="คัด"><option value="ล้าง"><option value="อบ"><option value="บด"><option value="ย่อย"><option value="ย่อยขนาด"><option value="ปอกเปลือก"><option value="หั่น"><option value="ตาก"><option value="ร่อน"></datalist>
 <!-- ═══════════════ MODAL: วัตถุดิบ / แพ็คเกจจิ้ง (Master) ═══════════════ -->
 <div class="modal fade" id="rmMasterModal" tabindex="-1">
   <div class="modal-dialog">
@@ -1090,6 +1273,15 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
               <span class="input-group-text" id="fgm-price-unit">บาท/ลูก</span>
               <div class="invalid-feedback" id="fgm-price-err"></div>
             </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">กำลังการผลิต/วัน</label>
+            <div class="input-group has-validation">
+              <input id="fgm-capacity" type="number" step="any" min="0" class="form-control" placeholder="ไม่บังคับ">
+              <span class="input-group-text" id="fgm-capacity-unit">ลูก/วัน</span>
+              <div class="invalid-feedback" id="fgm-capacity-err"></div>
+            </div>
+            <div class="form-text" style="font-size:.72rem">ใช้คำนวณจำนวนที่จะผลิตในหน้า "สร้าง MO" จากจำนวนวัน</div>
           </div>
           <div class="col-12">
             <label class="form-label">หมายเหตุ</label>
@@ -1358,14 +1550,18 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
-        <h5 class="modal-title"><i class="fa-solid fa-calendar-days me-2"></i>สร้างคำสั่งผลิต (MO)</h5>
+        <h5 class="modal-title"><i class="fa-solid fa-calendar-days me-2"></i><span id="pln-modal-title">สร้างคำสั่งผลิต (MO)</span></h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div class="row g-3">
           <div class="col-6">
             <label class="form-label">สินค้า</label>
-            <select id="pln-fg" class="form-select"></select>
+            <select id="pln-fg" class="form-select" onchange="planFgChanged()"></select>
+          </div>
+          <div class="col-6">
+            <label class="form-label">จะผลิตกี่วัน <span class="text-muted fw-normal" id="pln-capacity-hint" style="font-size:.72rem"></span></label>
+            <input id="pln-days" type="number" min="0" step="any" class="form-control" placeholder="ไม่บังคับ" oninput="planDaysChanged()">
           </div>
           <div class="col-6">
             <label class="form-label">จำนวนที่จะผลิต<span class="text-danger">*</span></label>
@@ -1373,12 +1569,16 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
             <div class="invalid-feedback" id="pln-qty-err"></div>
           </div>
           <div class="col-6">
-            <label class="form-label">วันที่ผลิต</label>
-            <input id="pln-date" type="date" class="form-control">
+            <label class="form-label">วันที่เริ่มผลิต</label>
+            <input id="pln-date" type="date" class="form-control" onchange="planDateChanged()">
           </div>
           <div class="col-6">
-            <label class="form-label">กะ</label>
-            <select id="pln-shift" class="form-select"><option>เช้า</option><option>บ่าย</option><option>โอที</option></select>
+            <label class="form-label">Lot<span class="text-danger">*</span></label>
+            <input id="pln-lot" class="form-control">
+            <div class="invalid-feedback" id="pln-lot-err"></div>
+          </div>
+          <div class="col-12">
+            <div class="small text-muted" id="pln-daterange-hint"></div>
           </div>
           <div class="col-12">
             <label class="form-label">อ้างอิงคำสั่งซื้อ (ถ้ามี)</label>
@@ -1388,7 +1588,7 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
       </div>
       <div class="modal-footer modal-footer-light">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-        <button type="button" class="btn btn-brand" onclick="planModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>สร้าง MO</button>
+        <button type="button" class="btn btn-brand" onclick="planModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i><span id="pln-modal-savebtn">สร้าง MO</span></button>
       </div>
     </div>
   </div>
@@ -1632,6 +1832,13 @@ function genId(prefix) {
   const rand = Math.random().toString(36).slice(2,6).toUpperCase();
   return `${prefix}-${ymd}-${rand}`;
 }
+// Lot ของ MO = วันที่เริ่มผลิตที่เลือกในฟอร์ม (ปีเดือนวัน) ล้วนๆ ไม่มีคำนำหน้า "LOT-" และไม่มีรหัสสุ่มต่อท้าย
+// (ผู้ใช้ขอ 2026-09-28 ตัดส่วนสุ่มออกก่อน แล้วขอ 2026-09-28 ให้ตัดคำว่า LOT ออกด้วยอีกที — เหลือแค่ตัวเลข
+// เช่น 260928 — ถ้าวันเดียวกันมีหลาย MO แล้วอยากแยก Lot กัน แก้ในช่อง Lot ต่อเอง)
+function _genLotForDate(dateStr) {
+  const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+  return String(d.getFullYear()).slice(2) + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+}
 function fmtDate(s) { if (!s) return '-'; const d = new Date(s); return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }); }
 // วันที่ "วันนี้" ตามเวลาเครื่อง (ไทย UTC+7) — เดิมใช้ toISOString() ตรงๆ ซึ่งเป็นวันที่ UTC ทำให้ช่วง 00:00–06:59
 // ได้วันที่ของ "เมื่อวาน" (วันรับเข้า/วันเบิก/วันผลิต/MO วันนี้ ผิดไป 1 วัน) — แก้ 2026-09-25
@@ -1858,7 +2065,7 @@ _sb.auth.onAuthStateChange((event, session) => {
 function toggleNavGroup(el) { el.classList.toggle('collapsed'); el.nextElementSibling.classList.toggle('collapsed'); }
 const PAGE_LOADERS = {
   dashboard: dashboardLoad, received: receivedLoad, stockrm: stockRmLoad, stockpkg: stockPkgLoad,
-  plan: planLoad, issue: issueLoad, prodrecord: prodRecordLoad,
+  plan: planLoad, calendar: planLoad, issue: issueLoad, prodrecord: prodRecordLoad,
   fgreceive: fgReceiveLoad, stockfg: stockFgLoad, stockcard: stockCardLoad,
   co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
   rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad, employee: employeeLoad, auditlog: auditLoad, prep: prepLoad,
@@ -1970,11 +2177,11 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // ⚠️ ฟังก์ชันบันทึก/ลบใหม่ที่เพิ่มในอนาคต ต้องเพิ่มชื่อใน _WRITE_ACTIONS ด้วย
 const _WRITE_ACTIONS = [
   'rmMasterModalSave', 'fgMasterModalSave', 'bomLineSubmit', 'receivedModalSave', 'coModalSave', 'planModalSave',
-  'issueModalSave', 'prodRecordModalSave', 'fgReceiveModalSave', 'fgoutModalSave', 'deliveryAdvance',
-  'wasteModalNext', 'wasteLotModalSave', 'employeeSave',
+  'issueModalSave', 'prodRecordModalSave', 'fgReceiveModalSave', 'fgoutModalSave', 'deliveryAdvance', 'planRequestDelete',
+  'wasteModalNext', 'wasteLotModalSave', 'employeeSave', 'genwdModalSave', 'genwdDelete',
   'rmMasterDelete', 'bomDeleteLine', 'bomDeleteProduct', 'receivedDelete', 'coDelete', 'planDelete', 'prodRecordDelete', 'wasteDelete',
   'signupreqApprove', 'signupreqReject', 'userrolesUpdateRole', 'userrolesUpdateName',
-  'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete',
+  'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete', 'prepPlanBulkIssue',
   'rcvReportConfirm', 'rcvReportRename',
   'rcvEditApprove', 'rcvEditReject', 'rcvEditCancel', 'rcvEditSignup', 'editReqSubmit',
 ];
@@ -2207,6 +2414,7 @@ const AUDIT_TABLE_LABEL = {
   fg_withdraw: 'เบิก FG', delivery: 'จัดส่ง', waste_log: 'Waste (ของเสีย)', employees: 'พนักงาน',
   user_roles: 'สิทธิ์การใช้งาน', signup_requests: 'คำขอสมัครใช้งาน', prep_orders: 'เตรียมวัตถุดิบ',
   rm_rc_numbers: 'ใบรายงานรับ (RC No)', rm_receive_edit_requests: 'คำขอแก้ไขใบรับ (เดิม)', edit_requests: 'คำขอแก้ไข',
+  rm_withdraw: 'เบิกวัตถุดิบ/แพ็คเกจจิ้ง (ไม่ผูก CO)',
 };
 const AUDIT_ACTION = {
   INSERT: ['เพิ่ม', 'success'], UPDATE: ['แก้ไข', 'warning'], DELETE: ['ลบ', 'danger'],
@@ -2216,7 +2424,7 @@ const AUDIT_ACTION = {
 const AUDIT_FIELD_LABEL = {
   RM_ID: 'รหัสวัตถุดิบ', RM_Name: 'ชื่อ', FG_ID: 'รหัสสินค้า', FG_Name: 'ชื่อสินค้า', Category: 'หมวดหมู่', Unit: 'หน่วย',
   MinStock: 'ขั้นต่ำ', Supplier: 'ซัพพลายเออร์', Note: 'หมายเหตุ', Qty: 'จำนวน', QtyIssued: 'จำนวนเบิก', QtyProduced: 'จำนวนผลิต',
-  QtyPerUnit: 'ปริมาณ/หน่วย', ScrapSteps: '%Scrap', PlanQty: 'จำนวนแผน', PlanDate: 'วันที่ผลิต', OrderQty: 'จำนวนสั่ง',
+  QtyPerUnit: 'ปริมาณ/หน่วย', ScrapSteps: '%Scrap', PlanQty: 'จำนวนแผน', PlanDate: 'วันที่เริ่มผลิต', PlanEndDate: 'วันที่ผลิตถึง', OrderQty: 'จำนวนสั่ง',
   CustomerName: 'ลูกค้า', Status: 'สถานะ', Lot: 'Lot', ProdLot: 'Lot ผลิต', ExpDate: 'วันหมดอายุ', MfgDate: 'วันผลิต',
   ReceiveDate: 'วันที่รับ', HarvestDate: 'วันที่ผลิต', Reason: 'สาเหตุ', MO_ID: 'MO', Order_ID: 'CO', ShelfLifeDays: 'อายุ (วัน)',
   FirstName: 'ชื่อ', LastName: 'นามสกุล', NickName: 'ชื่อเล่น', Position: 'ตำแหน่ง', Department: 'แผนก', Phone: 'โทร',
@@ -2612,10 +2820,17 @@ function rmMasterRenderTable() {
   const catRows = _rmMasterCache.filter(r => catMatches(r.Category, filter));
   const sup = _rmMasterFillSuppliers(catRows);
   const rows = catRows.filter(r => !sup || _rmSupplierKey(r) === sup);
-  document.getElementById('rmMasterTableBody').innerHTML = rows.map(r => `
-    <tr><td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}</td><td>${catBadge(r.Category)}${r.SourceRM_ID ? `<div class="small text-muted">${r.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmMasterCache.find(x => x.RM_ID === r.SourceRM_ID)?.RM_Name || r.SourceRM_ID || '—')} · สูญเสีย ${_bomFmtQty(_bomScrapTotal(r.PrepSteps))}%</div>` : ''}</td><td>${esc(r.Unit)}</td><td>${r.MinStock ?? 0}</td><td>${esc(r.Supplier||'-')}</td><td>${esc(r.Note||'')}</td>
+  document.getElementById('rmMasterTableBody').innerHTML = rows.map(r => {
+    // reverse-lookup: รายการที่ทำ/อบมาจากตัวนี้ (SourceRM_ID ชี้กลับมาที่ r) — ให้เห็นจากฝั่งวัตถุดิบต้นทางว่า
+    // "ห้ามเบิกตรง ต้องเตรียมก่อน" และเตรียมได้กี่แบบ โดยไม่ต้องไล่หาเองว่ามีแถวไหนอ้างถึง (ผู้ใช้ขอ 2026-09-26)
+    const targets = _rmMasterCache.filter(x => x.SourceRM_ID === r.RM_ID);
+    const targetsHtml = !targets.length ? '' : `<div class="small mt-1"><i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>ต้องเตรียมก่อนใช้ →
+      ${targets.map(t => `<span class="badge bg-light text-primary border me-1" style="cursor:pointer" onclick="rmMasterOpenForm('${esc(t.RM_ID)}')" title="${esc((t.PrepSteps||[]).map(s=>s.step).join(' → ') || 'ยังไม่ได้ตั้งขั้นตอน')}">${esc(t.RM_Name)}${t.Category === CAT_DRY ? ' (แห้ง)' : ''}</span>`).join('')}
+      </div>`;
+    return `<tr><td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}</td><td>${catBadge(r.Category)}${r.SourceRM_ID ? `<div class="small text-muted">${r.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmMasterCache.find(x => x.RM_ID === r.SourceRM_ID)?.RM_Name || r.SourceRM_ID || '—')} · สูญเสีย ${_bomFmtQty(_bomScrapTotal(r.PrepSteps))}%</div>` : ''}${targetsHtml}</td><td>${esc(r.Unit)}</td><td>${_bomFmtQty(r.MinStock ?? 0)}</td><td>${esc(r.Supplier||'-')}</td><td>${esc(r.Note||'')}</td>
     <td><button class="btn btn-sm btn-outline-primary me-1" onclick="rmMasterOpenForm('${r.RM_ID}')"><i class="fa-solid fa-pen"></i></button>
-    <button class="btn btn-sm btn-outline-danger" onclick="rmMasterDelete('${r.RM_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+    <button class="btn btn-sm btn-outline-danger" onclick="rmMasterDelete('${r.RM_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+  }).join('')
     || '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
 }
 let _rmMasterEditId = null;
@@ -2799,7 +3014,7 @@ async function _renameMasterCode(table, oldId, newId, name) {
 function fgMasterOpenForm(id) {
   _fgMasterEditId = id || null;
   const row = id ? _fgMasterCache.find(r => r.FG_ID === id) : null;
-  _modalClearErrors(['fgm-id', 'fgm-name']);
+  _modalClearErrors(['fgm-id', 'fgm-name', 'fgm-price', 'fgm-capacity']);
   document.getElementById('fgm-icon').className = id ? 'fa-solid fa-pen me-2' : 'fa-solid fa-spa me-2';
   document.getElementById('fgm-title').textContent = id ? 'แก้ไขข้อมูลสินค้า' : 'เพิ่มสินค้า';
   // รหัส FG เป็น PK ที่ตารางอื่น (bom/MO/CO/stock_fg ฯลฯ) อ้างถึง — แก้ได้เฉพาะตอนสร้างใหม่ ล็อกไว้ตอนแก้ไข
@@ -2811,15 +3026,18 @@ function fgMasterOpenForm(id) {
   document.getElementById('fgm-shelf').value = row?.ShelfLifeDays ?? 5;
   document.getElementById('fgm-note').value = row?.Note || '';
   document.getElementById('fgm-price').value = row?.SellPrice ?? '';
+  document.getElementById('fgm-capacity').value = row?.CapacityPerDay ?? '';
   fgMasterSyncPriceUnit();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('fgMasterModal')).show();
 }
 function _fmtBaht(n) { return (parseFloat(n) || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fgMasterSyncPriceUnit() {
-  document.getElementById('fgm-price-unit').textContent = 'บาท/' + (document.getElementById('fgm-unit').value.trim() || 'หน่วย');
+  const u = document.getElementById('fgm-unit').value.trim() || 'หน่วย';
+  document.getElementById('fgm-price-unit').textContent = 'บาท/' + u;
+  document.getElementById('fgm-capacity-unit').textContent = u + '/วัน';
 }
 async function fgMasterModalSave() {
-  _modalClearErrors(['fgm-id', 'fgm-name', 'fgm-price']);
+  _modalClearErrors(['fgm-id', 'fgm-name', 'fgm-price', 'fgm-capacity']);
   const fgId = document.getElementById('fgm-id').value.trim();
   const name = document.getElementById('fgm-name').value.trim();
   if (!fgId) { _modalShowError('fgm-id', 'กรอกรหัส FG'); return; }
@@ -2828,10 +3046,18 @@ async function fgMasterModalSave() {
   const priceRaw = document.getElementById('fgm-price').value.trim();
   const price = priceRaw === '' ? null : Math.round(parseFloat(priceRaw) * 100) / 100;
   if (priceRaw !== '' && !(price >= 0)) { _modalShowError('fgm-price', 'กรอกราคาให้ถูกต้อง'); return; }
-  // คอลัมน์ SellPrice มาจาก migration_2026-09-26_sell_price.sql — ถ้ายังไม่รัน SQL ส่วนแก้ข้อมูลอื่นยังบันทึกได้ (ไม่ส่งราคาเมื่อว่าง)
+  const capacityRaw = document.getElementById('fgm-capacity').value.trim();
+  const capacity = capacityRaw === '' ? null : parseFloat(capacityRaw);
+  if (capacityRaw !== '' && !(capacity > 0)) { _modalShowError('fgm-capacity', 'กรอกกำลังการผลิตให้ถูกต้อง'); return; }
+  // คอลัมน์ SellPrice/CapacityPerDay มาจากไมเกรชันที่รันทีหลัง — ถ้ายังไม่รัน SQL ส่วนแก้ข้อมูลอื่นยังบันทึกได้ (ไม่ส่งค่าที่ยังไม่มีคอลัมน์เมื่อว่าง)
   const priceSupported = _fgMasterCache.some(r => 'SellPrice' in r);
   if (price !== null && !priceSupported && _fgMasterCache.length) {
     Swal.fire('ยังใส่ราคาขายไม่ได้', 'แอดมินต้องรัน <code>migration_2026-09-26_sell_price.sql</code> ใน Supabase ก่อน (หรือลบราคาออกแล้วบันทึก)', 'error');
+    return;
+  }
+  const capacitySupported = _fgMasterCache.some(r => 'CapacityPerDay' in r);
+  if (capacity !== null && !capacitySupported && _fgMasterCache.length) {
+    Swal.fire('ยังใส่กำลังการผลิต/วันไม่ได้', 'แอดมินต้องรัน <code>migration_2026-09-27_capacity_per_day.sql</code> ใน Supabase ก่อน (หรือลบค่านี้ออกแล้วบันทึก)', 'error');
     return;
   }
   if (_fgMasterEditId && fgId !== _fgMasterEditId) {
@@ -2846,6 +3072,7 @@ async function fgMasterModalSave() {
     Note: document.getElementById('fgm-note').value.trim() || null,
   };
   if (priceSupported || price !== null) payload.SellPrice = price;
+  if (capacitySupported || capacity !== null) payload.CapacityPerDay = capacity;
   const ok = await sbRun(_sb.from('product_master').upsert(payload), 'บันทึกสินค้าไม่สำเร็จ');
   if (ok === null) return;
   bootstrap.Modal.getInstance(document.getElementById('fgMasterModal')).hide();
@@ -2978,6 +3205,7 @@ function bomRenderCards() {
           <span class="badge bg-light text-dark border ms-2">หน่วย: ${esc(g.Unit || '—')}</span>
           <span class="badge bg-light text-dark border ms-1"><i class="fa-regular fa-clock me-1"></i>อายุ ${g.ShelfLifeDays ?? '—'} วัน</span>
           ${g.SellPrice != null ? `<span class="badge bg-light text-success border ms-1"><i class="fa-solid fa-tag me-1"></i>${_fmtBaht(g.SellPrice)} บาท/${esc(g.Unit || 'หน่วย')}</span>` : ''}
+          ${g.CapacityPerDay != null ? `<span class="badge bg-light text-primary border ms-1"><i class="fa-solid fa-gauge-high me-1"></i>${_bomFmtQty(g.CapacityPerDay)} ${esc(g.Unit || 'หน่วย')}/วัน</span>` : ''}
           ${g.lines.length
             ? `<span class="text-muted ms-2 small">วัตถุดิบ ${rmCount} · แพ็คเกจจิ้ง ${pkgCount} รายการ</span>`
             : `<span class="badge text-bg-warning ms-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่มีสูตร</span>`}
@@ -3710,6 +3938,8 @@ const EDIT_TYPES = {
     fields: { Qty: 'จำนวน', Reason: 'สาเหตุ', WasteDate: 'วันที่', Note: 'หมายเหตุ' },
     form: [{ k: 'Qty', type: 'number', unit: r => r.Unit, req: true }, { k: 'Reason', type: 'text', req: true }, { k: 'WasteDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
     info: 'เพิ่มจำนวน = ตัดสต็อกล็อตเดิมเพิ่ม · ลดจำนวน = คืนเข้าล็อตเดิม — ปรับตอนแอดมินอนุมัติ' },
+  // ไม่มี form/fields ให้แก้จริง — ใช้แค่ "ขอลบ" (planRequestDelete) ไม่ใช่แก้ไขทีละช่อง ต่างจากประเภทอื่นทั้งหมด
+  manufacturing_orders: { label: 'แผนผลิต (MO)', icon: 'fa-calendar-days', table: 'manufacturing_orders', pk: 'MO_ID' },
 };
 const EDIT_NUM_FIELDS = ['Qty', 'QtyIssued', 'QtyProduced', 'UnitPrice'];
 const RCV_EDIT_STATUS_BADGE = { 'รออนุมัติ': 'warning', 'อนุมัติแล้ว': 'success', 'ไม่อนุมัติ': 'danger', 'ยกเลิก': 'secondary',
@@ -3766,6 +3996,11 @@ function _rcvEditFmtVal(field, v) {
   return esc(v);
 }
 function _rcvEditDiffHtml(changes, type = 'rm_receive') {
+  // MO ไม่มีช่องให้แก้จริง — Changes เก็บสถานะตอนขอไว้แค่เช็คว่าเปลี่ยนไปหรือยัง (ดู migration_2026-09-28_mo_delete_request.sql)
+  // ไม่ใช่ค่าที่ต้องโชว์เป็น "จาก → เป็น" แบบคำขอแก้ไขทั่วไป
+  if (type === 'manufacturing_orders') {
+    return `<div class="small text-danger"><i class="fa-solid fa-trash me-1"></i><b>ขอลบ MO ทั้งใบ</b><div class="text-muted">อนุมัติแล้วจะคืนวัตถุดิบที่เบิกไปทั้งหมดกลับเข้าสต็อกให้อัตโนมัติ</div></div>`;
+  }
   const labels = EDIT_TYPES[type]?.fields || {};
   return Object.entries(changes || {}).map(([f, [from, to]]) =>
     `<div class="small"><b>${esc(labels[f] || f)}:</b> <span class="text-danger text-decoration-line-through">${_rcvEditFmtVal(f, from)}</span>
@@ -3777,11 +4012,12 @@ function _editRecLabel(type, rec) {
   const rm = id => _rmMasterCache.find(r => r.RM_ID === id)?.RM_Name || id;
   const fg = id => _fgMasterCache.find(f => f.FG_ID === id)?.FG_Name || id;
   switch (type) {
-    case 'rm_receive': return [rm(rec.RM_ID), `รับ ${fmtDateLong(rec.ReceiveDate)} · ${_bomFmtQty(rec.Qty)} ${rec.Unit || ''} · Lot ${rec.Lot || '-'}`];
+    case 'rm_receive': return [rm(rec.RM_ID), `รับ ${fmtDateLong(rec.ReceiveDate)} · ${_bomFmtQty(rec.Qty)} ${rec.Unit || ''} · ${rec.Lot || '-'}`];
     case 'issue_production': return [rm(rec.RM_ID), `${rec.MO_ID} · เบิก ${_bomFmtQty(rec.QtyIssued)} ${rec.Unit || ''} · ${fmtDateLong(rec.IssueDate)}`];
-    case 'production_records': return [fg(rec.FG_ID), `Lot ${rec.ProdLot} · ${_bomFmtQty(rec.QtyProduced)} · ผลิต ${fmtDateLong(rec.MfgDate)}`];
-    case 'fg_receive': return [fg(rec.FG_ID), `Lot ${rec.Lot} · ${_bomFmtQty(rec.Qty)} · รับ ${fmtDateLong(rec.ReceiveDate)}`];
+    case 'production_records': return [fg(rec.FG_ID), `${rec.ProdLot} · ${_bomFmtQty(rec.QtyProduced)} · ผลิต ${fmtDateLong(rec.MfgDate)}`];
+    case 'fg_receive': return [fg(rec.FG_ID), `${rec.Lot} · ${_bomFmtQty(rec.Qty)} · รับ ${fmtDateLong(rec.ReceiveDate)}`];
     case 'waste_log': return [rec.ItemType === 'FG' ? fg(rec.FG_ID) : rm(rec.RM_ID), `${_bomFmtQty(rec.Qty)} ${rec.Unit || ''} · ${rec.Reason || ''} · ${fmtDateLong(rec.WasteDate)}`];
+    case 'manufacturing_orders': return [`${rec.MO_ID} · ${fg(rec.FG_ID)}`, `แผน ${_bomFmtQty(rec.PlanQty)} · ${fmtDate(rec.PlanDate)} · สถานะ ${rec.Status}`];
   }
   return ['', ''];
 }
@@ -4349,9 +4585,16 @@ function rcvReportPrint() {
 // STOCK RM / STOCK PACKAGING — share stock_balance (แยกด้วย rm_master.Category)
 // ═══════════════════════════════════════════════════════════
 let _stockRmCache = [];
+// ราคา/หน่วยของแต่ละใบรับ (rm_receive.UnitPrice) — ไว้คำนวณ "มูลค่ารวม" + "ราคาเฉลี่ย" บนการ์ดสต็อก แบบ ProFlow
+// เก็บแยกจาก _receivedCache เพราะหน้าสต็อกไม่ได้โหลดหน้า Received เสมอไป · ไม่มีคอลัมน์นี้ (ยังไม่รัน SQL) = เฉยๆ ไม่โชว์มูลค่า
+let _rmPriceMap = {};
+async function _loadRmPriceMap() {
+  const { data, error } = await _sb.from('rm_receive').select('Receive_ID,UnitPrice').not('UnitPrice', 'is', null);
+  _rmPriceMap = error ? {} : Object.fromEntries(data.map(r => [r.Receive_ID, r.UnitPrice]));
+}
 async function stockRmLoad() {
   if (!_rmMasterCache.length) await rmMasterLoad();
-  const [bal] = await Promise.all([sbRun(_sb.from('stock_balance').select('*'), 'โหลดสต็อก'), rmLotLoad()]);
+  const [bal] = await Promise.all([sbRun(_sb.from('stock_balance').select('*'), 'โหลดสต็อก'), rmLotLoad(), _loadRmPriceMap()]);
   _stockRmCache = bal || [];
   stockRmRenderTable();
   stockPkgRenderTable();
@@ -4362,43 +4605,102 @@ function stockToggleLots(rmId) {
   stockRmRenderTable();
   stockPkgRenderTable();
 }
-// categories = หมวดที่หน้านี้แสดง (หน้า Raw Material แสดงทั้งวัตถุดิบสดและพร้อมผลิต เลือกกรองได้)
-function _stockRenderByCategory(categories, searchInputId, tbodyId) {
+// รหัสหมวดของ rm_master → ค่าตัวกรอง scType ของหน้า Stock Card (ไว้กดปุ่ม "ดูการ์ดสต็อก" แล้วพาไปพร้อมเลือกรายการให้)
+const CAT_TO_SCTYPE = { 'วัตถุดิบ': 'rm', [CAT_DRY]: 'dry', [CAT_CHEM]: 'chem', [CAT_PREP]: 'prep', [CAT_PKG]: 'pkg' };
+// เปิดหน้า Stock Card พร้อมเลือกประเภท+รายการให้ทันที — showPage('stockcard') โหลดรายการของ scType เดิมก่อน
+// (ตาม PAGE_LOADERS) จึงต้องตั้งประเภท/รายการที่ต้องการ "หลัง" โหลดเสร็จ ไม่งั้นค่าที่ตั้งจะถูกทับ
+async function goStockCard(scType, id) {
+  await showPage('stockcard');
+  document.getElementById('scType').value = scType;
+  stockCardLoadItems();   // เติมตัวเลือกรายการของ scType นี้ใหม่ (เรียก stockCardRender() ในตัวด้วย)
+  const sel = document.getElementById('scItem');
+  if ([...sel.options].some(o => o.value === id)) sel.value = id;
+  stockCardRender();
+}
+// สถานะสต็อก (ตัวกรอง + สีขอบซ้าย) ใช้ร่วมกันทั้งวัตถุดิบและแพ็คเกจจิ้ง
+function _stockStatus(qty, minStock) {
+  if (qty < 0) return { key: 'low', html: badge('ติดลบ', 'danger') };
+  if (qty < (minStock ?? 0)) return { key: 'low', html: badge('ต่ำกว่าขั้นต่ำ', 'danger') };
+  return { key: 'ok', html: badge('ปกติ', 'success') };
+}
+// ตัวเรียงลำดับที่ใช้ร่วมกันทุกหน้า Stock (Raw Material / Packaging / Finished Goods)
+// item ต้องมี sortCode (รหัส) / sortExp (วันหมดอายุของล็อตที่ใกล้สุด หรือ null) / sortOld (วันที่รับ/ผลิตของล็อตเก่าสุด หรือ null)
+// รายการที่ไม่มีวันที่ (เช่นยังไม่มีล็อตเลย) ถูกดันไปท้ายสุดเสมอไม่ว่าจะเรียงแบบไหน
+function _stockApplySort(items, mode, defaultCmp) {
+  const byNullLast = key => (a, b) => (a[key] ? 0 : 1) - (b[key] ? 0 : 1) || String(a[key]).localeCompare(String(b[key]));
+  const cmp = { 'code-asc': (a, b) => a.sortCode.localeCompare(b.sortCode, 'th'), 'exp-asc': byNullLast('sortExp'), 'oldest-asc': byNullLast('sortOld') }[mode];
+  items.sort(cmp || defaultCmp);
+}
+// การ์ดแบบ ProFlow: หัวการ์ดกดขยายดูล็อต + คลัสเตอร์ขวา (ล็อต/ยอด/มูลค่า/หมดอายุ/สถานะ) + ปุ่ม "ดูการ์ดสต็อก"
+// categories = หมวดที่หน้านี้แสดง (หน้า Raw Material แสดงทั้งวัตถุดิบสด/แห้ง/เคมี/พร้อมผลิต เลือกกรองได้)
+function _stockRenderByCategory(categories, searchInputId, containerId, statusFilterId, sortSelectId) {
   const q = (document.getElementById(searchInputId).value || '').toLowerCase();
-  const rows = _rmMasterCache.filter(r => categories.includes(r.Category || 'วัตถุดิบ') &&
-    (!q || [r.RM_ID, r.RM_Name].join(' ').toLowerCase().includes(q)))
-    .sort((a, b) => ((_BOM_CAT_ORDER[a.Category] ?? 9) - (_BOM_CAT_ORDER[b.Category] ?? 9)) || (a.RM_Name || '').localeCompare(b.RM_Name || ''));
-  document.getElementById(tbodyId).innerHTML = rows.map(r => {
-    const s = _stockRmCache.find(x => x.RM_ID === r.RM_ID);
-    const qty = parseFloat(s?.Qty) || 0;
-    const low = qty < (r.MinStock ?? 0);
-    const lots = _lotsFefo(r.RM_ID);                 // เรียงหมดอายุก่อน = ลำดับที่จะถูกเบิก
-    const nearest = lots.find(l => l.ExpDate);
+  const statusF = statusFilterId ? document.getElementById(statusFilterId).value : '';
+  const sortMode = sortSelectId ? document.getElementById(sortSelectId).value : '';
+  let items = _rmMasterCache.filter(r => categories.includes(r.Category || 'วัตถุดิบ') &&
+      (!q || [r.RM_ID, r.RM_Name].join(' ').toLowerCase().includes(q)))
+    .map(r => {
+      const s = _stockRmCache.find(x => x.RM_ID === r.RM_ID);
+      const qty = parseFloat(s?.Qty) || 0;
+      const lots = _lotsFefo(r.RM_ID);                 // เรียงหมดอายุก่อน = ลำดับที่จะถูกเบิก
+      const nearest = lots.find(l => l.ExpDate);
+      const oldest = lots.reduce((min, l) => l.ReceiveDate && (!min || l.ReceiveDate < min) ? l.ReceiveDate : min, null);
+      return { r, qty, lots, nearest, st: _stockStatus(qty, r.MinStock), sortCode: r.RM_ID, sortExp: nearest?.ExpDate || null, sortOld: oldest };
+    })
+    .filter(it => !statusF || it.st.key === statusF);
+  _stockApplySort(items, sortMode, (a, b) => ((_BOM_CAT_ORDER[a.r.Category] ?? 9) - (_BOM_CAT_ORDER[b.r.Category] ?? 9)) || (a.r.RM_Name || '').localeCompare(b.r.RM_Name || '', 'th'));
+  const cards = items.map(({ r, qty, lots, nearest, st }) => {
     const expanded = _stockLotExpanded.has(r.RM_ID);
-    const status = qty < 0 ? badge('ติดลบ', 'danger') : low ? badge('ต่ำกว่าขั้นต่ำ', 'danger') : badge('ปกติ', 'success');
-    const main = `<tr${lots.length ? ` style="cursor:pointer" data-rm="${esc(r.RM_ID)}" onclick="stockToggleLots(this.dataset.rm)" title="กดเพื่อดูรายล็อต"` : ''}>
-      <td class="text-center text-muted">${lots.length ? `<i class="fa-solid fa-chevron-${expanded ? 'down' : 'right'}"></i>` : ''}</td>
-      <td>${esc(r.RM_ID)}</td><td>${esc(r.RM_Name)}${[CAT_PREP, CAT_DRY, CAT_CHEM].includes(r.Category) ? ` ${catBadge(r.Category)}` : ''}</td><td class="text-end fw-semibold">${_bomFmtQty(qty)}</td><td>${esc(r.Unit)}</td>
-      <td class="text-end">${_bomFmtQty(r.MinStock ?? 0)}</td>
-      <td>${lots.length ? `${lots.length} ล็อต` : '<span class="text-muted">—</span>'}</td>
-      <td class="text-nowrap">${nearest ? _expBadge(nearest.ExpDate) : '<span class="text-muted">—</span>'}</td>
-      <td>${status}</td></tr>`;
-    if (!expanded || !lots.length) return main;
-    return main + `<tr class="table-light"><td></td><td colspan="8" class="py-2">
-      <table class="table table-sm mb-0 bg-white"><thead><tr><th>#</th><th>Lot</th><th>ใบรับ / ใบเตรียม</th><th>วันที่รับ</th><th class="text-end">คงเหลือ / รับเข้า</th><th>หมดอายุ</th></tr></thead><tbody>
-      ${lots.map((l, i) => `<tr><td class="text-muted">${i + 1}</td><td>${esc(_lotLabel(l))}</td><td class="small">${esc(l.Receive_ID || (l.Lot_ID?.startsWith('OPEN-') ? '—' : l.Lot_ID))}</td>
-        <td>${fmtDate(l.ReceiveDate)}</td><td class="text-end"><b>${_bomFmtQty(l.Qty)}</b> / ${_bomFmtQty(l.QtyReceived)} ${esc(l.Unit || r.Unit)}</td>
-        <td class="text-nowrap">${_expBadge(l.ExpDate)}</td></tr>`).join('')}
-      </tbody></table>
-      <div class="small text-muted mt-1"><i class="fa-solid fa-circle-info me-1"></i>เรียงตามลำดับที่จะถูกเบิกเข้าสาย (หมดอายุก่อนใช้ก่อน)</div>
-    </td></tr>`;
-  }).join('') || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
+    // มูลค่ารวม + ราคาเฉลี่ย จากราคา/หน่วยของใบรับแต่ละล็อต (เฉพาะล็อตที่ทราบราคา — migration_2026-09-26_receive_note_price.sql)
+    let value = 0, pricedQty = 0;
+    lots.forEach(l => { const p = l.Receive_ID && _rmPriceMap[l.Receive_ID]; if (p != null) { value += p * l.Qty; pricedQty += l.Qty; } });
+    const cardCls = st.key === 'low' ? ' stock-card-low' : '';
+    const lotDetail = !lots.length ? '' : `<div class="stock-lot-detail" style="${expanded ? '' : 'display:none'}"><div class="table-responsive"><table class="table table-sm mb-0 stock-lot-table">
+      <thead><tr><th>Lot</th><th class="text-end">คงเหลือ / หน่วย</th><th>หมดอายุ</th><th class="text-end">ราคา/หน่วย</th><th class="text-end">มูลค่า</th><th class="text-end">รับเข้า</th><th class="text-end">จ่ายออก</th></tr></thead><tbody>
+      ${lots.map(l => {
+        const price = l.Receive_ID ? _rmPriceMap[l.Receive_ID] : null;
+        const lotValue = price != null ? price * l.Qty : null;
+        const used = (parseFloat(l.QtyReceived) || 0) - (parseFloat(l.Qty) || 0);
+        const traceId = l.Receive_ID || (l.Lot_ID?.startsWith('OPEN-') ? 'ยอดยกมา' : l.Lot_ID);
+        return `<tr>
+          <td title="${esc(traceId)}">${esc(_lotLabel(l))}</td>
+          <td class="text-end"><b class="text-primary">${_bomFmtQty(l.Qty)}</b> ${esc(l.Unit || r.Unit)}</td>
+          <td class="text-nowrap text-muted">${l.ExpDate ? fmtDate(l.ExpDate) : '—'}</td>
+          <td class="text-end text-primary">${price != null ? '฿' + _fmtBaht(price) : '<span class="text-muted">—</span>'}</td>
+          <td class="text-end text-success fw-semibold">${lotValue != null ? '฿' + _fmtBaht(lotValue) : '<span class="text-muted">—</span>'}</td>
+          <td class="text-end text-success fw-semibold">${_bomFmtQty(l.QtyReceived)}</td>
+          <td class="text-end${used > 0 ? ' text-danger fw-semibold' : ' text-muted'}">${_bomFmtQty(used)}</td>
+        </tr>`;
+      }).join('')}
+      </tbody></table></div>
+      <div class="small text-muted px-3 pb-2"><i class="fa-solid fa-circle-info me-1"></i>เรียงตามลำดับที่จะถูกเบิกเข้าสาย (หมดอายุก่อนใช้ก่อน)</div>
+    </div>`;
+    return `<div class="glass-card stock-card${cardCls}">
+      <div class="stock-card-head${expanded ? ' expanded' : ''}" ${lots.length ? `onclick="stockToggleLots('${esc(r.RM_ID)}')" title="กดเพื่อดูรายล็อต"` : ''}>
+        <span class="code">${esc(r.RM_ID)}</span>
+        ${[CAT_PREP, CAT_DRY, CAT_CHEM].includes(r.Category) ? catBadge(r.Category) : ''}
+        <span class="name">${esc(r.RM_Name)}</span>
+        <span class="meta">
+          <i class="fa-solid fa-layer-group me-1 opacity-50"></i>${lots.length ? `${lots.length} ล็อต` : 'ไม่มีล็อต'}<span class="sep">·</span>
+          <b>${_bomFmtQty(qty)}</b>&nbsp;${esc(r.Unit)}<span class="sep">·</span>
+          ${pricedQty > 0 ? `<span class="val">฿${_fmtBaht(value)}</span><span class="sep">·</span><span class="avg" title="ราคาเฉลี่ยของล็อตที่ทราบราคา">เฉลี่ย ฿${_fmtBaht(value / pricedQty)}/${esc(r.Unit)}</span><span class="sep">·</span>` : ''}
+          ขั้นต่ำ ${_bomFmtQty(r.MinStock ?? 0)}
+          ${nearest ? `<span class="sep">·</span><i class="fa-solid fa-calendar-days me-1 opacity-50"></i>${_expBadge(nearest.ExpDate)}` : ''}
+        </span>
+        ${st.html}
+        <button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:.72rem" onclick="event.stopPropagation();goStockCard('${CAT_TO_SCTYPE[r.Category || 'วัตถุดิบ'] || 'rm'}','${esc(r.RM_ID)}')" title="ดูการ์ดสต็อก"><i class="fa-solid fa-clipboard-list"></i></button>
+        ${lots.length ? '<i class="fa-solid fa-chevron-down chevron"></i>' : '<span class="chevron"></span>'}
+      </div>
+      ${lotDetail}
+    </div>`;
+  });
+  document.getElementById(containerId).innerHTML = cards.join('') || '<div class="glass-card text-center text-muted py-4">ยังไม่มีข้อมูล</div>';
 }
 function stockRmRenderTable() {
   const f = document.getElementById('stockRmCatFilter').value;
-  _stockRenderByCategory(f ? [f] : [...CAT_RAW_GROUP, CAT_PREP], 'stockRmSearch', 'stockRmTableBody');
+  _stockRenderByCategory(f ? [f] : [...CAT_RAW_GROUP, CAT_PREP], 'stockRmSearch', 'stockRmCards', 'stockRmStatusFilter', 'stockRmSort');
 }
-function stockPkgRenderTable() { _stockRenderByCategory(['แพ็คเกจจิ้ง'], 'stockPkgSearch', 'stockPkgTableBody'); }
+function stockPkgRenderTable() { _stockRenderByCategory([CAT_PKG], 'stockPkgSearch', 'stockPkgCards', 'stockPkgStatusFilter', 'stockPkgSort'); }
 async function stockPkgLoad() { await stockRmLoad(); }
 
 // ═══════════════════════════════════════════════════════════
@@ -4421,7 +4723,7 @@ function coRenderTable() {
   const q = (document.getElementById('coSearch').value || '').toLowerCase();
   const rows = _coCache.filter(c => !q || JSON.stringify(c).toLowerCase().includes(q));
   document.getElementById('coTableBody').innerHTML = rows.map(c => `
-    <tr><td>${esc(c.Order_ID)}</td><td>${esc(c.CustomerName)}</td><td>${esc(fgMap[c.FG_ID]?.FG_Name || c.FG_ID)}</td><td>${c.OrderQty}</td><td>${coWithdrawnQty(c.Order_ID)}</td><td>${fmtDate(c.NeedDate)}</td><td>${badge(c.Status, CO_STATUS_BADGE[c.Status])}</td>
+    <tr><td>${esc(c.Order_ID)}</td><td>${esc(c.CustomerName)}</td><td>${esc(fgMap[c.FG_ID]?.FG_Name || c.FG_ID)}</td><td>${_bomFmtQty(c.OrderQty)}</td><td>${_bomFmtQty(coWithdrawnQty(c.Order_ID))}</td><td>${fmtDate(c.NeedDate)}</td><td>${badge(c.Status, CO_STATUS_BADGE[c.Status])}</td>
     <td><button class="btn btn-sm btn-outline-danger" onclick="coDelete('${c.Order_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
     || '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มีคำสั่งซื้อ</td></tr>';
 }
@@ -4463,37 +4765,156 @@ async function planLoad() {
   if (!_fgMasterCache.length) await fgMasterLoad();
   if (!_coCache.length) await coLoad();
   _planCache = await sbRun(_sb.from('manufacturing_orders').select('*').order('PlanDate', { ascending: false }), 'โหลดแผนผลิต') || [];
+  await rcvEditLoadPending();   // ต้องรู้ว่า MO ไหนมีคำขอลบรออนุมัติอยู่ ก่อนวาดปุ่มจัดการ
   planRenderTable();
+  moCalRender();
 }
 function planRenderTable() {
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const q = (document.getElementById('planSearch').value || '').toLowerCase();
   const rows = _planCache.filter(p => !q || JSON.stringify(p).toLowerCase().includes(q));
-  document.getElementById('planTableBody').innerHTML = rows.map(p => `
-    <tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${p.PlanQty}</td><td>${fmtDate(p.PlanDate)}</td><td>${esc(p.Shift||'-')}</td><td>${esc(p.Order_ID||'-')}</td><td>${badge(p.Status, MO_STATUS_BADGE[p.Status])}</td>
-    <td>${p.Status === 'วางแผน' ? `<button class="btn btn-sm btn-outline-danger" onclick="planDelete('${p.MO_ID}')"><i class="fa-solid fa-trash"></i></button>` : ''}</td></tr>`).join('')
+  document.getElementById('planTableBody').innerHTML = rows.map(p => {
+    let actions;
+    if (p.Status === 'วางแผน') {
+      actions = `<button class="btn btn-sm btn-outline-primary me-1" onclick="planOpenForm('${p.MO_ID}')" title="แก้ไข"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="planDelete('${p.MO_ID}')" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
+    } else if (_editPendingFor('manufacturing_orders', p.MO_ID)) {
+      actions = `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอลบรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
+    } else {
+      actions = `<button class="btn btn-sm btn-outline-danger" onclick="planRequestDelete('${p.MO_ID}')" title="เบิกวัตถุดิบไปแล้ว แก้ไขไม่ได้ — ขอลบ (รอแอดมินอนุมัติ)"><i class="fa-solid fa-trash"></i></button>`;
+    }
+    return `<tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td>
+    <td>${p.PlanEndDate && p.PlanEndDate !== p.PlanDate ? `${fmtDate(p.PlanDate)} - ${fmtDate(p.PlanEndDate)}` : fmtDate(p.PlanDate)}</td>
+    <td>${esc(p.Lot||'-')}</td><td>${esc(p.Order_ID||'-')}</td><td>${badge(p.Status, MO_STATUS_BADGE[p.Status])}</td>
+    <td class="text-nowrap">${actions}</td></tr>`;
+  }).join('')
     || '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มีแผนผลิต</td></tr>';
 }
-function planOpenForm() {
+// MO เบิกวัตถุดิบไปแล้ว (Status ไม่ใช่ "วางแผน") — แก้ไขไม่ได้ ลบตรงไม่ได้ ต้องส่งคำขอให้แอดมินอนุมัติก่อน
+// (อนุมัติแล้วระบบคืนวัตถุดิบที่เบิกไปทั้งหมดกลับเข้าสต็อกให้อัตโนมัติ — ดู migration_2026-09-28_mo_delete_request.sql)
+async function planRequestDelete(id) {
+  const mo = _planCache.find(m => m.MO_ID === id);
+  const { value: reason } = await Swal.fire({
+    icon: 'warning', title: `ขอลบ MO ${id}?`,
+    html: `<div class="small text-start mb-2">MO นี้เบิกวัตถุดิบไปแล้ว (สถานะ: ${esc(mo?.Status || '')}) — ลบไม่ได้ทันที ต้องส่งคำขอให้แอดมินอนุมัติก่อน<br>ถ้าอนุมัติ ระบบจะคืนวัตถุดิบที่เบิกไปทั้งหมดกลับเข้าสต็อกให้อัตโนมัติ</div>`,
+    input: 'textarea', inputPlaceholder: 'เหตุผลที่ขอลบ', inputAttributes: { 'aria-label': 'เหตุผลที่ขอลบ' },
+    inputValidator: v => !v?.trim() ? 'กรุณาระบุเหตุผล' : undefined,
+    showCancelButton: true, confirmButtonText: 'ส่งคำขอลบ', cancelButtonText: 'ยกเลิก',
+  });
+  if (!reason) return;
+  const { error } = await _sb.rpc('mo_delete_request_create', { p_mo_id: id, p_reason: reason.trim() });
+  if (error) {
+    const notSetup = error.code === 'PGRST202' || /mo_delete_request_create|manufacturing_orders/.test(error.message || '') && /not find|does not exist|schema cache/i.test(error.message || '');
+    Swal.fire('ส่งคำขอไม่สำเร็จ', notSetup ? 'แอดมินต้องรัน <code>migration_2026-09-28_mo_delete_request.sql</code> ใน Supabase ก่อน' : esc(error.message), 'error');
+    return;
+  }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: 'ส่งคำขอลบแล้ว — รอแอดมินอนุมัติ' });
+  await Promise.all([planLoad(), rcvEditLoadPending()]);
+}
+// id: แก้ไข MO เดิม (เฉพาะสถานะ "วางแผน" — เบิกวัตถุดิบไปแล้วแก้ไม่ได้ เพราะเบิกไปแล้วอิงจำนวน/สูตรตอนนั้น
+// ไปแล้ว แก้ทีหลังจะทำให้ตัวเลขที่เบิกไปกับแผนใหม่ไม่ตรงกัน) — ไม่ใส่ id = สร้างใหม่ เหมือนเดิม
+let _planEditId = null;
+function planOpenForm(id) {
   if (!_fgMasterCache.length) { Swal.fire('ยังไม่มีสินค้า', 'กรุณาเพิ่มสินค้าใน "สูตรแม่บท (BOM Master)" ก่อน', 'info'); return; }
-  _modalClearErrors(['pln-qty']);
+  _planEditId = id || null;
+  const row = id ? _planCache.find(m => m.MO_ID === id) : null;
+  _modalClearErrors(['pln-qty', 'pln-lot']);
+  document.getElementById('pln-modal-title').textContent = id ? `แก้ไขคำสั่งผลิต (MO) — ${id}` : 'สร้างคำสั่งผลิต (MO)';
+  document.getElementById('pln-modal-savebtn').textContent = id ? 'บันทึก' : 'สร้าง MO';
   document.getElementById('pln-fg').innerHTML = _fgMasterCache.map(f => `<option value="${esc(f.FG_ID)}">${esc(f.FG_Name)}</option>`).join('');
-  document.getElementById('pln-qty').value = '';
-  document.getElementById('pln-date').value = todayStr();
-  document.getElementById('pln-shift').value = 'เช้า';
-  const openCo = _coCache.filter(c => !_coDoneStatuses.includes(c.Status));
+  if (row) document.getElementById('pln-fg').value = row.FG_ID;
+  document.getElementById('pln-days').value = '';
+  document.getElementById('pln-qty').value = row?.PlanQty ?? '';
+  document.getElementById('pln-date').value = row?.PlanDate || todayStr();
+  document.getElementById('pln-lot').value = row?.Lot || _genLotForDate(document.getElementById('pln-date').value);
+  const openCo = _coCache.filter(c => !_coDoneStatuses.includes(c.Status) || c.Order_ID === row?.Order_ID);
   document.getElementById('pln-co').innerHTML = '<option value="">-- ไม่อ้างอิง CO (ผลิตสต็อกล่วงหน้า) --</option>' + openCo.map(c => `<option value="${esc(c.Order_ID)}">${esc(c.Order_ID)} — ${esc(c.CustomerName)}</option>`).join('');
+  if (row) document.getElementById('pln-co').value = row.Order_ID || '';
+  planFgChanged();
+  _planUpdateDateRangeHint();
   new bootstrap.Modal(document.getElementById('planModal')).show();
 }
+// เลือกสินค้า → โชว์กำลังการผลิต/วัน (ถ้าตั้งไว้) และเปิด/ปิดช่อง "จะผลิตกี่วัน" ตามนั้น
+function planFgChanged() {
+  const fg = _fgMasterCache.find(f => f.FG_ID === document.getElementById('pln-fg').value);
+  const daysEl = document.getElementById('pln-days');
+  const hint = document.getElementById('pln-capacity-hint');
+  if (fg?.CapacityPerDay > 0) {
+    hint.textContent = `(กำลังผลิต ${_bomFmtQty(fg.CapacityPerDay)} ${fg.Unit || 'หน่วย'}/วัน)`;
+    daysEl.disabled = false;
+  } else {
+    hint.textContent = '(สินค้านี้ยังไม่ได้ตั้งกำลังการผลิต/วัน — ตั้งได้ที่หน้า "สูตรแม่บท")';
+    daysEl.disabled = true; daysEl.value = '';
+  }
+  planDaysChanged();
+}
+// เปลี่ยนวันที่เริ่มผลิต → ตั้ง Lot ใหม่ตามวันที่นี้ (รูปแบบเดียวกับ genId แต่ใช้วันที่ที่เลือก ไม่ใช่วันนี้)
+function planDateChanged() {
+  document.getElementById('pln-lot').value = _genLotForDate(document.getElementById('pln-date').value);
+  _planUpdateDateRangeHint();
+}
+// จำนวนวัน × กำลังการผลิต/วัน → เติมลง "จำนวนที่จะผลิต" ให้อัตโนมัติ — ยังแก้จำนวนเองทับได้เสมอ
+function planDaysChanged() {
+  const fg = _fgMasterCache.find(f => f.FG_ID === document.getElementById('pln-fg').value);
+  const days = parseFloat(document.getElementById('pln-days').value);
+  if (fg?.CapacityPerDay > 0 && days > 0) {
+    document.getElementById('pln-qty').value = Math.round(fg.CapacityPerDay * days * 10000) / 10000;
+  }
+  _planUpdateDateRangeHint();
+}
+// วันที่เริ่ม + (จำนวนวัน − 1) = วันสุดท้าย เช่น เริ่ม 28 ก.ย. ผลิต 2 วัน → 28–29 ก.ย. (ผู้ใช้ขอ 2026-09-28
+// ให้รู้ว่า Lot นี้ผลิตวันไหนบ้าง ไม่ใช่แค่วันเริ่ม)
+function _planDaysCount() { return Math.max(1, parseInt(document.getElementById('pln-days').value) || 1); }
+function _planEndDate() {
+  const start = document.getElementById('pln-date').value || todayStr();
+  const days = _planDaysCount();
+  return days > 1 ? addDays(start, days - 1) : start;
+}
+function _planUpdateDateRangeHint() {
+  const start = document.getElementById('pln-date').value;
+  const hint = document.getElementById('pln-daterange-hint');
+  if (!start) { hint.textContent = ''; return; }
+  const days = _planDaysCount();
+  const end = _planEndDate();
+  hint.innerHTML = `<i class="fa-regular fa-calendar-days me-1"></i>` + (days > 1
+    ? `ผลิตวันที่ ${fmtDateLong(start)} ถึง ${fmtDateLong(end)} (${days} วัน)`
+    : `ผลิตวันที่ ${fmtDateLong(start)}`);
+}
+// เลข MO ถัดไป = "ปี-ครั้ง" เช่น 2026-001 (ผู้ใช้ขอ 2026-09-28, เดิมสุ่ม MO-YYMMDD-XXXX) — อ่านเลขสูงสุดของปี
+// ปัจจุบันจาก DB ทุกครั้งแล้ว +1 (กติกาเดียวกับ _rrptSuggestNo ของเลข RC No — กันชนกันข้ามเครื่องได้ไม่สมบูรณ์
+// 100% แต่พอกันได้เพราะ MO_ID เป็น primary key ถ้าชนกันจริงๆ DB จะปฏิเสธให้กดสร้างใหม่แทนที่จะได้เลขซ้ำ)
+async function _nextMoId() {
+  const year = new Date().getFullYear();
+  const prefix = `${year}-`;
+  const { data, error } = await _sb.from('manufacturing_orders').select('MO_ID').like('MO_ID', `${prefix}%`);
+  if (error) return `${prefix}001`;
+  const re = new RegExp(`^${year}-(\\d+)$`);
+  const max = Math.max(0, ...(data || []).map(r => (r.MO_ID.match(re) || [])[1]).filter(Boolean).map(Number));
+  return `${prefix}${String(max + 1).padStart(3, '0')}`;
+}
 async function planModalSave() {
-  _modalClearErrors(['pln-qty']);
+  _modalClearErrors(['pln-qty', 'pln-lot']);
   const qty = parseFloat(document.getElementById('pln-qty').value);
   if (!qty || qty <= 0) { _modalShowError('pln-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  const lot = document.getElementById('pln-lot').value.trim();
+  if (!lot) { _modalShowError('pln-lot', 'กรอก Lot'); return; }
+  // คอลัมน์ Lot/PlanEndDate มาจาก migration_2026-09-28_mo_lot.sql — ถ้ายังไม่รัน SQL แจ้งให้รันก่อนแทนที่จะโชว์ error ของ Postgres ตรงๆ
+  const lotSupported = _planCache.some(r => 'Lot' in r);
+  if (!lotSupported && _planCache.length) {
+    Swal.fire('ยังใส่ Lot ไม่ได้', 'แอดมินต้องรัน <code>migration_2026-09-28_mo_lot.sql</code> ใน Supabase ก่อน', 'error');
+    return;
+  }
   const payload = {
-    MO_ID: genId('MO'), FG_ID: document.getElementById('pln-fg').value, Order_ID: document.getElementById('pln-co').value || null,
-    PlanQty: qty, PlanDate: document.getElementById('pln-date').value || todayStr(), Shift: document.getElementById('pln-shift').value, Status: 'วางแผน',
+    FG_ID: document.getElementById('pln-fg').value, Order_ID: document.getElementById('pln-co').value || null,
+    PlanQty: qty, PlanDate: document.getElementById('pln-date').value || todayStr(), PlanEndDate: _planEndDate(), Lot: lot,
   };
-  const ok = await sbRun(_sb.from('manufacturing_orders').insert(payload), 'สร้าง MO ไม่สำเร็จ');
+  let ok;
+  if (_planEditId) {
+    ok = await sbRun(_sb.from('manufacturing_orders').update(payload).eq('MO_ID', _planEditId), 'แก้ไข MO ไม่สำเร็จ');
+  } else {
+    payload.MO_ID = await _nextMoId();
+    payload.Status = 'วางแผน';
+    ok = await sbRun(_sb.from('manufacturing_orders').insert(payload), 'สร้าง MO ไม่สำเร็จ');
+  }
   if (ok === null) return;
   bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
   planLoad();
@@ -4502,6 +4923,87 @@ async function planDelete(id) {
   const c = await Swal.fire({ title: 'ลบ MO นี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
   if (await sbDelete('manufacturing_orders', 'MO_ID', id)) planLoad();
+}
+
+// ═══════════════════════════════════════════════════════════
+// ปฏิทินแผนผลิต (หน้า แผนผลิต/MO) — พอร์ตมาจากปฏิทินของ ProFlow (ผู้ใช้ขอ 2026-09-28 "เหมือน Proflow"):
+// grid 7 คอลัมน์, วันอาทิตย์ = วันหยุดตายตัว (ไม่มีตารางวันหยุดแยก เหมือนต้นฉบับ), สูงสุด 3 ชิปต่อวันแล้วขึ้น
+// "+N เพิ่มเติม", กดที่ตัวช่องทั้งช่อง (ไม่ใช่แค่ชิป) เปิดดูรายละเอียดวัน
+// ต่างจาก ProFlow ตรงที่ 1 MO ครอบคลุมได้หลายวัน (PlanDate..PlanEndDate จากฟีเจอร์ "จะผลิตกี่วัน" — ดูด้านบน)
+// จึงต้องกระจาย MO เดียวกันให้ขึ้นซ้ำทุกวันในช่วงนั้น ไม่ใช่วันเดียวแบบ production_plan ของ ProFlow และไม่มี
+// คอนเซปต์ "ไลน์ผลิต" (ตัดออกตั้งแต่สร้างหน้า BOM — ดู skill file) จึงใช้สีชิปตามสถานะ MO แทนสีตามไลน์
+// ═══════════════════════════════════════════════════════════
+let _moCalCurrentMonth = null;
+const MO_CAL_CHIP_CLS = { 'วางแผน': 'st-plan', 'เบิกวัตถุดิบแล้ว': 'st-issued', 'ผลิตแล้ว': 'st-produced', 'ปิดงาน': 'st-closed' };
+function _moCalDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+function moCalChangeMonth(delta) {
+  if (!_moCalCurrentMonth) _moCalCurrentMonth = new Date();
+  _moCalCurrentMonth = new Date(_moCalCurrentMonth.getFullYear(), _moCalCurrentMonth.getMonth() + delta, 1);
+  moCalRender();
+}
+// MO ครอบคลุมวันไหนบ้าง (PlanDate..PlanEndDate) → dateStr[] ทุกวันในช่วง รวมวันเริ่ม-สิ้นสุด
+function _moCalDatesOf(mo) {
+  const start = new Date(mo.PlanDate + 'T00:00:00');
+  const end = mo.PlanEndDate ? new Date(mo.PlanEndDate + 'T00:00:00') : start;
+  const out = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) out.push(_moCalDateStr(d));
+  return out;
+}
+function _moCalChipHTML(mo, fgMap) {
+  const fg = fgMap[mo.FG_ID];
+  const cls = MO_CAL_CHIP_CLS[mo.Status] || 'st-plan';
+  return `<div class="mocal-chip ${cls}" title="${esc(mo.MO_ID)} · ${esc(fg?.FG_Name || mo.FG_ID)} · ${_bomFmtQty(mo.PlanQty)} ${esc(fg?.Unit || '')}${mo.Lot ? ' · ' + esc(mo.Lot) : ''} · ${esc(mo.Status)}">${esc(fg?.FG_Name || mo.FG_ID)}${mo.Lot ? ` · ${esc(mo.Lot)}` : ''}</div>`;
+}
+function _moCalCellBodyHTML(items, fgMap) {
+  const chips = items.slice(0, 3).map(mo => _moCalChipHTML(mo, fgMap)).join('');
+  const more = items.length > 3 ? `<div class="mocal-chip-more">+${items.length - 3} เพิ่มเติม</div>` : '';
+  return chips + more;
+}
+function moCalRender() {
+  if (!document.getElementById('moCalBody')) return;
+  if (!_moCalCurrentMonth) { const n = new Date(); _moCalCurrentMonth = new Date(n.getFullYear(), n.getMonth(), 1); }
+  const y = _moCalCurrentMonth.getFullYear(), m = _moCalCurrentMonth.getMonth();
+  document.getElementById('moCalMonthLabel').textContent = _moCalCurrentMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const byDate = {};
+  _planCache.forEach(mo => { if (mo.PlanDate) _moCalDatesOf(mo).forEach(ds => { (byDate[ds] ||= []).push(mo); }); });
+  const firstDow = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const todayStr2 = _moCalDateStr(new Date());
+  const prevMonthLastDay = new Date(y, m, 0).getDate();
+  let cells = '';
+  // ช่องปีก่อนหน้า/เดือนก่อนหน้าที่ล้นเข้ามาให้ตารางเต็มแถว — จางลง กดไม่ได้ (เปลี่ยนเดือนด้วยลูกศรแทน เหมือน ProFlow)
+  for (let i = 0; i < firstDow; i++) {
+    const d = prevMonthLastDay - firstDow + 1 + i;
+    const dateStr = _moCalDateStr(new Date(y, m - 1, d));
+    cells += `<div class="mocal-day mocal-outside"><div class="mocal-daynum">${d}</div>${_moCalCellBodyHTML(byDate[dateStr] || [], fgMap)}</div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const isToday = dateStr === todayStr2;
+    const isSunday = new Date(y, m, d).getDay() === 0;
+    cells += `<div class="mocal-day${isToday ? ' mocal-today' : ''}${isSunday ? ' mocal-sunday' : ''}" onclick="moCalOpenDayModal('${dateStr}')">
+      <div class="mocal-daynum">${d}</div>${isSunday ? '<div class="mocal-dayoff">Day Off</div>' : ''}${_moCalCellBodyHTML(byDate[dateStr] || [], fgMap)}
+    </div>`;
+  }
+  const trailing = (7 - ((firstDow + daysInMonth) % 7)) % 7;
+  for (let i = 0; i < trailing; i++) {
+    const d = i + 1;
+    const dateStr = _moCalDateStr(new Date(y, m + 1, d));
+    cells += `<div class="mocal-day mocal-outside"><div class="mocal-daynum">${d}</div>${_moCalCellBodyHTML(byDate[dateStr] || [], fgMap)}</div>`;
+  }
+  document.getElementById('moCalBody').innerHTML = cells;
+}
+function moCalOpenDayModal(dateStr) {
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const items = _planCache.filter(mo => mo.PlanDate && _moCalDatesOf(mo).includes(dateStr));
+  document.getElementById('moCalDayTitle').textContent = `แผนผลิตวันที่ ${fmtDateLong(dateStr)}`;
+  document.getElementById('moCalDayBody').innerHTML = items.map(mo => `<tr>
+      <td>${esc(mo.MO_ID)}</td><td>${esc(fgMap[mo.FG_ID]?.FG_Name || mo.FG_ID)}</td>
+      <td class="text-end">${_bomFmtQty(mo.PlanQty)} ${esc(fgMap[mo.FG_ID]?.Unit || '')}</td>
+      <td>${esc(mo.Lot || '-')}</td><td>${badge(mo.Status, MO_STATUS_BADGE[mo.Status])}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มีแผนผลิตวันนี้</td></tr>';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('moCalDayModal')).show();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -4525,6 +5027,7 @@ async function prepLoad() {
   if (!_rmMasterCache.length) await rmMasterLoad();
   if (!_planCache.length) await planLoad();
   if (!_bomCache.length) await bomLoad();
+  if (!_stockRmCache.length) await stockRmLoad();
   const since = addDays(todayStr(), -30);
   const [res] = await Promise.all([
     _sb.from('prep_orders').select('*').or(`Status.eq.กำลังเตรียม,PrepDate.gte.${since}`).order('CreatedAt', { ascending: false }),
@@ -4537,6 +5040,107 @@ async function prepLoad() {
   }
   _prepCache = res.data || [];
   prepRender();
+  prepPlanRefreshMoOptions();
+}
+// ตัวเลือก MO ร่วม (Status วางแผน) — ใช้ทั้งดรอปดาวน์วางแผนบนหน้าเพจ และในโมดัล "เบิกไปเตรียม"
+function _moOptionsHtml(noneLabel) {
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const opts = _planCache.filter(m => m.Status === 'วางแผน').map(m =>
+    `<option value="${esc(m.MO_ID)}">${esc(m.MO_ID)} · ${esc(fgMap[m.FG_ID]?.FG_Name || m.FG_ID)} × ${_bomFmtQty(m.PlanQty)} (${fmtDate(m.PlanDate)})</option>`).join('');
+  return (noneLabel ? `<option value="">${esc(noneLabel)}</option>` : '') + opts;
+}
+// เลือก MO จาก BOM → โชว์รายการวัตถุดิบพร้อมผลิต/แห้งที่สูตรต้องใช้ ต้องการเท่าไหร่ มีอยู่แล้วเท่าไหร่ ขาดอีกเท่าไหร่ที่ต้องเบิกไปเตรียม
+function prepPlanRefreshMoOptions() {
+  const sel = document.getElementById('prepPlanMo');
+  const cur = sel.value;
+  sel.innerHTML = _moOptionsHtml('— เลือก MO ที่จะผลิต —');
+  if (cur && [...sel.options].some(o => o.value === cur)) sel.value = cur;
+  prepPlanMoChanged();
+}
+function prepPlanMoChanged() {
+  const mo = _planCache.find(m => m.MO_ID === document.getElementById('prepPlanMo').value);
+  document.getElementById('prepPlanQty').value = mo ? mo.PlanQty : '';
+  document.getElementById('prepPlanQtyUnit').textContent = mo ? (_fgMasterCache.find(f => f.FG_ID === mo.FG_ID)?.Unit || '') : '—';
+  prepPlanCalc();
+}
+// อ่านสถานะปัจจุบันของการ์ด "วางแผนจาก MO" — ใช้ร่วมกันทั้งตอนวาดตาราง (prepPlanCalc) และตอนเบิกทั้งหมด (prepPlanBulkIssue)
+// เพื่อไม่ให้สูตรคำนวณ ต้องใช้/มีอยู่แล้ว/ต้องเตรียมเพิ่ม เพี้ยนกันระหว่างสองที่
+function _prepPlanShortfallRows() {
+  const moId = document.getElementById('prepPlanMo').value;
+  const mo = _planCache.find(m => m.MO_ID === moId);
+  if (!mo) return { moId, mo: null, rows: [] };
+  const qty = parseFloat(document.getElementById('prepPlanQty').value) || 0;
+  const targetIds = new Set(_prepTargets().map(t => t.RM_ID));
+  const rows = _bomCache.filter(b => b.FG_ID === mo.FG_ID && targetIds.has(b.RM_ID)).map(b => {
+    const t = _rmMasterCache.find(r => r.RM_ID === b.RM_ID);
+    const required = Math.round((parseFloat(b.QtyPerUnit) || 0) * qty * 10000) / 10000;
+    const have = parseFloat(_stockRmCache.find(s => s.RM_ID === b.RM_ID)?.Qty) || 0;
+    const short = Math.round(Math.max(0, required - have) * 10000) / 10000;
+    return { b, t, required, have, short };
+  });
+  return { moId, mo, rows };
+}
+function prepPlanCalc() {
+  const body = document.getElementById('prepPlanBody');
+  const infoEl = document.getElementById('prepPlanInfo');
+  const bulkBtn = document.getElementById('prepPlanBulkBtn');
+  const { moId, mo, rows } = _prepPlanShortfallRows();
+  if (!moId) {
+    infoEl.textContent = ''; bulkBtn.disabled = true;
+    body.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">เลือก MO ที่จะผลิตก่อน</td></tr>';
+    return;
+  }
+  const fg = _fgMasterCache.find(f => f.FG_ID === mo?.FG_ID);
+  infoEl.innerHTML = `สินค้า: <b>${esc(fg?.FG_Name || mo?.FG_ID || '')}</b> · แผนใน MO: ${_bomFmtQty(mo?.PlanQty || 0)} ${esc(fg?.Unit || '')}`;
+  if (!rows.length) {
+    bulkBtn.disabled = true;
+    body.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">สูตรนี้ไม่มีวัตถุดิบที่ต้องเตรียมก่อน (ใช้วัตถุดิบสด/แห้ง/เคมีตรงได้เลย)</td></tr>';
+    return;
+  }
+  bulkBtn.disabled = !rows.some(r => r.short > 0);
+  body.innerHTML = rows.map(({ b, t, required, have, short }) => `<tr>
+      <td><div class="fw-semibold">${esc(t?.RM_Name || b.RM_ID)}</div><div class="small text-muted">${t?.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmName(t?.SourceRM_ID))}</div></td>
+      <td class="text-end fw-semibold">${_bomFmtQty(required)} ${esc(b.Unit || '')}</td>
+      <td class="text-end">${_bomFmtQty(have)} ${esc(b.Unit || '')}</td>
+      <td class="text-end ${short > 0 ? 'text-danger fw-semibold' : 'text-success'}">${short > 0 ? `${_bomFmtQty(short)} ${esc(b.Unit || '')}` : 'พอใช้แล้ว'}</td>
+      <td class="text-center">${short > 0 ? `<button class="btn btn-sm btn-success" data-t="${esc(b.RM_ID)}" data-mo="${esc(moId)}" data-q="${short}" onclick="prepOpenIssue(this.dataset.t,this.dataset.mo,+this.dataset.q)"><i class="fa-solid fa-circle-plus me-1"></i>เบิกไปเตรียม</button>` : '<span class="text-muted small">—</span>'}</td>
+    </tr>`).join('');
+}
+// ปุ่มเดียวเบิกไปเตรียมทุกรายการที่ขาด (ผู้ใช้ขอ 2026-09-28) — ต่างจากปุ่มต่อแถวตรงที่ทำทีเดียวหมด แต่ยังเคารพ
+// กติกาเดิมของ prep_issue_post ว่าห้ามติดลบ: ถ้าวัตถุดิบสดมีไม่พอ จะเบิกให้เท่าที่มีจริงแทน (ไม่ error ทั้งชุด)
+// แล้วสรุปให้ทราบท้ายสุดว่ารายการไหนได้ครบ/ได้บางส่วน/ข้ามเพราะไม่มีของเลย
+async function prepPlanBulkIssue() {
+  const { moId, rows } = _prepPlanShortfallRows();
+  const shortRows = rows.filter(r => r.short > 0).map(r => {
+    const std = _bomScrapTotal(r.t?.PrepSteps);
+    const rawNeeded = _bomWithScrap(r.short, std);
+    const available = Math.round(_lotsFefo(r.t?.SourceRM_ID).reduce((s, l) => s + (+l.Qty || 0), 0) * 10000) / 10000;
+    const rawToIssue = Math.round(Math.min(rawNeeded, available) * 10000) / 10000;
+    return { ...r, rawNeeded, available, rawToIssue };
+  });
+  if (!shortRows.length) return;
+  const listHtml = shortRows.map(r => `<div class="text-start"><b>${esc(r.t.RM_Name)}</b>: เบิกวัตถุดิบสด ${_bomFmtQty(r.rawToIssue)} ${esc(r.t.Unit || '')}
+    ${r.rawToIssue < r.rawNeeded ? `<span class="text-danger">(ต้องการ ${_bomFmtQty(r.rawNeeded)} — ${r.rawToIssue <= 0 ? 'ไม่มีของเลย จะข้ามรายการนี้' : 'มีไม่พอ เบิกให้เท่าที่มี'})</span>` : ''}</div>`).join('');
+  const c = await Swal.fire({ icon: 'question', title: `เบิกไปเตรียมทั้งหมด ${shortRows.length} รายการ?`, html: listHtml,
+    showCancelButton: true, confirmButtonText: 'ยืนยันเบิกทั้งหมด', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  let okCount = 0, skipped = 0; const errors = [];
+  for (const r of shortRows) {
+    if (r.rawToIssue <= 0) { skipped++; continue; }
+    const { error } = await _sb.rpc('prep_issue_post', {
+      p_prep_id: genId('PREP'), p_target_rm_id: r.t.RM_ID, p_qty: r.rawToIssue,
+      p_mo_id: moId || null, p_date: todayStr(), p_note: null,
+    });
+    if (error) errors.push(`${r.t.RM_Name}: ${error.message}`); else okCount++;
+  }
+  await Promise.all([prepLoad(), stockRmLoad()]);
+  prepPlanCalc();
+  Swal.fire({
+    icon: errors.length ? 'warning' : 'success', title: 'เบิกไปเตรียมเสร็จแล้ว',
+    html: `สำเร็จ ${okCount} รายการ`
+      + (skipped ? `<br><span class="text-muted">ข้าม ${skipped} รายการ (ไม่มีวัตถุดิบสดคงเหลือเลย)</span>` : '')
+      + (errors.length ? `<br><span class="text-danger">ไม่สำเร็จ ${errors.length} รายการ:<br>${errors.map(esc).join('<br>')}</span>` : ''),
+  });
 }
 function prepRender() {
   const open = _prepCache.filter(p => p.Status === 'กำลังเตรียม');
@@ -4586,22 +5190,26 @@ function prepRender() {
 }
 
 // ── เบิกไปเตรียม ──
-function prepOpenIssue() {
+// targetId/moId/wantQty: ไว้เปิดพร้อมเลือกไว้ล่วงหน้าจากการ์ด "วางแผนจาก MO" — เว้นว่างได้เมื่อเปิดจากปุ่มบนหัวเพจ (เลือกเองทั้งหมด)
+function prepOpenIssue(targetId, moId, wantQty) {
   const targets = _prepTargets();
   if (!targets.length) {
     Swal.fire('ยังไม่มีรายการปลายทาง', 'เพิ่มรายการหมวด "วัตถุดิบพร้อมผลิต" หรือ "วัตถุดิบแห้ง" ที่ระบุว่าทำ/อบจากวัตถุดิบตัวไหน ที่หน้า Master → วัตถุดิบ / แพ็คเกจจิ้ง ก่อน', 'info');
     return;
   }
+  // ชื่อรายการขึ้นก่อน (อ่านง่าย เลือกง่าย) แล้วค่อยวงเล็บบอกหมวดสั้นๆ ต่อท้าย — เดิมขึ้น "[วัตถุดิบพร้อมผลิต] ชื่อ..."
+  // ยาวจนต้องเพ่งหาชื่อ (ผู้ใช้ขอ 2026-09-26)
   document.getElementById('prepi-target').innerHTML = targets.map(t =>
-    `<option value="${esc(t.RM_ID)}">[${esc(catLabel(t.Category))}] ${esc(t.RM_Name)} — ${t.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmName(t.SourceRM_ID))}</option>`).join('');
-  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
-  document.getElementById('prepi-mo').innerHTML = '<option value="">— ไม่อ้างอิง (เตรียมเก็บสต็อก) —</option>' +
-    _planCache.filter(m => m.Status === 'วางแผน').map(m =>
-      `<option value="${esc(m.MO_ID)}">${esc(m.MO_ID)} · ${esc(fgMap[m.FG_ID]?.FG_Name || m.FG_ID)} × ${_bomFmtQty(m.PlanQty)} (${fmtDate(m.PlanDate)})</option>`).join('');
+    `<option value="${esc(t.RM_ID)}">${esc(t.RM_Name)} (${t.Category === CAT_DRY ? 'แห้ง' : 'พร้อมผลิต'}) — ${t.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmName(t.SourceRM_ID))}</option>`).join('');
+  if (targetId) document.getElementById('prepi-target').value = targetId;
+  document.getElementById('prepi-mo').innerHTML = _moOptionsHtml('— ไม่อ้างอิง (เตรียมเก็บสต็อก) —');
+  if (moId) document.getElementById('prepi-mo').value = moId;
   ['prepi-want', 'prepi-qty', 'prepi-note'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('prepi-date').value = todayStr();
   document.getElementById('prepi-qty-err').textContent = '';
   prepIssueTargetChanged();
+  // มาจากการ์ด "วางแผนจาก MO" พร้อมจำนวนที่ขาดแล้ว — ใช้ตัวเลขนี้แทนที่จะให้คำนวณเต็มสูตรใหม่
+  if (wantQty) { document.getElementById('prepi-want').value = wantQty; prepIssueCalc('want'); }
   bootstrap.Modal.getOrCreateInstance(document.getElementById('prepIssueModal')).show();
 }
 function _prepSelTarget() { return _rmMasterCache.find(r => r.RM_ID === document.getElementById('prepi-target').value); }
@@ -4609,13 +5217,21 @@ function prepIssueTargetChanged() {
   const t = _prepSelTarget();
   if (!t) return;
   const src = _rmMasterCache.find(r => r.RM_ID === t.SourceRM_ID);
-  const stock = Math.round(_lotsFefo(t.SourceRM_ID).reduce((s, l) => s + (+l.Qty || 0), 0) * 10000) / 10000;
+  const lots = _lotsFefo(t.SourceRM_ID);   // เรียงหมดอายุก่อน = ลำดับที่จะถูกหยิบ
+  const stock = Math.round(lots.reduce((s, l) => s + (+l.Qty || 0), 0) * 10000) / 10000;
   const std = _bomScrapTotal(t.PrepSteps);
   document.querySelectorAll('.prepi-unit').forEach(el => el.textContent = src?.Unit || t.Unit || '');
+  // แสดงล็อตที่มีของทั้งหมดของวัตถุดิบต้นทาง (ผู้ใช้ขอ 2026-09-26) — ให้เห็นก่อนพิมพ์จำนวนว่ามีของจริงเท่าไหร่ ล็อตไหนบ้าง
+  // ต่างจาก "หยิบจากล็อต" ใต้ช่องจำนวน ที่โชว์เฉพาะล็อตที่จะถูกตัดตามจำนวนที่กรอก
+  const lotsHtml = !lots.length ? '<div class="text-danger fw-semibold mt-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>ไม่มีล็อตวัตถุดิบสดคงเหลือเลย — ต้องรับเข้าคลังก่อนถึงจะเบิกไปเตรียมได้</div>'
+    : `<div class="table-responsive mt-2"><table class="table table-sm mb-0 bg-white"><thead><tr><th>#</th><th>Lot</th><th class="text-end">คงเหลือ</th><th>หมดอายุ</th></tr></thead><tbody>
+      ${lots.map((l, i) => `<tr><td class="text-muted">${i + 1}</td><td>${esc(_lotLabel(l))}</td><td class="text-end fw-semibold">${_bomFmtQty(l.Qty)} ${esc(l.Unit || src?.Unit || '')}</td><td class="text-nowrap">${_expBadge(l.ExpDate)}</td></tr>`).join('')}
+      </tbody></table></div>`;
   document.getElementById('prepi-info').innerHTML =
-    `วัตถุดิบต้นทาง (${esc(catLabel(src?.Category))}): <b>${esc(src?.RM_Name || t.SourceRM_ID)}</b> · คงเหลือ <b>${_bomFmtQty(stock)} ${esc(src?.Unit || '')}</b> ในล็อตที่มีของ ${_lotsFefo(t.SourceRM_ID).length} ล็อต<br>
+    `วัตถุดิบต้นทาง (${esc(catLabel(src?.Category))}): <b>${esc(src?.RM_Name || t.SourceRM_ID)}</b> · คงเหลือ <b>${_bomFmtQty(stock)} ${esc(src?.Unit || '')}</b> ในล็อตที่มีของ ${lots.length} ล็อต<br>
      ขั้นตอนมาตรฐาน: ${(t.PrepSteps || []).length ? t.PrepSteps.map(s => `${esc(s.step)} ${_bomFmtQty(s.pct)}%`).join(' → ') : '<span class="text-muted">ยังไม่ได้ตั้ง</span>'}
-     · สูญเสียรวม <b>${_bomFmtQty(std)}%</b>${t.ShelfLifeDays != null ? ` · อายุหลังเตรียม ${t.ShelfLifeDays} วัน` : ''}`;
+     · สูญเสียรวม <b>${_bomFmtQty(std)}%</b>${t.ShelfLifeDays != null ? ` · อายุหลังเตรียม ${t.ShelfLifeDays} วัน` : ''}
+     ${lotsHtml}`;
   prepIssueMoChanged();
 }
 // เลือก MO → ตั้งต้น "ต้องการพร้อมผลิต" = ปริมาณในสูตรของ MO นั้น (ถ้าสูตรใช้รายการนี้)
@@ -4755,7 +5371,7 @@ async function prepReceiveSave() {
   if (back > +p.QtyOut) warns.push(`น้ำหนักรับกลับ (${_bomFmtQty(back)}) มากกว่าที่เบิกไป (${_bomFmtQty(p.QtyOut)})`);
   if (!exp) warns.push('ไม่ได้ระบุวันหมดอายุ — ล็อตนี้จะถูกใช้ทีหลังสุดและไม่ขึ้นเตือน');
   const c = await Swal.fire({ icon: warns.length ? 'warning' : 'question', title: 'รับกลับเข้าสต็อก?',
-    html: `<b>${esc(_rmName(p.TargetRM_ID))}</b> ${_bomFmtQty(back)} ${esc(p.Unit || '')} · Lot ${esc(document.getElementById('preps-lot').value || p.Prep_ID)}` +
+    html: `<b>${esc(_rmName(p.TargetRM_ID))}</b> ${_bomFmtQty(back)} ${esc(p.Unit || '')} · ${esc(document.getElementById('preps-lot').value || p.Prep_ID)}` +
       (warns.length ? `<div class="text-danger small mt-2">${warns.map(esc).join('<br>')}</div>` : '') + '<div class="small text-muted mt-2">รับกลับแล้วจะแก้ไขใบนี้ไม่ได้</div>',
     showCancelButton: true, confirmButtonText: 'รับกลับ', cancelButtonText: 'กลับไปแก้' });
   if (!c.isConfirmed) return;
@@ -4788,7 +5404,7 @@ async function issueLoad() {
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const pending = _planCache.filter(p => p.Status === 'วางแผน');
   document.getElementById('issueMoTableBody').innerHTML = pending.map(p => `
-    <tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${p.PlanQty}</td><td>${fmtDate(p.PlanDate)}</td>
+    <tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td><td>${fmtDate(p.PlanDate)}</td>
     <td><button class="btn btn-sm btn-success" onclick="issueOpenForm('${p.MO_ID}')"><i class="fa-solid fa-dolly me-1"></i>เบิกวัตถุดิบ</button></td></tr>`).join('')
     || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มี MO รอเบิกวัตถุดิบ</td></tr>';
 
@@ -4796,16 +5412,60 @@ async function issueLoad() {
     sbRun(_sb.from('issue_production').select('*').order('IssueDate', { ascending: false }).limit(100), 'โหลดประวัติการเบิก'),
     rcvEditLoadPending(),   // ปุ่มแก้ไข: มีคำขอค้าง = นาฬิกาทราย
   ]).then(([h]) => [h || []]);
+  _issueHistCache = hist;
+  _issueHistRenderCards();
+}
+// การ์ดต่อ MO (ทุกแถวของการเบิกครั้งเดียวกันมี MO_ID/IssueDate เดียวกันเสมอ — เบิกทีเดียวทุกวัตถุดิบผ่าน
+// rm_issue_post ครั้งเดียว และ MO เบิกได้ครั้งเดียวเท่านั้น จึงจัดกลุ่มตาม MO_ID ได้ตรงกับ "1 การเบิก" พอดี)
+// ผู้ใช้ขอ 2026-09-28: อยากเห็นสินค้า/ยอดผลิต/Lot ก่อน แล้วค่อยกดดูรายละเอียดวัตถุดิบแต่ละตัว เหมือนการ์ดอื่นในแอป
+let _issueHistCache = [];
+let _issueHistGroupsCache = [];
+const _issueHistExpanded = new Set();
+function issueHistToggle(gi) {
+  const g = _issueHistGroupsCache[gi];
+  if (!g) return;
+  if (_issueHistExpanded.has(g.moId)) _issueHistExpanded.delete(g.moId); else _issueHistExpanded.add(g.moId);
+  _issueHistRenderCards();
+}
+function _issueHistRenderCards() {
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
-  document.getElementById('issueHistTableBody').innerHTML = hist.map(h => `
-    <tr><td>${esc(h.Issue_ID)}</td><td>${esc(h.MO_ID)}</td><td>${esc(rmMap[h.RM_ID]?.RM_Name || h.RM_ID)}</td>
-    <td class="text-end">${h.ForQty != null ? _bomFmtQty(h.ForQty) : '-'}</td>
-    <td class="text-end">${h.QtyBase != null ? _bomFmtQty(h.QtyBase) : '-'}</td>
-    <td class="text-end">${h.ScrapPct ? _bomFmtQty(h.ScrapPct) + '%' : '-'}</td>
-    <td class="text-end fw-semibold">${_bomFmtQty(h.QtyIssued)} ${esc(h.Unit||'')}
-      ${Array.isArray(h.LotAlloc) && h.LotAlloc.length ? `<div class="small text-muted fw-normal">${_lotAllocText(h.LotAlloc)}</div>` : ''}</td>
-    <td>${fmtDate(h.IssueDate)}</td><td class="text-center">${_editBtn('issue_production', h.Issue_ID)}</td></tr>`).join('')
-    || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+  const groups = [];
+  const idxByMo = new Map();
+  _issueHistCache.forEach(h => {
+    if (!idxByMo.has(h.MO_ID)) { idxByMo.set(h.MO_ID, groups.length); groups.push({ moId: h.MO_ID, rows: [] }); }
+    groups[idxByMo.get(h.MO_ID)].rows.push(h);
+  });
+  _issueHistGroupsCache = groups;
+  document.getElementById('issueHistCards').innerHTML = groups.map((g, gi) => {
+    const mo = _planCache.find(m => m.MO_ID === g.moId);
+    const fg = _fgMasterCache.find(f => f.FG_ID === mo?.FG_ID);
+    const first = g.rows[0];
+    const expanded = _issueHistExpanded.has(g.moId);
+    const rowsHtml = g.rows.map(h => `<tr>
+      <td><code>${esc(h.Issue_ID)}</code></td>
+      <td>${esc(rmMap[h.RM_ID]?.RM_Name || h.RM_ID)}</td>
+      <td class="text-end">${h.QtyBase != null ? _bomFmtQty(h.QtyBase) : '-'}</td>
+      <td class="text-end">${h.ScrapPct ? _bomFmtQty(h.ScrapPct) + '%' : '-'}</td>
+      <td class="text-end fw-semibold">${_bomFmtQty(h.QtyIssued)} ${esc(h.Unit || '')}
+        ${Array.isArray(h.LotAlloc) && h.LotAlloc.length ? `<div class="small text-muted fw-normal">${_lotAllocText(h.LotAlloc)}</div>` : ''}</td>
+      <td class="text-center">${_editBtn('issue_production', h.Issue_ID)}</td>
+    </tr>`).join('');
+    return `<div class="glass-card mb-2">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 bom-card-head" onclick="issueHistToggle(${gi})">
+        <div>
+          <span class="badge text-bg-primary me-2">${esc(g.moId)}</span>
+          <b>${esc(fg?.FG_Name || mo?.FG_ID || '-')}</b>
+          <span class="badge bg-light text-dark border ms-2">ผลิต ${_bomFmtQty(first?.ForQty ?? mo?.PlanQty ?? 0)} ${esc(fg?.Unit || '')}</span>
+          <span class="badge bg-light text-dark border ms-1"><i class="fa-solid fa-tag me-1"></i>${esc(mo?.Lot || '-')}</span>
+          <span class="text-muted ms-2 small">${fmtDate(first?.IssueDate)} · ${g.rows.length} วัตถุดิบ</span>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" title="${expanded ? 'ย่อ' : 'ดูรายละเอียด'}"><i class="fa-solid fa-chevron-${expanded ? 'up' : 'down'}"></i></button>
+      </div>
+      ${!expanded ? '' : `<div class="table-responsive mt-3"><table class="table table-sm table-hover mb-0">
+        <thead><tr><th>เลขที่เบิก</th><th>วัตถุดิบ</th><th class="text-end">ตามสูตร</th><th class="text-end">Scrap</th><th class="text-end">เบิกจริง</th><th class="text-center">จัดการ</th></tr></thead>
+        <tbody>${rowsHtml}</tbody></table></div>`}
+    </div>`;
+  }).join('') || '<div class="glass-card text-center py-4 text-muted">ยังไม่มีประวัติ</div>';
 }
 // ขั้นที่ 2 ของโฟลผลิตลูกประคบ: เตรียมวัตถุดิบเข้าไลน์ — จำนวนลูกตั้งต้นจาก MO.PlanQty (แก้ได้) แล้วคำนวณ
 // ต้องเตรียม = QtyPerUnit × จำนวน ÷ (1 − %Scrap รวมของขั้นตอนเตรียมใน BOM/100) — สูตรกลางอยู่ที่ _bomWithScrap
@@ -4878,9 +5538,11 @@ async function issueModalSave() {
   }
   // ฟังก์ชัน DB rm_issue_post ทำทุกอย่างใน transaction เดียว: ตัดล็อตแบบ FEFO + บันทึก issue_production (พร้อม
   // LotAlloc ว่าใช้ล็อตไหน) + หักยอดรวม + ปิดสถานะ MO — และล็อก MO กันเบิกซ้ำถ้าอีกคนเพิ่งเบิก MO เดียวกันไป
+  // เลขที่เบิก = ISS-ปีเดือนวัน-รหัสวัตถุดิบ (ผู้ใช้ขอ 2026-09-28) — หมายเหตุ: ถ้าวันเดียวกันมีเบิกวัตถุดิบตัว
+  // เดียวกันจากคนละ MO จะได้เลขซ้ำ (Issue_ID เป็น primary key) แล้วรายการนั้นจะเบิกไม่ผ่านจนกว่าจะข้ามวันไป
   const { data: alloc, error } = await _sb.rpc('rm_issue_post', {
     p_mo_id: _issueMoId,
-    p_rows: rows.map(n => ({ issue_id: genId('ISS'), rm_id: n.RM_ID, qty: n.issueQty, unit: n.unit,
+    p_rows: rows.map(n => ({ issue_id: `ISS-${_genLotForDate(todayStr())}-${n.RM_ID}`, rm_id: n.RM_ID, qty: n.issueQty, unit: n.unit,
       for_qty: forQty, qty_base: n.base, scrap_pct: n.scrapPct, issue_date: todayStr() })),
   });
   if (error) { _rmLotRpcErr(error, 'เบิกวัตถุดิบไม่สำเร็จ'); return; }
@@ -4901,7 +5563,7 @@ async function prodRecordLoad() {
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const ready = _planCache.filter(p => p.Status === 'เบิกวัตถุดิบแล้ว');
   document.getElementById('prodReadyTableBody').innerHTML = ready.map(p => `
-    <tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${p.PlanQty}</td><td>${fmtDate(p.PlanDate)}</td>
+    <tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td><td>${fmtDate(p.PlanDate)}</td>
     <td><button class="btn btn-sm btn-success" onclick="prodRecordOpenForm('${p.MO_ID}')"><i class="fa-solid fa-industry me-1"></i>บันทึกผลิต</button></td></tr>`).join('')
     || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มี MO รอบันทึกผลิต</td></tr>';
 
@@ -4911,7 +5573,7 @@ async function prodRecordLoad() {
   ]).then(([h]) => [h || []]);
   window._prodRecordCache = hist;
   document.getElementById('prodHistTableBody').innerHTML = hist.map(h => `
-    <tr><td>${esc(h.Prod_ID)}</td><td>${esc(fgMap[h.FG_ID]?.FG_Name || h.FG_ID)}</td><td>${h.QtyProduced}</td><td>${esc(h.ProdLot)}</td><td>${fmtDate(h.MfgDate)}</td><td>${fmtDate(h.ExpDate)}</td>
+    <tr><td>${esc(h.Prod_ID)}</td><td>${esc(fgMap[h.FG_ID]?.FG_Name || h.FG_ID)}</td><td>${_bomFmtQty(h.QtyProduced)}</td><td>${esc(h.ProdLot)}</td><td>${fmtDate(h.MfgDate)}</td><td>${fmtDate(h.ExpDate)}</td>
     <td class="text-nowrap">${_editBtn('production_records', h.Prod_ID)}<button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
     || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
 }
@@ -4926,7 +5588,8 @@ function prodRecordOpenForm(moId) {
   _modalClearErrors(['pr-qty', 'pr-lot']);
   document.getElementById('pr-title').textContent = `บันทึกผลิต ${moId}`;
   document.getElementById('pr-qty').value = mo.PlanQty;
-  document.getElementById('pr-lot').value = genId('LOT');
+  // Lot ตั้งไว้ตั้งแต่ตอนวางแผน (MO.Lot) ให้ใช้ต่อเนื่องกันเป็นค่าเริ่มต้น — ยังแก้ได้ถ้าผลิตจริงต้องแยก Lot
+  document.getElementById('pr-lot').value = mo.Lot || _genLotForDate(mo.PlanDate);
   document.getElementById('pr-mfg').value = mfgDefault;
   document.getElementById('pr-exp').value = expDefault;
   document.getElementById('pr-by').value = '';
@@ -4969,11 +5632,11 @@ async function fgReceiveLoad() {
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const ready = (window._prodRecordCache||[]).filter(p => !receivedProdIds.has(p.Prod_ID));
   document.getElementById('fgReceiveReadyTableBody').innerHTML = ready.map(p => `
-    <tr><td>${esc(p.Prod_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${esc(p.ProdLot)}</td><td>${p.QtyProduced}</td><td>${fmtDate(p.ExpDate)}</td>
+    <tr><td>${esc(p.Prod_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${esc(p.ProdLot)}</td><td>${_bomFmtQty(p.QtyProduced)}</td><td>${fmtDate(p.ExpDate)}</td>
     <td><button class="btn btn-sm btn-success" onclick="fgReceiveOpenForm('${p.Prod_ID}')"><i class="fa-solid fa-box-open me-1"></i>รับเข้าคลัง</button></td></tr>`).join('')
     || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีรายการรอรับเข้าคลัง</td></tr>';
   document.getElementById('fgReceiveHistTableBody').innerHTML = fgReceived.map(r => `
-    <tr><td>${esc(r.FGReceive_ID)}</td><td>${esc(fgMap[r.FG_ID]?.FG_Name || r.FG_ID)}</td><td>${esc(r.Lot)}</td><td>${r.Qty}</td><td>${fmtDate(r.ReceiveDate)}</td><td class="text-center">${_editBtn('fg_receive', r.FGReceive_ID)}</td></tr>`).join('')
+    <tr><td>${esc(r.FGReceive_ID)}</td><td>${esc(fgMap[r.FG_ID]?.FG_Name || r.FG_ID)}</td><td>${esc(r.Lot)}</td><td>${_bomFmtQty(r.Qty)}</td><td>${fmtDate(r.ReceiveDate)}</td><td class="text-center">${_editBtn('fg_receive', r.FGReceive_ID)}</td></tr>`).join('')
     || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
 }
 let _fgReceiveProdId = null;
@@ -5011,16 +5674,52 @@ async function stockFgLoad() {
   _stockFgCache = await sbRun(_sb.from('stock_fg').select('*').order('ExpDate'), 'โหลดสต็อก FG') || [];
   stockFgRenderTable();
 }
+let _stockFgLotExpanded = new Set();   // FG_ID ที่กางดูล็อตอยู่
+function stockFgToggleLots(fgId) {
+  if (_stockFgLotExpanded.has(fgId)) _stockFgLotExpanded.delete(fgId); else _stockFgLotExpanded.add(fgId);
+  stockFgRenderTable();
+}
+// การ์ดแบบ ProFlow เหมือนหน้า Raw Material: 1 การ์ด = 1 สินค้า รวมทุกล็อต กดขยายดูรายล็อต + ปุ่ม "ดูการ์ดสต็อก"
 function stockFgRenderTable() {
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const q = (document.getElementById('stockFgSearch').value || '').toLowerCase();
-  const rows = _stockFgCache.filter(s => !q || (fgMap[s.FG_ID]?.FG_Name||'').toLowerCase().includes(q) || (s.Lot||'').toLowerCase().includes(q));
-  document.getElementById('stockFgTableBody').innerHTML = rows.map(s => {
-    const d = s.ExpDate ? daysUntil(s.ExpDate) : null;
-    let statusHtml = badge('ปกติ','success');
-    if (d !== null) { if (d < 0) statusHtml = badge('หมดอายุแล้ว','danger'); else if (d <= EXPIRING_SOON_DAYS) statusHtml = badge(`ใกล้หมดอายุ (${d} วัน)`,'warning'); }
-    return `<tr><td>${esc(fgMap[s.FG_ID]?.FG_Name || s.FG_ID)}</td><td>${esc(s.Lot)}</td><td>${s.Qty}</td><td>${fmtDate(s.MfgDate)}</td><td>${fmtDate(s.ExpDate)}</td><td>${statusHtml}</td></tr>`;
-  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีสต็อก</td></tr>';
+  const sortMode = document.getElementById('stockFgSort').value;
+  const byFg = {};
+  _stockFgCache.forEach(s => { (byFg[s.FG_ID] ??= []).push(s); });
+  let items = Object.keys(byFg)
+    .filter(id => !q || (fgMap[id]?.FG_Name || id).toLowerCase().includes(q) || byFg[id].some(l => (l.Lot || '').toLowerCase().includes(q)))
+    .map(id => {
+      const lots = byFg[id].filter(l => l.Qty > 0).sort((a, b) => new Date(a.ExpDate) - new Date(b.ExpDate));
+      const oldest = lots.reduce((min, l) => l.MfgDate && (!min || l.MfgDate < min) ? l.MfgDate : min, null);
+      return { id, lots, sortCode: id, sortExp: lots[0]?.ExpDate || null, sortOld: oldest };
+    });
+  _stockApplySort(items, sortMode, (a, b) => (fgMap[a.id]?.FG_Name || a.id).localeCompare(fgMap[b.id]?.FG_Name || b.id, 'th'));
+  document.getElementById('stockFgCards').innerHTML = items.map(({ id, lots }) => {
+    const total = lots.reduce((sum, l) => sum + (parseFloat(l.Qty) || 0), 0);
+    const nearest = lots[0];
+    const expanded = _stockFgLotExpanded.has(id);
+    const d = nearest?.ExpDate ? daysUntil(nearest.ExpDate) : null;
+    let statusHtml = badge('ปกติ', 'success'), cardCls = '';
+    if (!lots.length) { statusHtml = badge('ไม่มีสต็อก', 'secondary'); }
+    else if (d !== null && d < 0) { statusHtml = badge('หมดอายุแล้ว', 'danger'); cardCls = ' stock-card-low'; }
+    else if (d !== null && d <= EXPIRING_SOON_DAYS) { statusHtml = badge(`ใกล้หมดอายุ (${d} วัน)`, 'warning'); cardCls = ' stock-card-warn'; }
+    const lotDetail = !lots.length ? '' : `<div class="stock-lot-detail" style="${expanded ? '' : 'display:none'}"><div class="table-responsive"><table class="table table-sm mb-0">
+      <thead><tr><th>Lot</th><th class="text-end">คงเหลือ</th><th>วันผลิต</th><th>วันหมดอายุ</th></tr></thead><tbody>
+      ${lots.map(l => `<tr><td>${esc(l.Lot)}</td><td class="text-end">${_bomFmtQty(l.Qty)}</td><td>${fmtDate(l.MfgDate)}</td><td class="text-nowrap">${_expBadge(l.ExpDate)}</td></tr>`).join('')}
+      </tbody></table></div></div>`;
+    return `<div class="glass-card stock-card${cardCls}">
+      <div class="stock-card-head${expanded ? ' expanded' : ''}" ${lots.length ? `onclick="stockFgToggleLots('${esc(id)}')" title="กดเพื่อดูรายล็อต"` : ''}>
+        <span class="code">${esc(id)}</span>
+        <span class="name">${esc(fgMap[id]?.FG_Name || id)}</span>
+        <span class="meta"><i class="fa-solid fa-layer-group me-1 opacity-50"></i>${lots.length ? `${lots.length} ล็อต` : 'ไม่มีล็อต'}
+          &nbsp;·&nbsp;<b>${_bomFmtQty(total)}</b> ${esc(fgMap[id]?.Unit || 'หน่วย')}</span>
+        ${statusHtml}
+        <button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:.72rem" onclick="event.stopPropagation();goStockCard('fg','${esc(id)}')" title="ดูการ์ดสต็อก"><i class="fa-solid fa-clipboard-list"></i></button>
+        ${lots.length ? '<i class="fa-solid fa-chevron-down chevron"></i>' : '<span class="chevron"></span>'}
+      </div>
+      ${lotDetail}
+    </div>`;
+  }).join('') || '<div class="glass-card text-center text-muted py-4">ยังไม่มีสต็อก</div>';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -5033,7 +5732,7 @@ async function fgoutLoad() {
   const openCo = _coCache.filter(c => !_coDoneStatuses.includes(c.Status));
   document.getElementById('fgoutCoTableBody').innerHTML = openCo.map(c => {
     const remain = c.OrderQty - coWithdrawnQty(c.Order_ID);
-    return `<tr><td>${esc(c.Order_ID)}</td><td>${esc(c.CustomerName)}</td><td>${esc(fgMap[c.FG_ID]?.FG_Name || c.FG_ID)}</td><td>${remain}</td><td>${badge(c.Status, CO_STATUS_BADGE[c.Status])}</td>
+    return `<tr><td>${esc(c.Order_ID)}</td><td>${esc(c.CustomerName)}</td><td>${esc(fgMap[c.FG_ID]?.FG_Name || c.FG_ID)}</td><td>${_bomFmtQty(remain)}</td><td>${badge(c.Status, CO_STATUS_BADGE[c.Status])}</td>
     <td>${remain > 0 ? `<button class="btn btn-sm btn-success" onclick="fgoutOpenForm('${c.Order_ID}')"><i class="fa-solid fa-dolly me-1"></i>เบิกสินค้า</button>` : ''}</td></tr>`;
   }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีคำสั่งซื้อค้างส่ง</td></tr>';
 
@@ -5046,8 +5745,110 @@ async function fgoutLoad() {
     let nextBtn = '';
     if (d.Status === 'รอจัดส่ง') nextBtn = `<button class="btn btn-sm btn-outline-primary" onclick="deliveryAdvance('${d.Delivery_ID}','จัดส่งแล้ว')">จัดส่งแล้ว</button>`;
     else if (d.Status === 'จัดส่งแล้ว') nextBtn = `<button class="btn btn-sm btn-outline-success" onclick="deliveryAdvance('${d.Delivery_ID}','ส่งถึงแล้ว')">ส่งถึงแล้ว</button>`;
-    return `<tr><td>${esc(d.Delivery_ID)}</td><td>${esc(d.Order_ID||'-')}</td><td>${label}</td><td>${d.QtyDelivered}</td><td>${badge(d.Status, DELIVERY_STATUS_BADGE[d.Status])}</td><td>${nextBtn}</td></tr>`;
+    return `<tr><td>${esc(d.Delivery_ID)}</td><td>${esc(d.Order_ID||'-')}</td><td>${label}</td><td>${_bomFmtQty(d.QtyDelivered)}</td><td>${badge(d.Status, DELIVERY_STATUS_BADGE[d.Status])}</td><td>${nextBtn}</td></tr>`;
   }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีรายการจัดส่ง</td></tr>';
+
+  // "เพิ่มรายการเบิก" (ไม่ผูก CO) — รวมฝั่งวัตถุดิบ/แพ็คเกจจิ้ง (rm_withdraw) กับฝั่ง FG (fg_withdraw ที่ Order_ID
+  // เป็น null คือไม่ได้มาจากการเบิกส่งลูกค้าตามปกติ) มาแสดงเป็นประวัติเดียวกัน เรียงตามวันที่เบิกล่าสุดก่อน
+  // ตารางนี้แสดงได้แม้ยังไม่รัน migration ของฝั่งวัตถุดิบ (fg_withdraw ที่ Order_ID เป็น null มีอยู่แล้วเดิม) —
+  // ถ้า rm_withdraw ยังไม่มี ให้ข้ามเฉพาะฝั่งวัตถุดิบไปเฉยๆ พร้อมข้อความแจ้งต่อท้ายตาราง ไม่บังการแสดงฝั่ง FG
+  const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  const rmWdRes = await _sb.from('rm_withdraw').select('*');
+  const rmWd = rmWdRes.error ? [] : rmWdRes.data;
+  const adhocFg = withdraws.filter(w => !w.Order_ID);
+  const merged = [
+    ...rmWd.map(w => ({ kind: 'M', id: w.Withdraw_ID, name: rmMap[w.RM_ID]?.RM_Name || w.RM_ID, type: catLabel(rmMap[w.RM_ID]?.Category), qty: w.Qty, unit: w.Unit, note: w.Note, date: w.WithdrawDate })),
+    ...adhocFg.map(w => ({ kind: 'F', id: w.WD_ID, name: fgMap[w.FG_ID]?.FG_Name || w.FG_ID, type: 'สินค้าสำเร็จรูป', qty: w.Qty, unit: fgMap[w.FG_ID]?.Unit, note: w.Note, date: w.WithdrawDate })),
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+  document.getElementById('genwdHistTableBody').innerHTML = (merged.map(w => `
+    <tr><td><code>${esc(w.id)}</code></td><td>${w.kind === 'F' ? badge(w.type, 'primary') : catBadge(w.type)}</td><td>${esc(w.name)}</td>
+    <td class="text-end">${_bomFmtQty(w.qty)} ${esc(w.unit||'')}</td><td>${esc(w.note||'-')}</td><td>${fmtDate(w.date)}</td>
+    <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="genwdDelete('${w.kind}','${esc(w.id)}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+    || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีรายการเบิก</td></tr>')
+    + (rmWdRes.error ? `<tr><td colspan="7" class="text-center py-2 small text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>เบิกวัตถุดิบ/แพ็คเกจจิ้งยังใช้ไม่ได้ — รัน <code>migration_2026-09-28_rm_withdraw.sql</code> ก่อน</td></tr>` : '');
+}
+// ── เพิ่มรายการเบิก (วัตถุดิบ/แพ็คเกจจิ้ง/FG ไม่ผูกกับ CO) ──
+function genwdOpenForm() {
+  const matOpts = _rmMasterCache.map(r => `<option value="M:${esc(r.RM_ID)}">[${esc(catLabel(r.Category))}] ${esc(r.RM_Name)}</option>`).join('');
+  const fgOpts = _fgMasterCache.map(f => `<option value="F:${esc(f.FG_ID)}">[สินค้าสำเร็จรูป] ${esc(f.FG_Name)}</option>`).join('');
+  if (!matOpts && !fgOpts) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบหรือสินค้าก่อน', 'info'); return; }
+  _modalClearErrors(['genwd-lot', 'genwd-qty', 'genwd-note']);
+  document.getElementById('genwd-item').innerHTML = matOpts + fgOpts;
+  document.getElementById('genwd-qty').value = '';
+  document.getElementById('genwd-date').value = todayStr();
+  document.getElementById('genwd-note').value = '';
+  genwdItemChanged();
+  new bootstrap.Modal(document.getElementById('genwdModal')).show();
+}
+let _genwdLots = [];
+async function genwdItemChanged() {
+  const [kind, itemId] = document.getElementById('genwd-item').value.split(':');
+  const lotSel = document.getElementById('genwd-lot');
+  if (kind === 'M') {
+    await rmLotLoad();
+    const rm = _rmMasterCache.find(r => r.RM_ID === itemId);
+    const lots = _lotsFefo(itemId);
+    _genwdLots = lots.map(l => ({ id: l.Lot_ID, label: _lotLabel(l), qty: l.Qty, unit: l.Unit || rm?.Unit, exp: l.ExpDate }));
+    document.getElementById('genwd-unit').textContent = rm?.Unit || '';
+  } else {
+    if (!_stockFgCache.length) await stockFgLoad();
+    const fg = _fgMasterCache.find(f => f.FG_ID === itemId);
+    const lots = _stockFgCache.filter(s => s.FG_ID === itemId && s.Qty > 0).sort((a,b) => new Date(a.ExpDate) - new Date(b.ExpDate));
+    _genwdLots = lots.map(l => ({ id: l.Lot, label: l.Lot, qty: l.Qty, unit: fg?.Unit, exp: l.ExpDate }));
+    document.getElementById('genwd-unit').textContent = fg?.Unit || '';
+  }
+  document.getElementById('genwd-lot').innerHTML = _genwdLots.length
+    ? _genwdLots.map(l => `<option value="${esc(l.id)}">${esc(l.label)} — คงเหลือ ${_bomFmtQty(l.qty)} ${esc(l.unit||'')}${l.exp ? ` · หมดอายุ ${fmtDate(l.exp)}` : ''}</option>`).join('')
+    : '<option value="">— ไม่มีสต็อกคงเหลือ —</option>';
+  document.getElementById('genwd-qty').value = '';
+}
+async function genwdModalSave() {
+  _modalClearErrors(['genwd-lot', 'genwd-qty', 'genwd-note']);
+  const [kind, itemId] = document.getElementById('genwd-item').value.split(':');
+  const lotId = document.getElementById('genwd-lot').value;
+  const lotRow = _genwdLots.find(l => l.id === lotId);
+  const qty = parseFloat(document.getElementById('genwd-qty').value);
+  const note = document.getElementById('genwd-note').value.trim();
+  const date = document.getElementById('genwd-date').value || todayStr();
+  if (!lotRow) { _modalShowError('genwd-lot', 'ไม่มีล็อตให้เลือก'); return; }
+  if (!qty || qty <= 0) { _modalShowError('genwd-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  if (qty > lotRow.qty) { _modalShowError('genwd-qty', `จำนวนเกินคงเหลือของล็อตนี้ (เหลือ ${_bomFmtQty(lotRow.qty)})`); return; }
+  if (!note) { _modalShowError('genwd-note', 'กรอกวัตถุประสงค์'); return; }
+
+  if (kind === 'M') {
+    const { error } = await _sb.rpc('rm_withdraw_post', { p_withdraw_id: genId('GWD'), p_lot_id: lotId, p_qty: qty, p_note: note, p_date: date });
+    if (error) { _rmLotRpcErr(error, 'บันทึกการเบิกไม่สำเร็จ'); return; }
+    bootstrap.Modal.getInstance(document.getElementById('genwdModal')).hide();
+    await stockRmLoad();
+    fgoutLoad();
+    return;
+  }
+  const ok = await sbRun(_sb.from('fg_withdraw').insert({ WD_ID: genId('WD'), Order_ID: null, FG_ID: itemId, Lot: lotId, Qty: qty, WithdrawDate: date, Note: note }), 'บันทึกการเบิกไม่สำเร็จ');
+  if (ok === null) return;
+  await adjustStockFG(itemId, lotId, -qty);
+  bootstrap.Modal.getInstance(document.getElementById('genwdModal')).hide();
+  await stockFgLoad();
+  fgoutLoad();
+}
+async function genwdDelete(kind, id) {
+  const c = await Swal.fire({ title: 'ลบรายการเบิกนี้?', text: 'สต็อกจะถูกคืนกลับเข้าล็อตเดิมตามจำนวนนี้', icon: 'warning',
+    showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  if (kind === 'M') {
+    const { error } = await _sb.rpc('rm_withdraw_delete', { p_withdraw_id: id });
+    if (error) { _rmLotRpcErr(error, 'ลบไม่สำเร็จ'); return; }
+    await stockRmLoad();
+    fgoutLoad();
+    return;
+  }
+  const { data: withdraws } = await _sb.from('fg_withdraw').select('*').eq('WD_ID', id);
+  const w = withdraws?.[0];
+  if (!w) return;
+  if (await sbDelete('fg_withdraw', 'WD_ID', id)) {
+    await adjustStockFG(w.FG_ID, w.Lot, w.Qty);
+    await stockFgLoad();
+    fgoutLoad();
+  }
 }
 let _fgoutOrderId = null;
 let _fgoutLots = [];
@@ -5060,8 +5861,8 @@ function fgoutOpenForm(orderId) {
   _fgoutLots = lots;
   _modalClearErrors(['fgo-qty']);
   document.getElementById('fgo-title').textContent = `เบิกสินค้าสำหรับ ${orderId}`;
-  document.getElementById('fgo-hint').textContent = `ค้างส่ง ${remain} หน่วย — ระบบเรียงล็อตตามวันหมดอายุก่อน (FEFO)`;
-  document.getElementById('fgo-lot').innerHTML = lots.map(l => `<option value="${esc(l.Lot)}">${esc(l.Lot)} — คงเหลือ ${l.Qty} · หมดอายุ ${fmtDate(l.ExpDate)}</option>`).join('');
+  document.getElementById('fgo-hint').textContent = `ค้างส่ง ${_bomFmtQty(remain)} หน่วย — ระบบเรียงล็อตตามวันหมดอายุก่อน (FEFO)`;
+  document.getElementById('fgo-lot').innerHTML = lots.map(l => `<option value="${esc(l.Lot)}">${esc(l.Lot)} — คงเหลือ ${_bomFmtQty(l.Qty)} · หมดอายุ ${fmtDate(l.ExpDate)}</option>`).join('');
   document.getElementById('fgo-qty').value = Math.min(remain, lots[0].Qty);
   new bootstrap.Modal(document.getElementById('fgoutModal')).show();
 }
@@ -5169,7 +5970,7 @@ async function stockCardRender() {
     || ((a.ts && b.ts) ? new Date(a.ts) - new Date(b.ts) : 0)
     || ((b.in > 0) - (a.in > 0)));
   let balance = 0;
-  const rowsHtml = entries.map(e => { balance += e.in - e.out; return `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.label)}</td><td>${esc(e.ref)}</td><td>${e.in || '-'}</td><td>${e.out || '-'}</td><td>${balance}</td></tr>`; }).join('');
+  const rowsHtml = entries.map(e => { balance += e.in - e.out; return `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.label)}</td><td>${esc(e.ref)}</td><td>${e.in ? _bomFmtQty(e.in) : '-'}</td><td>${e.out ? _bomFmtQty(e.out) : '-'}</td><td>${_bomFmtQty(balance)}</td></tr>`; }).join('');
   tbody.innerHTML = rowsHtml || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีการเคลื่อนไหว</td></tr>';
 }
 
@@ -5192,9 +5993,9 @@ function wasteRenderTable() {
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   document.getElementById('wasteTableBody').innerHTML = _wasteCache.map(w => {
     const isFg = w.ItemType === 'FG';
-    const itemName = (isFg ? (fgMap[w.FG_ID]?.FG_Name || w.FG_ID) : (rmMap[w.RM_ID]?.RM_Name || w.RM_ID)) + (w.Lot ? ` (Lot ${w.Lot})` : '');
+    const itemName = (isFg ? (fgMap[w.FG_ID]?.FG_Name || w.FG_ID) : (rmMap[w.RM_ID]?.RM_Name || w.RM_ID)) + (w.Lot ? ` (${w.Lot})` : '');
     const typeLabel = isFg ? 'สินค้าสำเร็จรูป' : catLabel(rmMap[w.RM_ID]?.Category);
-    return `<tr><td>${esc(w.Waste_ID)}</td><td>${isFg ? badge(typeLabel, 'primary') : catBadge(typeLabel)}</td><td>${esc(itemName)}</td><td>${w.Qty} ${esc(w.Unit||'')}</td><td>${esc(w.Reason)}</td><td>${fmtDate(w.WasteDate)}</td>
+    return `<tr><td>${esc(w.Waste_ID)}</td><td>${isFg ? badge(typeLabel, 'primary') : catBadge(typeLabel)}</td><td>${esc(itemName)}</td><td>${_bomFmtQty(w.Qty)} ${esc(w.Unit||'')}</td><td>${esc(w.Reason)}</td><td>${fmtDate(w.WasteDate)}</td>
     <td class="text-nowrap">${_editBtn('waste_log', w.Waste_ID)}<button class="btn btn-sm btn-outline-danger" onclick="wasteDelete('${w.Waste_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
   }).join('') || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีข้อมูล</td></tr>';
 }
@@ -5233,7 +6034,7 @@ async function wasteModalNext() {
     const lots = _stockFgCache.filter(s => s.FG_ID === itemId && s.Qty > 0).sort((a,b) => new Date(a.ExpDate) - new Date(b.ExpDate));
     if (!lots.length) { Swal.fire('ไม่มีสต็อก', 'สินค้านี้ไม่มีสต็อกคงเหลือให้ตัดเป็นของเสีย', 'info'); return; }
     _wasteForm.lots = lots;
-    document.getElementById('wstl-lot').innerHTML = lots.map(l => `<option value="${esc(l.Lot)}">${esc(l.Lot)} — คงเหลือ ${l.Qty} · หมดอายุ ${fmtDate(l.ExpDate)}</option>`).join('');
+    document.getElementById('wstl-lot').innerHTML = lots.map(l => `<option value="${esc(l.Lot)}">${esc(l.Lot)} — คงเหลือ ${_bomFmtQty(l.Qty)} · หมดอายุ ${fmtDate(l.ExpDate)}</option>`).join('');
   }
   _modalClearErrors(['wstl-lot']);
   bootstrap.Modal.getInstance(document.getElementById('wasteModal')).hide();
