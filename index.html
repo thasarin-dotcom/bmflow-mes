@@ -660,13 +660,16 @@ table.prtp-table .prtp-blank { height: 30px; }
 
   <!-- ═══════════════ FG RECEIVE ═══════════════ -->
   <div class="page-view" id="page-fgreceive">
-    <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง</h4><div class="text-white-50 small">รับสินค้าที่บันทึกผลิตแล้วเข้าคลังสินค้าสำเร็จรูป</div></div>
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง</h4><div class="text-white-50 small">รับสินค้าที่บันทึกผลิตแล้วเข้าคลังสินค้าสำเร็จรูป</div></div>
+      <button class="btn btn-success" onclick="fgReceiveOpenGeneral()"><i class="fa-solid fa-plus me-1"></i>รับทั่วไป</button>
+    </div>
     <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
       <thead><tr><th>เลขที่ผลิต</th><th>สินค้า</th><th>Lot</th><th>จำนวนผลิตได้</th><th>วันหมดอายุ</th><th>จัดการ</th></tr></thead>
       <tbody id="fgReceiveReadyTableBody"></tbody>
     </table></div></div>
     <div class="glass-card"><h6 class="mb-3">ประวัติการรับเข้าคลัง</h6><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th>เลขที่รับ</th><th>สินค้า</th><th>Lot</th><th>จำนวน</th><th>วันที่รับ</th><th class="text-center">จัดการ</th></tr></thead>
+      <thead><tr><th>เลขที่รับ</th><th>ประเภท</th><th>สินค้า</th><th>Lot</th><th>จำนวน</th><th>วันที่รับ</th><th class="text-center">จัดการ</th></tr></thead>
       <tbody id="fgReceiveHistTableBody"></tbody>
     </table></div></div></div>
   </div>
@@ -1718,6 +1721,31 @@ table.prtp-table .prtp-blank { height: 30px; }
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <!-- เฉพาะโหมด "รับทั่วไป" (ไม่ผูกกับใบผลิต) — โหมด "จากไลน์ผลิต" (คลิกจากแถวที่รอรับ) ซ่อนส่วนนี้
+             เพราะสินค้า/Lot/วันที่ผลิต/วันหมดอายุ มาจากใบผลิตอยู่แล้ว (ผู้ใช้ขอ 2026-09-28 ให้มีทั้ง 2 แบบ
+             เหมือน ProFlow) -->
+        <div id="fgr-general-fields" class="d-none">
+          <div class="mb-3">
+            <label class="form-label">สินค้า<span class="text-danger">*</span></label>
+            <select id="fgr-fg" class="form-select"></select>
+            <div class="invalid-feedback" id="fgr-fg-err"></div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Lot<span class="text-danger">*</span></label>
+              <input id="fgr-lot" class="form-control">
+              <div class="invalid-feedback" id="fgr-lot-err"></div>
+            </div>
+            <div class="col-6">
+              <label class="form-label">วันที่ผลิต</label>
+              <input id="fgr-mfgdate" type="date" class="form-control">
+            </div>
+            <div class="col-6">
+              <label class="form-label">วันหมดอายุ</label>
+              <input id="fgr-exp" type="date" class="form-control">
+            </div>
+          </div>
+        </div>
         <div class="row g-3">
           <div class="col-6">
             <label class="form-label">จำนวนรับเข้า<span class="text-danger">*</span></label>
@@ -1727,6 +1755,10 @@ table.prtp-table .prtp-blank { height: 30px; }
           <div class="col-6">
             <label class="form-label">วันที่รับเข้าคลัง</label>
             <input id="fgr-date" type="date" class="form-control">
+          </div>
+          <div class="col-12 d-none" id="fgr-general-note-wrap">
+            <label class="form-label">หมายเหตุ</label>
+            <textarea id="fgr-note" class="form-control" rows="2"></textarea>
           </div>
         </div>
       </div>
@@ -3696,10 +3728,14 @@ function _receivedSort(rows, rmMap) {
 function receivedRenderTable() {
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
   const catFilter = document.getElementById('receivedCategoryFilter').value;
-  const q = (document.getElementById('receivedSearch').value || '').toLowerCase();
+  const q = (document.getElementById('receivedSearch').value || '').trim().toLowerCase();
   const rows = _receivedCache.filter(r => {
     const cat = rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
-    return catMatches(cat, catFilter) && (!q || JSON.stringify(r).toLowerCase().includes(q));
+    // ค้นหาแบบไฮบริด: พิมพ์อะไรก็ได้ที่อยู่ใน "ชื่อรายการ" (ไม่ใช่แค่รหัส) ซัพพลายเออร์ Lot (ทั้งของเราและ
+    // ของผู้ผลิต) หรือหมายเหตุ — เดิมค้นแค่ JSON.stringify(r) ซึ่งเป็นแถวดิบไม่มีชื่อรายการ (มีแค่ RM_ID)
+    // เลยพิมพ์ชื่อแล้วไม่เจอ (ผู้ใช้ขอ 2026-09-28)
+    const hay = [r.RM_ID, rmMap[r.RM_ID]?.RM_Name, r.Supplier, r.Lot, r.MfgLot, r.Note].filter(Boolean).join(' ').toLowerCase();
+    return catMatches(cat, catFilter) && (!q || hay.includes(q));
   });
   _receivedSort(rows, rmMap);
   const sortMode = document.getElementById('receivedSort').value;
@@ -4103,7 +4139,18 @@ function _rcvLabelAny(type, id) {
 // ส่งคำขอ + (แอดมิน) อนุมัติทันที — ใช้ทั้งฟอร์มใบรับและฟอร์มกลาง
 async function _editSubmitRequest(type, id, p_new, reason) {
   const { data: reqId, error } = await _sb.rpc('edit_request_create', { p_type: type, p_record_id: id, p_new, p_reason: reason });
-  if (error) { console.error(error); Swal.fire('ส่งคำขอไม่สำเร็จ', _rcvEditSetupErr(error) ? RCV_EDIT_SETUP_MSG : esc(error.message), 'error'); return false; }
+  if (error) {
+    console.error(error);
+    // ช่องที่เพิ่งเพิ่มใหม่ (เช่น MfgLot) แต่ยังไม่ได้รัน migration ที่เพิ่ม field นั้นเข้า _edit_cfg —
+    // ฝั่ง DB จะ raise "แก้ช่อง % ไม่ได้" ตรงๆ (ไม่ใช่ error แบบระบบคำขอแก้ไขทั้งระบบยังไม่ได้ตั้งค่าที่
+    // _rcvEditSetupErr ดักไว้) โชว์ข้อความที่เข้าใจง่ายกว่าแทน raw error (ผู้ใช้ขอ 2026-09-28)
+    const fieldErr = /แก้ช่อง (\S+) ไม่ได้/.exec(error.message || '');
+    const msg = _rcvEditSetupErr(error) ? RCV_EDIT_SETUP_MSG
+      : fieldErr ? `ช่อง "${esc(fieldErr[1])}" เพิ่งเพิ่มใหม่ — แอดมินต้องรัน migration ที่เกี่ยวข้องใน Supabase ก่อนถึงจะขอแก้ไขช่องนี้ได้ (หรือแก้ค่านี้กลับเป็นเดิมแล้วส่งใหม่)`
+      : esc(error.message);
+    Swal.fire('ส่งคำขอไม่สำเร็จ', msg, 'error');
+    return false;
+  }
   if (_hasRole('admin')) {
     const { error: apErr } = await _sb.rpc('edit_request_approve', { p_req_id: reqId, p_note: 'แอดมินแก้ไขเอง' });
     if (apErr) {
@@ -5825,20 +5872,45 @@ async function fgReceiveLoad() {
     <td><button class="btn btn-sm btn-success" onclick="fgReceiveOpenForm('${p.Prod_ID}')"><i class="fa-solid fa-box-open me-1"></i>รับเข้าคลัง</button></td></tr>`).join('')
     || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีรายการรอรับเข้าคลัง</td></tr>';
   document.getElementById('fgReceiveHistTableBody').innerHTML = fgReceived.map(r => `
-    <tr><td>${esc(r.FGReceive_ID)}</td><td>${esc(fgMap[r.FG_ID]?.FG_Name || r.FG_ID)}</td><td>${esc(r.Lot)}</td><td>${_bomFmtQty(r.Qty)}</td><td>${fmtDate(r.ReceiveDate)}</td><td class="text-center">${_editBtn('fg_receive', r.FGReceive_ID)}</td></tr>`).join('')
-    || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+    <tr><td>${esc(r.FGReceive_ID)}</td><td>${r.Prod_ID ? badge('จากไลน์ผลิต','primary') : badge('ทั่วไป','secondary')}</td><td>${esc(fgMap[r.FG_ID]?.FG_Name || r.FG_ID)}</td><td>${esc(r.Lot)}</td><td>${_bomFmtQty(r.Qty)}</td><td>${fmtDate(r.ReceiveDate)}</td><td class="text-center">${_editBtn('fg_receive', r.FGReceive_ID)}</td></tr>`).join('')
+    || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
 }
 let _fgReceiveProdId = null;
+// 'line' = รับจากไลน์ผลิต (คลิกจากแถวที่รอรับ ผูกกับใบผลิต) / 'general' = รับทั่วไป (ไม่ผูกใบผลิตไหน
+// เลือกสินค้า+กรอก Lot/วันที่ผลิต/วันหมดอายุเอง) — เหมือนแนวคิด ProFlow แต่ใช้โมดัลเดียวกัน สลับส่วนที่
+// ต้องกรอกด้วย mode แทนที่จะแยกโมดัล (ผู้ใช้ขอ 2026-09-28)
+let _fgReceiveMode = 'line';
 function fgReceiveOpenForm(prodId) {
   const p = (window._prodRecordCache||[]).find(x => x.Prod_ID === prodId);
   _fgReceiveProdId = prodId;
+  _fgReceiveMode = 'line';
+  document.getElementById('fgr-general-fields').classList.add('d-none');
+  document.getElementById('fgr-general-note-wrap').classList.add('d-none');
   _modalClearErrors(['fgr-qty']);
   document.getElementById('fgr-title').textContent = `รับ FG เข้าคลัง (${prodId})`;
   document.getElementById('fgr-qty').value = p.QtyProduced;
   document.getElementById('fgr-date').value = todayStr();
   new bootstrap.Modal(document.getElementById('fgReceiveModal')).show();
 }
+function fgReceiveOpenGeneral() {
+  _fgReceiveProdId = null;
+  _fgReceiveMode = 'general';
+  _modalClearErrors(['fgr-qty', 'fgr-fg', 'fgr-lot']);
+  document.getElementById('fgr-title').textContent = 'รับ FG เข้าคลัง (ทั่วไป)';
+  document.getElementById('fgr-general-fields').classList.remove('d-none');
+  document.getElementById('fgr-general-note-wrap').classList.remove('d-none');
+  document.getElementById('fgr-fg').innerHTML = '<option value="">-- เลือกสินค้า --</option>' +
+    _fgMasterCache.map(f => `<option value="${esc(f.FG_ID)}">${esc(f.FG_Name)}</option>`).join('');
+  document.getElementById('fgr-lot').value = '';
+  document.getElementById('fgr-mfgdate').value = todayStr();
+  document.getElementById('fgr-exp').value = '';
+  document.getElementById('fgr-note').value = '';
+  document.getElementById('fgr-qty').value = '';
+  document.getElementById('fgr-date').value = todayStr();
+  new bootstrap.Modal(document.getElementById('fgReceiveModal')).show();
+}
 async function fgReceiveModalSave() {
+  if (_fgReceiveMode === 'general') return fgReceiveGeneralSave();
   _modalClearErrors(['fgr-qty']);
   const qty = parseFloat(document.getElementById('fgr-qty').value);
   if (!qty || qty <= 0) { _modalShowError('fgr-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
@@ -5850,6 +5922,32 @@ async function fgReceiveModalSave() {
   const ok = await sbRun(_sb.from('fg_receive').insert(payload), 'รับ FG เข้าคลังไม่สำเร็จ');
   if (ok === null) return;
   await adjustStockFG(p.FG_ID, p.ProdLot, qty, p.MfgDate, p.ExpDate);
+  bootstrap.Modal.getInstance(document.getElementById('fgReceiveModal')).hide();
+  fgReceiveLoad();
+}
+// รับทั่วไป: เขียนตาราง fg_receive แถวเดียวกันกับรับจากไลน์ผลิต แค่ Prod_ID เป็น null (ต้องรัน
+// migration_2026-09-28_fg_receive_general.sql ให้คอลัมน์นี้ยอม null ก่อน) ไม่แตะ production_records เลย
+async function fgReceiveGeneralSave() {
+  _modalClearErrors(['fgr-qty', 'fgr-fg', 'fgr-lot']);
+  const fgId = document.getElementById('fgr-fg').value;
+  const lot = document.getElementById('fgr-lot').value.trim();
+  const qty = parseFloat(document.getElementById('fgr-qty').value);
+  if (!fgId) { _modalShowError('fgr-fg', 'เลือกสินค้า'); return; }
+  if (!lot) { _modalShowError('fgr-lot', 'กรอก Lot'); return; }
+  if (!qty || qty <= 0) { _modalShowError('fgr-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  const mfgDate = document.getElementById('fgr-mfgdate').value || null;
+  const expDate = document.getElementById('fgr-exp').value || null;
+  const payload = {
+    FGReceive_ID: genId('FGR'), Prod_ID: null, FG_ID: fgId, Lot: lot, Qty: qty,
+    MfgDate: mfgDate, ExpDate: expDate, ReceiveDate: document.getElementById('fgr-date').value || todayStr(),
+    Note: document.getElementById('fgr-note').value.trim() || null,
+  };
+  const { error } = await _sb.from('fg_receive').insert(payload);
+  if (error) {
+    if (error.code === '23502') { Swal.fire('รับเข้าคลังแบบทั่วไปยังใช้ไม่ได้', 'แอดมินต้องรัน <code>migration_2026-09-28_fg_receive_general.sql</code> ใน Supabase ก่อน', 'error'); return; }
+    _rmLotRpcErr(error, 'รับ FG เข้าคลังไม่สำเร็จ'); return;
+  }
+  await adjustStockFG(fgId, lot, qty, mfgDate, expDate);
   bootstrap.Modal.getInstance(document.getElementById('fgReceiveModal')).hide();
   fgReceiveLoad();
 }
