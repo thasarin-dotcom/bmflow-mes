@@ -888,6 +888,15 @@ table.prtp-table .prtp-blank { height: 30px; }
           <thead><tr><th>วัตถุดิบพร้อมผลิต</th><th class="text-end">ต้องใช้</th><th class="text-end">มีอยู่แล้ว</th><th class="text-end">ต้องเตรียมเพิ่ม</th><th class="text-center">จัดการ</th></tr></thead>
           <tbody id="prepPlanBody"><tr><td colspan="5" class="text-center text-muted py-3">เลือก MO ที่จะผลิตก่อน</td></tr></tbody>
         </table></div>
+        <!-- ใบเตรียมของ MO นี้ที่กำลังดำเนินการ — รวมจุดทำงานไว้ที่เดียว ไม่ต้องเลื่อนไปหาที่การ์ด "กำลัง
+             เตรียม" ด้านล่างเอง (ผู้ใช้ขอ 2026-09-28) โผล่เฉพาะตอนมีจริง -->
+        <div id="prepPlanInProgressWrap" class="d-none mt-3">
+          <h6 class="small text-muted mb-2"><i class="fa-solid fa-spinner me-1"></i>ใบเตรียมของ MO นี้ที่กำลังดำเนินการ</h6>
+          <div class="table-responsive"><table class="table table-sm table-hover mb-0">
+            <thead><tr><th>ใบเตรียม</th><th>จาก → เป็น</th><th class="text-end">เบิกไป</th><th>ความคืบหน้า</th><th class="text-center">จัดการ</th></tr></thead>
+            <tbody id="prepPlanInProgressBody"></tbody>
+          </table></div>
+        </div>
       </div>
       <div class="glass-card">
         <h6 class="mb-3"><i class="fa-solid fa-spinner me-2 text-warning"></i>กำลังเตรียม</h6>
@@ -902,7 +911,7 @@ table.prtp-table .prtp-blank { height: 30px; }
           <div class="search-wrap" style="width:240px;max-width:100%"><input class="form-control form-control-sm search-input" id="prepSearch" placeholder="ค้นหา..." oninput="prepRender()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('prepSearch').value='';prepRender()"></i></div>
         </div>
         <div class="table-responsive"><table class="table table-hover mb-0">
-          <thead><tr><th>ใบเตรียม</th><th>วันที่</th><th>จาก → เป็น</th><th class="text-end">เบิกไป</th><th class="text-end">ได้กลับ</th><th class="text-end">สูญเสียจริง</th><th class="text-end">มาตรฐาน</th><th>Lot ที่ได้</th><th>สถานะ</th></tr></thead>
+          <thead><tr><th>ใบเตรียม</th><th>วันที่</th><th>จาก → เป็น</th><th class="text-end">เบิกไป</th><th class="text-end">ได้กลับ</th><th class="text-end">สูญเสียจริง</th><th class="text-end">มาตรฐาน</th><th>Lot ที่ได้</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
           <tbody id="prepHistBody"></tbody>
         </table></div>
       </div>
@@ -1316,6 +1325,15 @@ table.prtp-table .prtp-blank { height: 30px; }
             <div class="form-text" style="font-size:.72rem">ใช้คำนวณจำนวนที่จะผลิตในหน้า "สร้าง MO" จากจำนวนวัน</div>
           </div>
           <div class="col-md-6">
+            <label class="form-label">ขนาด 1 แบท</label>
+            <div class="input-group has-validation">
+              <input id="fgm-batchsize" type="number" step="any" min="0" class="form-control" placeholder="ไม่บังคับ">
+              <span class="input-group-text" id="fgm-batchsize-unit">ลูก/แบท</span>
+              <div class="invalid-feedback" id="fgm-batchsize-err"></div>
+            </div>
+            <div class="form-text" style="font-size:.72rem">ใช้คำนวณจำนวนที่จะผลิตในหน้า "สร้าง MO" จากจำนวนแบท</div>
+          </div>
+          <div class="col-md-6">
             <label class="form-label">เลขทะเบียน</label>
             <input id="fgm-regno" class="form-control" placeholder="เช่น เลข อย.">
           </div>
@@ -1604,11 +1622,15 @@ table.prtp-table .prtp-blank { height: 30px; }
           </div>
           <div class="col-6">
             <label class="form-label">จะผลิตกี่วัน <span class="text-muted fw-normal" id="pln-capacity-hint" style="font-size:.72rem"></span></label>
-            <input id="pln-days" type="number" min="0" step="any" class="form-control" placeholder="ไม่บังคับ" oninput="planDaysChanged()">
+            <input id="pln-days" type="number" min="0" step="1" class="form-control" placeholder="ไม่บังคับ" oninput="planRecalc('days')">
+          </div>
+          <div class="col-6">
+            <label class="form-label">จำนวนแบท <span class="text-muted fw-normal" id="pln-batch-hint" style="font-size:.72rem"></span></label>
+            <input id="pln-batches" type="number" min="0" step="any" class="form-control" placeholder="ไม่บังคับ" oninput="planRecalc('batches')">
           </div>
           <div class="col-6">
             <label class="form-label">จำนวนที่จะผลิต<span class="text-danger">*</span></label>
-            <input id="pln-qty" type="number" step="any" class="form-control">
+            <input id="pln-qty" type="number" step="any" class="form-control" oninput="planRecalc('qty')">
             <div class="invalid-feedback" id="pln-qty-err"></div>
           </div>
           <div class="col-6">
@@ -2267,7 +2289,7 @@ const _WRITE_ACTIONS = [
   'wasteModalNext', 'wasteLotModalSave', 'employeeSave', 'genwdModalSave', 'genwdDelete',
   'rmMasterDelete', 'bomDeleteLine', 'bomDeleteProduct', 'receivedDelete', 'coDelete', 'planDelete', 'prodRecordDelete', 'wasteDelete',
   'signupreqApprove', 'signupreqReject', 'userrolesUpdateRole', 'userrolesUpdateName',
-  'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete', 'prepPlanBulkIssue',
+  'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete', 'prepPlanBulkIssue', 'prepHistRequestDelete',
   'rcvReportConfirm', 'rcvReportRename',
   'rcvEditApprove', 'rcvEditReject', 'rcvEditCancel', 'rcvEditSignup', 'editReqSubmit',
 ];
@@ -3113,6 +3135,7 @@ function fgMasterOpenForm(id) {
   document.getElementById('fgm-note').value = row?.Note || '';
   document.getElementById('fgm-price').value = row?.SellPrice ?? '';
   document.getElementById('fgm-capacity').value = row?.CapacityPerDay ?? '';
+  document.getElementById('fgm-batchsize').value = row?.BatchSize ?? '';
   document.getElementById('fgm-regno').value = row?.RegNo || '';
   fgMasterSyncPriceUnit();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('fgMasterModal')).show();
@@ -3122,9 +3145,10 @@ function fgMasterSyncPriceUnit() {
   const u = document.getElementById('fgm-unit').value.trim() || 'หน่วย';
   document.getElementById('fgm-price-unit').textContent = 'บาท/' + u;
   document.getElementById('fgm-capacity-unit').textContent = u + '/วัน';
+  document.getElementById('fgm-batchsize-unit').textContent = u + '/แบท';
 }
 async function fgMasterModalSave() {
-  _modalClearErrors(['fgm-id', 'fgm-name', 'fgm-price', 'fgm-capacity']);
+  _modalClearErrors(['fgm-id', 'fgm-name', 'fgm-price', 'fgm-capacity', 'fgm-batchsize']);
   const fgId = document.getElementById('fgm-id').value.trim();
   const name = document.getElementById('fgm-name').value.trim();
   if (!fgId) { _modalShowError('fgm-id', 'กรอกรหัส FG'); return; }
@@ -3153,6 +3177,14 @@ async function fgMasterModalSave() {
     Swal.fire('ยังใส่เลขทะเบียนไม่ได้', 'แอดมินต้องรัน <code>migration_2026-09-28_product_regno.sql</code> ใน Supabase ก่อน (หรือลบค่านี้ออกแล้วบันทึก)', 'error');
     return;
   }
+  const batchRaw = document.getElementById('fgm-batchsize').value.trim();
+  const batchSize = batchRaw === '' ? null : parseFloat(batchRaw);
+  if (batchRaw !== '' && !(batchSize > 0)) { _modalShowError('fgm-batchsize', 'กรอกขนาดแบทให้ถูกต้อง'); return; }
+  const batchSupported = _fgMasterCache.some(r => 'BatchSize' in r);
+  if (batchSize !== null && !batchSupported && _fgMasterCache.length) {
+    Swal.fire('ยังใส่ขนาดแบทไม่ได้', 'แอดมินต้องรัน <code>migration_2026-09-28_product_batchsize.sql</code> ใน Supabase ก่อน (หรือลบค่านี้ออกแล้วบันทึก)', 'error');
+    return;
+  }
   if (_fgMasterEditId && fgId !== _fgMasterEditId) {
     if (!(await _renameMasterCode('product_master', _fgMasterEditId, fgId, name))) return;
     _bomExpandedSet.delete(_fgMasterEditId); _bomExpandedSet.add(fgId);
@@ -3167,6 +3199,7 @@ async function fgMasterModalSave() {
   if (priceSupported || price !== null) payload.SellPrice = price;
   if (capacitySupported || capacity !== null) payload.CapacityPerDay = capacity;
   if (regNoSupported || regNo !== null) payload.RegNo = regNo;
+  if (batchSupported || batchSize !== null) payload.BatchSize = batchSize;
   const ok = await sbRun(_sb.from('product_master').upsert(payload), 'บันทึกสินค้าไม่สำเร็จ');
   if (ok === null) return;
   bootstrap.Modal.getInstance(document.getElementById('fgMasterModal')).hide();
@@ -3305,6 +3338,7 @@ function bomRenderCards() {
           <span class="badge bg-light text-dark border ms-1"><i class="fa-regular fa-clock me-1"></i>อายุ ${g.ShelfLifeDays ?? '—'} วัน</span>
           ${g.SellPrice != null ? `<span class="badge bg-light text-success border ms-1"><i class="fa-solid fa-tag me-1"></i>${_fmtBaht(g.SellPrice)} บาท/${esc(g.Unit || 'หน่วย')}</span>` : ''}
           ${g.CapacityPerDay != null ? `<span class="badge bg-light text-primary border ms-1"><i class="fa-solid fa-gauge-high me-1"></i>${_bomFmtQty(g.CapacityPerDay)} ${esc(g.Unit || 'หน่วย')}/วัน</span>` : ''}
+          ${g.BatchSize != null ? `<span class="badge bg-light text-primary border ms-1"><i class="fa-solid fa-layer-group me-1"></i>1 แบท = ${_bomFmtQty(g.BatchSize)} ${esc(g.Unit || 'หน่วย')}</span>` : ''}
           ${g.RegNo ? `<span class="badge bg-light text-dark border ms-1"><i class="fa-solid fa-stamp me-1"></i>เลขทะเบียน ${esc(g.RegNo)}</span>` : ''}
           ${g.lines.length
             ? `<span class="text-muted ms-2 small">วัตถุดิบ ${rmCount} · แพ็คเกจจิ้ง ${pkgCount} รายการ</span>`
@@ -4041,17 +4075,24 @@ const EDIT_TYPES = {
       { k: 'ExpDate', type: 'date', req: true }, { k: 'ProducedBy', type: 'text' }, { k: 'Note', type: 'textarea' }],
     info: 'ถ้ารับเข้าคลัง FG แล้ว เปลี่ยน Lot ไม่ได้ · วันผลิต/หมดอายุจะเปลี่ยนตามในสต็อก FG ด้วย' },
   fg_receive: { label: 'รับ FG เข้าคลัง', icon: 'fa-box-open', table: 'fg_receive', pk: 'FGReceive_ID',
-    fields: { Qty: 'จำนวนรับ', ReceiveDate: 'วันที่รับ', Note: 'หมายเหตุ' },
-    form: [{ k: 'Qty', type: 'number', req: true }, { k: 'ReceiveDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
-    info: 'สต็อก FG ล็อตนี้ปรับตามส่วนต่างตอนแอดมินอนุมัติ (ลดได้ไม่เกินที่ยังเหลือในคลัง)' },
+    fields: { Qty: 'จำนวนรับ', ExpDate: 'วันหมดอายุ', ReceiveDate: 'วันที่รับ', Note: 'หมายเหตุ' },
+    form: [{ k: 'Qty', type: 'number', req: true }, { k: 'ExpDate', type: 'date' }, { k: 'ReceiveDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
+    info: 'สต็อก FG ล็อตนี้ปรับตามส่วนต่างตอนแอดมินอนุมัติ (ลดได้ไม่เกินที่ยังเหลือในคลัง) — แก้วันหมดอายุจะปรับล็อตในสต็อก FG (คีย์เดียวกับ Lot นี้) ตามไปด้วย' },
   waste_log: { label: 'ของเสีย', icon: 'fa-trash-can', table: 'waste_log', pk: 'Waste_ID',
     fields: { Qty: 'จำนวน', Reason: 'สาเหตุ', WasteDate: 'วันที่', Note: 'หมายเหตุ' },
     form: [{ k: 'Qty', type: 'number', unit: r => r.Unit, req: true }, { k: 'Reason', type: 'text', req: true }, { k: 'WasteDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
     info: 'เพิ่มจำนวน = ตัดสต็อกล็อตเดิมเพิ่ม · ลดจำนวน = คืนเข้าล็อตเดิม — ปรับตอนแอดมินอนุมัติ' },
   // ไม่มี form/fields ให้แก้จริง — ใช้แค่ "ขอลบ" (planRequestDelete) ไม่ใช่แก้ไขทีละช่อง ต่างจากประเภทอื่นทั้งหมด
   manufacturing_orders: { label: 'แผนผลิต (MO)', icon: 'fa-calendar-days', table: 'manufacturing_orders', pk: 'MO_ID' },
+  // ใบเตรียม (รับกลับแล้วเท่านั้น — ใบที่ยังกำลังเตรียมอยู่ใช้ prepDelete/prep_cancel เดิม ไม่ต้องรออนุมัติ)
+  // แก้ทีละช่องได้ (QtyBack/Note) ต่างจาก prep_orders_delete ด้านล่างที่ไม่มี form เหมือน MO (ขอลบทั้งใบ)
+  prep_orders: { label: 'ใบเตรียมวัตถุดิบ', icon: 'fa-mortar-pestle', table: 'prep_orders', pk: 'Prep_ID',
+    fields: { QtyBack: 'ได้กลับ', Note: 'หมายเหตุ' },
+    form: [{ k: 'QtyBack', type: 'number', unit: r => r.Unit, req: true }, { k: 'Note', type: 'textarea' }],
+    info: 'แก้ "ได้กลับ" จะปรับล็อตวัตถุดิบพร้อมผลิตที่สร้างไว้ตามส่วนต่าง — ถ้าล็อตนั้นถูกเบิกเข้าสายไปแล้วบางส่วน จะแก้ให้น้อยกว่าที่เบิกไปไม่ได้' },
+  prep_orders_delete: { label: 'ใบเตรียมวัตถุดิบ (ลบ)', icon: 'fa-mortar-pestle', table: 'prep_orders', pk: 'Prep_ID' },
 };
-const EDIT_NUM_FIELDS = ['Qty', 'QtyIssued', 'QtyProduced', 'UnitPrice'];
+const EDIT_NUM_FIELDS = ['Qty', 'QtyIssued', 'QtyProduced', 'UnitPrice', 'QtyBack'];
 const RCV_EDIT_STATUS_BADGE = { 'รออนุมัติ': 'warning', 'อนุมัติแล้ว': 'success', 'ไม่อนุมัติ': 'danger', 'ยกเลิก': 'secondary',
   'รอตรวจสอบ': 'warning', 'สร้างแล้ว': 'success', 'ปฏิเสธ': 'danger' };
 const RCV_EDIT_SETUP_MSG = 'ยังไม่ได้ตั้งค่าคำขอแก้ไข — แอดมินต้องรัน <code>migration_2026-09-26_edit_requests_all.sql</code> ใน Supabase ก่อน';
@@ -4111,6 +4152,9 @@ function _rcvEditDiffHtml(changes, type = 'rm_receive') {
   if (type === 'manufacturing_orders') {
     return `<div class="small text-danger"><i class="fa-solid fa-trash me-1"></i><b>ขอลบ MO ทั้งใบ</b><div class="text-muted">อนุมัติแล้วจะคืนวัตถุดิบที่เบิกไปทั้งหมดกลับเข้าสต็อกให้อัตโนมัติ</div></div>`;
   }
+  if (type === 'prep_orders_delete') {
+    return `<div class="small text-danger"><i class="fa-solid fa-trash me-1"></i><b>ขอลบใบเตรียมทั้งใบ</b><div class="text-muted">อนุมัติแล้วจะคืนวัตถุดิบสดต้นทางกลับเข้าล็อตเดิม และตัดวัตถุดิบพร้อมผลิตที่สร้างไว้ออกจากสต็อก</div></div>`;
+  }
   const labels = EDIT_TYPES[type]?.fields || {};
   return Object.entries(changes || {}).map(([f, [from, to]]) =>
     `<div class="small"><b>${esc(labels[f] || f)}:</b> <span class="text-danger text-decoration-line-through">${_rcvEditFmtVal(f, from)}</span>
@@ -4128,6 +4172,8 @@ function _editRecLabel(type, rec) {
     case 'fg_receive': return [fg(rec.FG_ID), `${rec.Lot} · ${_bomFmtQty(rec.Qty)} · รับ ${fmtDateLong(rec.ReceiveDate)}`];
     case 'waste_log': return [rec.ItemType === 'FG' ? fg(rec.FG_ID) : rm(rec.RM_ID), `${rec.ItemType === 'FG' ? _bomFmtQty(rec.Qty) : _qtyFmtByCat(rec.Qty, _rmMasterCache.find(r => r.RM_ID === rec.RM_ID)?.Category)} ${rec.Unit || ''} · ${rec.Reason || ''} · ${fmtDateLong(rec.WasteDate)}`];
     case 'manufacturing_orders': return [`${rec.MO_ID} · ${fg(rec.FG_ID)}`, `แผน ${_bomFmtQty(rec.PlanQty)} · ${fmtDate(rec.PlanDate)} · สถานะ ${rec.Status}`];
+    case 'prep_orders': case 'prep_orders_delete':
+      return [rm(rec.TargetRM_ID), `${rm(rec.SourceRM_ID)} → ${rm(rec.TargetRM_ID)} · ได้กลับ ${_rmFmtQty(rec.QtyBack)} ${rec.Unit || ''} · ${fmtDateLong(rec.PrepDate)}`];
   }
   return ['', ''];
 }
@@ -4945,6 +4991,7 @@ function planOpenForm(id) {
   document.getElementById('pln-fg').innerHTML = _fgMasterCache.map(f => `<option value="${esc(f.FG_ID)}">${esc(f.FG_Name)}</option>`).join('');
   if (row) document.getElementById('pln-fg').value = row.FG_ID;
   document.getElementById('pln-days').value = '';
+  document.getElementById('pln-batches').value = '';
   document.getElementById('pln-qty').value = row?.PlanQty ?? '';
   document.getElementById('pln-date').value = row?.PlanDate || todayStr();
   document.getElementById('pln-lot').value = row?.Lot || _genLotForDate(document.getElementById('pln-date').value);
@@ -4955,32 +5002,52 @@ function planOpenForm(id) {
   _planUpdateDateRangeHint();
   new bootstrap.Modal(document.getElementById('planModal')).show();
 }
-// เลือกสินค้า → โชว์กำลังการผลิต/วัน (ถ้าตั้งไว้) และเปิด/ปิดช่อง "จะผลิตกี่วัน" ตามนั้น
+// เลือกสินค้า → โชว์กำลังการผลิต/วัน + ขนาดแบท (ถ้าตั้งไว้) เปิด/ปิดช่อง "จะผลิตกี่วัน"/"จำนวนแบท" ตามนั้น
 function planFgChanged() {
   const fg = _fgMasterCache.find(f => f.FG_ID === document.getElementById('pln-fg').value);
-  const daysEl = document.getElementById('pln-days');
-  const hint = document.getElementById('pln-capacity-hint');
+  const daysEl = document.getElementById('pln-days'), batchEl = document.getElementById('pln-batches');
+  const capHint = document.getElementById('pln-capacity-hint'), batchHint = document.getElementById('pln-batch-hint');
   if (fg?.CapacityPerDay > 0) {
-    hint.textContent = `(กำลังผลิต ${_bomFmtQty(fg.CapacityPerDay)} ${fg.Unit || 'หน่วย'}/วัน)`;
+    capHint.textContent = `(กำลังผลิต ${_bomFmtQty(fg.CapacityPerDay)} ${fg.Unit || 'หน่วย'}/วัน)`;
     daysEl.disabled = false;
   } else {
-    hint.textContent = '(สินค้านี้ยังไม่ได้ตั้งกำลังการผลิต/วัน — ตั้งได้ที่หน้า "สูตรแม่บท")';
+    capHint.textContent = '(ยังไม่ได้ตั้งกำลังการผลิต/วัน — ตั้งได้ที่หน้า "สูตรแม่บท")';
     daysEl.disabled = true; daysEl.value = '';
   }
-  planDaysChanged();
+  if (fg?.BatchSize > 0) {
+    batchHint.textContent = `(1 แบท = ${_bomFmtQty(fg.BatchSize)} ${fg.Unit || 'หน่วย'})`;
+    batchEl.disabled = false;
+  } else {
+    batchHint.textContent = '(ยังไม่ได้ตั้งขนาดแบท — ตั้งได้ที่หน้า "สูตรแม่บท")';
+    batchEl.disabled = true; batchEl.value = '';
+  }
+  planRecalc('qty');   // เติมวัน/แบทให้ตรงกับจำนวนที่มีอยู่แล้ว (โหมดแก้ไข) หรือเคลียร์ถ้ายังไม่มี (สร้างใหม่)
 }
 // เปลี่ยนวันที่เริ่มผลิต → ตั้ง Lot ใหม่ตามวันที่นี้ (รูปแบบเดียวกับ genId แต่ใช้วันที่ที่เลือก ไม่ใช่วันนี้)
 function planDateChanged() {
   document.getElementById('pln-lot').value = _genLotForDate(document.getElementById('pln-date').value);
   _planUpdateDateRangeHint();
 }
-// จำนวนวัน × กำลังการผลิต/วัน → เติมลง "จำนวนที่จะผลิต" ให้อัตโนมัติ — ยังแก้จำนวนเองทับได้เสมอ
-function planDaysChanged() {
+// จำนวนลูก / จำนวนแบท / จะผลิตกี่วัน สัมพันธ์กันหมด (ผู้ใช้ขอ 2026-09-28) — "จำนวนที่จะผลิต" (ลูก) เป็นค่า
+// จริงที่บันทึกลง PlanQty เสมอ ไม่ว่าจะแก้จากช่องไหนก็คำนวณผ่านช่องนี้เป็นตัวกลางก่อน แล้วค่อยคำนวณอีกสอง
+// ช่องที่เหลือกลับจากค่านี้อีกที (กันปัญหา 3 ช่องขัดแย้งกันเองถ้าคำนวณแยกอิสระ) ช่องไหนไม่ได้ตั้งค่า
+// (กำลังการผลิต/วัน หรือ ขนาดแบท) ไว้ที่สินค้านั้น จะถูก disable ไปแล้วตั้งแต่ planFgChanged
+function planRecalc(from) {
   const fg = _fgMasterCache.find(f => f.FG_ID === document.getElementById('pln-fg').value);
-  const days = parseFloat(document.getElementById('pln-days').value);
-  if (fg?.CapacityPerDay > 0 && days > 0) {
-    document.getElementById('pln-qty').value = Math.round(fg.CapacityPerDay * days * 10000) / 10000;
+  const qtyEl = document.getElementById('pln-qty'), daysEl = document.getElementById('pln-days'), batchEl = document.getElementById('pln-batches');
+  const cap = fg?.CapacityPerDay > 0 ? fg.CapacityPerDay : null;
+  const batch = fg?.BatchSize > 0 ? fg.BatchSize : null;
+  // "จะผลิตกี่วัน" ต้องเป็นจำนวนเต็มเสมอ ไม่มีจุดทศนิยม (ผู้ใช้ขอ 2026-09-28) — พิมพ์เองก็ปัดขึ้นทันที
+  // (ปัดขึ้นไม่ใช่ปัดใกล้สุด เพราะผลิตครึ่งวันจริงไม่ได้ ต้องใช้เต็มวันถัดไปเสมอ)
+  if (from === 'days' && parseFloat(daysEl.value) > 0) daysEl.value = Math.ceil(parseFloat(daysEl.value));
+  if (from === 'days' && cap && parseFloat(daysEl.value) > 0) {
+    qtyEl.value = Math.round(cap * parseFloat(daysEl.value) * 10000) / 10000;
+  } else if (from === 'batches' && batch && parseFloat(batchEl.value) > 0) {
+    qtyEl.value = Math.round(batch * parseFloat(batchEl.value) * 10000) / 10000;
   }
+  const qty = parseFloat(qtyEl.value) || 0;
+  if (from !== 'days') daysEl.value = (cap && qty > 0) ? Math.ceil(qty / cap) : '';
+  if (from !== 'batches') batchEl.value = (batch && qty > 0) ? Math.round((qty / batch) * 100) / 100 : '';
   _planUpdateDateRangeHint();
 }
 // วันที่เริ่ม + (จำนวนวัน − 1) = วันสุดท้าย เช่น เริ่ม 28 ก.ย. ผลิต 2 วัน → 28–29 ก.ย. (ผู้ใช้ขอ 2026-09-28
@@ -5223,6 +5290,7 @@ function prepPlanCalc() {
   if (!moId) {
     infoEl.textContent = ''; bulkBtn.disabled = true;
     body.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">เลือก MO ที่จะผลิตก่อน</td></tr>';
+    _prepPlanRenderInProgress(null);
     return;
   }
   const fg = _fgMasterCache.find(f => f.FG_ID === mo?.FG_ID);
@@ -5230,6 +5298,7 @@ function prepPlanCalc() {
   if (!rows.length) {
     bulkBtn.disabled = true;
     body.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">สูตรนี้ไม่มีวัตถุดิบที่ต้องเตรียมก่อน (ใช้วัตถุดิบสด/แห้ง/เคมีตรงได้เลย)</td></tr>';
+    _prepPlanRenderInProgress(moId);
     return;
   }
   bulkBtn.disabled = !rows.some(r => r.short > 0);
@@ -5240,6 +5309,30 @@ function prepPlanCalc() {
       <td class="text-end ${short > 0 ? 'text-danger fw-semibold' : 'text-success'}">${short > 0 ? `${_rmFmtQty(short)} ${esc(b.Unit || '')}` : (have >= required ? 'พอใช้แล้ว' : 'กำลังเตรียมอยู่ (รอรับกลับ)')}</td>
       <td class="text-center">${short > 0 ? `<button class="btn btn-sm btn-success" data-t="${esc(b.RM_ID)}" data-mo="${esc(moId)}" data-q="${short}" onclick="prepOpenIssue(this.dataset.t,this.dataset.mo,+this.dataset.q)"><i class="fa-solid fa-circle-plus me-1"></i>เบิกไปเตรียม</button>` : '<span class="text-muted small">—</span>'}</td>
     </tr>`).join('');
+  _prepPlanRenderInProgress(moId);
+}
+// รวมจุดทำงานไว้ที่เดียว (ผู้ใช้ขอ 2026-09-28): ใบเตรียม "กำลังเตรียม" ที่ผูกกับ MO นี้ โผล่ในการ์ด
+// "วางแผนจาก MO" เลย ไม่ต้องเลื่อนลงไปหาที่การ์ด "กำลังเตรียม" (ตารางรวมทุก MO) ด้านล่างเอง — ปุ่มเรียก
+// ฟังก์ชันเดิมทุกตัว (prepOpenSteps/prepPrintOpen/prepDelete) แค่แสดงซ้ำในบริบทที่สโคปแคบกว่า
+function _prepPlanRenderInProgress(moId) {
+  const wrap = document.getElementById('prepPlanInProgressWrap');
+  const rows = moId ? _prepCache.filter(p => p.MO_ID === moId && p.Status === 'กำลังเตรียม') : [];
+  wrap.classList.toggle('d-none', !rows.length);
+  if (!rows.length) return;
+  document.getElementById('prepPlanInProgressBody').innerHTML = rows.map(p => {
+    const steps = Array.isArray(p.Steps) ? p.Steps : [];
+    const filled = steps.filter(s => s.weight !== null && s.weight !== undefined && s.weight !== '');
+    return `<tr>
+      <td><code>${esc(p.Prep_ID)}</code></td>
+      <td>${esc(_rmName(p.SourceRM_ID))} <i class="fa-solid fa-arrow-right mx-1 text-muted"></i> <b>${esc(_rmName(p.TargetRM_ID))}</b></td>
+      <td class="text-end">${_rmFmtQty(p.QtyOut)} ${esc(p.Unit || '')}</td>
+      <td class="small">${steps.length ? `${filled.length}/${steps.length} ขั้น` : '—'}</td>
+      <td class="text-center text-nowrap">
+        <button class="btn btn-sm btn-success me-1" data-id="${esc(p.Prep_ID)}" onclick="prepOpenSteps(this.dataset.id)"><i class="fa-solid fa-scale-balanced me-1"></i>บันทึก / รับกลับ</button>
+        <button class="btn btn-sm btn-outline-primary me-1" data-id="${esc(p.Prep_ID)}" onclick="prepPrintOpen(this.dataset.id)" title="พิมพ์ใบเตรียมแบ่งวัน/ชุด"><i class="fa-solid fa-print"></i></button>
+        <button class="btn btn-sm btn-outline-danger" data-id="${esc(p.Prep_ID)}" onclick="prepDelete(this.dataset.id)" title="ยกเลิกใบเตรียม (คืนวัตถุดิบสดเข้าล็อตเดิม)"><i class="fa-solid fa-ban"></i></button>
+      </td></tr>`;
+  }).join('');
 }
 // ปุ่มเดียวเบิกไปเตรียมทุกรายการที่ขาด (ผู้ใช้ขอ 2026-09-28) — ต่างจากปุ่มต่อแถวตรงที่ทำทีเดียวหมด แต่ยังเคารพ
 // กติกาเดิมของ prep_issue_post ว่าห้ามติดลบ: ถ้าวัตถุดิบสดมีไม่พอ จะเบิกให้เท่าที่มีจริงแทน (ไม่ error ทั้งชุด)
@@ -5262,10 +5355,12 @@ async function prepPlanBulkIssue() {
   let okCount = 0, skipped = 0; const errors = []; const usedIds = new Set();
   for (const r of shortRows) {
     if (r.rawToIssue <= 0) { skipped++; continue; }
-    // สองรายการปลายทางอาจใช้วัตถุดิบต้นทางเดียวกัน (เช่น "พร้อมใช้" กับ "แห้ง" มาจากของสดตัวเดียวกัน) — กันเลขซ้ำ
-    // ในชุดเบิกเดียวกันด้วย usedIds แทนที่จะพึ่งสุ่มแบบเดิม (ผู้ใช้ขอให้เลขคาดเดาได้ 2026-09-28)
+    // สองรายการปลายทางอาจใช้วัตถุดิบต้นทางเดียวกัน (เช่น "พร้อมใช้" กับ "แห้ง" มาจากของสดตัวเดียวกัน) หรือ
+    // วันนี้เคยเบิกวัตถุดิบต้นทางนี้ไปเตรียมแล้วรอบหนึ่ง (คนละ MO/ครั้ง) มาก่อนแล้ว — กันเลขซ้ำด้วยเช็คทั้ง
+    // usedIds (ชุดนี้) และ _prepCache จริง (ของเดิมที่มีอยู่แล้ว) ไม่งั้นชนกัน "duplicate key" ตอนบันทึก
+    // (ผู้ใช้ขอให้เลขคาดเดาได้ 2026-09-28 เจอบั๊กนี้จากการทดสอบจริง — เดิมเช็คแค่ usedIds ไม่พอ)
     let prepId = `PRE-${_genLotForDate(todayStr())}-${r.t.SourceRM_ID}`, n = 1;
-    while (usedIds.has(prepId)) prepId = `PRE-${_genLotForDate(todayStr())}-${r.t.SourceRM_ID}-${++n}`;
+    while (usedIds.has(prepId) || _prepCache.some(p => p.Prep_ID === prepId)) prepId = `PRE-${_genLotForDate(todayStr())}-${r.t.SourceRM_ID}-${++n}`;
     usedIds.add(prepId);
     const { error } = await _sb.rpc('prep_issue_post', {
       p_prep_id: prepId, p_target_rm_id: r.t.RM_ID, p_qty: r.rawToIssue,
@@ -5326,8 +5421,34 @@ function prepRender() {
       <td class="text-end ${over ? 'text-danger fw-semibold' : ''}">${p.ActualLossPct != null ? _bomFmtQty(p.ActualLossPct) + '%' : '—'}${over ? ' <i class="fa-solid fa-triangle-exclamation" title="สูญเสียมากกว่ามาตรฐานเกิน 2%"></i>' : ''}</td>
       <td class="text-end text-muted">${_bomFmtQty(p.StdLossPct || 0)}%</td>
       <td class="small">${esc(p.BackLotID ? (_rmLotCache.find(l => l.Lot_ID === p.BackLotID)?.Lot || p.BackLotID) : '—')}</td>
-      <td>${badge(p.Status, PREP_STATUS_BADGE[p.Status])}</td></tr>`;
-  }).join('') || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+      <td>${badge(p.Status, PREP_STATUS_BADGE[p.Status])}</td>
+      <td class="text-center text-nowrap">${p.Status === 'รับกลับแล้ว' ? `${_editBtn('prep_orders', p.Prep_ID)}
+        ${_editPendingFor('prep_orders_delete', p.Prep_ID) ? `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอลบรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`
+          : `<button class="btn btn-sm btn-outline-danger" data-id="${esc(p.Prep_ID)}" onclick="prepHistRequestDelete(this.dataset.id)" title="ขอลบใบเตรียมนี้"><i class="fa-solid fa-trash"></i></button>`}`
+        : '<span class="text-muted small">—</span>'}</td></tr>`;
+  }).join('') || '<tr><td colspan="10" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+}
+// ขอลบใบเตรียมที่ "รับกลับแล้ว" ทั้งใบ (ต่างจาก prepDelete ที่ยกเลิกได้ทันทีเฉพาะใบที่ยังกำลังเตรียมอยู่) —
+// ต้องผ่านคำขอ+อนุมัติเพราะย้อนกลับสต็อกสองด้าน (คืนวัตถุดิบสดต้นทาง + ตัดวัตถุดิบพร้อมผลิตที่สร้างไว้)
+async function prepHistRequestDelete(id) {
+  const p = _prepCache.find(x => x.Prep_ID === id);
+  const { value: reason } = await Swal.fire({
+    icon: 'warning', title: `ขอลบใบเตรียม ${id}?`,
+    html: `<div class="small text-start mb-2">${esc(_rmName(p?.SourceRM_ID))} → <b>${esc(_rmName(p?.TargetRM_ID))}</b> · ได้กลับ ${_rmFmtQty(p?.QtyBack)} ${esc(p?.Unit || '')}<br>
+      ลบไม่ได้ทันที ต้องส่งคำขอให้แอดมินอนุมัติก่อน — ถ้าอนุมัติ ระบบจะคืนวัตถุดิบสดต้นทางกลับเข้าล็อตเดิม และตัดวัตถุดิบพร้อมผลิตที่สร้างไว้ออกจากสต็อกให้อัตโนมัติ</div>`,
+    input: 'textarea', inputPlaceholder: 'เหตุผลที่ขอลบ', inputAttributes: { 'aria-label': 'เหตุผลที่ขอลบ' },
+    inputValidator: v => !v?.trim() ? 'กรุณาระบุเหตุผล' : undefined,
+    showCancelButton: true, confirmButtonText: 'ส่งคำขอลบ', cancelButtonText: 'ยกเลิก',
+  });
+  if (!reason) return;
+  const { error } = await _sb.rpc('prep_delete_request_create', { p_prep_id: id, p_reason: reason.trim() });
+  if (error) {
+    const notSetup = error.code === 'PGRST202' || /prep_delete_request_create|prep_orders_delete/.test(error.message || '') && /not find|does not exist|schema cache/i.test(error.message || '');
+    Swal.fire('ส่งคำขอไม่สำเร็จ', notSetup ? 'แอดมินต้องรัน <code>migration_2026-09-28_prep_edit_delete.sql</code> ใน Supabase ก่อน' : esc(error.message), 'error');
+    return;
+  }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: 'ส่งคำขอลบแล้ว — รอแอดมินอนุมัติ' });
+  await Promise.all([prepLoad(), rcvEditLoadPending()]);
 }
 
 // ── เบิกไปเตรียม ──
@@ -5909,6 +6030,17 @@ function fgReceiveOpenGeneral() {
   document.getElementById('fgr-date').value = todayStr();
   new bootstrap.Modal(document.getElementById('fgReceiveModal')).show();
 }
+// เลขที่รับ FG ถัดไป = ปีเดือน+ครั้งที่ ต่อกันไม่มีขีดคั่น รีเซ็ตทุกเดือน เช่น FGR-260901 = รับครั้งที่ 1
+// ของเดือน 09 ปี 2569 (ผู้ใช้ขอ 2026-09-28) — คนละแบบกับ MO_ID ที่รีเซ็ตทุกปีและมีขีดคั่นก่อนเลขครั้ง
+async function _nextFgReceiveId() {
+  const now = new Date();
+  const prefix = `FGR-${String(now.getFullYear()).slice(2)}${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const { data, error } = await _sb.from('fg_receive').select('FGReceive_ID').like('FGReceive_ID', `${prefix}%`);
+  if (error) return `${prefix}01`;
+  const re = new RegExp(`^${prefix}(\\d+)$`);
+  const max = Math.max(0, ...(data || []).map(r => (r.FGReceive_ID.match(re) || [])[1]).filter(Boolean).map(Number));
+  return `${prefix}${String(max + 1).padStart(2, '0')}`;
+}
 async function fgReceiveModalSave() {
   if (_fgReceiveMode === 'general') return fgReceiveGeneralSave();
   _modalClearErrors(['fgr-qty']);
@@ -5916,7 +6048,7 @@ async function fgReceiveModalSave() {
   if (!qty || qty <= 0) { _modalShowError('fgr-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
   const p = (window._prodRecordCache||[]).find(x => x.Prod_ID === _fgReceiveProdId);
   const payload = {
-    FGReceive_ID: genId('FGR'), Prod_ID: _fgReceiveProdId, FG_ID: p.FG_ID, Lot: p.ProdLot, Qty: qty,
+    FGReceive_ID: await _nextFgReceiveId(), Prod_ID: _fgReceiveProdId, FG_ID: p.FG_ID, Lot: p.ProdLot, Qty: qty,
     MfgDate: p.MfgDate, ExpDate: p.ExpDate, ReceiveDate: document.getElementById('fgr-date').value || todayStr(),
   };
   const ok = await sbRun(_sb.from('fg_receive').insert(payload), 'รับ FG เข้าคลังไม่สำเร็จ');
@@ -5938,7 +6070,7 @@ async function fgReceiveGeneralSave() {
   const mfgDate = document.getElementById('fgr-mfgdate').value || null;
   const expDate = document.getElementById('fgr-exp').value || null;
   const payload = {
-    FGReceive_ID: genId('FGR'), Prod_ID: null, FG_ID: fgId, Lot: lot, Qty: qty,
+    FGReceive_ID: await _nextFgReceiveId(), Prod_ID: null, FG_ID: fgId, Lot: lot, Qty: qty,
     MfgDate: mfgDate, ExpDate: expDate, ReceiveDate: document.getElementById('fgr-date').value || todayStr(),
     Note: document.getElementById('fgr-note').value.trim() || null,
   };
