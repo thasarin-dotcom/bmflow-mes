@@ -294,10 +294,18 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
   body.print-rrpt { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
   body.print-rrpt > *:not(#rrpt-print-root) { display: none !important; }
   body.print-rrpt #rrpt-print-root { display: block !important; }
-  /* margin 10mm ที่ @page (ไม่ใช่ padding ของ .rrpt-page) → รายการยาวเกินหน้าแรก หน้าต่อๆ ไปยังมีขอบกระดาษ
-     ห้ามตั้งทั้งสองที่พร้อมกัน ขอบจะบวกซ้อนเป็นสองเท่า (บั๊กเดียวกับที่เคยเจอใน ProFlow MR Report) */
-  @page rcvreport { size: A4 landscape; margin: 10mm; }
-  #rrpt-print-root .rrpt-page { page: rcvreport; box-shadow: none; margin: 0; padding: 0; width: auto; min-height: 189mm; }
+  /* แนวตั้ง (top/bottom): margin อยู่ที่ @page เท่านั้น ห้ามตั้งซ้ำที่ .rrpt-page (รายการยาวเกินหน้าแรก
+     หน้าต่อๆ ไปยังมีขอบกระดาษ ตั้งสองที่พร้อมกันจะซ้อนเป็นสองเท่า — บั๊กเดียวกับที่เคยเจอใน ProFlow MR Report)
+     15mm (เพิ่มจาก 10mm เดิม, 2026-09-30) เผื่อขอบที่เครื่องพิมพ์จริงพิมพ์ไม่ถึง (unprintable margin) ซึ่ง
+     คุมจาก CSS ไม่ได้ตรงๆ — เผื่อให้กว้างขึ้นกว่าที่คำนวณพอดีเป๊ะ
+     แนวนอน (left/right): ตั้งเป็น padding ของ .rrpt-page แทน (ไม่ใช่ @page) เพราะ padding ซ้าย-ขวาไม่มีปัญหา
+     ซ้อนข้ามหน้าแบบ top/bottom — ให้ .rrpt-head/.rrpt-filters/table/.rrpt-foot ทุกส่วนเผื่อขอบเท่ากันหมด
+     (ก่อนหน้านี้เผื่อไว้แค่ที่ตารางเป็นกรณีพิเศษ พอลองพิมพ์จริงตารางเลยพอดีแต่หัวกระดาษ/footer ยังล้นเพราะไม่มี
+     buffer ชั้นนี้เหมือนกัน, ผู้ใช้ยืนยัน 2026-09-30) */
+  /* ขอบบนเพิ่มเป็น 22mm แยกจากขอบอื่น (2026-09-30, ผู้ใช้ขอ "ขอบบนชิดไป") — ซ้าย/ขวา/ล่างยังคง 15mm เดิม
+     ที่ใช้ได้ผลแล้ว ไม่แตะจุดที่โอเคอยู่แล้ว */
+  @page rcvreport { size: A4 landscape; margin: 15mm; margin-top: 22mm; }
+  #rrpt-print-root .rrpt-page { page: rcvreport; box-shadow: none; margin: 0; padding: 0 6mm; width: auto; min-height: 173mm; }
   table.rrpt-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 /* ใบเตรียมวัตถุดิบ (prtp) — กระดาษงานให้พนักงานถือไปชั่งจริง แบ่งเป็นวันๆ ตาม "ทำวันละกี่ชุด" ที่กรอก
@@ -4818,7 +4826,7 @@ function _rrptHtml() {
     ${showSup ? `<td>${esc(r.Supplier || '-')}</td>` : ''}
     <td>${esc(r.Lot || '-')}</td><td>${_fmtDateEn(r.HarvestDate)}</td><td>${_fmtDateEn(r.ExpDate)}</td>
     <td class="num qty">${_qtyFmtByCat(r.Qty, catOf(r))}</td><td>${esc(_rrptUnit(r.Unit))}</td>
-    <td class="num">${r.UnitPrice != null ? _fmtBaht(r.UnitPrice) : '-'}</td><td class="num">${r.UnitPrice != null ? _fmtBaht(r.UnitPrice * r.Qty) : '-'}</td>
+    <td class="num">${r.UnitPrice != null ? _fmtBaht(r.UnitPrice) : '-'}</td>
     <td>${esc(r.Note || '')}</td>
   </tr>`).join('');
   // สรุปตามรายการ + หน่วย (หน่วยต่างกันบวกกันไม่ได้) · มูลค่ารวมนับเฉพาะรายการที่มีราคา
@@ -4856,9 +4864,9 @@ function _rrptHtml() {
     </div>
     ${rows.length ? `
     <table class="rrpt-table">
-      <thead><tr><th style="width:3%">No.</th><th style="width:6%">Code</th><th style="width:14%">Description</th><th style="width:6%">Category</th>
-        ${showSup ? '<th style="width:7%">Supplier</th>' : ''}<th style="width:7%">Lot No.</th><th style="width:7%">Mfg. Date</th><th style="width:7%">Exp. Date</th>
-        <th class="num" style="width:6%">Qty</th><th style="width:4%">Unit</th><th class="num" style="width:7%">Unit Price</th><th class="num" style="width:8%">Amount</th><th>Remarks</th></tr></thead>
+      <thead><tr><th style="width:3%">No.</th><th style="width:6%">Code</th><th style="width:26%">Description</th><th style="width:7%">Category</th>
+        ${showSup ? '<th style="width:8%">Supplier</th>' : ''}<th style="width:8%">Lot No.</th><th style="width:8%">Mfg. Date</th><th style="width:8%">Exp. Date</th>
+        <th class="num" style="width:6%">Qty</th><th style="width:4%">Unit</th><th class="num" style="width:7%">Unit Price</th><th>Remarks</th></tr></thead>
       <tbody>${trs}</tbody>
     </table>
     <div class="rrpt-sum-title">Summary by Item</div>
