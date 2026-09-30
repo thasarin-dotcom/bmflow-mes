@@ -324,6 +324,50 @@ table.prtp-table .prtp-blank { height: 30px; }
   #prtp-print-root .prtp-page { page: prtpreport; box-shadow: none; margin: 0; padding: 0; width: auto; min-height: 277mm; page-break-after: always; }
   table.prtp-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+/* ใบขอเบิก (reqo) — ขอเบิกจากคลังใหญ่ พิมพ์แล้วเซ็นด้วยมือจริง (2026-09-29, ฟอร์มต้นแบบจาก ProFlow's
+   ใบขอซื้อ — สามช่องลายเซ็นเป็นเส้นเปล่าล้วนๆ ให้เซ็นบนกระดาษ ไม่ใช่ e-signature) A4 พอร์เทรต 1 หน้า แบ่งครึ่ง
+   บน/ล่าง ต้นฉบับ/สำเนา เหมือน ProFlow's .pr-print-page/.pr-print-half เป๊ะ (ผู้ใช้ขอปรับให้ตรงแบบ 2026-09-29
+   รอบสอง — เดิมทำหน้าเดียวไม่แบ่งครึ่งเพราะคิดว่าไม่มีเคสต้องเก็บสำเนา แต่ผู้ใช้อยากได้หน้าตาเหมือนต้นแบบจริงๆ) */
+.reqo-page { font-family: 'Sarabun', sans-serif; color: #1e293b; width: 210mm; height: 297mm; box-sizing: border-box;
+  background: #fff; margin: 0 auto 10px; box-shadow: 0 2px 10px rgba(0,0,0,.4); display: flex; flex-direction: column; }
+.reqo-half { height: 148.5mm; box-sizing: border-box; padding: 8mm 14mm; display: flex; flex-direction: column; font-size: 10.5px; overflow: hidden; }
+.reqo-cut { text-align: center; border-top: 1px dashed #94a3b8; position: relative; height: 0; }
+.reqo-cut span { position: relative; top: -7px; display: inline-block; background: #fff; padding: 0 10px; font-size: 9px; color: #94a3b8; }
+.reqo-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-blue); padding-bottom: 6px; margin-bottom: 8px; }
+.reqo-head-left { display: flex; align-items: center; gap: 8px; }
+.reqo-head img { height: 30px; }
+.reqo-company { font-size: 9.5px; color: #64748b; }
+.reqo-title { font-size: 15px; font-weight: 800; color: var(--primary-blue); text-align: right; }
+.reqo-copy-label { font-size: 10px; font-weight: 700; color: #fff; background: var(--primary-blue); border-radius: 3px; padding: 1px 7px; margin-left: 6px; vertical-align: middle; }
+.reqo-no { font-size: 10.5px; color: #1e293b; text-align: right; margin-top: 2px; }
+.reqo-meta { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 8px; font-size: 10.5px; }
+.reqo-meta .lbl { color: #64748b; font-weight: 700; margin-right: 3px; }
+table.reqo-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 6px; }
+table.reqo-table th { background: var(--primary-blue); color: #fff; padding: 4px; text-align: center; font-weight: 700; font-size: 9.5px; }
+table.reqo-table td { padding: 4px 5px; border: 1px solid #e2e8f0; text-align: center; vertical-align: middle; }
+table.reqo-table td.reqo-item { text-align: left; }
+.reqo-note-box { border: 1px solid #e2e8f0; border-radius: 3px; padding: 4px 8px; font-size: 10px; min-height: 20px; margin-bottom: 8px; }
+.reqo-sign { display: flex; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 6px; }
+.reqo-sign > div { flex: 1; text-align: center; font-size: 9.5px; }
+.reqo-sign .role { font-weight: 700; }
+/* ช่องว่างเซ็นจริง — สูงเท่ากันทั้ง 3 ช่องเสมอ (ผู้ขอเบิกมีรูปลายเซ็นวางอยู่ในนี้, อีก 2 ช่องว่างเปล่าให้เซ็นมือ
+   — เดิมช่องที่ไม่มีรูปมีระยะห่างจาก role ไปเส้นน้อยเกินไปจนแทบไม่มีที่เซ็น ผู้ใช้ทักหลังพิมพ์จริง 2026-09-29) */
+.reqo-sign .sigspace { height: 11mm; display: flex; align-items: flex-end; justify-content: center; }
+.reqo-sign .sigimg { display: block; max-height: 100%; max-width: 90%; object-fit: contain; }
+.reqo-sign .sigline { border-top: 1px solid #1e293b; margin: 0 8px 4px; padding-top: 2px; color: #64748b; }
+.reqo-sign .dateline { margin-top: 2px; color: #64748b; }
+#reqo-print-root { display: none; }
+@media print {
+  body.print-reqo { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+  body.print-reqo > *:not(#reqo-print-root) { display: none !important; }
+  body.print-reqo #reqo-print-root { display: block !important; }
+  /* margin 0 ที่ @page เพราะ .reqo-page สูง 297mm เป๊ะเท่ากระดาษจริงพอดีแล้ว (แบ่งครึ่งเป็น .reqo-half เอง
+     ข้างในผ่าน padding ของมันเอง) — ห้ามตั้ง margin ที่ @page ซ้ำ ไม่งั้นความสูงรวมเกิน 297mm ล้นไปหน้าที่ 2
+     เปล่าๆ (บั๊กเดียวกับที่เจอมาแล้วใน rrpt/prtp) */
+  @page reqoreport { size: A4 portrait; margin: 0; }
+  #reqo-print-root .reqo-page { page: reqoreport; box-shadow: none; margin: 0; }
+  table.reqo-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
 </style>
 </head>
 <body>
@@ -409,6 +453,7 @@ table.prtp-table .prtp-blank { height: 30px; }
     <ul class="nav flex-column nav-group-body">
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('received');return false;" id="navlink-received"><i class="fa-solid fa-inbox me-2"></i>Received</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('fgreceive');return false;" id="navlink-fgreceive"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('reqorder');return false;" id="navlink-reqorder"><i class="fa-solid fa-file-signature me-2"></i>ใบขอเบิก</a></li>
     </ul>
 
     <div class="nav-group-header" onclick="toggleNavGroup(this)"><span>Stock</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
@@ -534,6 +579,29 @@ table.prtp-table .prtp-blank { height: 30px; }
     <div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
       <thead><tr><th>วันที่รับ</th><th>หมวดหมู่</th><th>รายการ</th><th class="text-end">รับเข้า</th><th>ซัพพลายเออร์</th><th>Lot</th><th class="text-end">ราคา/หน่วย</th><th>หมดอายุ</th><th>จัดการ</th></tr></thead>
       <tbody id="receivedTableBody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ ใบขอเบิก (จากคลังใหญ่ — สถานที่ภายนอก ไม่มีสต็อกใน BM Flow) ═══════════════ -->
+  <div class="page-view" id="page-reqorder">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-file-signature me-2"></i>ใบขอเบิก</h4><div class="text-white-50 small">ขอเบิกวัตถุดิบ / แพ็คเกจจิ้งจากคลังใหญ่ — พิมพ์แล้วเซ็นด้วยมือจริง ไม่มีผลต่อสต็อกใน BM Flow</div></div>
+      <button class="btn btn-success" onclick="reqOrderOpenForm()"><i class="fa-solid fa-plus me-1"></i>สร้างใบขอเบิก</button>
+    </div>
+    <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 mb-2">
+      <select class="form-select w-auto" id="reqOrderFilter" onchange="reqOrderRender()">
+        <option value="">ทุกสถานะ</option>
+        <option value="รออนุมัติ">รออนุมัติ</option>
+        <option value="อนุมัติแล้ว">อนุมัติแล้ว</option>
+        <option value="พิมพ์แล้ว">พิมพ์แล้ว</option>
+        <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+        <option value="ยกเลิก">ยกเลิก</option>
+      </select>
+      <div class="search-wrap"><input class="form-control search-input" id="reqOrderSearch" placeholder="ค้นหา..." oninput="reqOrderRender()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('reqOrderSearch').value='';reqOrderRender()"></i></div>
+    </div></div>
+    <div class="scroll-content"><div class="glass-card p-0 overflow-hidden"><div class="table-responsive"><table class="table table-hover mb-0 align-middle">
+      <thead><tr><th>เลขที่</th><th>วันที่</th><th>ผู้ขอเบิก</th><th>รายการ</th><th>หมายเหตุ</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
+      <tbody id="reqOrderTableBody"></tbody>
     </table></div></div></div>
   </div>
 
@@ -908,7 +976,12 @@ table.prtp-table .prtp-blank { height: 30px; }
       <div class="glass-card">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
           <h6 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>ประวัติการเตรียม (30 วันล่าสุด)</h6>
-          <div class="search-wrap" style="width:240px;max-width:100%"><input class="form-control form-control-sm search-input" id="prepSearch" placeholder="ค้นหา..." oninput="prepRender()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('prepSearch').value='';prepRender()"></i></div>
+          <div class="d-flex flex-wrap gap-2">
+            <select class="form-select form-select-sm w-auto" id="prepHistStatusFilter" onchange="prepRender()">
+              <option value="">ทุกสถานะ</option><option value="รับกลับแล้ว">รับกลับแล้ว</option><option value="ยกเลิก">ยกเลิก</option>
+            </select>
+            <div class="search-wrap" style="width:240px;max-width:100%"><input class="form-control form-control-sm search-input" id="prepSearch" placeholder="ค้นหา..." oninput="prepRender()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('prepSearch').value='';prepRender()"></i></div>
+          </div>
         </div>
         <div class="table-responsive"><table class="table table-hover mb-0">
           <thead><tr><th>ใบเตรียม</th><th>วันที่</th><th>จาก → เป็น</th><th class="text-end">เบิกไป</th><th class="text-end">ได้กลับ</th><th class="text-end">สูญเสียจริง</th><th class="text-end">มาตรฐาน</th><th>Lot ที่ได้</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
@@ -1118,11 +1191,17 @@ table.prtp-table .prtp-blank { height: 30px; }
           <div class="col-md-7">
             <label class="form-label">จะเตรียมเป็น (วัตถุดิบแห้ง / พร้อมผลิต)<span class="text-danger">*</span></label>
             <select id="prepi-target" class="form-select" onchange="prepIssueTargetChanged()"></select>
-            <div class="invalid-feedback" id="prepi-target-err"></div>
+            <div class="invalid-feedback d-block" id="prepi-target-err"></div>
           </div>
           <div class="col-md-5">
             <label class="form-label">อ้างอิง MO (ไม่บังคับ)</label>
             <select id="prepi-mo" class="form-select" onchange="prepIssueMoChanged()"></select>
+          </div>
+          <div class="col-md-7">
+            <label class="form-label">จะเตรียมจาก (วัตถุดิบต้นทาง)<span class="text-danger">*</span></label>
+            <select id="prepi-source" class="form-select" onchange="prepIssueSourceChanged()"></select>
+            <div class="invalid-feedback d-block" id="prepi-source-err"></div>
+            <div class="form-text" style="font-size:.72rem">ค่าเริ่มต้นดึงจากที่ตั้งไว้ใน Master แต่เลือกเปลี่ยนได้อิสระ</div>
           </div>
           <div class="col-12"><div class="alert alert-light border py-2 mb-0 small" id="prepi-info"></div></div>
           <div class="col-md-4">
@@ -1194,6 +1273,64 @@ table.prtp-table .prtp-blank { height: 30px; }
 </div>
 
 <datalist id="prepStepList"><option value="คัด"><option value="ล้าง"><option value="อบ"><option value="บด"><option value="ย่อย"><option value="ย่อยขนาด"><option value="ปอกเปลือก"><option value="หั่น"><option value="ตาก"><option value="ร่อน"></datalist>
+
+<!-- ═══════════════ MODAL: ใบขอเบิก (สร้าง/แก้ไข) ═══════════════ -->
+<div class="modal fade" id="reqOrderModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-file-signature me-2"></i><span id="reqo-title">สร้างใบขอเบิก</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="form-label">วันที่ขอเบิก</label>
+            <input id="reqo-date" type="date" class="form-control" oninput="_reqoSaveDraft()">
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">หมายเหตุ (ไม่บังคับ)</label>
+            <input id="reqo-note" class="form-control" placeholder="เช่น ใช้เร่งด่วนสำหรับ MO ..." oninput="_reqoSaveDraft()">
+          </div>
+        </div>
+        <label class="form-label">เพิ่มรายการที่จะขอเบิก</label>
+        <div class="position-relative mb-2">
+          <input id="reqo-add-search" class="form-control" placeholder="ค้นหารหัส / ชื่อวัตถุดิบ / แพ็คเกจจิ้ง..." oninput="reqoSearchMaterial(this.value)" autocomplete="off">
+          <div id="reqo-add-dd" class="list-group position-absolute w-100" style="z-index:1060;display:none;max-height:260px;overflow:auto"></div>
+        </div>
+        <div class="table-responsive"><table class="table table-sm align-middle mb-2">
+          <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end" style="width:12%">คงเหลือ</th><th style="width:14%">จำนวนที่ขอเบิก</th><th style="width:10%">หน่วย</th><th>หมายเหตุ</th><th></th></tr></thead>
+          <tbody id="reqo-rows"></tbody>
+        </table></div>
+        <div class="invalid-feedback d-block" id="reqo-rows-err"></div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="reqOrderSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: ตัวอย่างใบขอเบิก — ตรวจสอบก่อนพิมพ์ ═══════════════ -->
+<div class="modal fade" id="reqOrderPrintModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-print me-2"></i>ตัวอย่างใบขอเบิก — ตรวจสอบก่อนพิมพ์</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="background:#e2e8f0;max-height:75vh;overflow:auto">
+        <div id="reqo-preview-body"></div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+        <button type="button" class="btn btn-brand" onclick="reqOrderPrintConfirm()"><i class="fa-solid fa-print me-1"></i>พิมพ์ / บันทึกเป็น PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════ MODAL: วัตถุดิบ / แพ็คเกจจิ้ง (Master) ═══════════════ -->
 <div class="modal fade" id="rmMasterModal" tabindex="-1">
   <div class="modal-dialog">
@@ -1253,6 +1390,8 @@ table.prtp-table .prtp-blank { height: 30px; }
               <option value="กิโลกรัม">กิโลกรัม</option>
               <option value="มิลลิลิตร">มิลลิลิตร</option>
               <option value="ลิตร">ลิตร</option>
+              <option value="มิลลิเมตร">มิลลิเมตร</option>
+              <option value="เมตร">เมตร</option>
               <option value="ชิ้น">ชิ้น</option>
             </select>
           </div>
@@ -2177,7 +2316,7 @@ const PAGE_LOADERS = {
   fgreceive: fgReceiveLoad, stockfg: stockFgLoad, stockcard: stockCardLoad,
   co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
   rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad, employee: employeeLoad, auditlog: auditLoad, prep: prepLoad,
-  rcvedit: rcvEditLoad,
+  rcvedit: rcvEditLoad, reqorder: reqOrderLoad,
 };
 let _currentPage = 'dashboard';
 async function showPage(name) {
@@ -2211,7 +2350,7 @@ async function refreshCurrentPage() {
   if (_refreshing) return;
   _refreshing = true;
   try {
-    _planCache = []; _coCache = []; _bomCache = []; _stockRmCache = []; _stockFgCache = []; _receivedCache = []; _wasteCache = []; _rmLotCache = []; _prepCache = [];
+    _planCache = []; _coCache = []; _bomCache = []; _stockRmCache = []; _stockFgCache = []; _receivedCache = []; _wasteCache = []; _rmLotCache = []; _prepCache = []; _reqOrderCache = []; _reqOrderLinesCache = [];
     await Promise.all([fgMasterLoad(), rmMasterLoad()]);
     if (PAGE_LOADERS[_currentPage]) await PAGE_LOADERS[_currentPage]();
     if (_hasRole('admin')) signupreqRefreshBadge();
@@ -2289,9 +2428,10 @@ const _WRITE_ACTIONS = [
   'wasteModalNext', 'wasteLotModalSave', 'employeeSave', 'genwdModalSave', 'genwdDelete',
   'rmMasterDelete', 'bomDeleteLine', 'bomDeleteProduct', 'receivedDelete', 'coDelete', 'planDelete', 'prodRecordDelete', 'wasteDelete',
   'signupreqApprove', 'signupreqReject', 'userrolesUpdateRole', 'userrolesUpdateName',
-  'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete', 'prepPlanBulkIssue', 'prepHistRequestDelete',
+  'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete', 'prepPlanBulkIssue', 'prepHistRequestDelete', 'prepHistDelete',
   'rcvReportConfirm', 'rcvReportRename',
   'rcvEditApprove', 'rcvEditReject', 'rcvEditCancel', 'rcvEditSignup', 'editReqSubmit',
+  'reqOrderSave', 'reqOrderDelete', 'reqOrderApprove', 'reqOrderReject', 'reqOrderCancel', 'reqOrderPrintConfirm',
 ];
 let _singleFlightRunning = 0;
 function _singleFlight(names) {
@@ -4750,6 +4890,311 @@ function rcvReportPrint() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// ใบขอเบิก (REQ) — ขอเบิกจากคลังใหญ่ (2026-09-29, migration_2026-09-29_req_orders.sql)
+// คลังใหญ่ = สถานที่ภายนอก ไม่มีสต็อกใน BM Flow เลย → ฟีเจอร์นี้เป็นแค่เอกสาร ไม่กระทบสต็อกใดๆ ทั้งสิ้น
+// (ของที่ได้กลับมาจริง ค่อยรับเข้าคลังตามปกติที่หน้า "Received" แยกกันคนละขั้นตอน ไม่ผูกอัตโนมัติ — เหมือนที่
+// ProFlow's ใบขอซื้อ ก็ไม่ผูกอัตโนมัติกับ MR Receive เช่นกัน, ต้นแบบฟอร์มพิมพ์ก็มาจากฟีเจอร์เดียวกันนั้น)
+// สถานะ: รออนุมัติ → อนุมัติแล้ว → พิมพ์แล้ว | ไม่อนุมัติ | ยกเลิก (ผู้ใช้ขอ "เหมือนคำขอแก้ไข")
+// อนุมัติ/ไม่อนุมัติ = แอดมินเท่านั้น (rank>=3, ตรงกับ edit_request_approve/reject) · ยกเลิก = หัวหน้างานขึ้นไป
+// (rank>=2) · แก้ไข/ลบร่างที่ยังรออนุมัติ ทำได้ทุกคน (เหมือน prep_orders — ยังไม่กระทบอะไรจริง)
+// ═══════════════════════════════════════════════════════════
+let _reqOrderCache = [];
+let _reqOrderLinesCache = [];
+let _reqOrderEditId = null;
+const REQ_STATUS_BADGE = { 'รออนุมัติ': 'warning', 'อนุมัติแล้ว': 'primary', 'พิมพ์แล้ว': 'success', 'ไม่อนุมัติ': 'danger', 'ยกเลิก': 'secondary' };
+
+async function reqOrderLoad() {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  const [h, l] = await Promise.all([
+    _sb.from('req_orders').select('*').order('CreatedAt', { ascending: false }),
+    _sb.from('req_order_lines').select('*'),
+    stockRmLoad(),   // ให้ _stockRmCache สดไว้โชว์ "คงเหลือ" ตอนเพิ่มรายการ (ผู้ใช้ขอ 2026-09-29)
+  ]);
+  if (h.error) {
+    document.getElementById('reqOrderTableBody').innerHTML =
+      `<tr><td colspan="7" class="text-center text-danger py-4">รัน <code>migration_2026-09-29_req_orders.sql</code> ใน Supabase ก่อน<div class="small text-muted mt-1">${esc(h.error.message)}</div></td></tr>`;
+    return;
+  }
+  _reqOrderCache = h.data || [];
+  _reqOrderLinesCache = l.data || [];
+  reqOrderRender();
+}
+function _reqLinesOf(reqId) { return _reqOrderLinesCache.filter(l => l.Req_ID === reqId); }
+// เลขที่ใบขอเบิก REQ-ปี-ลำดับ วิ่งไปเรื่อยๆ ต่อปี — อ่านค่ามากสุดที่มีจริงแล้ว+1 (บทเรียนเดียวกับ _nextMoId /
+// RC No: ต้อง max-based ไม่ใช่ count-based กันเลขซ้ำถ้ามีช่องว่างในลำดับ)
+async function _nextReqId() {
+  const year = new Date().getFullYear();
+  const prefix = `REQ-${year}-`;
+  const { data, error } = await _sb.from('req_orders').select('Req_ID').like('Req_ID', `${prefix}%`);
+  if (error) return `${prefix}001`;
+  const re = new RegExp(`^REQ-${year}-(\\d+)$`);
+  const max = Math.max(0, ...(data || []).map(r => (r.Req_ID.match(re) || [])[1]).filter(Boolean).map(Number));
+  return `${prefix}${String(max + 1).padStart(3, '0')}`;
+}
+function reqOrderRender() {
+  const f = document.getElementById('reqOrderFilter').value;
+  const q = (document.getElementById('reqOrderSearch').value || '').trim().toLowerCase();
+  const rows = _reqOrderCache.filter(r => (!f || r.Status === f)
+    && (!q || [r.Req_ID, r.RequestedBy, r.Note].join(' ').toLowerCase().includes(q)));
+  document.getElementById('reqOrderTableBody').innerHTML = rows.map(r => {
+    const lines = _reqLinesOf(r.Req_ID);
+    const itemsText = lines.length
+      ? `${lines.length} รายการ <span class="text-muted small">(${lines.slice(0, 2).map(l => esc(_rmName(l.RM_ID))).join(', ')}${lines.length > 2 ? ' ...' : ''})</span>`
+      : '<span class="text-muted">—</span>';
+    let actions = '';
+    if (r.Status === 'รออนุมัติ') {
+      actions += `<button class="btn btn-sm btn-outline-primary me-1" onclick="reqOrderOpenForm('${esc(r.Req_ID)}')" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>`;
+      if (_hasRole('admin')) {
+        actions += `<button class="btn btn-sm btn-success me-1" onclick="reqOrderApprove('${esc(r.Req_ID)}')" title="อนุมัติ"><i class="fa-solid fa-check"></i></button>
+          <button class="btn btn-sm btn-outline-danger me-1" onclick="reqOrderReject('${esc(r.Req_ID)}')" title="ไม่อนุมัติ"><i class="fa-solid fa-xmark"></i></button>`;
+      }
+      actions += `<button class="btn btn-sm btn-outline-danger" onclick="reqOrderDelete('${esc(r.Req_ID)}')" title="ลบร่าง"><i class="fa-solid fa-trash"></i></button>`;
+    } else if (r.Status === 'อนุมัติแล้ว' || r.Status === 'พิมพ์แล้ว') {
+      actions += `<button class="btn btn-sm btn-primary me-1" onclick="reqOrderOpenPrintPreview('${esc(r.Req_ID)}')" title="พิมพ์"><i class="fa-solid fa-print"></i></button>`;
+      if (_hasRole('supervisor')) actions += `<button class="btn btn-sm btn-outline-danger" onclick="reqOrderCancel('${esc(r.Req_ID)}')" title="ยกเลิกใบขอเบิก"><i class="fa-solid fa-ban"></i></button>`;
+    } else if (_hasRole('supervisor')) {
+      actions += `<button class="btn btn-sm btn-outline-danger" onclick="reqOrderDelete('${esc(r.Req_ID)}')" title="ลบทิ้ง"><i class="fa-solid fa-trash"></i></button>`;
+    }
+    const reasonTip = (r.Status === 'ไม่อนุมัติ' || r.Status === 'ยกเลิก') && r.RejectReason
+      ? ` <i class="fa-solid fa-circle-info text-muted" title="${esc(r.RejectReason)}"></i>` : '';
+    return `<tr><td><code>${esc(r.Req_ID)}</code></td><td>${fmtDate(r.ReqDate)}</td><td>${esc(r.RequestedBy || '-')}</td>
+      <td class="small">${itemsText}</td><td class="small text-muted">${esc(r.Note || '')}</td>
+      <td>${badge(r.Status, REQ_STATUS_BADGE[r.Status])}${reasonTip}</td>
+      <td class="text-center text-nowrap">${actions}</td></tr>`;
+  }).join('') || '<tr><td colspan="7" class="text-center text-muted py-4">ยังไม่มีใบขอเบิก — กด "สร้างใบขอเบิก" เพื่อเริ่ม</td></tr>';
+}
+
+// ── สร้าง/แก้ไข ──
+// stockQty = ยอดคงเหลือปัจจุบัน (ตอนเพิ่มรายการใหม่ = ดึงสดจาก _stockRmCache, ตอนแก้ไขใบเดิม = ใช้ค่า
+// snapshot ที่บันทึกไว้ตอนขอ req_order_lines.QtyAtRequest ไม่ใช่ยอดสดตอนนี้ — เก็บไว้ใน data-qty-at-request
+// ของแถว ให้ _reqoReadRows() อ่านตอนบันทึกโดยไม่ต้องคำนวณใหม่) (ผู้ใช้ขอ 2026-09-29)
+function _reqoRowHTML(rmId, name, unit, qty, note, stockQty) {
+  return `<tr class="reqo-row" data-rm="${esc(rmId)}" data-qty-at-request="${stockQty ?? ''}">
+    <td><code>${esc(rmId)}</code></td><td>${esc(name)}</td>
+    <td class="text-end small ${(stockQty ?? 0) <= 0 ? 'text-danger fw-semibold' : 'text-muted'}">${stockQty != null ? _rmFmtQty(stockQty) : '—'}</td>
+    <td><input type="number" min="0" step="any" class="form-control form-control-sm reqo-qty" value="${qty ?? ''}" oninput="_reqoSaveDraft()"></td>
+    <td class="small text-muted">${esc(unit || '')}</td>
+    <td><input class="form-control form-control-sm reqo-note" value="${esc(note || '')}" placeholder="ไม่บังคับ" oninput="_reqoSaveDraft()"></td>
+    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" style="padding:0 8px !important" onclick="this.closest('tr').remove();_reqoSaveDraft()"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
+}
+// ค้นหา+เลือกวัตถุดิบจาก Master แบบเดียวกับ bomSearchMaterial/bomSelectMaterial — กันเพิ่มรายการซ้ำด้วย
+// การเช็ค data-rm ที่มีอยู่แล้วในตารางก่อนโชว์ผลค้นหา
+function reqoSearchMaterial(q) {
+  const dd = document.getElementById('reqo-add-dd');
+  q = (q || '').trim().toLowerCase();
+  if (!q) { dd.style.display = 'none'; return; }
+  const existing = new Set([...document.querySelectorAll('#reqo-rows .reqo-row')].map(tr => tr.dataset.rm));
+  const results = _rmMasterCache.filter(m => !existing.has(m.RM_ID)
+    && ((m.RM_Name || '').toLowerCase().includes(q) || (m.RM_ID || '').toLowerCase().includes(q))).slice(0, 10);
+  dd.innerHTML = results.length
+    ? results.map(m => `<button type="button" class="list-group-item list-group-item-action py-1 px-2" style="font-size:.84rem"
+        data-rm="${esc(m.RM_ID)}" onclick="reqoAddMaterial(this.dataset.rm)">
+        <span class="badge text-bg-secondary me-1">${esc(m.RM_ID)}</span>${esc(m.RM_Name)} ${catBadge(m.Category)}
+        <span class="text-muted small ms-1">(${esc(m.Unit)})</span></button>`).join('')
+    : '<div class="list-group-item small text-muted">ไม่พบใน Master — เพิ่มที่หน้า "วัตถุดิบ / แพ็คเกจจิ้ง (Master)" ก่อน</div>';
+  dd.style.display = 'block';
+}
+function reqoAddMaterial(rmId) {
+  const m = _rmMasterCache.find(r => r.RM_ID === rmId);
+  if (!m) return;
+  const stock = _stockRmCache.find(s => s.RM_ID === rmId)?.Qty ?? 0;
+  document.getElementById('reqo-rows').insertAdjacentHTML('beforeend', _reqoRowHTML(m.RM_ID, m.RM_Name, m.Unit, 1, '', stock));
+  document.getElementById('reqo-add-search').value = '';
+  document.getElementById('reqo-add-dd').style.display = 'none';
+  document.getElementById('reqo-rows-err').textContent = '';
+  _reqoSaveDraft();
+}
+// ── ร่างค้างไว้กันเผลอปิดฟอร์มหาย (localStorage, 2026-09-29, ผู้ใช้ขอ) ──
+// เฉพาะตอน "สร้างใหม่" เท่านั้น (ไม่ใช่แก้ไขของเดิม — ของเดิมปลอดภัยอยู่ใน DB แล้ว ไม่มีอะไรจะหาย)
+const REQO_DRAFT_KEY = 'bmflow.reqoDraft.v1';
+function _reqoSaveDraft() {
+  if (_reqOrderEditId) return;
+  try {
+    const rows = [...document.querySelectorAll('#reqo-rows .reqo-row')].map(tr => ({
+      RM_ID: tr.dataset.rm, Qty: tr.querySelector('.reqo-qty').value,
+      Note: tr.querySelector('.reqo-note').value, QtyAtRequest: tr.dataset.qtyAtRequest,
+    }));
+    localStorage.setItem(REQO_DRAFT_KEY, JSON.stringify({
+      date: document.getElementById('reqo-date').value, note: document.getElementById('reqo-note').value, rows,
+    }));
+  } catch {}   // localStorage อาจใช้ไม่ได้ (private mode ฯลฯ) — แค่ไม่ช่วยกู้คืน ไม่ใช่ทำฟอร์มพัง
+}
+function _reqoLoadDraft() { try { return JSON.parse(localStorage.getItem(REQO_DRAFT_KEY) || 'null'); } catch { return null; } }
+function _reqoClearDraft() { try { localStorage.removeItem(REQO_DRAFT_KEY); } catch {} }
+function reqOrderOpenForm(id) {
+  _reqOrderEditId = id || null;
+  document.getElementById('reqo-title').textContent = id ? `แก้ไขใบขอเบิก — ${id}` : 'สร้างใบขอเบิก';
+  document.getElementById('reqo-add-search').value = '';
+  document.getElementById('reqo-add-dd').style.display = 'none';
+  document.getElementById('reqo-rows-err').textContent = '';
+  if (id) {
+    const r = _reqOrderCache.find(x => x.Req_ID === id);
+    document.getElementById('reqo-date').value = r?.ReqDate || todayStr();
+    document.getElementById('reqo-note').value = r?.Note || '';
+    document.getElementById('reqo-rows').innerHTML = _reqLinesOf(id).map(l =>
+      _reqoRowHTML(l.RM_ID, _rmName(l.RM_ID), l.Unit, l.Qty, l.Note, l.QtyAtRequest)).join('');
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('reqOrderModal')).show();
+    return;
+  }
+  const fillRows = (draft) => {
+    document.getElementById('reqo-date').value = draft?.date || todayStr();
+    document.getElementById('reqo-note').value = draft?.note || '';
+    document.getElementById('reqo-rows').innerHTML = (draft?.rows || []).map(l => {
+      const m = _rmMasterCache.find(x => x.RM_ID === l.RM_ID);
+      return m ? _reqoRowHTML(m.RM_ID, m.RM_Name, m.Unit, l.Qty, l.Note, l.QtyAtRequest) : '';
+    }).join('');
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('reqOrderModal')).show();
+  };
+  const draft = _reqoLoadDraft();
+  if (draft && ((draft.rows || []).length || draft.note)) {
+    Swal.fire({ icon: 'question', title: 'พบข้อมูลที่กรอกค้างไว้', text: 'มีใบขอเบิกที่กรอกไว้ยังไม่ได้บันทึก — กู้คืนเลยไหม?',
+      showCancelButton: true, confirmButtonText: 'กู้คืน', cancelButtonText: 'เริ่มใหม่' })
+      .then(c => { if (!c.isConfirmed) _reqoClearDraft(); fillRows(c.isConfirmed ? draft : null); });
+  } else {
+    fillRows(null);
+  }
+}
+function _reqoReadRows() {
+  return [...document.querySelectorAll('#reqo-rows .reqo-row')].map(tr => ({
+    RM_ID: tr.dataset.rm,
+    Qty: parseFloat(tr.querySelector('.reqo-qty').value) || 0,
+    Unit: _rmMasterCache.find(r => r.RM_ID === tr.dataset.rm)?.Unit || '',
+    Note: tr.querySelector('.reqo-note').value.trim() || null,
+    QtyAtRequest: tr.dataset.qtyAtRequest === '' ? null : parseFloat(tr.dataset.qtyAtRequest),
+  }));
+}
+// บันทึก = ลบรายการเดิมทั้งหมดแล้วแทรกใหม่ทั้งชุด (ง่ายกว่า diff ทีละแถว, เหมือน purchase_request_lines
+// ของ ProFlow ตอนแก้ไข) — ทำได้เพราะแก้ไขได้เฉพาะตอนยังรออนุมัติเท่านั้น ไม่มีอะไรอ้างอิงรายการเดิมอยู่
+async function reqOrderSave() {
+  const errEl = document.getElementById('reqo-rows-err');
+  errEl.textContent = '';
+  const rows = _reqoReadRows();
+  if (!rows.length) { errEl.textContent = 'เพิ่มอย่างน้อย 1 รายการ'; return; }
+  const bad = rows.find(r => !(r.Qty > 0));
+  if (bad) { errEl.textContent = `กรอกจำนวนของ "${esc(_rmName(bad.RM_ID))}" ให้มากกว่า 0`; return; }
+  const reqDate = document.getElementById('reqo-date').value || todayStr();
+  const note = document.getElementById('reqo-note').value.trim() || null;
+  const isEdit = !!_reqOrderEditId;
+  const reqId = isEdit ? _reqOrderEditId : await _nextReqId();
+  if (isEdit) {
+    const ok = await sbRun(_sb.from('req_orders').update({ ReqDate: reqDate, Note: note }).eq('Req_ID', reqId).eq('Status', 'รออนุมัติ'), 'บันทึกไม่สำเร็จ');
+    if (ok === null) return;
+    await sbRun(_sb.from('req_order_lines').delete().eq('Req_ID', reqId), 'บันทึกรายการไม่สำเร็จ');
+  } else {
+    const ok = await sbRun(_sb.from('req_orders').insert({
+      Req_ID: reqId, ReqDate: reqDate, Note: note,
+      RequestedByID: _currentUser?.id || null, RequestedBy: _currentUser?.name || _currentUser?.email || null,
+    }), 'สร้างใบขอเบิกไม่สำเร็จ');
+    if (ok === null) return;
+  }
+  const ok2 = await sbRun(_sb.from('req_order_lines').insert(rows.map(r => ({ ...r, Req_ID: reqId }))), 'บันทึกรายการไม่สำเร็จ');
+  if (ok2 === null) return;
+  if (!isEdit) _reqoClearDraft();   // บันทึกสำเร็จแล้ว ไม่ต้องเก็บร่างไว้อีกต่อไป
+  bootstrap.Modal.getInstance(document.getElementById('reqOrderModal')).hide();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 1800, title: isEdit ? 'บันทึกแล้ว' : 'สร้างใบขอเบิกแล้ว' });
+  await reqOrderLoad();
+}
+async function reqOrderDelete(id) {
+  const c = await Swal.fire({ icon: 'warning', title: `ลบใบขอเบิก ${id}?`, showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ', cancelButtonText: 'ไม่ลบ' });
+  if (!c.isConfirmed) return;
+  if (!await sbDelete('req_orders', 'Req_ID', id)) return;
+  await reqOrderLoad();
+}
+async function reqOrderApprove(id) {
+  const c = await Swal.fire({ icon: 'question', title: `อนุมัติใบขอเบิก ${id}?`, showCancelButton: true, confirmButtonText: 'อนุมัติ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  const { error } = await _sb.rpc('req_order_approve', { p_req_id: id });
+  if (error) { Swal.fire('อนุมัติไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await reqOrderLoad();
+}
+async function reqOrderReject(id) {
+  const { value: reason } = await Swal.fire({ icon: 'warning', title: `ไม่อนุมัติใบขอเบิก ${id}?`,
+    input: 'textarea', inputPlaceholder: 'เหตุผลที่ไม่อนุมัติ', inputValidator: v => !v?.trim() ? 'กรุณาระบุเหตุผล' : undefined,
+    showCancelButton: true, confirmButtonText: 'ไม่อนุมัติ', cancelButtonText: 'ยกเลิก' });
+  if (!reason) return;
+  const { error } = await _sb.rpc('req_order_reject', { p_req_id: id, p_reason: reason.trim() });
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await reqOrderLoad();
+}
+async function reqOrderCancel(id) {
+  const { value: reason } = await Swal.fire({ icon: 'warning', title: `ยกเลิกใบขอเบิก ${id}?`,
+    input: 'textarea', inputPlaceholder: 'เหตุผลที่ยกเลิก', inputValidator: v => !v?.trim() ? 'กรุณาระบุเหตุผล' : undefined,
+    showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ยกเลิกใบขอเบิก', cancelButtonText: 'ปิด' });
+  if (!reason) return;
+  const { error } = await _sb.rpc('req_order_cancel', { p_req_id: id, p_reason: reason.trim() });
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await reqOrderLoad();
+}
+
+// ── พิมพ์ (ฟอร์มต้นแบบจาก ProFlow's ใบขอซื้อ — A4 1 หน้า แบ่งครึ่งบน/ล่าง ต้นฉบับ/สำเนา, สามช่อง
+// ลายเซ็นเปล่าให้เซ็นมือจริง ไม่ใช่ e-signature — ผู้ใช้ขอให้ตรงหน้าตากับต้นแบบ 2026-09-29) ──
+function _reqoHalfHTML(r, copyLabel) {
+  const lines = _reqLinesOf(r.Req_ID);
+  // เผื่อแถวว่างท้ายตารางไว้เขียนเพิ่มมือ อย่างน้อย 2 แถวเสมอ (ไม่ว่ารายการจริงจะมีกี่แถว)
+  const trs = lines.map((l, i) => `<tr><td>${i + 1}</td><td class="reqo-item">${esc(l.RM_ID)} — ${esc(_rmName(l.RM_ID))}</td>
+    <td>${_rmFmtQty(l.Qty)}</td><td>${esc(l.Unit || '')}</td><td class="reqo-item">${esc(l.Note || '')}</td></tr>`).join('')
+    + '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>'.repeat(2);
+  return `<div class="reqo-half">
+    <div class="reqo-head">
+      <div class="reqo-head-left"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
+        <div class="reqo-company"><b>Blooming Company Limited</b><br>BLM Herbal — Raw Material Warehouse</div></div>
+      <div><div class="reqo-title">ใบขอเบิก<span class="reqo-copy-label">${esc(copyLabel)}</span></div><div class="reqo-no">เลขที่: ${esc(r.Req_ID)}</div></div>
+    </div>
+    <div class="reqo-meta">
+      <div><span class="lbl">วันที่ขอเบิก</span>${fmtDateLong(r.ReqDate)}</div>
+      <div><span class="lbl">ผู้ขอเบิก</span>${esc(r.RequestedBy || '-')}</div>
+      <div><span class="lbl">ขอเบิกจาก</span>คลังใหญ่</div>
+    </div>
+    <table class="reqo-table">
+      <thead><tr><th style="width:6%">ลำดับ</th><th>รายการ</th><th style="width:12%">จำนวน</th><th style="width:12%">หน่วย</th><th style="width:22%">หมายเหตุ</th></tr></thead>
+      <tbody>${trs}</tbody>
+    </table>
+    <div class="reqo-note-box"><b>หมายเหตุ:</b> ${esc(r.Note || '-')}</div>
+    <div class="reqo-sign">
+      <div><div class="role">ผู้ขอเบิก</div>
+        <div class="sigspace"><img class="sigimg" src="assets/signature-requester.png" alt="ลายเซ็นผู้ขอเบิก" onerror="this.style.display='none'"></div>
+        <div class="sigline">ลายเซ็น</div><div class="dateline">วันที่ .......... / .......... / ..........</div></div>
+      <div><div class="role">ผู้อนุมัติ</div><div class="sigspace"></div><div class="sigline">ลายเซ็น</div><div class="dateline">วันที่ .......... / .......... / ..........</div></div>
+      <div><div class="role">ผู้จ่ายของ (คลังใหญ่)</div><div class="sigspace"></div><div class="sigline">ลายเซ็น</div><div class="dateline">วันที่ .......... / .......... / ..........</div></div>
+    </div>
+  </div>`;
+}
+function _reqoPrintHTML(r) {
+  return `<div class="reqo-page">${_reqoHalfHTML(r, 'ต้นฉบับ')}<div class="reqo-cut"><span><i class="fa-solid fa-scissors"></i> ตัดตามรอยประ</span></div>${_reqoHalfHTML(r, 'สำเนา')}</div>`;
+}
+// เปิดตัวอย่างก่อนพิมพ์ (เหมือน ProFlow's purchasereqOpenPrintModal) — ยังไม่มาร์คสถานะ/ตัดอะไรตอนนี้
+// รอกดยืนยันในโมดัลก่อน ให้ตรวจดูก่อนได้ว่าถูกต้องจริง
+let _reqoPrintId = null;
+function reqOrderOpenPrintPreview(id) {
+  const r = _reqOrderCache.find(x => x.Req_ID === id);
+  if (!r) return;
+  _reqoPrintId = id;
+  document.getElementById('reqo-preview-body').innerHTML = _reqoPrintHTML(r);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('reqOrderPrintModal')).show();
+}
+// กดยืนยันในโมดัล = มาร์คสถานะเป็น "พิมพ์แล้ว" ก่อน (กดซ้ำได้ ไม่ทับวันที่พิมพ์ครั้งแรก) แล้วค่อยเปิดพิมพ์จริง
+// — เหมือน rcvReportPrint/prtpPrintExec: ใส่เนื้อหาลง print root ตอนพิมพ์เท่านั้น แล้วล้างทิ้งหลังพิมพ์เสร็จ
+async function reqOrderPrintConfirm() {
+  const id = _reqoPrintId;
+  if (!id) return;
+  const { error } = await _sb.rpc('req_order_mark_printed', { p_req_id: id });
+  if (error) { Swal.fire('พิมพ์ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await reqOrderLoad();
+  const fresh = _reqOrderCache.find(x => x.Req_ID === id);
+  if (!fresh) return;
+  document.getElementById('reqo-print-root').innerHTML = _reqoPrintHTML(fresh);
+  bootstrap.Modal.getInstance(document.getElementById('reqOrderPrintModal')).hide();
+  document.body.classList.add('print-reqo');
+  const done = () => {
+    document.body.classList.remove('print-reqo');
+    document.getElementById('reqo-print-root').innerHTML = '';
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+
+// ═══════════════════════════════════════════════════════════
 // STOCK RM / STOCK PACKAGING — share stock_balance (แยกด้วย rm_master.Category)
 // ═══════════════════════════════════════════════════════════
 let _stockRmCache = [];
@@ -5207,7 +5652,22 @@ let _prepEditId = null;
 const PREP_STATUS_BADGE = { 'กำลังเตรียม': 'warning', 'รับกลับแล้ว': 'success', 'ยกเลิก': 'secondary' };
 // ปลายทางของการเตรียม: พร้อมผลิต หรือ วัตถุดิบแห้งที่อบเอง (มี SourceRM_ID) — ต่อเป็นทอดได้ สด → แห้ง → พร้อมผลิต
 function _prepTargets() {
-  return _rmMasterCache.filter(r => [CAT_PREP, CAT_DRY].includes(r.Category) && r.SourceRM_ID)
+  // วัตถุดิบพร้อมผลิต (CAT_PREP) ได้สต็อกทางเดียวคือผ่านการเตรียมเท่านั้น จึงเป็นปลายทางได้เสมอ แม้ยัง
+  // ไม่ได้ตั้ง SourceRM_ID ไว้ที่ Master — เพราะเลือกวัตถุดิบต้นทางได้อิสระตอนกด "เบิกไปเตรียม" แทนแล้ว
+  // (prepi-source, 2026-09-29; SourceRM_ID ที่ Master เหลือแค่เป็นค่าเริ่มต้น)
+  // วัตถุดิบแห้ง (CAT_DRY) เป็นปลายทางได้ทุกตัวไม่ว่าจะมี SourceRM_ID หรือไม่ (2026-09-29, ผู้ใช้ขอ —
+  // "ไม่ต้องอ้างอิง Master ให้เลือกเองได้เลย ... เตรียมมาก็เป็นวัตถุดิบแห้ง ไม่ต้องเปลี่ยนรหัส"): ตัวที่มี
+  // SourceRM_ID = อบจากของสด (transformation, เหมือนเดิม); ตัวที่ไม่มี = "เตรียมซ้ำ คงรหัสเดิม" — เอาของแห้ง
+  // ที่มีอยู่แล้วมาผ่านขั้นตอน (คัด/ร่อน/ตาก) แล้วรับกลับเป็นรหัสเดิม ได้แค่ Lot ใหม่ (RED-...)
+  return _rmMasterCache.filter(r => r.Category === CAT_PREP || r.Category === CAT_DRY)
+    .sort((a, b) => ((_BOM_CAT_ORDER[a.Category] ?? 9) - (_BOM_CAT_ORDER[b.Category] ?? 9)) || (a.RM_Name || '').localeCompare(b.RM_Name || ''));
+}
+// วัตถุดิบต้นทางที่เลือกได้ตอนเบิกไปเตรียม: สด/แห้ง/เคมี ตัวไหนก็ได้ — ยกเว้นปลายทางเอง เว้นแต่ปลายทางเป็น
+// วัตถุดิบแห้ง (เตรียมซ้ำคงรหัสเดิมได้ ผู้ใช้ขอ 2026-09-29, ตรงข้ามกับพร้อมผลิตที่ห้าม "ทำจากตัวเอง" เพราะ
+// ไม่มีเหตุผลทางธุรกิจ)
+function _prepSourceCandidates(target) {
+  const allowSelf = target?.Category === CAT_DRY;
+  return _rmMasterCache.filter(r => CAT_RAW_GROUP.includes(r.Category || 'วัตถุดิบ') && (allowSelf || r.RM_ID !== target?.RM_ID))
     .sort((a, b) => ((_BOM_CAT_ORDER[a.Category] ?? 9) - (_BOM_CAT_ORDER[b.Category] ?? 9)) || (a.RM_Name || '').localeCompare(b.RM_Name || ''));
 }
 function _rmName(id) { return _rmMasterCache.find(r => r.RM_ID === id)?.RM_Name || id; }
@@ -5393,7 +5853,9 @@ function prepRender() {
     { n: std === null ? '—' : _bomFmtQty(Math.round(std * 10) / 10) + '%', l: 'มาตรฐานเฉลี่ย (30 วัน)' },
   ].map(k => `<div class="col-6 col-md-3"><div class="kpi-card ${k.cls || ''}"><div class="kpi-num">${k.n}</div><div class="kpi-label">${k.l}</div></div></div>`).join('');
 
-  const fromTo = p => `${esc(_rmName(p.SourceRM_ID))} <i class="fa-solid fa-arrow-right mx-1 text-muted"></i> <b>${esc(_rmName(p.TargetRM_ID))}</b>`;
+  const fromTo = p => p.SourceRM_ID === p.TargetRM_ID
+    ? `<b>${esc(_rmName(p.SourceRM_ID))}</b> <span class="text-muted small">(เตรียมซ้ำ — คงรหัสเดิม)</span>`
+    : `${esc(_rmName(p.SourceRM_ID))} <i class="fa-solid fa-arrow-right mx-1 text-muted"></i> <b>${esc(_rmName(p.TargetRM_ID))}</b>`;
   document.getElementById('prepOpenBody').innerHTML = open.map(p => {
     const steps = Array.isArray(p.Steps) ? p.Steps : [];
     const filled = steps.filter(s => s.weight !== null && s.weight !== undefined && s.weight !== '');
@@ -5412,7 +5874,9 @@ function prepRender() {
   }).join('') || '<tr><td colspan="8" class="text-center text-muted py-3">ไม่มีใบที่กำลังเตรียม — กด "เบิกไปเตรียม" เพื่อเริ่ม</td></tr>';
 
   const q = (document.getElementById('prepSearch').value || '').trim().toLowerCase();
+  const statusF = document.getElementById('prepHistStatusFilter').value;
   const hist = _prepCache.filter(p => p.Status !== 'กำลังเตรียม')
+    .filter(p => !statusF || p.Status === statusF)
     .filter(p => !q || [p.Prep_ID, _rmName(p.SourceRM_ID), _rmName(p.TargetRM_ID), p.MO_ID].join(' ').toLowerCase().includes(q));
   document.getElementById('prepHistBody').innerHTML = hist.map(p => {
     const over = p.ActualLossPct !== null && +p.ActualLossPct > (+p.StdLossPct || 0) + 2;
@@ -5425,7 +5889,9 @@ function prepRender() {
       <td class="text-center text-nowrap">${p.Status === 'รับกลับแล้ว' ? `${_editBtn('prep_orders', p.Prep_ID)}
         ${_editPendingFor('prep_orders_delete', p.Prep_ID) ? `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอลบรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`
           : `<button class="btn btn-sm btn-outline-danger" data-id="${esc(p.Prep_ID)}" onclick="prepHistRequestDelete(this.dataset.id)" title="ขอลบใบเตรียมนี้"><i class="fa-solid fa-trash"></i></button>`}`
-        : '<span class="text-muted small">—</span>'}</td></tr>`;
+        : p.Status === 'ยกเลิก'
+          ? `<button class="btn btn-sm btn-outline-danger" data-id="${esc(p.Prep_ID)}" onclick="prepHistDelete(this.dataset.id)" title="ลบใบเตรียมที่ยกเลิกนี้ทิ้ง"><i class="fa-solid fa-trash"></i></button>`
+          : '<span class="text-muted small">—</span>'}</td></tr>`;
   }).join('') || '<tr><td colspan="10" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
 }
 // ขอลบใบเตรียมที่ "รับกลับแล้ว" ทั้งใบ (ต่างจาก prepDelete ที่ยกเลิกได้ทันทีเฉพาะใบที่ยังกำลังเตรียมอยู่) —
@@ -5450,39 +5916,81 @@ async function prepHistRequestDelete(id) {
   Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: 'ส่งคำขอลบแล้ว — รอแอดมินอนุมัติ' });
   await Promise.all([prepLoad(), rcvEditLoadPending()]);
 }
+// ลบใบเตรียมที่ "ยกเลิก" แล้วทิ้งได้ทันที (ต่างจาก prepHistRequestDelete ด้านบน) — prep_cancel คืน
+// วัตถุดิบสดต้นทางเข้าล็อตเดิมไปแล้วตอนกดยกเลิก ไม่เคยสร้างล็อต/สต็อกฝั่งปลายทางเลย (BackLotID ว่างเสมอ)
+// การลบแถวนี้จึงไม่กระทบสต็อกส่วนไหนอีก แค่ล้างประวัติที่ไม่มีประโยชน์ทิ้ง — ไม่ต้องผ่านคำขออนุมัติ
+// (RLS ฝั่ง DB บล็อกอยู่แล้วสำหรับ operator — ต้องหัวหน้างานขึ้นไป เหมือนปุ่มลบอื่นๆ)
+async function prepHistDelete(id) {
+  const p = _prepCache.find(x => x.Prep_ID === id);
+  const c = await Swal.fire({ icon: 'warning', title: `ลบใบเตรียม ${id}?`,
+    html: `${esc(_rmName(p?.SourceRM_ID))} → <b>${esc(_rmName(p?.TargetRM_ID))}</b> · ยกเลิกไปแล้ว ไม่กระทบสต็อก<div class="small text-muted mt-1">ลบได้ทันที ไม่ต้องรออนุมัติ</div>`,
+    showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบทิ้ง', cancelButtonText: 'ไม่ลบ' });
+  if (!c.isConfirmed) return;
+  if (!await sbDelete('prep_orders', 'Prep_ID', id)) return;
+  await prepLoad();
+}
 
 // ── เบิกไปเตรียม ──
 // targetId/moId/wantQty: ไว้เปิดพร้อมเลือกไว้ล่วงหน้าจากการ์ด "วางแผนจาก MO" — เว้นว่างได้เมื่อเปิดจากปุ่มบนหัวเพจ (เลือกเองทั้งหมด)
 function prepOpenIssue(targetId, moId, wantQty) {
   const targets = _prepTargets();
   if (!targets.length) {
-    Swal.fire('ยังไม่มีรายการปลายทาง', 'เพิ่มรายการหมวด "วัตถุดิบพร้อมผลิต" หรือ "วัตถุดิบแห้ง" ที่ระบุว่าทำ/อบจากวัตถุดิบตัวไหน ที่หน้า Master → วัตถุดิบ / แพ็คเกจจิ้ง ก่อน', 'info');
+    Swal.fire('ยังไม่มีรายการปลายทาง', 'เพิ่มรายการหมวด "วัตถุดิบพร้อมผลิต" หรือ "วัตถุดิบแห้ง" ที่หน้า Master → วัตถุดิบ / แพ็คเกจจิ้ง ก่อน (เลือกวัตถุดิบต้นทางได้ตอนกดเบิก ไม่ต้องตั้งไว้ล่วงหน้าก็ได้)', 'info');
     return;
   }
   // ชื่อรายการขึ้นก่อน (อ่านง่าย เลือกง่าย) แล้วค่อยวงเล็บบอกหมวดสั้นๆ ต่อท้าย — เดิมขึ้น "[วัตถุดิบพร้อมผลิต] ชื่อ..."
   // ยาวจนต้องเพ่งหาชื่อ (ผู้ใช้ขอ 2026-09-26)
-  document.getElementById('prepi-target').innerHTML = targets.map(t =>
-    `<option value="${esc(t.RM_ID)}">${esc(t.RM_Name)} (${t.Category === CAT_DRY ? 'แห้ง' : 'พร้อมผลิต'}) — ${t.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmName(t.SourceRM_ID))}</option>`).join('');
-  if (targetId) document.getElementById('prepi-target').value = targetId;
+  // มีตัวเลือกว่างบังคับให้เลือกเองเสมอ (2026-09-29) — ตั้งแต่แยกช่องต้นทางออกมาเลือกอิสระ ถ้าปล่อยให้
+  // ปลายทางเลือกตัวแรกในลิสต์ให้อัตโนมัติ (พฤติกรรมเดิมของ <select>) มีความเสี่ยงที่ผู้ใช้จะสนใจแค่ช่อง
+  // ต้นทางแล้วลืมเช็คปลายทาง จนได้คู่ที่ไม่สัมพันธ์กัน (เช่น เบิกกฤษณาแห้งไปเตรียมเป็นขมิ้นสดหั่นพร้อมใช้ —
+  // เคสจริงที่เกิดขึ้น) — บังคับเลือกเองทุกครั้งที่เปิดจากปุ่มหัวเพจ (ไม่ใช่จากการ์ด MO ที่ส่ง targetId มาแล้ว)
+  document.getElementById('prepi-target').innerHTML = '<option value="">— เลือกวัตถุดิบที่จะเตรียม —</option>' + targets.map(t =>
+    `<option value="${esc(t.RM_ID)}">${esc(t.RM_Name)} (${t.Category === CAT_DRY ? 'แห้ง' : 'พร้อมผลิต'})${t.SourceRM_ID ? ` — ${t.Category === CAT_DRY ? 'อบจาก' : 'ทำจาก'} ${esc(_rmName(t.SourceRM_ID))}` : (t.Category === CAT_DRY ? ' — เตรียมซ้ำ คงรหัสเดิม' : '')}</option>`).join('');
+  document.getElementById('prepi-target').value = targetId || '';
   document.getElementById('prepi-mo').innerHTML = _moOptionsHtml('— ไม่อ้างอิง (เตรียมเก็บสต็อก) —');
   if (moId) document.getElementById('prepi-mo').value = moId;
   ['prepi-want', 'prepi-qty', 'prepi-note'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('prepi-date').value = todayStr();
   document.getElementById('prepi-qty-err').textContent = '';
+  document.getElementById('prepi-source-err').textContent = '';
+  document.getElementById('prepi-target-err').textContent = '';
   prepIssueTargetChanged();
   // มาจากการ์ด "วางแผนจาก MO" พร้อมจำนวนที่ขาดแล้ว — ใช้ตัวเลขนี้แทนที่จะให้คำนวณเต็มสูตรใหม่
   if (wantQty) { document.getElementById('prepi-want').value = wantQty; prepIssueCalc('want'); }
   bootstrap.Modal.getOrCreateInstance(document.getElementById('prepIssueModal')).show();
 }
 function _prepSelTarget() { return _rmMasterCache.find(r => r.RM_ID === document.getElementById('prepi-target').value); }
+function _prepSelSource() { return _rmMasterCache.find(r => r.RM_ID === document.getElementById('prepi-source').value); }
 function prepIssueTargetChanged() {
   const t = _prepSelTarget();
+  const srcSel = document.getElementById('prepi-source');
+  if (!t) {
+    // ยังไม่ได้เลือกปลายทาง (ตัวเลือกว่างตอนเปิดโมดัล) — เคลียร์ต้นทาง/ข้อมูลเก่าทิ้ง กันโชว์ค้างจากรอบก่อนหน้า
+    srcSel.innerHTML = '';
+    document.getElementById('prepi-info').innerHTML = '';
+    document.getElementById('prepi-plan').innerHTML = '';
+    return;
+  }
+  const candidates = _prepSourceCandidates(t);
+  srcSel.innerHTML = candidates.map(r =>
+    `<option value="${esc(r.RM_ID)}">${esc(r.RM_Name)}${r.RM_ID === t.RM_ID ? ' (ตัวเดิม — เตรียมซ้ำ)' : ''} · ${esc(catLabel(r.Category))} (${esc(r.Unit)})</option>`).join('');
+  // ตั้งต้นตามที่ Master ผูกไว้ (SourceRM_ID) ถ้ามีและยังเป็นตัวเลือกที่ถูกต้อง — ไม่งั้นถ้าปลายทางเป็น
+  // วัตถุดิบแห้งที่ไม่มี SourceRM_ID (เตรียมซ้ำคงรหัสเดิม, 2026-09-29) ตั้งต้นเป็นตัวมันเองไปเลย — ไม่งั้นปล่อยว่างให้ผู้ใช้เลือกเอง
+  srcSel.value = t.SourceRM_ID && candidates.some(c => c.RM_ID === t.SourceRM_ID) ? t.SourceRM_ID
+    : (t.Category === CAT_DRY && candidates.some(c => c.RM_ID === t.RM_ID) ? t.RM_ID : '');
+  prepIssueSourceChanged();
+}
+// เลือกวัตถุดิบต้นทางเอง (2026-09-29) — อิสระจาก SourceRM_ID ที่ตั้งไว้ใน Master, ใช้แค่เป็นค่าเริ่มต้น
+function prepIssueSourceChanged() {
+  const t = _prepSelTarget();
   if (!t) return;
-  const src = _rmMasterCache.find(r => r.RM_ID === t.SourceRM_ID);
-  const lots = _lotsFefo(t.SourceRM_ID);   // เรียงหมดอายุก่อน = ลำดับที่จะถูกหยิบ
+  const src = _prepSelSource();
+  const lots = src ? _lotsFefo(src.RM_ID) : [];   // เรียงหมดอายุก่อน = ลำดับที่จะถูกหยิบ
   const stock = Math.round(lots.reduce((s, l) => s + (+l.Qty || 0), 0) * 10000) / 10000;
   const std = _bomScrapTotal(t.PrepSteps);
   document.querySelectorAll('.prepi-unit').forEach(el => el.textContent = src?.Unit || t.Unit || '');
+  document.getElementById('prepi-source-err').textContent = src ? '' : 'เลือกวัตถุดิบต้นทาง';
+  if (!src) { document.getElementById('prepi-info').innerHTML = ''; return; }
   // แสดงล็อตที่มีของทั้งหมดของวัตถุดิบต้นทาง (ผู้ใช้ขอ 2026-09-26) — ให้เห็นก่อนพิมพ์จำนวนว่ามีของจริงเท่าไหร่ ล็อตไหนบ้าง
   // ต่างจาก "หยิบจากล็อต" ใต้ช่องจำนวน ที่โชว์เฉพาะล็อตที่จะถูกตัดตามจำนวนที่กรอก
   const lotsHtml = !lots.length ? '<div class="text-danger fw-semibold mt-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>ไม่มีล็อตวัตถุดิบสดคงเหลือเลย — ต้องรับเข้าคลังก่อนถึงจะเบิกไปเตรียมได้</div>'
@@ -5490,8 +5998,9 @@ function prepIssueTargetChanged() {
       ${lots.map((l, i) => `<tr><td class="text-muted">${i + 1}</td><td>${esc(_lotLabel(l))}</td><td class="text-end fw-semibold">${_rmFmtQty(l.Qty)} ${esc(l.Unit || src?.Unit || '')}</td><td class="text-nowrap">${_expBadge(l.ExpDate)}</td></tr>`).join('')}
       </tbody></table></div>`;
   document.getElementById('prepi-info').innerHTML =
-    `วัตถุดิบต้นทาง (${esc(catLabel(src?.Category))}): <b>${esc(src?.RM_Name || t.SourceRM_ID)}</b> · คงเหลือ <b>${_rmFmtQty(stock)} ${esc(src?.Unit || '')}</b> ในล็อตที่มีของ ${lots.length} ล็อต<br>
-     ขั้นตอนมาตรฐาน: ${(t.PrepSteps || []).length ? t.PrepSteps.map(s => `${esc(s.step)} ${_bomFmtQty(s.pct)}%`).join(' → ') : '<span class="text-muted">ยังไม่ได้ตั้ง</span>'}
+    (src.RM_ID === t.RM_ID ? '<div class="text-primary fw-semibold mb-1"><i class="fa-solid fa-rotate me-1"></i>เตรียมซ้ำ — รับกลับเป็นรหัสเดิม แค่ได้ Lot ใหม่</div>' : '') +
+    `วัตถุดิบต้นทาง (${esc(catLabel(src?.Category))}): <b>${esc(src?.RM_Name)}</b> · คงเหลือ <b>${_rmFmtQty(stock)} ${esc(src?.Unit || '')}</b> ในล็อตที่มีของ ${lots.length} ล็อต<br>
+     ขั้นตอนมาตรฐาน: ${(t.PrepSteps || []).length ? t.PrepSteps.map(s => `${esc(s.step)} ${_bomFmtQty(s.pct)}%`).join(' → ') : '<span class="text-muted">ยังไม่ได้ตั้ง — เพิ่มขั้นตอนเองได้ตอนบันทึก/รับกลับ</span>'}
      · สูญเสียรวม <b>${_bomFmtQty(std)}%</b>${t.ShelfLifeDays != null ? ` · อายุหลังเตรียม ${t.ShelfLifeDays} วัน` : ''}
      ${lotsHtml}`;
   prepIssueMoChanged();
@@ -5513,12 +6022,13 @@ function prepIssueMoChanged() {
 function prepIssueCalc(from) {
   const t = _prepSelTarget();
   if (!t) return;
+  const srcId = document.getElementById('prepi-source').value;
   const std = _bomScrapTotal(t.PrepSteps);
   const wantEl = document.getElementById('prepi-want'), qtyEl = document.getElementById('prepi-qty');
   if (from === 'want' && wantEl.value !== '') qtyEl.value = _bomWithScrap(parseFloat(wantEl.value) || 0, std);
   if (from === 'qty' && qtyEl.value !== '') wantEl.value = Math.round((parseFloat(qtyEl.value) || 0) * (1 - std / 100) * 10000) / 10000;
   const qty = parseFloat(qtyEl.value) || 0;
-  const plan = qty ? _planFefo(t.SourceRM_ID, qty) : [];
+  const plan = qty && srcId ? _planFefo(srcId, qty) : [];
   const short = plan.some(a => a.lot_id === null);
   const mo = document.getElementById('prepi-mo').value;
   const moNoLine = mo && !_bomCache.some(b => b.FG_ID === _planCache.find(m => m.MO_ID === mo)?.FG_ID && b.RM_ID === t.RM_ID);
@@ -5529,25 +6039,41 @@ function prepIssueCalc(from) {
 }
 async function prepIssueSave() {
   const t = _prepSelTarget();
+  const srcId = document.getElementById('prepi-source').value;
+  const src = _prepSelSource();
   const qty = parseFloat(document.getElementById('prepi-qty').value);
   const errEl = document.getElementById('prepi-qty-err');
-  errEl.textContent = '';
-  if (!t) return;
+  const srcErrEl = document.getElementById('prepi-source-err');
+  const tgtErrEl = document.getElementById('prepi-target-err');
+  errEl.textContent = ''; srcErrEl.textContent = ''; tgtErrEl.textContent = '';
+  if (!t) { tgtErrEl.textContent = 'เลือกวัตถุดิบที่จะเตรียม'; return; }
+  if (!srcId) { srcErrEl.textContent = 'เลือกวัตถุดิบต้นทาง'; return; }
   if (!(qty > 0)) { errEl.textContent = 'กรอกน้ำหนักวัตถุดิบสดที่จะเบิก'; return; }
+  // ยืนยันคู่ต้นทาง → ปลายทางอีกครั้งก่อนตัดสต็อกจริง (2026-09-29) — ตั้งแต่แยกช่องเลือกต้นทางออกมาอิสระ
+  // จากปลายทางแล้ว มีเคสจริงที่ผู้ใช้เปลี่ยนต้นทางแต่ลืมเช็คปลายทาง จนได้คู่ที่ไม่สัมพันธ์กัน (เบิกกฤษณาแห้ง
+  // ไปเตรียมเป็นขมิ้นสดหั่นพร้อมใช้) — เพิ่ม dialog สรุปคู่ให้เห็นชัดๆ ก่อนกดจริง แทนที่จะยิง RPC ทันที
+  const sameCode = srcId === t.RM_ID;
+  const c = await Swal.fire({ icon: 'question', title: 'ยืนยันเบิกไปเตรียม?',
+    html: sameCode
+      ? `เตรียม <b>${esc(t.RM_Name)}</b> ${_rmFmtQty(qty)} ${esc(src?.Unit || '')} ซ้ำ <span class="text-muted">(คงรหัสเดิม — ได้ Lot ใหม่)</span>`
+      : `<b>${esc(src?.RM_Name)}</b> ${_rmFmtQty(qty)} ${esc(src?.Unit || '')} <i class="fa-solid fa-arrow-right mx-2 text-muted"></i> เตรียมเป็น <b>${esc(t.RM_Name)}</b>`,
+    showCancelButton: true, confirmButtonText: 'ยืนยันเบิก', cancelButtonText: 'กลับไปแก้' });
+  if (!c.isConfirmed) return;
   const prepDate = document.getElementById('prepi-date').value || todayStr();
   // เบิกวัตถุดิบต้นทางเดียวกันซ้ำในวันเดียวกันได้ (เช่น เบิกเพิ่มอีกรอบ) — กันเลขซ้ำด้วยการเช็คกับที่มีอยู่แล้วจริง
-  let prepId = `PRE-${_genLotForDate(prepDate)}-${t.SourceRM_ID}`, n = 1;
-  while (_prepCache.some(p => p.Prep_ID === prepId)) prepId = `PRE-${_genLotForDate(prepDate)}-${t.SourceRM_ID}-${++n}`;
+  let prepId = `PRE-${_genLotForDate(prepDate)}-${srcId}`, n = 1;
+  while (_prepCache.some(p => p.Prep_ID === prepId)) prepId = `PRE-${_genLotForDate(prepDate)}-${srcId}-${++n}`;
   const { data: alloc, error } = await _sb.rpc('prep_issue_post', {
     p_prep_id: prepId, p_target_rm_id: t.RM_ID, p_qty: qty,
     p_mo_id: document.getElementById('prepi-mo').value || null,
     p_date: prepDate,
     p_note: document.getElementById('prepi-note').value.trim() || null,
+    p_source_rm_id: srcId,
   });
   if (error) { _rmLotRpcErr(error, 'เบิกไปเตรียมไม่สำเร็จ'); return; }
   bootstrap.Modal.getInstance(document.getElementById('prepIssueModal')).hide();
   await Swal.fire({ icon: 'success', title: 'เบิกไปเตรียมแล้ว — หยิบจากล็อตตามนี้',
-    html: `<div class="small"><b>${esc(_rmName(t.SourceRM_ID))}</b> ${_rmFmtQty(qty)}: ${_lotAllocText(alloc, _rmFmtQty)}</div>` });
+    html: `<div class="small"><b>${esc(_rmName(srcId))}</b> ${_rmFmtQty(qty)}: ${_lotAllocText(alloc, _rmFmtQty)}</div>` });
   await Promise.all([prepLoad(), stockRmLoad()]);
 }
 
@@ -6509,5 +7035,7 @@ async function wasteDelete(id) {
 <div id="rrpt-print-root"></div>
 <!-- ที่พิมพ์ใบเตรียมวัตถุดิบ (prtp) — เหมือน rrpt-print-root ข้างบน คนละ root กันเพราะ CSS หน้ากระดาษต่างกัน (แนวตั้ง/แนวนอน) -->
 <div id="prtp-print-root"></div>
+<!-- ที่พิมพ์ใบขอเบิก (reqo) — คนละ root อีกเช่นกัน (portrait, ต่างจาก rrpt ที่เป็น landscape) -->
+<div id="reqo-print-root"></div>
 </body>
 </html>
