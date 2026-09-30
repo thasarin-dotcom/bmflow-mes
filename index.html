@@ -333,8 +333,12 @@ table.prtp-table .prtp-blank { height: 30px; }
   body.print-prtp { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
   body.print-prtp > *:not(#prtp-print-root) { display: none !important; }
   body.print-prtp #prtp-print-root { display: block !important; }
-  @page prtpreport { size: A4 portrait; margin: 10mm; }
-  #prtp-print-root .prtp-page { page: prtpreport; box-shadow: none; margin: 0; padding: 0; width: auto; min-height: 277mm; page-break-after: always; }
+  /* บั๊กเดียวกับที่เจอใน rrpt (GOODS RECEIVING REPORT) วันเดียวกัน 2026-09-30 — margin ที่ @page อย่างเดียว
+     ไม่พอกับเครื่องพิมพ์จริง (unprintable margin ของฮาร์ดแวร์) และ .prtp-page เดิม padding:0 ตอนพิมพ์ทำให้
+     ทุกส่วน (หัว/ตาราง/สรุป) ชิดขอบเท่ากันหมด แก้ตามสูตรเดียวกัน: เพิ่ม @page margin, ขอบบนมากกว่าด้านอื่น,
+     และเพิ่ม padding ซ้าย-ขวาที่ตัว .prtp-page เอง (ไม่ใช่แค่ @page) ให้ทุกส่วนเผื่อขอบเท่ากัน */
+  @page prtpreport { size: A4 portrait; margin: 15mm; margin-top: 22mm; }
+  #prtp-print-root .prtp-page { page: prtpreport; box-shadow: none; margin: 0; padding: 0 6mm; width: auto; min-height: 260mm; page-break-after: always; }
   table.prtp-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 /* ใบขอเบิก (reqo) — ขอเบิกจากคลังใหญ่ พิมพ์แล้วเซ็นด้วยมือจริง (2026-09-29, ฟอร์มต้นแบบจาก ProFlow's
