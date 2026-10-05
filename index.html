@@ -216,6 +216,10 @@ img.emp-avatar { cursor: zoom-in; }
   .page-header .text-white-50 { display: none; }
 }
 
+/* ── โมดัล "บันทึกผลิต"/"แก้ไขบันทึกผลิต" กว้างเป็นพิเศษ ให้ตารางวัตถุดิบ 7 คอลัมน์ไม่อัดแน่นจนตัวอักษร
+   ซ้อน/ล้น (ผู้ใช้ขอ 2026-10-05) — modal-xl ของ Bootstrap ตันที่ 1140px เสมอไม่ว่าจอกว้างแค่ไหน ไม่พอ ── */
+.modal-dialog.rm-wide { max-width: min(1500px, 96vw); }
+
 /* ── ช่องค้นหารายการแบบพิมพ์แล้วขึ้นแนะนำ (ฟอร์มรับเข้าคลัง) ── */
 .rcv-suggest { position: absolute; left: calc(var(--bs-gutter-x) * .5); right: calc(var(--bs-gutter-x) * .5); top: 100%; z-index: 1070;
   max-height: 280px; overflow-y: auto; box-shadow: 0 8px 24px rgba(15,23,42,.18); border-radius: 8px; display: none; }
@@ -1814,7 +1818,7 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
 
 <!-- ฟอร์มขอแก้ไขกลาง (เบิกเข้าไลน์ผลิต / บันทึกผลิต / รับ FG / ของเสีย) — ช่องสร้างจาก EDIT_TYPES[type].form -->
 <div class="modal fade" id="editReqModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg" id="erq-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
         <h5 class="modal-title"><i class="fa-solid fa-pen-to-square me-2"></i><span id="erq-title">ขอแก้ไข</span></h5>
@@ -1822,21 +1826,25 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
       </div>
       <div class="modal-body">
         <div class="alert alert-info small py-2 mb-3" id="erq-info"></div>
-        <div class="row g-3" id="erq-fields"></div>
-        <div id="erq-rm-section" style="display:none" class="mt-3">
-          <label class="form-label d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span>วัตถุดิบที่ใช้จริง <span class="text-muted fw-normal small">(แก้ไขได้ถ้าใช้ไม่เท่ากับที่เบิกไป — ใช้มากกว่าเดิมจะตัดสต็อกเพิ่ม, ใช้น้อยกว่าเดิมส่วนต่างจะบันทึกเป็น "ของเสีย" อัตโนมัติ ไม่คืนเข้าสต็อก)</span></span>
-            <span id="erq-rm-loss" class="small"></span>
-          </label>
-          <div class="table-responsive"><table class="table table-sm align-middle mb-0">
-            <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end">พร้อมใช้ในสูตร</th><th style="width:130px">เบิกตั้งต้น</th><th>หน่วย</th><th class="text-end">% หาย</th></tr></thead>
-            <tbody id="erq-rm-rows"></tbody>
-          </table></div>
-        </div>
-        <div class="mt-3">
-          <label class="form-label">เหตุผลที่ขอแก้ไข<span class="text-danger">*</span></label>
-          <textarea id="erq-reason" class="form-control" rows="2" placeholder="เช่น กรอกจำนวนผิด"></textarea>
-          <div class="invalid-feedback" id="erq-reason-err"></div>
+        <div class="row g-3">
+          <div class="col-lg-12" id="erq-left-col">
+            <div class="row g-3" id="erq-fields"></div>
+            <div class="mt-3">
+              <label class="form-label">เหตุผลที่ขอแก้ไข<span class="text-danger">*</span></label>
+              <textarea id="erq-reason" class="form-control" rows="2" placeholder="เช่น กรอกจำนวนผิด"></textarea>
+              <div class="invalid-feedback" id="erq-reason-err"></div>
+            </div>
+          </div>
+          <div class="col-lg-8 d-flex flex-column" id="erq-rm-section" style="display:none">
+            <label class="form-label d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <span>วัตถุดิบที่ใช้จริง <span class="text-muted fw-normal small">(แก้ไขได้ถ้าใช้ไม่เท่ากับที่เบิกไป — ใช้มากกว่าเดิมจะตัดสต็อกเพิ่ม, ใช้น้อยกว่าเดิมส่วนต่างจะบันทึกเป็น "ของเสีย" อัตโนมัติ ไม่คืนเข้าสต็อก)</span></span>
+              <span id="erq-rm-loss" class="small"></span>
+            </label>
+            <div class="table-responsive flex-grow-1" style="min-height:0;overflow-y:auto"><table class="table table-sm align-middle mb-0">
+              <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end">พร้อมใช้ในสูตร</th><th style="width:130px">เบิกตั้งต้น</th><th class="text-end">ของเสีย</th><th>หน่วย</th><th class="text-end">% หาย</th></tr></thead>
+              <tbody id="erq-rm-rows"></tbody>
+            </table></div>
+          </div>
         </div>
       </div>
       <div class="modal-footer modal-footer-light">
@@ -2142,7 +2150,7 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
 
 <!-- ═══════════════ MODAL: บันทึกผลิต ═══════════════ -->
 <div class="modal fade" id="prodRecordModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-xl rm-wide">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
         <h5 class="modal-title"><i class="fa-solid fa-industry me-2"></i><span id="pr-title">บันทึกผลิต</span></h5>
@@ -2150,43 +2158,48 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
       </div>
       <div class="modal-body">
         <div class="row g-3">
-          <div class="col-4">
-            <label class="form-label">ได้ทั้งหมด<span class="text-danger">*</span></label>
-            <input id="pr-qty-gross" type="number" min="0" step="any" class="form-control" oninput="prQtyRecalc()">
-            <div class="invalid-feedback" id="pr-qty-gross-err"></div>
+          <div class="col-lg-4">
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="form-label">ได้ทั้งหมด<span class="text-danger">*</span></label>
+                <input id="pr-qty-gross" type="number" min="0" step="any" class="form-control" oninput="prQtyRecalc()">
+                <div class="invalid-feedback" id="pr-qty-gross-err"></div>
+              </div>
+              <div class="col-6">
+                <label class="form-label">เสีย (Scrap)</label>
+                <input id="pr-qty-defect" type="number" min="0" step="any" class="form-control" oninput="prQtyRecalc()">
+              </div>
+              <div class="col-6">
+                <label class="form-label">สุทธิ<span class="text-danger">*</span></label>
+                <input id="pr-qty" type="number" step="any" class="form-control" readonly style="background:#f1f5f9">
+                <div class="invalid-feedback" id="pr-qty-err"></div>
+              </div>
+              <div class="col-6">
+                <label class="form-label">Lot<span class="text-danger">*</span></label>
+                <input id="pr-lot" class="form-control">
+                <div class="invalid-feedback" id="pr-lot-err"></div>
+              </div>
+              <div class="col-6">
+                <label class="form-label">วันผลิต</label>
+                <input id="pr-mfg" type="date" class="form-control" onchange="document.getElementById('pr-exp').value = addDays(this.value, window._prShelfDays ?? 5)">
+              </div>
+              <div class="col-6">
+                <label class="form-label">วันหมดอายุ</label>
+                <input id="pr-exp" type="date" class="form-control">
+              </div>
+            </div>
           </div>
-          <div class="col-4">
-            <label class="form-label">เสีย (Scrap)</label>
-            <input id="pr-qty-defect" type="number" min="0" step="any" class="form-control" oninput="prQtyRecalc()">
-          </div>
-          <div class="col-4">
-            <label class="form-label">สุทธิ<span class="text-danger">*</span></label>
-            <input id="pr-qty" type="number" step="any" class="form-control" readonly style="background:#f1f5f9">
-            <div class="invalid-feedback" id="pr-qty-err"></div>
-          </div>
-          <div class="col-4">
-            <label class="form-label">Lot<span class="text-danger">*</span></label>
-            <input id="pr-lot" class="form-control">
-            <div class="invalid-feedback" id="pr-lot-err"></div>
-          </div>
-          <div class="col-4">
-            <label class="form-label">วันผลิต</label>
-            <input id="pr-mfg" type="date" class="form-control" onchange="document.getElementById('pr-exp').value = addDays(this.value, window._prShelfDays ?? 5)">
-          </div>
-          <div class="col-4">
-            <label class="form-label">วันหมดอายุ</label>
-            <input id="pr-exp" type="date" class="form-control">
+          <div class="col-lg-8 d-flex flex-column">
+            <label class="form-label d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <span>วัตถุดิบที่ใช้จริง <span class="text-muted fw-normal small">(แก้ไขได้ถ้าใช้ไม่เท่ากับที่เบิกไป — ใช้มากกว่าเดิมจะตัดสต็อกเพิ่ม, ใช้น้อยกว่าเดิมส่วนต่างจะบันทึกเป็น "ของเสีย" อัตโนมัติ ไม่คืนเข้าสต็อก)</span></span>
+              <span id="pr-rm-loss" class="small"></span>
+            </label>
+            <div class="table-responsive flex-grow-1" style="min-height:0;overflow-y:auto"><table class="table table-sm align-middle mb-0">
+              <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end">พร้อมใช้ในสูตร</th><th style="width:130px">เบิกตั้งต้น</th><th class="text-end">ของเสีย</th><th>หน่วย</th><th class="text-end">% หาย</th></tr></thead>
+              <tbody id="pr-rm-rows"></tbody>
+            </table></div>
           </div>
         </div>
-        <hr>
-        <label class="form-label d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <span>วัตถุดิบที่ใช้จริง <span class="text-muted fw-normal small">(แก้ไขได้ถ้าใช้ไม่เท่ากับที่เบิกไป — ใช้มากกว่าเดิมจะตัดสต็อกเพิ่ม, ใช้น้อยกว่าเดิมส่วนต่างจะบันทึกเป็น "ของเสีย" อัตโนมัติ ไม่คืนเข้าสต็อก)</span></span>
-          <span id="pr-rm-loss" class="small"></span>
-        </label>
-        <div class="table-responsive"><table class="table table-sm align-middle mb-0">
-          <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end">พร้อมใช้ในสูตร</th><th style="width:130px">เบิกตั้งต้น</th><th>หน่วย</th><th class="text-end">% หาย</th></tr></thead>
-          <tbody id="pr-rm-rows"></tbody>
-        </table></div>
       </div>
       <div class="modal-footer modal-footer-light">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
@@ -2898,7 +2911,7 @@ const _WRITE_ACTIONS = [
   'rcvReportConfirm', 'rcvReportRename',
   'rcvEditApprove', 'rcvEditReject', 'rcvEditCancel', 'rcvEditSignup', 'editReqSubmit',
   'reqOrderSave', 'reqOrderDelete', 'reqOrderApprove', 'reqOrderReject', 'reqOrderCancel', 'reqOrderPrintConfirm',
-  'issueGenSave', 'issueLotEditSubmit', 'issueDeleteRequest', 'planCloseMo', 'planReopenMo', 'issueDateBulkEdit',
+  'issueGenSave', 'issueLotEditSubmit', 'issueDeleteRequest', 'issueHistDeleteAllRequest', 'planCloseMo', 'planReopenMo', 'issueDateBulkEdit',
   'issueHistAddItemSave',
   'packboxModalSave', 'packboxCloseBox', 'packboxDelete', 'packboxBulkDelete', 'packboxEditSave',
 ];
@@ -4992,11 +5005,20 @@ async function editReqOpen(type, id) {
   _modalClearErrors(['erq-reason']);
   // วัตถุดิบที่ใช้จริง (ผู้ใช้ขอ 2026-10-05 "แก้ไขของเดิมให้ขึ้นเหมือนตัวใหม่ด้วย") — เฉพาะ production_records
   // ใช้ฟังก์ชันกลาง _rmUse* ชุดเดียวกับ prodRecordModal (ดูคอมเมนต์ที่ _rmUseLoadRows)
+  // จอกว้าง (modal-xl) + 2 คอลัมน์ ซ้ายข้อมูล/ขวาตาราง เฉพาะตอนมีตารางให้โชว์ (ผู้ใช้ขอ 2026-10-05 "ไม่ต้องสกอลลงมา")
   const rmSection = document.getElementById('erq-rm-section');
+  const leftCol = document.getElementById('erq-left-col');
+  const dialog = document.getElementById('erq-dialog');
   if (type === 'production_records') {
+    dialog.classList.replace('modal-lg', 'modal-xl');
+    dialog.classList.add('rm-wide');
+    leftCol.className = 'col-lg-4';
     rmSection.style.display = '';
     await _rmUseLoadRows('erq', row.MO_ID);
   } else {
+    dialog.classList.replace('modal-xl', 'modal-lg');
+    dialog.classList.remove('rm-wide');
+    leftCol.className = 'col-lg-12';
     rmSection.style.display = 'none';
   }
   bootstrap.Modal.getOrCreateInstance(document.getElementById('editReqModal')).show();
@@ -6976,6 +6998,7 @@ function _issueHistRenderCards() {
         <div class="d-flex gap-1">
           ${mo?.Status !== 'ปิดงาน' ? `<button class="btn btn-sm btn-outline-success" onclick="event.stopPropagation();issueHistAddItemOpen(${gi})" title="เบิกไม่ครบ? เพิ่มรายการวัตถุดิบให้ MO นี้"><i class="fa-solid fa-cart-plus"></i></button>` : ''}
           <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation();issueHistPrint(${gi})" title="ปริ้นใบเบิกผลิตแบบย่อ (ส่งบัญชี)"><i class="fa-solid fa-print"></i></button>
+          <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();issueHistDeleteAllRequest(${gi})" title="ขอลบรายการเบิกทั้งหมดของ MO นี้ทีเดียว"><i class="fa-solid fa-trash-can"></i></button>
           <button class="btn btn-sm btn-outline-secondary" title="${expanded ? 'ย่อ' : 'ดูรายละเอียด'}"><i class="fa-solid fa-chevron-${expanded ? 'up' : 'down'}"></i></button>
         </div>
       </div>
@@ -7267,6 +7290,28 @@ async function issueDeleteRequest(id) {
   const { error } = await _sb.rpc('issue_delete_request_create', { p_issue_id: id, p_reason: reason.trim() });
   if (error) { Swal.fire('ส่งคำขอไม่สำเร็จ', esc(error.message), 'error'); return; }
   Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: 'ส่งคำขอลบแล้ว — รอแอดมินอนุมัติ' });
+  await Promise.all([issueLoad(), rcvEditLoadPending()]);
+}
+// ขอลบรายการเบิกทั้งการ์ด (ทุกวัตถุดิบของ MO นี้) ทีเดียว (ผู้ใช้ขอ 2026-10-05) — ยังผ่านอนุมัติทีละรายการ
+// เหมือนเดิมทุกประการ (ไม่มี RPC/ประเภทคำขอใหม่) แค่ยิง issue_delete_request_create วนทุกแถวด้วยเหตุผลเดียวกัน
+// ข้ามแถวที่มีคำขอลบรออนุมัติอยู่แล้วกันชน unique-pending constraint ในฟังก์ชัน
+async function issueHistDeleteAllRequest(gi) {
+  const g = _issueHistGroupsCache[gi];
+  if (!g) return;
+  const rows = g.rows.filter(h => !_editPendingFor('issue_production_delete', h.Issue_ID));
+  if (!rows.length) { Swal.fire('ไม่มีรายการให้ลบ', 'ทุกรายการมีคำขอลบรออนุมัติอยู่แล้ว', 'info'); return; }
+  const { value: reason } = await Swal.fire({
+    icon: 'warning', title: `ขอลบรายการเบิกทั้งหมดของ ${esc(g.moId)}?`,
+    html: `<div class="small text-start mb-2">จะส่งคำขอลบวัตถุดิบทั้ง ${rows.length} รายการของ MO นี้ทีเดียว — คืนวัตถุดิบกลับเข้าล็อตเดิมให้อัตโนมัติทีละรายการเมื่อแอดมินอนุมัติ ถ้าอนุมัติจนไม่เหลือรายการเบิกเลย สถานะ MO จะย้อนกลับเป็น "วางแผน"</div>`,
+    input: 'textarea', inputPlaceholder: 'เหตุผลที่ขอลบ (ใช้กับทุกรายการ)', inputAttributes: { 'aria-label': 'เหตุผลที่ขอลบ' },
+    inputValidator: v => !v?.trim() ? 'กรุณาระบุเหตุผล' : undefined,
+    showCancelButton: true, confirmButtonText: `ส่งคำขอลบทั้งหมด (${rows.length})`, cancelButtonText: 'ยกเลิก',
+  });
+  if (!reason) return;
+  const results = await Promise.all(rows.map(h => _sb.rpc('issue_delete_request_create', { p_issue_id: h.Issue_ID, p_reason: reason.trim() })));
+  const errs = results.filter(r => r.error);
+  if (errs.length) Swal.fire('บางรายการส่งคำขอไม่สำเร็จ', esc(errs.map(e => e.error.message).join('; ')), 'warning');
+  else Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: `ส่งคำขอลบแล้ว ${rows.length} รายการ — รอแอดมินอนุมัติ` });
   await Promise.all([issueLoad(), rcvEditLoadPending()]);
 }
 // ขั้นที่ 2 ของโฟลผลิตลูกประคบ: เตรียมวัตถุดิบเข้าไลน์ — จำนวนลูกตั้งต้นจาก MO.PlanQty (แก้ได้) แล้วคำนวณ
@@ -7586,7 +7631,8 @@ function _rmUseRowHTML(prefix, r, rm) {
   return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}">
     <td><code>${esc(r.RM_ID)}</code></td><td>${esc(rm?.RM_Name || r.RM_ID)}</td>
     <td class="text-end text-muted">${_rmFmtQty(r.QtyIssued)}</td>
-    <td><input type="number" min="0" step="any" class="form-control form-control-sm ${prefix}-rm-qty" value="${r.QtyIssued}" oninput="_rmUseRecalc('${prefix}')"></td>
+    <td><input type="number" min="0" step="any" class="form-control form-control-sm ${prefix}-rm-qty${CAT_RAW_ALL.includes(rm?.Category) ? ' bg-warning-subtle' : ''}" value="${r.QtyIssued}" oninput="_rmUseRecalc('${prefix}')"></td>
+    <td class="text-end small ${prefix}-rm-waste"></td>
     <td class="small text-muted">${esc(r.Unit || rm?.Unit || '')}</td>
     <td class="text-end small ${prefix}-rm-pct"></td></tr>`;
 }
@@ -7597,7 +7643,7 @@ async function _rmUseLoadRows(prefix, moId) {
   const issRows = await sbRun(_sb.from('issue_production').select('*').eq('MO_ID', moId), 'โหลดวัตถุดิบที่เบิก') || [];
   document.getElementById(`${prefix}-rm-rows`).innerHTML = issRows.length
     ? issRows.map(r => _rmUseRowHTML(prefix, r, _rmMasterCache.find(x => x.RM_ID === r.RM_ID))).join('')
-    : '<tr><td colspan="6" class="text-center text-muted py-2">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>';
+    : '<tr><td colspan="7" class="text-center text-muted py-2">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>';
   _rmUseRecalc(prefix);
 }
 // % หายรวม = (เบิกเดิม − ใช้จริง) ÷ เบิกเดิม × 100 (ยืนยันสูตรกับผู้ใช้ 2026-10-04) — นับเฉพาะหมวดวัตถุดิบจริง
@@ -7609,6 +7655,12 @@ function _rmUseRecalc(prefix) {
     // % หายรายตัว — โชว์ทุกแถว (รวมแพ็คเกจจิ้งด้วย เพื่อให้เห็นครบ) แยกจาก % หายรวมด้านบนที่นับเฉพาะวัตถุดิบจริง
     const orig = parseFloat(tr.dataset.original) || 0;
     const actual = parseFloat(tr.querySelector(`.${prefix}-rm-qty`).value) || 0;
+    // "ของเสีย" = พร้อมใช้ในสูตร (เบิกไปเดิม) − เบิกตั้งต้น (ที่แก้) เป็นจำนวนจริง ไม่ใช่ % — ผู้ใช้ขอ 2026-10-05
+    // ใช้ข้อมูลเดิมที่มีอยู่แล้ว (data-original/เบิกตั้งต้น) ไม่เพิ่มคอลัมน์/ช่องกรอกใหม่ซ้ำกับ "พร้อมใช้ในสูตร"
+    const wasteCell = tr.querySelector(`.${prefix}-rm-waste`);
+    const waste = Math.round((orig - actual) * 10000) / 10000;
+    wasteCell.textContent = _rmFmtQty(waste);
+    wasteCell.className = `text-end small ${prefix}-rm-waste ` + (Math.abs(waste) < 1e-9 ? 'text-success' : waste > 0 ? 'text-danger' : 'text-warning');
     const pctCell = tr.querySelector(`.${prefix}-rm-pct`);
     if (orig > 0) {
       const rowPct = (orig - actual) / orig * 100;
