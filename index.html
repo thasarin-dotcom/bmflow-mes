@@ -1215,6 +1215,7 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
         <option value="waste_log">ของเสีย</option>
         <option value="manufacturing_orders">แผนผลิต (MO)</option>
         <option value="mo_lot">Lot ของ MO</option>
+        <option value="mo_edit">แก้ไข MO (ฉุกเฉิน)</option>
         <option value="issue_lot">ล็อตที่เบิก</option>
         <option value="issue_production_delete">เบิกเข้าไลน์ผลิต (ลบ)</option>
         <option value="signup">สมัครใช้งาน</option>
@@ -1844,13 +1845,13 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
               <div class="invalid-feedback" id="erq-reason-err"></div>
             </div>
           </div>
-          <div class="col-lg-8 d-flex flex-column" id="erq-rm-section" style="display:none">
+          <div class="col-lg-8" id="erq-rm-section" style="display:none">
             <label class="form-label d-flex justify-content-between align-items-center flex-wrap gap-2">
               <span>วัตถุดิบที่ใช้จริง <span class="text-muted fw-normal small">(แก้ไขได้ถ้าใช้ไม่เท่ากับที่เบิกไป — ใช้มากกว่าเดิมจะตัดสต็อกเพิ่ม, ใช้น้อยกว่าเดิมส่วนต่างจะบันทึกเป็น "ของเสีย" อัตโนมัติ ไม่คืนเข้าสต็อก)</span></span>
               <span id="erq-rm-loss" class="small"></span>
             </label>
             <div class="table-responsive flex-grow-1" style="min-height:0;overflow-y:auto"><table class="table table-sm align-middle mb-0">
-              <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end">พร้อมใช้ในสูตร</th><th style="width:130px">เบิกตั้งต้น</th><th class="text-end">ของเสีย</th><th>หน่วย</th><th class="text-end">% หาย</th></tr></thead>
+              <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end">พร้อมใช้ในสูตร</th><th style="width:190px">เบิกตั้งต้น</th><th class="text-end">ของเสีย</th><th>หน่วย</th><th class="text-end">% หาย</th></tr></thead>
               <tbody id="erq-rm-rows"></tbody>
             </table></div>
           </div>
@@ -2204,7 +2205,7 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
               <span id="pr-rm-loss" class="small"></span>
             </label>
             <div class="table-responsive flex-grow-1" style="min-height:0;overflow-y:auto"><table class="table table-sm align-middle mb-0">
-              <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end">พร้อมใช้ในสูตร</th><th style="width:130px">เบิกตั้งต้น</th><th class="text-end">ของเสีย</th><th>หน่วย</th><th class="text-end">% หาย</th></tr></thead>
+              <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end">พร้อมใช้ในสูตร</th><th style="width:190px">เบิกตั้งต้น</th><th class="text-end">ของเสีย</th><th>หน่วย</th><th class="text-end">% หาย</th></tr></thead>
               <tbody id="pr-rm-rows"></tbody>
             </table></div>
           </div>
@@ -4783,6 +4784,14 @@ const EDIT_TYPES = {
     fields: { Lot: 'Lot' },
     form: [{ k: 'Lot', type: 'text', req: true }],
     info: 'แก้ชื่อ Lot ของ MO นี้ — ไม่กระทบสต็อกหรือยอดใดๆ เป็นแค่ป้ายอ้างอิง' },
+  // ปุ่ม "แก้ไข" กรณีฉุกเฉินของ MO ที่เบิกวัตถุดิบไปแล้ว (ผู้ใช้ขอ 2026-10-05) — แยกจาก 'manufacturing_orders'
+  // ข้างบนเหตุผลเดียวกับ mo_lot: ตัวนั้นเป็น sentinel เฉพาะคำขอลบทั้งใบ ปนกับแก้ทีละช่องไม่ได้ ไม่รวม Lot (มีปุ่ม
+  // แยกอยู่แล้วที่การ์ด "เบิกวัตถุดิบเข้าไลน์ผลิต") และไม่รวม FG_ID (เปลี่ยนสินค้าหลังเบิกตามสูตรเดิมไปแล้วจะ
+  // สวนทางกับของจริง)
+  mo_edit: { label: 'MO (ฉุกเฉิน)', icon: 'fa-clipboard-list', table: 'manufacturing_orders', pk: 'MO_ID',
+    fields: { PlanQty: 'จำนวนแผน', PlanDate: 'วันที่ผลิต', PlanEndDate: 'วันที่ผลิตถึง', Order_ID: 'อ้างอิง CO' },
+    form: [{ k: 'PlanQty', type: 'number', req: true }, { k: 'PlanDate', type: 'date', req: true }, { k: 'PlanEndDate', type: 'date' }, { k: 'Order_ID', type: 'text' }],
+    info: 'ใช้กรณีฉุกเฉินเท่านั้น (เช่น กรอกจำนวน/วันที่ผิดหลังเบิกวัตถุดิบไปแล้ว) — แก้ตัวเลขนี้ไม่ปรับยอดวัตถุดิบที่เบิกไปแล้วให้อัตโนมัติ เป็นแค่แก้แผน/ป้ายอ้างอิง ถ้าจะแก้ Lot ให้ใช้ปุ่มที่หน้า "เบิกวัตถุดิบเข้าไลน์ผลิต" แทน' },
   // แก้ "ล็อตวัตถุดิบที่เบิก" (issue_production.LotAlloc) — ใช้โมดัลของตัวเอง (issueLotModal) ไม่ใช่ฟอร์ม
   // อัตโนมัติ erq-fields เพราะต้องเลือกล็อตจาก stock_rm_lot ไม่ใช่กรอกข้อความ/ตัวเลขธรรมดา — ไม่มี form/fields
   // ให้ erq-fields ใช้ (เหมือน manufacturing_orders/prep_orders_delete ที่เป็น sentinel ไม่ใช่ field-edit ทั่วไป)
@@ -4898,7 +4907,7 @@ function _editRecLabel(type, rec) {
     case 'production_records': return [fg(rec.FG_ID), `${rec.ProdLot} · ${_bomFmtQty(rec.QtyProduced)} · ผลิต ${fmtDateLong(rec.MfgDate)}`];
     case 'fg_receive': case 'fg_receive_delete': return [fg(rec.FG_ID), `${rec.Lot} · ${_bomFmtQty(rec.Qty)} · รับ ${fmtDateLong(rec.ReceiveDate)}`];
     case 'waste_log': return [rec.ItemType === 'FG' ? fg(rec.FG_ID) : rm(rec.RM_ID), `${rec.ItemType === 'FG' ? _bomFmtQty(rec.Qty) : _qtyFmtByCat(rec.Qty, _rmMasterCache.find(r => r.RM_ID === rec.RM_ID)?.Category)} ${rec.Unit || ''} · ${rec.Reason || ''} · ${fmtDateLong(rec.WasteDate)}`];
-    case 'manufacturing_orders': return [`${rec.MO_ID} · ${fg(rec.FG_ID)}`, `แผน ${_bomFmtQty(rec.PlanQty)} · ${fmtDate(rec.PlanDate)} · สถานะ ${rec.Status}`];
+    case 'manufacturing_orders': case 'mo_edit': return [`${rec.MO_ID} · ${fg(rec.FG_ID)}`, `แผน ${_bomFmtQty(rec.PlanQty)} · ${fmtDate(rec.PlanDate)} · สถานะ ${rec.Status}`];
     case 'prep_orders': case 'prep_orders_delete':
       return [rm(rec.TargetRM_ID), `${rm(rec.SourceRM_ID)} → ${rm(rec.TargetRM_ID)} · ได้กลับ ${_rmFmtQty(rec.QtyBack)} ${rec.Unit || ''} · ${fmtDateLong(rec.PrepDate)}`];
     case 'mo_lot': return [`${rec.MO_ID} · ${fg(rec.FG_ID)}`, `Lot: ${rec.Lot || '-'} · แผน ${_bomFmtQty(rec.PlanQty)} · ${fmtDate(rec.PlanDate)}`];
@@ -5030,12 +5039,17 @@ async function editReqOpen(type, id) {
     dialog.classList.replace('modal-lg', 'modal-xl');
     dialog.classList.add('rm-wide');
     leftCol.className = 'col-lg-4';
+    rmSection.classList.add('d-flex', 'flex-column');
     rmSection.style.display = '';
     await _rmUseLoadRows('erq', row.MO_ID);
   } else {
     dialog.classList.replace('modal-xl', 'modal-lg');
     dialog.classList.remove('rm-wide');
     leftCol.className = 'col-lg-12';
+    // ⚠️ ต้องถอด d-flex ออกก่อน ไม่ใช่แค่ style.display='none' เฉยๆ — .d-flex ของ Bootstrap เป็น !important
+    // ทับ inline style ทิ้งได้ (บั๊กที่เจอจริง 2026-10-05: ทุก type อื่นที่ไม่ใช่ production_records โชว์ตาราง
+    // วัตถุดิบเปล่าๆ ค้างอยู่ เพราะ class ยังติด d-flex มาจากตอนเปิด type อื่นก่อนหน้า)
+    rmSection.classList.remove('d-flex', 'flex-column');
     rmSection.style.display = 'none';
   }
   bootstrap.Modal.getOrCreateInstance(document.getElementById('editReqModal')).show();
@@ -6118,11 +6132,12 @@ function planRenderTable() {
     } else if (_editPendingFor('manufacturing_orders', p.MO_ID)) {
       actions = `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอลบรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
     } else if (p.Status === 'ปิดงาน') {
-      actions = _hasRole('supervisor')
+      actions = _editBtn('mo_edit', p.MO_ID) + (_hasRole('supervisor')
         ? `<button class="btn btn-sm btn-outline-secondary" onclick="planReopenMo('${p.MO_ID}')" title="เปิดงานอีกครั้ง (ย้อนเป็น ผลิตแล้ว)"><i class="fa-solid fa-rotate-left"></i></button>`
-        : '';
+        : '');
     } else {
-      actions = `<button class="btn btn-sm btn-outline-danger me-1" onclick="planRequestDelete('${p.MO_ID}')" title="เบิกวัตถุดิบไปแล้ว แก้ไขไม่ได้ — ขอลบ (รอแอดมินอนุมัติ)"><i class="fa-solid fa-trash"></i></button>`
+      actions = _editBtn('mo_edit', p.MO_ID)
+        + `<button class="btn btn-sm btn-outline-danger me-1" onclick="planRequestDelete('${p.MO_ID}')" title="เบิกวัตถุดิบไปแล้ว แก้ไขไม่ได้ — ขอลบ (รอแอดมินอนุมัติ)"><i class="fa-solid fa-trash"></i></button>`
         + (p.Status === 'ผลิตแล้ว' ? `<button class="btn btn-sm btn-outline-success" onclick="planCloseMo('${p.MO_ID}')" title="ปิดงาน — จบขั้นตอนของ MO นี้"><i class="fa-solid fa-flag-checkered"></i></button>` : '');
     }
     return `<tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td>
@@ -7325,11 +7340,16 @@ function islotRecalcTotal() {
 // issueLotEditOpen อ่านจาก _issueHistCache ปกติ (เร็ว ไม่ยิง query ซ้ำ) แต่ cache นั้นจำกัดแค่ 100 แถวล่าสุด
 // (ดู issueLoad) — ถ้าเรียกจากหน้าอื่นที่ไม่ได้โหลด cache นี้ไว้ (เช่น Stock Movement) หรือรายการเก่ากว่า 100
 // แถว ให้ดึงจาก DB ตรงๆ แทน (2026-10-04)
-async function issueLotEditOpen(issueId) {
+// context (ไม่บังคับ) = {prefix, moId} เมื่อเปิดจากตาราง "วัตถุดิบที่ใช้จริง" (บันทึกผลิตใหม่/แก้ไขบันทึกผลิต
+// — ผู้ใช้ขอ 2026-10-05) ไว้ให้ issueLotEditSubmit รู้ว่าต้องรีโหลดตารางไหนแทนหน้า "เบิกวัตถุดิบเข้าไลน์ผลิต"
+// ปกติหลังส่งคำขอสำเร็จ — null = เปิดจากปุ่มเดิมทั่วไป (_issueLotBtn) เหมือนเดิมทุกประการ
+let _islotContext = null;
+async function issueLotEditOpen(issueId, context) {
   let h = _issueHistCache.find(x => x.Issue_ID === issueId);
   if (!h) h = await _sb.from('issue_production').select('*').eq('Issue_ID', issueId).maybeSingle().then(r => r.data);
   if (!h) return;
   _issueLotEditId = issueId;
+  _islotContext = context || null;
   _islotRequiredQty = parseFloat(h.QtyIssued) || 0;
   const rm = _rmMasterCache.find(r => r.RM_ID === h.RM_ID);
   document.getElementById('islot-info').innerHTML =
@@ -7369,7 +7389,8 @@ async function issueLotEditSubmit() {
   if (error) { errEl.textContent = error.message; return; }
   bootstrap.Modal.getInstance(document.getElementById('issueLotModal')).hide();
   Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: 'ส่งคำขอแล้ว — รอแอดมินอนุมัติ' });
-  await Promise.all([issueLoad(), rcvEditLoadPending()]);
+  if (_islotContext) await Promise.all([_rmUseLoadRows(_islotContext.prefix, _islotContext.moId), rcvEditLoadPending()]);
+  else await Promise.all([issueLoad(), rcvEditLoadPending()]);
 }
 // ขอลบรายการเบิกทั้งแถว (2026-10-03) — คืนวัตถุดิบกลับเข้าล็อตเดิมอัตโนมัติตอนแอดมินอนุมัติ เหมือน
 // prepHistRequestDelete/mo_delete_request_create ทุกประการ (ต้องผ่านอนุมัติเสมอ แม้เป็นแอดมินเองก็ไม่ auto-approve
@@ -7731,10 +7752,38 @@ function _rmUseRowHTML(prefix, r, rm) {
   return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}">
     <td><code>${esc(r.RM_ID)}</code></td><td>${esc(rm?.RM_Name || r.RM_ID)}</td>
     <td class="text-end text-muted">${_rmFmtQty(r.QtyIssued)}</td>
-    <td><input type="number" min="0" step="any" class="form-control form-control-sm ${prefix}-rm-qty${CAT_RAW_ALL.includes(rm?.Category) ? ' bg-warning-subtle' : ''}" value="${r.QtyIssued}" oninput="_rmUseRecalc('${prefix}')"></td>
+    <td><div class="d-flex gap-1 align-items-center">
+      <input type="number" min="0" step="any" class="form-control form-control-sm ${prefix}-rm-qty${CAT_RAW_ALL.includes(rm?.Category) ? ' bg-warning-subtle' : ''}" value="${r.QtyIssued}" oninput="_rmUseRecalc('${prefix}')">
+      ${_rmUseLotBtn(prefix, r.Issue_ID)}
+    </div></td>
     <td class="text-end small ${prefix}-rm-waste"></td>
     <td class="small text-muted">${esc(r.Unit || rm?.Unit || '')}</td>
     <td class="text-end small ${prefix}-rm-pct"></td></tr>`;
+}
+// เลือกว่า "เบิกตั้งต้น" (ที่แก้ในฟอร์มนี้) มาจากล็อตไหนบ้าง (ผู้ใช้ขอ 2026-10-05) — ใช้ตัวเลือกล็อตเดิมที่มี
+// อยู่แล้ว (issueLotModal/issueLotEditOpen ของปุ่ม "แก้ไขล็อตที่เบิก") ไม่สร้างใหม่ซ้ำซ้อน ต่างแค่ยอดที่ต้อง
+// จัดสรรให้เท่ากับเลขที่พิมพ์ในช่อง "เบิกตั้งต้น" ของแถวนี้ตอนนี้ (ไม่ใช่ยอดเบิกเดิมที่ยังไม่ได้แก้)
+function _rmUseLotBtn(prefix, issueId) {
+  if (_editPendingFor('issue_lot', issueId)) return `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอแก้ไขล็อตรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
+  return `<button type="button" class="btn btn-sm btn-outline-secondary" onclick="_rmUseLotEditOpen('${prefix}','${esc(issueId)}')" title="เลือกว่าเบิกจากล็อตไหนบ้าง"><i class="fa-solid fa-boxes-stacked"></i></button>`;
+}
+async function _rmUseLotEditOpen(prefix, issueId) {
+  // เลือกล็อตต้องอิงยอด "เบิกตั้งต้น" ที่บันทึกจริงในระบบแล้วเท่านั้น (RPC ฝั่งเซิร์ฟเวอร์ตรวจกับค่าจริงใน
+  // issue_production.QtyIssued เสมอ ไม่รู้จักค่าที่พิมพ์ในฟอร์มนี้แต่ยังไม่กดบันทึก) ถ้ายังมีค่าที่พิมพ์ไว้
+  // แต่ยังไม่บันทึก ให้เตือนก่อน ไม่งั้นผลรวมล็อตจะชนกับ error "ผลรวมต้องเท่ากับที่เบิกจริง" ที่งงว่าทำไมเลข
+  // ไม่ตรงกับที่เห็นในช่อง
+  // ต้องมี _rmLotCache ไว้สร้างตัวเลือกล็อต — หน้าบันทึกผลิต/แก้ไขบันทึกผลิตไม่เคยโหลดตัวนี้มาก่อนเลย (ต่างจาก
+  // หน้า "เบิกวัตถุดิบเข้าไลน์ผลิต" เดิมที่โหลดผ่าน stockRmLoad อยู่แล้ว) ถ้าเป็นหน้าแรกของ session จะว่างเปล่า
+  if (!_rmLotCache.length) await rmLotLoad();
+  const tr = document.querySelector(`#${prefix}-rm-rows tr[data-issue="${issueId}"]`);
+  const liveQty = parseFloat(tr?.querySelector(`.${prefix}-rm-qty`)?.value) || 0;
+  const original = parseFloat(tr?.dataset.original) || 0;
+  if (Math.abs(liveQty - original) > 0.0005) {
+    Swal.fire('บันทึก "เบิกตั้งต้น" ก่อน', `แก้ไขจำนวน "เบิกตั้งต้น" ของแถวนี้ไว้แต่ยังไม่ได้กดบันทึก — ต้องกด "บันทึก"/"บันทึกการแก้ไข" ของฟอร์มนี้ก่อน ถึงจะเลือกล็อตให้ตรงกับจำนวนใหม่ (${_rmFmtQty(liveQty)}) ได้ ตอนนี้ระบบยังอ้างอิงยอดเดิมที่บันทึกไว้จริง (${_rmFmtQty(original)})`, 'info');
+    return;
+  }
+  const moId = prefix === 'pr' ? _prodMoId : _editForm?.row?.MO_ID;
+  issueLotEditOpen(issueId, { prefix, moId });
 }
 // ต้องมี _rmMasterCache ไว้แสดงชื่อ — ถ้าเข้าเป็นหน้าแรกของ session (ยังไม่เคยโหลด RM master จากหน้าอื่นมา
 // ก่อน) ชื่อจะโชว์เป็นรหัสซ้ำแทน (บั๊กที่เจอจริง 2026-10-04)
@@ -7864,7 +7913,18 @@ async function prodRecordDelete(id) {
   }
   const c = await Swal.fire({ title: 'ลบรายการนี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
-  if (await sbDelete('production_records', 'Prod_ID', id)) prodRecordLoad();
+  // ย้อนสถานะ MO กลับเป็น "เบิกวัตถุดิบแล้ว" ให้กลับไปอยู่ใน "MO รอบันทึกผลิต" เหมือนเดิม — ไม่งั้นค้างที่
+  // "ผลิตแล้ว" ตลอดไปโดยไม่มีบันทึกผลิตจริงรองรับ บันทึกผลิตใหม่ไม่ได้อีกเลย (บั๊กที่เจอจริง 2026-10-05) เช็ค
+  // MO_ID ไว้ก่อนลบ (ลบแล้วไม่มีแถวให้ดูย้อนหลัง) เฉพาะกรณียังเป็น "ผลิตแล้ว" อยู่ (ถ้าไปไกลกว่านั้นแล้ว เช่น
+  // ปิดงาน ไม่ย้อน กันสถานะสวนทางกับความเป็นจริง — เหมือนแนวทางเดียวกับ issue_production_delete)
+  const { data: rec } = await _sb.from('production_records').select('MO_ID').eq('Prod_ID', id).maybeSingle();
+  if (await sbDelete('production_records', 'Prod_ID', id)) {
+    if (rec?.MO_ID) {
+      await sbRun(_sb.from('manufacturing_orders').update({ Status: 'เบิกวัตถุดิบแล้ว' }).eq('MO_ID', rec.MO_ID).eq('Status', 'ผลิตแล้ว'), 'ย้อนสถานะ MO ไม่สำเร็จ');
+      await planLoad();
+    }
+    prodRecordLoad();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -8614,6 +8674,7 @@ async function stockCardLoad() {
   if (!_rmMasterCache.length) await rmMasterLoad();
   if (!_fgMasterCache.length) await fgMasterLoad();
   if (!_rmLotCache.length) await rmLotLoad();   // ไว้แปลง BackLotID (รับกลับจากการเตรียม) เป็น Lot label
+  if (!_planCache.length) await planLoad();     // ไว้หา MO.Lot (= FG Lot) ของแถว "เบิกเข้าไลน์ผลิต" (2026-10-05)
   stockCardLoadItems();
 }
 function stockCardLoadItems() {
@@ -8669,7 +8730,9 @@ async function stockCardRender() {
     ]);
     entries = [
       ...(recv||[]).map(r => ({ date: r.ReceiveDate, ts: r.CreatedAt, label: 'รับเข้าคลัง', ref: r.Receive_ID, lot: r.Lot || '-', in: r.Qty, out: 0 })),
-      ...(iss||[]).map(r => ({ date: r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต', ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), in: 0, out: r.QtyIssued })),
+      // ต่อท้าย "เบิกเข้าไลน์ผลิต" ด้วย Lot ของ MO ที่เบิกไป (= FG Lot ที่จะออกมาในที่สุด ดู MO.Lot) ให้ตามรอยได้
+      // ว่าวัตถุดิบล็อตนี้ถูกเบิกไปทำสินค้าล็อตไหน (ผู้ใช้ขอ 2026-10-05 "เบิกเป็น FG Lot ไหน ใส่ด้วย")
+      ...(iss||[]).map(r => ({ date: r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (_planCache.find(p => p.MO_ID === r.MO_ID)?.Lot ? ` → FG Lot ${_planCache.find(p => p.MO_ID === r.MO_ID).Lot}` : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), in: 0, out: r.QtyIssued })),
       ...(waste||[]).map(r => ({ date: r.WasteDate, ts: r.CreatedAt, label: 'ของเสีย', ref: r.Waste_ID, lot: r.Lot || '-', in: 0, out: r.Qty })),
       ...prepOut.map(r => ({ date: r.PrepDate, ts: r.CreatedAt, label: 'เบิกไปเตรียม', ref: r.Prep_ID, lot: _scAllocLots(r.SourceAlloc), in: 0, out: r.QtyOut })),
       ...prepIn.map(r => ({ date: r.ReceivedAt ? new Date(r.ReceivedAt).toLocaleDateString('sv-SE') : r.PrepDate, ts: r.ReceivedAt, label: 'รับกลับจากการเตรียม', ref: r.Prep_ID, lot: _lotLabel(_rmLotCache.find(l => l.Lot_ID === r.BackLotID) || { Lot_ID: r.BackLotID }), in: r.QtyBack, out: 0 })),
@@ -8800,10 +8863,19 @@ async function stockMoveLoad() {
     sbRun(_sb.from('prep_orders').select('*').neq('Status', 'ยกเลิก'), 'โหลด Stock Movement'),
     sbRun(_sb.from('waste_log').select('*').eq('ItemType', 'MATERIAL'), 'โหลด Stock Movement'),
   ]);
+  // ของเสียที่เกิดจากแก้ "เบิกตั้งต้น" ในหน้าบันทึกผลิต (issue_qty_correct ลดจำนวน — migration_2026-10-05_
+  // issue_correct_to_waste.sql) ตั้งใจเก็บ Lot/RMLotID เป็น NULL เพราะยอดเบิกเดิมอาจตัดมาจากหลายล็อต (FEFO)
+  // ไม่มีล็อตเดียวที่ชี้ชัดได้ว่า "ส่วนที่เสีย" มาจากล็อตไหนเป๊ะ — ผู้ใช้ถามว่าทำไมไม่มี Lot (2026-10-05) จึง
+  // เพิ่มการแสดงผล (ไม่แก้ข้อมูลจริง) โดยพาร์ส Issue_ID จาก Reason (รูปแบบคงที่ "...อ้างอิง ISS-...)" ที่ฟังก์ชัน
+  // ข้างต้นสร้างไว้เสมอ) แล้วโชว์ล็อตต้นทางของรายการเบิกนั้นแทน ให้เห็นว่าวัตถุดิบที่เสียมาจากล็อตไหนบ้าง
+  const issById = Object.fromEntries((iss || []).map(r => [r.Issue_ID, r]));
   _stockMoveCache = [
     ...(iss || []).map(r => ({ type: 'issue', label: 'เบิกเข้าไลน์ผลิต', date: r.IssueDate, ts: r.CreatedAt, rmId: r.RM_ID, qty: r.QtyIssued, lot: _scAllocLots(r.LotAlloc), ref: r.Issue_ID, note: r.MO_ID ? `MO ${r.MO_ID}` : '' })),
     ...(prepOut || []).map(r => ({ type: 'prep', label: 'เบิกไปเตรียม', date: r.PrepDate, ts: r.CreatedAt, rmId: r.SourceRM_ID, qty: r.QtyOut, lot: _scAllocLots(r.SourceAlloc), ref: r.Prep_ID, note: r.TargetRM_ID ? `เตรียม → ${_rmName(r.TargetRM_ID)}` : '' })),
-    ...(waste || []).map(r => ({ type: 'waste', label: 'ของเสีย', date: r.WasteDate, ts: r.CreatedAt, rmId: r.RM_ID, qty: r.Qty, lot: r.Lot || '-', ref: r.Waste_ID, note: r.Reason || '' })),
+    ...(waste || []).map(r => {
+      const srcIssue = !r.Lot && r.Reason ? issById[(r.Reason.match(/อ้างอิง (ISS-\S+)\)/) || [])[1]] : null;
+      return { type: 'waste', label: 'ของเสีย', date: r.WasteDate, ts: r.CreatedAt, rmId: r.RM_ID, qty: r.Qty, lot: r.Lot || (srcIssue ? _scAllocLots(srcIssue.LotAlloc) : '-'), ref: r.Waste_ID, note: r.Reason || '' };
+    }),
   ];
   stockMoveRenderTable();
 }
