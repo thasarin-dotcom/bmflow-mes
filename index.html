@@ -2317,14 +2317,19 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
       </div>
       <div class="modal-body">
         <div class="row g-3">
-          <div class="col-md-7">
+          <div class="col-md-5">
             <label class="form-label">สินค้า<span class="text-danger">*</span></label>
             <select id="pb-fg" class="form-select" onchange="packboxFgChange()"></select>
           </div>
-          <div class="col-md-5">
+          <div class="col-md-4">
             <label class="form-label">ลูกต่อกล่อง<span class="text-danger">*</span></label>
             <input id="pb-unitperbox" type="number" step="any" class="form-control" oninput="packboxRecalc()">
             <div class="invalid-feedback" id="pb-unitperbox-err"></div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">วันที่แพ็ค<span class="text-danger">*</span></label>
+            <input id="pb-packdate" type="date" class="form-control">
+            <div class="form-text" style="font-size:.72rem">ใช้ตั้งรหัสกล่อง (CT-ลำดับ/วันที่แพ็ค) และบันทึกเป็นวันที่แพ็คของกล่อง</div>
           </div>
         </div>
         <div class="mt-3" id="pb-continue-wrap" style="display:none">
@@ -2498,7 +2503,7 @@ const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 const MO_STATUS = ['วางแผน','เบิกวัตถุดิบแล้ว','ผลิตแล้ว','ปิดงาน'];
 const CO_STATUS_BADGE = { 'สั่งผลิตแล้ว':'secondary', 'กำลังเบิก':'info', 'ส่งบางส่วน':'warning', 'ส่งสำเร็จ':'success' };
-const MO_STATUS_BADGE = { 'วางแผน':'secondary', 'เบิกวัตถุดิบแล้ว':'info', 'ผลิตแล้ว':'primary', 'ปิดงาน':'success' };
+const MO_STATUS_BADGE = { 'วางแผน':'secondary', 'เบิกวัตถุดิบแล้ว':'info', 'ผลิตแล้ว':'primary', 'รับ FG แล้ว':'warning', 'ปิดงาน':'success' };
 const DELIVERY_STATUS_BADGE = { 'รอจัดส่ง':'secondary', 'จัดส่งแล้ว':'info', 'ส่งถึงแล้ว':'success' };
 const _coDoneStatuses = ['ส่งสำเร็จ'];
 const EXPIRING_SOON_DAYS = 2;
@@ -6133,12 +6138,14 @@ function planRenderTable() {
       actions = `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอลบรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
     } else if (p.Status === 'ปิดงาน') {
       actions = _editBtn('mo_edit', p.MO_ID) + (_hasRole('supervisor')
-        ? `<button class="btn btn-sm btn-outline-secondary" onclick="planReopenMo('${p.MO_ID}')" title="เปิดงานอีกครั้ง (ย้อนเป็น ผลิตแล้ว)"><i class="fa-solid fa-rotate-left"></i></button>`
+        ? `<button class="btn btn-sm btn-outline-secondary" onclick="planReopenMo('${p.MO_ID}')" title="เปิดงานอีกครั้ง"><i class="fa-solid fa-rotate-left"></i></button>`
         : '');
     } else {
+      // "รับ FG แล้ว" (ผู้ใช้ขอ 2026-10-05 — ตั้งให้อัตโนมัติใน fgReceiveModalSave ตอนรับครบ 100%) ปิดงานได้
+      // เหมือน "ผลิตแล้ว" ทุกประการ แค่บอกว่าไปถึงขั้นไหนแล้วชัดเจนขึ้น ไม่ใช่เงื่อนไขใหม่ที่บังคับก่อนปิดงาน
       actions = _editBtn('mo_edit', p.MO_ID)
         + `<button class="btn btn-sm btn-outline-danger me-1" onclick="planRequestDelete('${p.MO_ID}')" title="เบิกวัตถุดิบไปแล้ว แก้ไขไม่ได้ — ขอลบ (รอแอดมินอนุมัติ)"><i class="fa-solid fa-trash"></i></button>`
-        + (p.Status === 'ผลิตแล้ว' ? `<button class="btn btn-sm btn-outline-success" onclick="planCloseMo('${p.MO_ID}')" title="ปิดงาน — จบขั้นตอนของ MO นี้"><i class="fa-solid fa-flag-checkered"></i></button>` : '');
+        + (['ผลิตแล้ว', 'รับ FG แล้ว'].includes(p.Status) ? `<button class="btn btn-sm btn-outline-success" onclick="planCloseMo('${p.MO_ID}')" title="ปิดงาน — จบขั้นตอนของ MO นี้"><i class="fa-solid fa-flag-checkered"></i></button>` : '');
     }
     return `<tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td>
     <td>${p.PlanEndDate && p.PlanEndDate !== p.PlanDate ? `${fmtDate(p.PlanDate)} - ${fmtDate(p.PlanEndDate)}` : fmtDate(p.PlanDate)}</td>
@@ -6315,13 +6322,23 @@ async function planDelete(id) {
 async function planCloseMo(id) {
   const c = await Swal.fire({ title: 'ปิดงาน MO นี้?', text: 'สถานะจะเปลี่ยนเป็น "ปิดงาน" — ใช้เมื่อผลิต/รับ FG/ส่งมอบครบแล้ว', icon: 'question', showCancelButton: true, confirmButtonText: 'ปิดงาน', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
-  if (await sbRun(_sb.from('manufacturing_orders').update({ Status: 'ปิดงาน' }).eq('MO_ID', id).eq('Status', 'ผลิตแล้ว'), 'ปิดงานไม่สำเร็จ') !== null) planLoad();
+  // ปิดงานได้ทั้งจาก "ผลิตแล้ว" และ "รับ FG แล้ว" (สถานะใหม่ 2026-10-05 — ไม่ใช่เงื่อนไขบังคับใหม่ก่อนปิดงาน
+  // แค่เพิ่มสถานะกลางให้เห็นชัดว่ารับ FG เข้าคลังครบแล้ว)
+  if (await sbRun(_sb.from('manufacturing_orders').update({ Status: 'ปิดงาน' }).eq('MO_ID', id).in('Status', ['ผลิตแล้ว', 'รับ FG แล้ว']), 'ปิดงานไม่สำเร็จ') !== null) planLoad();
 }
-// เปิดงานอีกครั้ง (ย้อนเป็น "ผลิตแล้ว") — เฉพาะ supervisor ขึ้นไป กันกดผิดจากคนทั่วไป
+// เปิดงานอีกครั้ง — เฉพาะ supervisor ขึ้นไป กันกดผิดจากคนทั่วไป ย้อนไปขั้นที่ถูกต้องตามจริง (ไม่ใช่ "ผลิตแล้ว"
+// เสมอ) — ถ้าตอนปิดงานรับ FG เข้าคลังครบแล้ว ควรย้อนกลับไปเป็น "รับ FG แล้ว" ไม่ใช่ถอยไกลเกินจริงไปที่ "ผลิตแล้ว"
 async function planReopenMo(id) {
-  const c = await Swal.fire({ title: 'เปิดงาน MO นี้อีกครั้ง?', text: 'สถานะจะย้อนกลับเป็น "ผลิตแล้ว"', icon: 'question', showCancelButton: true, confirmButtonText: 'เปิดงาน', cancelButtonText: 'ยกเลิก' });
+  const c = await Swal.fire({ title: 'เปิดงาน MO นี้อีกครั้ง?', text: 'สถานะจะย้อนกลับไปขั้นก่อนปิดงาน (ผลิตแล้ว หรือ รับ FG แล้ว ตามจริง)', icon: 'question', showCancelButton: true, confirmButtonText: 'เปิดงาน', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
-  if (await sbRun(_sb.from('manufacturing_orders').update({ Status: 'ผลิตแล้ว' }).eq('MO_ID', id).eq('Status', 'ปิดงาน'), 'เปิดงานไม่สำเร็จ') !== null) planLoad();
+  let revertStatus = 'ผลิตแล้ว';
+  const pr = await _sb.from('production_records').select('Prod_ID, QtyProduced').eq('MO_ID', id).maybeSingle().then(r => r.data);
+  if (pr) {
+    const fgr = await _sb.from('fg_receive').select('Qty').eq('Prod_ID', pr.Prod_ID).then(r => r.data || []);
+    const received = fgr.reduce((s, r) => s + (parseFloat(r.Qty) || 0), 0);
+    if (received >= (parseFloat(pr.QtyProduced) || 0) - 1e-6) revertStatus = 'รับ FG แล้ว';
+  }
+  if (await sbRun(_sb.from('manufacturing_orders').update({ Status: revertStatus }).eq('MO_ID', id).eq('Status', 'ปิดงาน'), 'เปิดงานไม่สำเร็จ') !== null) planLoad();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -8047,6 +8064,14 @@ async function fgReceiveModalSave() {
   const ok = await sbRun(_sb.from('fg_receive').insert(payload), 'รับ FG เข้าคลังไม่สำเร็จ');
   if (ok === null) return;
   await adjustStockFG(p.FG_ID, p.ProdLot, qty, p.MfgDate, p.ExpDate);
+  // รับ FG ครบตามจำนวนผลิตแล้ว (นับสะสมถ้ารับหลายครั้ง) → เปลี่ยนสถานะ MO เป็น "รับ FG แล้ว" ให้อัตโนมัติ
+  // (ผู้ใช้ขอ 2026-10-05) เฉพาะตอนยังเป็น "ผลิตแล้ว" อยู่ (กันสถานะสวนทางถ้าปิดงานไปแล้วก่อนหน้า) — ยังไม่ได้
+  // ทำฝั่งย้อนกลับ (ลบ/ลดรับ FG จนไม่ครบอีกแล้ว ย้อนเป็น "ผลิตแล้ว" คืน) เป็น known gap ไว้ก่อน
+  const remainingAfter = (ready?._remaining ?? p.QtyProduced) - qty;
+  if (remainingAfter <= 1e-6 && p.MO_ID) {
+    await sbRun(_sb.from('manufacturing_orders').update({ Status: 'รับ FG แล้ว' }).eq('MO_ID', p.MO_ID).eq('Status', 'ผลิตแล้ว'), 'อัปเดตสถานะ MO ไม่สำเร็จ');
+    _planCache = [];
+  }
   bootstrap.Modal.getInstance(document.getElementById('fgReceiveModal')).hide();
   fgReceiveLoad();
 }
@@ -8440,6 +8465,7 @@ function packboxOpenForm() {
     _fgMasterCache.map(f => `<option value="${esc(f.FG_ID)}">${esc(f.FG_Name)}</option>`).join('');
   document.getElementById('pb-unitperbox').value = '';
   document.getElementById('pb-unitperbox').disabled = false;
+  document.getElementById('pb-packdate').value = todayStr();
   document.getElementById('pb-note').value = '';
   document.getElementById('pb-continue-wrap').style.display = 'none';
   document.getElementById('pb-lot-rows').innerHTML = '';
@@ -8558,8 +8584,10 @@ async function _nextBoxIds(n, dateStr) {
 async function packboxModalSave() {
   _modalClearErrors(['pb-unitperbox']);
   const { fgId, unitPerBox, lotPicks, existingBox } = _packReadInputs();
+  const packDate = document.getElementById('pb-packdate').value;
   if (!fgId) { Swal.fire('เลือกสินค้า', '', 'warning'); return; }
   if (!unitPerBox || unitPerBox <= 0) { _modalShowError('pb-unitperbox', 'กรอกจำนวนลูกต่อกล่องให้ถูกต้อง'); return; }
+  if (!packDate) { Swal.fire('ระบุวันที่แพ็ค', '', 'warning'); return; }
   if (!lotPicks.length) { Swal.fire('ยังไม่ได้เลือกล็อต', 'กรอกจำนวนที่จะแพ็คอย่างน้อย 1 ล็อต', 'warning'); return; }
   for (const p of lotPicks) {
     const stock = _stockFgCache.find(s => s.FG_ID === fgId && s.Lot === p.lot);
@@ -8571,14 +8599,14 @@ async function packboxModalSave() {
     ? (document.querySelector('input[name="pb-remainder-choice"]:checked')?.value === 'close' ? 'ปิด' : 'ค้าง')
     : null;
   const newNeeded = closedBoxes.filter(b => b.isNew).length + (remainderBox?.isNew ? 1 : 0);
-  const newIds = newNeeded ? await _nextBoxIds(newNeeded, todayStr()) : [];
+  const newIds = newNeeded ? await _nextBoxIds(newNeeded, packDate) : [];
   let idx = 0;
   const now = new Date().toISOString();
   const allBoxes = [...closedBoxes.map(b => ({ ...b, status: 'ปิด', closedAt: now })),
     ...(remainderBox ? [{ ...remainderBox, status: remainderStatus, closedAt: remainderStatus === 'ปิด' ? now : null }] : [])];
   for (const b of allBoxes) {
     const boxId = b.isNew ? newIds[idx++] : b.Box_ID;
-    const payload = { FG_ID: fgId, UnitPerBox: unitPerBox, Qty: b.qty, Status: b.status, LotAlloc: b.lotAlloc, PackDate: todayStr(), Note: document.getElementById('pb-note').value || null, UpdatedAt: now, ClosedAt: b.closedAt };
+    const payload = { FG_ID: fgId, UnitPerBox: unitPerBox, Qty: b.qty, Status: b.status, LotAlloc: b.lotAlloc, PackDate: packDate, Note: document.getElementById('pb-note').value || null, UpdatedAt: now, ClosedAt: b.closedAt };
     const ok = b.isNew
       ? await sbRun(_sb.from('pack_boxes').insert({ Box_ID: boxId, CreatedAt: now, ...payload }), 'บันทึกกล่องไม่สำเร็จ')
       : await sbRun(_sb.from('pack_boxes').update(payload).eq('Box_ID', boxId), 'อัปเดตกล่องไม่สำเร็จ');
@@ -8699,6 +8727,20 @@ let _scLastEntries = []; let _scLastUnit = ''; let _scLastFmt = _bomFmtQty;   //
 function _scAllocLots(alloc) {
   return Array.isArray(alloc) && alloc.length ? [...new Set(alloc.map(a => a.lot).filter(Boolean))].join(', ') : '-';
 }
+// ของเสียที่ Lot เป็น NULL (แก้ "เบิกตั้งต้น" ลดจำนวน) อ้างอิงรายการเบิกที่ถูกลบไปแล้วจริงๆ (ไม่เจอใน
+// issue_production สด) — ลองหาใน audit_log แทน (ทริกเกอร์ audit เก็บสแนปช็อตแถวที่ถูกลบไว้ให้อัตโนมัติอยู่
+// แล้วทุกตาราง รวม LotAlloc เต็มๆ ด้วย) เฉพาะแอดมินอ่าน audit_log ได้ตาม RLS ของตัวเอง (admin_can_read) —
+// ผู้ใช้ทั่วไปเรียกแล้วได้ [] เปล่าๆ (ไม่ error) ยังเห็น "-" เหมือนเดิม ไม่ใช่บั๊ก แค่ข้อมูลเชิงลึกสำหรับแอดมิน
+// (ผู้ใช้ขอ 2026-10-05 หลังเจอว่ารายการเบิกต้นทางที่ลบไปแล้วยังโชว์ "-" อยู่)
+async function _wasteLotFromDeletedIssue(missingIds) {
+  if (!missingIds.length) return {};
+  const { data: logs } = await _sb.from('audit_log').select('RecordID, Changes')
+    .eq('TableName', 'issue_production').eq('Action', 'DELETE').in('RecordID', missingIds);
+  return Object.fromEntries((logs || []).map(l => [l.RecordID, _scAllocLots(l.Changes?.LotAlloc)]));
+}
+function _wasteRefIssueId(reason) {
+  return (reason || '').match(/อ้างอิง (ISS-\S+)\)/)?.[1];
+}
 async function stockCardRender() {
   const type = document.getElementById('scType').value;
   const id = document.getElementById('scItem').value;
@@ -8728,12 +8770,23 @@ async function stockCardRender() {
       _sb.from('prep_orders').select('*').eq('SourceRM_ID', id).neq('Status', 'ยกเลิก').then(r => r.data || []),
       _sb.from('prep_orders').select('*').eq('TargetRM_ID', id).eq('Status', 'รับกลับแล้ว').then(r => r.data || []),
     ]);
+    // ของเสียที่เกิดจากแก้ "เบิกตั้งต้น" (Lot เป็น NULL โดยตั้งใจ — ดูคอมเมนต์ที่ stockMoveLoad) ดึงล็อตต้นทางจาก
+    // รายการเบิกที่อ้างอิงไว้ใน Reason มาโชว์แทนเหมือนกัน (ผู้ใช้ขอ 2026-10-05 "ในสต็อกของเสียไม่ขึ้น Lot ทั้งๆ
+    // ที่ในมูฟเม้นมี Lot" — หน้านี้มี list `iss` ของ RM_ID นี้โดยเฉพาะอยู่แล้ว กรองง่ายกว่า stockMoveLoad ด้วยซ้ำ)
+    // ถ้ารายการเบิกต้นทางถูกลบไปแล้วจริงๆ ลองหาใน audit_log แทนอีกที (เฉพาะแอดมินเห็น — ดู _wasteLotFromDeletedIssue)
+    const missingIds = [...new Set((waste||[]).filter(r => !r.Lot).map(r => _wasteRefIssueId(r.Reason)).filter(rid => rid && !(iss||[]).some(i => i.Issue_ID === rid)))];
+    const auditLotById = await _wasteLotFromDeletedIssue(missingIds);
     entries = [
       ...(recv||[]).map(r => ({ date: r.ReceiveDate, ts: r.CreatedAt, label: 'รับเข้าคลัง', ref: r.Receive_ID, lot: r.Lot || '-', in: r.Qty, out: 0 })),
       // ต่อท้าย "เบิกเข้าไลน์ผลิต" ด้วย Lot ของ MO ที่เบิกไป (= FG Lot ที่จะออกมาในที่สุด ดู MO.Lot) ให้ตามรอยได้
       // ว่าวัตถุดิบล็อตนี้ถูกเบิกไปทำสินค้าล็อตไหน (ผู้ใช้ขอ 2026-10-05 "เบิกเป็น FG Lot ไหน ใส่ด้วย")
       ...(iss||[]).map(r => ({ date: r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (_planCache.find(p => p.MO_ID === r.MO_ID)?.Lot ? ` → FG Lot ${_planCache.find(p => p.MO_ID === r.MO_ID).Lot}` : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), in: 0, out: r.QtyIssued })),
-      ...(waste||[]).map(r => ({ date: r.WasteDate, ts: r.CreatedAt, label: 'ของเสีย', ref: r.Waste_ID, lot: r.Lot || '-', in: 0, out: r.Qty })),
+      ...(waste||[]).map(r => {
+        const refId = _wasteRefIssueId(r.Reason);
+        const srcIssue = refId ? (iss || []).find(i => i.Issue_ID === refId) : null;
+        const lot = r.Lot || (srcIssue ? _scAllocLots(srcIssue.LotAlloc) : null) || (refId && auditLotById[refId]) || '-';
+        return { date: r.WasteDate, ts: r.CreatedAt, label: 'ของเสีย', ref: r.Waste_ID, lot, in: 0, out: r.Qty };
+      }),
       ...prepOut.map(r => ({ date: r.PrepDate, ts: r.CreatedAt, label: 'เบิกไปเตรียม', ref: r.Prep_ID, lot: _scAllocLots(r.SourceAlloc), in: 0, out: r.QtyOut })),
       ...prepIn.map(r => ({ date: r.ReceivedAt ? new Date(r.ReceivedAt).toLocaleDateString('sv-SE') : r.PrepDate, ts: r.ReceivedAt, label: 'รับกลับจากการเตรียม', ref: r.Prep_ID, lot: _lotLabel(_rmLotCache.find(l => l.Lot_ID === r.BackLotID) || { Lot_ID: r.BackLotID }), in: r.QtyBack, out: 0 })),
     ];
@@ -8869,12 +8922,16 @@ async function stockMoveLoad() {
   // เพิ่มการแสดงผล (ไม่แก้ข้อมูลจริง) โดยพาร์ส Issue_ID จาก Reason (รูปแบบคงที่ "...อ้างอิง ISS-...)" ที่ฟังก์ชัน
   // ข้างต้นสร้างไว้เสมอ) แล้วโชว์ล็อตต้นทางของรายการเบิกนั้นแทน ให้เห็นว่าวัตถุดิบที่เสียมาจากล็อตไหนบ้าง
   const issById = Object.fromEntries((iss || []).map(r => [r.Issue_ID, r]));
+  const missingIds = [...new Set((waste || []).filter(r => !r.Lot).map(r => _wasteRefIssueId(r.Reason)).filter(id => id && !issById[id]))];
+  const auditLotById = await _wasteLotFromDeletedIssue(missingIds);
   _stockMoveCache = [
     ...(iss || []).map(r => ({ type: 'issue', label: 'เบิกเข้าไลน์ผลิต', date: r.IssueDate, ts: r.CreatedAt, rmId: r.RM_ID, qty: r.QtyIssued, lot: _scAllocLots(r.LotAlloc), ref: r.Issue_ID, note: r.MO_ID ? `MO ${r.MO_ID}` : '' })),
     ...(prepOut || []).map(r => ({ type: 'prep', label: 'เบิกไปเตรียม', date: r.PrepDate, ts: r.CreatedAt, rmId: r.SourceRM_ID, qty: r.QtyOut, lot: _scAllocLots(r.SourceAlloc), ref: r.Prep_ID, note: r.TargetRM_ID ? `เตรียม → ${_rmName(r.TargetRM_ID)}` : '' })),
     ...(waste || []).map(r => {
-      const srcIssue = !r.Lot && r.Reason ? issById[(r.Reason.match(/อ้างอิง (ISS-\S+)\)/) || [])[1]] : null;
-      return { type: 'waste', label: 'ของเสีย', date: r.WasteDate, ts: r.CreatedAt, rmId: r.RM_ID, qty: r.Qty, lot: r.Lot || (srcIssue ? _scAllocLots(srcIssue.LotAlloc) : '-'), ref: r.Waste_ID, note: r.Reason || '' };
+      const refId = _wasteRefIssueId(r.Reason);
+      const srcIssue = refId ? issById[refId] : null;
+      const lot = r.Lot || (srcIssue ? _scAllocLots(srcIssue.LotAlloc) : null) || (refId && auditLotById[refId]) || '-';
+      return { type: 'waste', label: 'ของเสีย', date: r.WasteDate, ts: r.CreatedAt, rmId: r.RM_ID, qty: r.Qty, lot, ref: r.Waste_ID, note: r.Reason || '' };
     }),
   ];
   stockMoveRenderTable();
