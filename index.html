@@ -1211,6 +1211,7 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
         <option value="issue_production">เบิกเข้าไลน์ผลิต</option>
         <option value="production_records">บันทึกผลิต</option>
         <option value="fg_receive">รับ FG เข้าคลัง</option>
+        <option value="fg_receive_delete">รับ FG เข้าคลัง (ลบ)</option>
         <option value="waste_log">ของเสีย</option>
         <option value="manufacturing_orders">แผนผลิต (MO)</option>
         <option value="mo_lot">Lot ของ MO</option>
@@ -2911,7 +2912,7 @@ const _WRITE_ACTIONS = [
   'rcvReportConfirm', 'rcvReportRename',
   'rcvEditApprove', 'rcvEditReject', 'rcvEditCancel', 'rcvEditSignup', 'editReqSubmit',
   'reqOrderSave', 'reqOrderDelete', 'reqOrderApprove', 'reqOrderReject', 'reqOrderCancel', 'reqOrderPrintConfirm',
-  'issueGenSave', 'issueLotEditSubmit', 'issueDeleteRequest', 'issueHistDeleteAllRequest', 'planCloseMo', 'planReopenMo', 'issueDateBulkEdit',
+  'issueGenSave', 'issueLotEditSubmit', 'issueDeleteRequest', 'issueHistDeleteAllRequest', 'fgReceiveDeleteRequest', 'planCloseMo', 'planReopenMo', 'issueDateBulkEdit',
   'issueHistAddItemSave',
   'packboxModalSave', 'packboxCloseBox', 'packboxDelete', 'packboxBulkDelete', 'packboxEditSave',
 ];
@@ -4750,6 +4751,10 @@ const EDIT_TYPES = {
     fields: { Qty: 'จำนวนรับ', ExpDate: 'วันหมดอายุ', ReceiveDate: 'วันที่รับ', Note: 'หมายเหตุ' },
     form: [{ k: 'Qty', type: 'number', req: true }, { k: 'ExpDate', type: 'date' }, { k: 'ReceiveDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
     info: 'สต็อก FG ล็อตนี้ปรับตามส่วนต่างตอนแอดมินอนุมัติ (ลดได้ไม่เกินที่ยังเหลือในคลัง) — แก้วันหมดอายุจะปรับล็อตในสต็อก FG (คีย์เดียวกับ Lot นี้) ตามไปด้วย' },
+  // ขอลบรายการรับ FG ทั้งแถว (ไม่ใช่แก้ทีละช่อง) — เหตุผลเดียวกับ issue_production_delete/prep_orders_delete
+  // (ผู้ใช้ขอ 2026-10-05 ให้สอดคล้องกับที่ prodRecordDelete บล็อกการลบถ้ารับ FG ไปแล้ว — ต้องมีทางลบรับ FG
+  // ออกก่อนได้ ถึงจะลบบันทึกผลิตต่อได้)
+  fg_receive_delete: { label: 'รับ FG เข้าคลัง (ลบ)', icon: 'fa-box-open', table: 'fg_receive', pk: 'FGReceive_ID' },
   waste_log: { label: 'ของเสีย', icon: 'fa-trash-can', table: 'waste_log', pk: 'Waste_ID',
     fields: { Qty: 'จำนวน', Reason: 'สาเหตุ', WasteDate: 'วันที่', Note: 'หมายเหตุ' },
     form: [{ k: 'Qty', type: 'number', unit: r => r.Unit, req: true }, { k: 'Reason', type: 'text', req: true }, { k: 'WasteDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
@@ -4860,6 +4865,9 @@ function _rcvEditDiffHtml(changes, type = 'rm_receive') {
   if (type === 'issue_production_delete') {
     return `<div class="small text-danger"><i class="fa-solid fa-trash me-1"></i><b>ขอลบรายการเบิกนี้</b><div class="text-muted">อนุมัติแล้วจะคืนวัตถุดิบกลับเข้าล็อตเดิมให้อัตโนมัติ — ถ้าเป็นรายการสุดท้ายของ MO สถานะ MO จะย้อนกลับเป็น "วางแผน"</div></div>`;
   }
+  if (type === 'fg_receive_delete') {
+    return `<div class="small text-danger"><i class="fa-solid fa-trash me-1"></i><b>ขอลบรายการรับ FG นี้</b><div class="text-muted">อนุมัติแล้วจะตัดสต็อก FG ล็อตนี้คืนออกให้อัตโนมัติ (ลบไม่ได้ถ้าล็อตนี้ถูกเบิก/ตัดออกจากคลังไปแล้วเกินกว่าจะย้อนได้)</div></div>`;
+  }
   // NewIssueDate ไม่ใช่คอลัมน์จริงของ manufacturing_orders (ดู migration_2026-10-03_issue_date_bulk.sql) —
   // โชว์วันที่ใหม่ที่ขอเปลี่ยนแทน ไม่ใช่ "จาก → เป็น" ทั่วไป เพราะกระทบหลายแถว (ทุกวัตถุดิบใน MO นี้) พร้อมกัน
   if (type === 'issue_date_bulk') {
@@ -4879,7 +4887,7 @@ function _editRecLabel(type, rec) {
     case 'rm_receive': return [rm(rec.RM_ID), `รับ ${fmtDateLong(rec.ReceiveDate)} · ${_qtyFmtByCat(rec.Qty, _rmMasterCache.find(r => r.RM_ID === rec.RM_ID)?.Category)} ${rec.Unit || ''} · ${rec.Lot || '-'}`];
     case 'issue_production': return [rm(rec.RM_ID), `${rec.MO_ID} · เบิก ${_qtyFmtByCat(rec.QtyIssued, _rmMasterCache.find(r => r.RM_ID === rec.RM_ID)?.Category)} ${rec.Unit || ''} · ${fmtDateLong(rec.IssueDate)}`];
     case 'production_records': return [fg(rec.FG_ID), `${rec.ProdLot} · ${_bomFmtQty(rec.QtyProduced)} · ผลิต ${fmtDateLong(rec.MfgDate)}`];
-    case 'fg_receive': return [fg(rec.FG_ID), `${rec.Lot} · ${_bomFmtQty(rec.Qty)} · รับ ${fmtDateLong(rec.ReceiveDate)}`];
+    case 'fg_receive': case 'fg_receive_delete': return [fg(rec.FG_ID), `${rec.Lot} · ${_bomFmtQty(rec.Qty)} · รับ ${fmtDateLong(rec.ReceiveDate)}`];
     case 'waste_log': return [rec.ItemType === 'FG' ? fg(rec.FG_ID) : rm(rec.RM_ID), `${rec.ItemType === 'FG' ? _bomFmtQty(rec.Qty) : _qtyFmtByCat(rec.Qty, _rmMasterCache.find(r => r.RM_ID === rec.RM_ID)?.Category)} ${rec.Unit || ''} · ${rec.Reason || ''} · ${fmtDateLong(rec.WasteDate)}`];
     case 'manufacturing_orders': return [`${rec.MO_ID} · ${fg(rec.FG_ID)}`, `แผน ${_bomFmtQty(rec.PlanQty)} · ${fmtDate(rec.PlanDate)} · สถานะ ${rec.Status}`];
     case 'prep_orders': case 'prep_orders_delete':
@@ -7730,7 +7738,16 @@ async function prodRecordModalSave() {
   prodRecordLoad();
   if (changedCount) stockRmLoad();
 }
+// ลบไม่ได้ถ้ารับเข้าคลัง FG ไปแล้ว (fg_receive.Prod_ID FK) — เดิมปล่อยให้ Postgres โยน FK-violation ดิบๆ
+// ให้ผู้ใช้เห็นตรงๆ (บั๊กที่เจอจริง 2026-10-05) เช็คก่อนแล้วบอกเหตุผลเป็นภาษาที่เข้าใจได้แทน ไม่ cascade ลบ/
+// ตัดความสัมพันธ์ให้เอง เพราะ fg_receive แทนของจริงที่รับเข้าคลังไปแล้ว (เหมือน lockLot ใน editReqOpen ที่เช็ค
+// FK เดียวกันนี้อยู่แล้วเวลาแก้ไข — ที่นี่แค่เพิ่มเช็คตอนลบด้วย)
 async function prodRecordDelete(id) {
+  const { count } = await _sb.from('fg_receive').select('FGReceive_ID', { count: 'exact', head: true }).eq('Prod_ID', id);
+  if (count > 0) {
+    Swal.fire('ลบไม่ได้', `บันทึกผลิตนี้ถูกรับเข้าคลัง FG ไปแล้ว ${count} ครั้ง — ต้องยกเลิก/แก้ไขรายการรับเข้าคลัง FG ที่เกี่ยวข้องให้หมดก่อน ถึงจะลบบันทึกผลิตนี้ได้`, 'error');
+    return;
+  }
   const c = await Swal.fire({ title: 'ลบรายการนี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
   if (await sbDelete('production_records', 'Prod_ID', id)) prodRecordLoad();
@@ -7767,8 +7784,30 @@ async function fgReceiveLoad() {
     <td><button class="btn btn-sm btn-success" onclick="fgReceiveOpenForm('${p.Prod_ID}')"><i class="fa-solid fa-box-open me-1"></i>รับเข้าคลัง</button></td></tr>`).join('')
     || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีรายการรอรับเข้าคลัง</td></tr>';
   document.getElementById('fgReceiveHistTableBody').innerHTML = fgReceived.map(r => `
-    <tr><td>${esc(r.FGReceive_ID)}</td><td>${r.Prod_ID ? badge('จากไลน์ผลิต','primary') : badge('ทั่วไป','secondary')}</td><td>${esc(fgMap[r.FG_ID]?.FG_Name || r.FG_ID)}</td><td>${esc(r.Lot)}</td><td>${_bomFmtQty(r.Qty)}</td><td>${fmtDate(r.ReceiveDate)}</td><td class="text-center">${_editBtn('fg_receive', r.FGReceive_ID)}</td></tr>`).join('')
+    <tr><td>${esc(r.FGReceive_ID)}</td><td>${r.Prod_ID ? badge('จากไลน์ผลิต','primary') : badge('ทั่วไป','secondary')}</td><td>${esc(fgMap[r.FG_ID]?.FG_Name || r.FG_ID)}</td><td>${esc(r.Lot)}</td><td>${_bomFmtQty(r.Qty)}</td><td>${fmtDate(r.ReceiveDate)}</td><td class="text-center">${_editBtn('fg_receive', r.FGReceive_ID)}${_fgReceiveDeleteBtn(r.FGReceive_ID)}</td></tr>`).join('')
     || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+}
+// ขอลบรายการรับ FG ทั้งแถว (2026-10-05) — คืนสต็อก FG ล็อตนี้ให้อัตโนมัติตอนแอดมินอนุมัติ เหมือน
+// issueDeleteRequest ทุกประการ (ต้องผ่านอนุมัติเสมอ แม้เป็นแอดมินเองก็ไม่ auto-approve) — ให้สอดคล้องกับที่
+// prodRecordDelete บล็อกการลบบันทึกผลิตถ้ายังมีรายการรับ FG ค้างอยู่: ลบรับ FG ออกก่อนที่นี่ บันทึกผลิตถึงจะ
+// ลบต่อได้
+function _fgReceiveDeleteBtn(id) {
+  if (_editPendingFor('fg_receive_delete', id)) return `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอลบรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
+  return `<button class="btn btn-sm btn-outline-danger" onclick="fgReceiveDeleteRequest('${esc(id)}')" title="ขอลบรายการรับ FG นี้"><i class="fa-solid fa-trash"></i></button>`;
+}
+async function fgReceiveDeleteRequest(id) {
+  const { value: reason } = await Swal.fire({
+    icon: 'warning', title: `ขอลบรายการรับ FG ${id}?`,
+    html: '<div class="small text-start mb-2">คืนสต็อก FG ล็อตนี้ให้อัตโนมัติเมื่ออนุมัติ — ลบไม่ได้ถ้าล็อตนี้ถูกเบิก/ตัดออกจากคลังไปแล้วเกินกว่าจะย้อนได้</div>',
+    input: 'textarea', inputPlaceholder: 'เหตุผลที่ขอลบ', inputAttributes: { 'aria-label': 'เหตุผลที่ขอลบ' },
+    inputValidator: v => !v?.trim() ? 'กรุณาระบุเหตุผล' : undefined,
+    showCancelButton: true, confirmButtonText: 'ส่งคำขอลบ', cancelButtonText: 'ยกเลิก',
+  });
+  if (!reason) return;
+  const { error } = await _sb.rpc('fg_receive_delete_request_create', { p_fgreceive_id: id, p_reason: reason.trim() });
+  if (error) { Swal.fire('ส่งคำขอไม่สำเร็จ', esc(error.message), 'error'); return; }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: 'ส่งคำขอลบแล้ว — รอแอดมินอนุมัติ' });
+  await Promise.all([fgReceiveLoad(), rcvEditLoadPending()]);
 }
 let _fgReceiveProdId = null;
 // 'line' = รับจากไลน์ผลิต (คลิกจากแถวที่รอรับ ผูกกับใบผลิต) / 'general' = รับทั่วไป (ไม่ผูกใบผลิตไหน
