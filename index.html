@@ -1230,9 +1230,17 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
         <input class="form-check-input" type="checkbox" id="rcvEditMine" onchange="rcvEditRender()">
         <label class="form-check-label text-white small" for="rcvEditMine">เฉพาะคำขอของฉัน</label>
       </div>
+    </div>
+    <!-- แถบดำเนินการหลายรายการพร้อมกัน (ผู้ใช้ขอ 2026-10-05 "ให้เลือกได้หลายรายการ" — คำขอลบทั้งการ์ด/ลบทั้ง MO
+         สร้างคำขอเดี่ยวทีละแถวเยอะมาก อนุมัติทีละแถวไม่ไหว) เฉพาะแอดมิน แสดงเมื่อเลือกอย่างน้อย 1 รายการ -->
+    <div class="d-none align-items-center gap-2 mt-2" id="rcvEditBulkBar">
+      <span class="small text-white" id="rcvEditBulkCount"></span>
+      <button class="btn btn-sm btn-success" onclick="rcvEditBulkApprove()"><i class="fa-solid fa-check-double me-1"></i>อนุมัติที่เลือก</button>
+      <button class="btn btn-sm btn-outline-danger" onclick="rcvEditBulkReject()"><i class="fa-solid fa-xmark me-1"></i>ไม่อนุมัติที่เลือก</button>
+      <button class="btn btn-sm btn-outline-light" onclick="_rcvEditClearSelection()">ล้างการเลือก</button>
     </div></div>
     <div class="scroll-content"><div class="glass-card p-0 overflow-hidden"><div class="table-responsive"><table class="table table-hover mb-0 align-middle">
-      <thead><tr><th>วันที่ขอ</th><th>ประเภท</th><th>รายการ</th><th>ขอแก้ (จาก → เป็น)</th><th>เหตุผล</th><th>ผู้ขอ</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
+      <thead><tr><th style="width:36px" id="rcvEditSelectAllWrap"><input type="checkbox" class="form-check-input" id="rcvEditSelectAll" onchange="_rcvEditToggleSelectAll(this.checked)"></th><th>วันที่ขอ</th><th>ประเภท</th><th>รายการ</th><th>ขอแก้ (จาก → เป็น)</th><th>เหตุผล</th><th>ผู้ขอ</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
       <tbody id="rcvEditTableBody"></tbody>
     </table></div></div></div>
   </div>
@@ -2911,6 +2919,7 @@ const _WRITE_ACTIONS = [
   'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete', 'prepPlanBulkIssue', 'prepHistRequestDelete', 'prepHistDelete',
   'rcvReportConfirm', 'rcvReportRename',
   'rcvEditApprove', 'rcvEditReject', 'rcvEditCancel', 'rcvEditSignup', 'editReqSubmit',
+  'rcvEditBulkApprove', 'rcvEditBulkReject',
   'reqOrderSave', 'reqOrderDelete', 'reqOrderApprove', 'reqOrderReject', 'reqOrderCancel', 'reqOrderPrintConfirm',
   'issueGenSave', 'issueLotEditSubmit', 'issueDeleteRequest', 'issueHistDeleteAllRequest', 'fgReceiveDeleteRequest', 'planCloseMo', 'planReopenMo', 'issueDateBulkEdit',
   'issueHistAddItemSave',
@@ -5118,6 +5127,10 @@ function rcvEditRender() {
   const typeF = document.getElementById('rcvEditType').value;
   const isAdmin = _hasRole('admin');
   const mine = !isAdmin || document.getElementById('rcvEditMine').checked;
+  // เปลี่ยนตัวกรอง/โหลดใหม่ = ล้างการเลือกหลายรายการเสมอ (แถวที่เคยเลือกอาจไม่อยู่ในรายการที่กรองใหม่แล้ว)
+  _rcvEditSelected.clear();
+  document.getElementById('rcvEditBulkBar').classList.add('d-none');
+  document.getElementById('rcvEditSelectAllWrap').style.display = isAdmin ? '' : 'none';
   const fmtTs = ts => ts ? new Date(ts).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-';
   // สถานะของคำขอสมัคร (รอตรวจสอบ/สร้างแล้ว/ปฏิเสธ) เทียบกับตัวกรองสถานะของคำขอแก้ไข
   const signupStatusOf = { 'รออนุมัติ': 'รอตรวจสอบ', 'อนุมัติแล้ว': 'สร้างแล้ว', 'ไม่อนุมัติ': 'ปฏิเสธ', 'ยกเลิก': '__none' };
@@ -5133,7 +5146,7 @@ function rcvEditRender() {
   }
   items.sort((a, b) => new Date(b.ts) - new Date(a.ts));
   document.getElementById('rcvEditTableBody').innerHTML = items.map(i => i.html).join('')
-    || `<tr><td colspan="8" class="text-center text-muted py-4">${f === 'รออนุมัติ' ? 'ไม่มีคำขอรออนุมัติ' : 'ไม่มีคำขอ'}</td></tr>`;
+    || `<tr><td colspan="9" class="text-center text-muted py-4">${f === 'รออนุมัติ' ? 'ไม่มีคำขอรออนุมัติ' : 'ไม่มีคำขอ'}</td></tr>`;
 }
 function _rcvEditRowHtml(r, isAdmin, fmtTs) {
   const t = EDIT_TYPES[r.Type] || { label: r.Type, icon: 'fa-pen' };
@@ -5144,7 +5157,9 @@ function _rcvEditRowHtml(r, isAdmin, fmtTs) {
         <button class="btn btn-sm btn-outline-danger me-1" onclick="rcvEditReject(${r.Req_ID})"><i class="fa-solid fa-xmark me-1"></i>ไม่อนุมัติ</button>` : '')
       + (r.RequestedByID === _currentUser?.id ? `<button class="btn btn-sm btn-outline-secondary" onclick="rcvEditCancel(${r.Req_ID})">ยกเลิกคำขอ</button>` : '');
   const review = r.ReviewedAt ? `<div class="small text-muted mt-1">${esc(r.ReviewedBy || '')} · ${fmtTs(r.ReviewedAt)}${r.ReviewNote ? `<br>“${esc(r.ReviewNote)}”` : ''}</div>` : '';
+  const checkbox = (isAdmin && pending) ? `<input type="checkbox" class="form-check-input rcv-edit-check" value="${r.Req_ID}" onchange="_rcvEditToggleSelect(${r.Req_ID}, this.checked)">` : '';
   return `<tr>
+    <td>${checkbox}</td>
     <td class="small text-nowrap">${fmtTs(r.RequestedAt)}</td>
     <td class="text-nowrap"><span class="badge text-bg-light border"><i class="fa-solid ${t.icon} me-1"></i>${esc(t.label)}</span></td>
     <td><b>${esc(title)}</b><div class="small text-muted">${esc(detail)}</div></td>
@@ -5160,6 +5175,7 @@ function _signupRowHtml(r, fmtTs) {
   const pw = _signupPassword(r);
   const pending = r.Status === 'รอตรวจสอบ';
   return `<tr>
+    <td></td>
     <td class="small text-nowrap">${fmtTs(r.CreatedAt)}</td>
     <td class="text-nowrap"><span class="badge text-bg-light border"><i class="fa-solid fa-user-plus me-1"></i>สมัครใช้งาน</span></td>
     <td><b>${esc(r.FirstName)} ${esc(r.LastName)}</b><div class="small text-muted">Username <b>${esc(username || '—')}</b>${r.Phone ? ` · ${esc(r.Phone)}` : ''} · ${esc(r.RealEmail || '')}</div></td>
@@ -5175,6 +5191,82 @@ function _signupRowHtml(r, fmtTs) {
 async function rcvEditSignup(action, rowId) {
   await (action === 'approve' ? signupreqApprove(rowId) : signupreqReject(rowId));
   await rcvEditLoad();
+}
+// เลือกหลายรายการพร้อมกัน (ผู้ใช้ขอ 2026-10-05) — เฉพาะแถว "รออนุมัติ" ที่แอดมินมองเห็น (เงื่อนไขเดียวกับที่
+// โชว์ปุ่มอนุมัติ/ไม่อนุมัติทีละแถวใน _rcvEditRowHtml) ล้างการเลือกทุกครั้งที่ rcvEditRender() วาดตารางใหม่
+// (เปลี่ยนตัวกรอง/โหลดข้อมูลใหม่ = แถวที่เคยติ๊กอาจไม่อยู่ในรายการที่เห็นแล้ว)
+let _rcvEditSelected = new Set();
+function _rcvEditToggleSelect(id, checked) {
+  if (checked) _rcvEditSelected.add(id); else _rcvEditSelected.delete(id);
+  _rcvEditUpdateBulkBar();
+}
+function _rcvEditToggleSelectAll(checked) {
+  document.querySelectorAll('.rcv-edit-check').forEach(cb => {
+    cb.checked = checked;
+    if (checked) _rcvEditSelected.add(+cb.value); else _rcvEditSelected.delete(+cb.value);
+  });
+  _rcvEditUpdateBulkBar();
+}
+function _rcvEditClearSelection() {
+  _rcvEditSelected.clear();
+  document.querySelectorAll('.rcv-edit-check').forEach(cb => cb.checked = false);
+  const selAll = document.getElementById('rcvEditSelectAll');
+  if (selAll) selAll.checked = false;
+  _rcvEditUpdateBulkBar();
+}
+function _rcvEditUpdateBulkBar() {
+  const n = _rcvEditSelected.size;
+  document.getElementById('rcvEditBulkBar').classList.toggle('d-none', n === 0);
+  document.getElementById('rcvEditBulkBar').classList.toggle('d-flex', n > 0);
+  document.getElementById('rcvEditBulkCount').textContent = n ? `เลือกไว้ ${n} รายการ` : '';
+}
+// อนุมัติ/ไม่อนุมัติทีละรายการแบบ sequential ไม่ใช่ Promise.all — กันชนกันเวลาหลายคำขอไปแตะล็อตวัตถุดิบ/สต็อก
+// เดียวกัน (เช่น คืนของเข้าล็อตเดิมพร้อมกันหลายแถวจากการ "ลบทั้งการ์ด") ผิดพลาดรายการไหนข้ามไปรายการถัดไป
+// ไม่ล้มทั้งชุด
+async function rcvEditBulkApprove() {
+  const ids = [..._rcvEditSelected];
+  if (!ids.length) return;
+  const c = await Swal.fire({
+    title: `อนุมัติ ${ids.length} รายการที่เลือก?`, icon: 'question',
+    html: '<div class="small text-muted text-start">ข้อมูลและยอดสต็อกที่เกี่ยวข้องของทุกรายการจะถูกปรับตามทันที — รายการไหนอนุมัติไม่สำเร็จ (เช่น ข้อมูลเปลี่ยนไปแล้วหลังส่งคำขอ) จะข้ามแล้วแจ้งให้ทราบ ไม่กระทบรายการอื่น</div>',
+    showCancelButton: true, confirmButtonText: `อนุมัติทั้งหมด (${ids.length})`, confirmButtonColor: '#198754', cancelButtonText: 'ยกเลิก',
+  });
+  if (!c.isConfirmed) return;
+  Swal.fire({ title: 'กำลังอนุมัติ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  const errs = [];
+  for (const id of ids) {
+    const { error } = await _sb.rpc('edit_request_approve', { p_req_id: id, p_note: null });
+    if (error) errs.push({ id, error });
+  }
+  _receivedCache = []; _stockRmCache = []; _stockFgCache = []; _rmLotCache = []; _wasteCache = [];
+  await rcvEditLoad();
+  if (errs.length) {
+    Swal.fire('อนุมัติสำเร็จบางส่วน', `สำเร็จ ${ids.length - errs.length} จาก ${ids.length} รายการ<br>` + errs.map(e => `Req ${e.id}: ${esc(e.error.message)}`).join('<br>'), 'warning');
+  } else {
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `อนุมัติแล้ว ${ids.length} รายการ`, showConfirmButton: false, timer: 2500 });
+  }
+}
+async function rcvEditBulkReject() {
+  const ids = [..._rcvEditSelected];
+  if (!ids.length) return;
+  const c = await Swal.fire({
+    title: `ไม่อนุมัติ ${ids.length} รายการที่เลือก?`, input: 'text', inputPlaceholder: 'เหตุผล (แจ้งผู้ขอทุกคน)', icon: 'warning',
+    showCancelButton: true, confirmButtonText: `ไม่อนุมัติทั้งหมด (${ids.length})`, confirmButtonColor: '#d33', cancelButtonText: 'ยกเลิก',
+    inputValidator: v => !v?.trim() ? 'กรุณาระบุเหตุผล' : undefined,
+  });
+  if (!c.isConfirmed) return;
+  Swal.fire({ title: 'กำลังดำเนินการ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  const errs = [];
+  for (const id of ids) {
+    const { error } = await _sb.rpc('edit_request_reject', { p_req_id: id, p_note: c.value.trim() });
+    if (error) errs.push({ id, error });
+  }
+  await rcvEditLoad();
+  if (errs.length) {
+    Swal.fire('ไม่อนุมัติสำเร็จบางส่วน', `สำเร็จ ${ids.length - errs.length} จาก ${ids.length} รายการ<br>` + errs.map(e => `Req ${e.id}: ${esc(e.error.message)}`).join('<br>'), 'warning');
+  } else {
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `ไม่อนุมัติแล้ว ${ids.length} รายการ`, showConfirmButton: false, timer: 2500 });
+  }
 }
 async function rcvEditApprove(reqId) {
   const r = _rcvEditCache.find(x => x.Req_ID === reqId);
@@ -7738,14 +7830,36 @@ async function prodRecordModalSave() {
   prodRecordLoad();
   if (changedCount) stockRmLoad();
 }
-// ลบไม่ได้ถ้ารับเข้าคลัง FG ไปแล้ว (fg_receive.Prod_ID FK) — เดิมปล่อยให้ Postgres โยน FK-violation ดิบๆ
-// ให้ผู้ใช้เห็นตรงๆ (บั๊กที่เจอจริง 2026-10-05) เช็คก่อนแล้วบอกเหตุผลเป็นภาษาที่เข้าใจได้แทน ไม่ cascade ลบ/
-// ตัดความสัมพันธ์ให้เอง เพราะ fg_receive แทนของจริงที่รับเข้าคลังไปแล้ว (เหมือน lockLot ใน editReqOpen ที่เช็ค
-// FK เดียวกันนี้อยู่แล้วเวลาแก้ไข — ที่นี่แค่เพิ่มเช็คตอนลบด้วย)
+// ลบบันทึกผลิตที่รับเข้าคลัง FG ไปแล้ว (fg_receive.Prod_ID FK) — เดิมปล่อยให้ Postgres โยน FK-violation ดิบๆ
+// (บั๊กที่เจอจริง 2026-10-05) รอบแรกแก้แค่บล็อกพร้อมบอกเหตุผล แต่ยังไม่มีทางลบต่อได้เลยเพราะตอนนั้นยังไม่มี
+// ปุ่มลบรับ FG เลย — ผู้ใช้ขอ 2026-10-05 รอบสอง "ให้ดึง FG กลับอัตโนมัติ ยกเลิกรับ FG แล้วโน้ตว่ายกเลิกบันทึก
+// ผลิต" ตอนนี้จึงยิง fg_receive_delete_request_create ให้ทุกแถวอัตโนมัติแทนการบล็อกเฉยๆ — ยังต้องรอแอดมิน
+// อนุมัติก่อน (ยืนยันกับผู้ใช้แล้ว "เหมือนการลบ FG เดี่ยว" ไม่ auto-approve) จึงยังลบบันทึกผลิตจริงไม่ได้ในคลิก
+// เดียวกัน ต้องรอ fg_receive ถูกลบ (อนุมัติแล้ว) ก่อน แล้วค่อยกดลบบันทึกผลิตอีกรอบ (count จะเป็น 0 ตอนนั้น) —
+// "โน้ตว่ายกเลิกบันทึกผลิต" คือ Reason ที่ใส่ไว้ในคำขอ ให้แอดมินเห็นตอนอนุมัติที่หน้า "คำขอแก้ไข" บวกกับ
+// ประวัติการลบแถว fg_receive จริงที่ audit_log เก็บอัตโนมัติอยู่แล้วทุกแถว (trigger ติดไว้ทุกตารางธุรกิจ)
 async function prodRecordDelete(id) {
-  const { count } = await _sb.from('fg_receive').select('FGReceive_ID', { count: 'exact', head: true }).eq('Prod_ID', id);
-  if (count > 0) {
-    Swal.fire('ลบไม่ได้', `บันทึกผลิตนี้ถูกรับเข้าคลัง FG ไปแล้ว ${count} ครั้ง — ต้องยกเลิก/แก้ไขรายการรับเข้าคลัง FG ที่เกี่ยวข้องให้หมดก่อน ถึงจะลบบันทึกผลิตนี้ได้`, 'error');
+  const { data: fgRows, error: fgErr } = await _sb.from('fg_receive').select('FGReceive_ID').eq('Prod_ID', id);
+  if (fgErr) { Swal.fire('ผิดพลาด', esc(fgErr.message), 'error'); return; }
+  if (fgRows && fgRows.length > 0) {
+    const pending = fgRows.filter(r => !_editPendingFor('fg_receive_delete', r.FGReceive_ID));
+    if (!pending.length) {
+      Swal.fire('รอการอนุมัติ', 'มีคำขอดึง FG กลับของบันทึกผลิตนี้รออนุมัติอยู่แล้ว — รอแอดมินอนุมัติก่อน แล้วค่อยกลับมาลบบันทึกผลิตนี้อีกครั้ง', 'info');
+      return;
+    }
+    const c = await Swal.fire({
+      icon: 'warning', title: 'ลบบันทึกผลิตนี้?',
+      html: `<div class="small text-start mb-2">บันทึกผลิตนี้ถูกรับเข้าคลัง FG ไปแล้ว ${fgRows.length} ครั้ง — ระบบจะส่งคำขอ "ดึง FG กลับ" (ยกเลิกรับ FG ทั้งหมดของบันทึกผลิตนี้) ให้อัตโนมัติ ต้องรอแอดมินอนุมัติก่อน ถึงจะลบบันทึกผลิตนี้ได้จริง (ยังไม่ลบตอนนี้)</div>`,
+      showCancelButton: true, confirmButtonText: 'ส่งคำขอดึง FG กลับ', cancelButtonText: 'ยกเลิก',
+    });
+    if (!c.isConfirmed) return;
+    const reason = `ยกเลิกบันทึกผลิต ${id} — ขอดึง FG กลับเพื่อให้ลบบันทึกผลิตนี้ได้`;
+    const results = await Promise.all(pending.map(r => _sb.rpc('fg_receive_delete_request_create', { p_fgreceive_id: r.FGReceive_ID, p_reason: reason })));
+    const errs = results.filter(r => r.error);
+    if (errs.length) Swal.fire('ส่งคำขอดึง FG กลับบางรายการไม่สำเร็จ', errs.map(e => esc(e.error.message)).join('<br>'), 'warning');
+    else Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 3500, title: `ส่งคำขอดึง FG กลับแล้ว ${pending.length} รายการ — รอแอดมินอนุมัติ แล้วค่อยกลับมาลบบันทึกผลิตนี้อีกครั้ง` });
+    await rcvEditLoadPending();
+    prodRecordLoad();
     return;
   }
   const c = await Swal.fire({ title: 'ลบรายการนี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
