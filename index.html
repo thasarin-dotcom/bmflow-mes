@@ -460,6 +460,35 @@ table.ihist-table .ihist-unit { color: #64748b; font-weight: 400; }
   .pbqr-page { page: pbqrreport; box-shadow: none; margin: 0; }
   .pbqr-page:last-child { page-break-after: auto; break-after: auto; }
 }
+
+/* พิมพ์การ์ดสต็อก (เลือกช่วงเดือน) — ต่างจากป้าย/สลิปอื่นในไฟล์นี้ตรงที่ยาวได้ไม่จำกัด (ประวัติทั้งเดือน/
+   หลายเดือน) จึงไม่บังคับความสูงหน้าคงที่แบบ rrpt/reqo/ihist — ปล่อยให้ตารางไหลข้ามหน้าตามธรรมชาติ แค่ตั้ง
+   thead ให้ซ้ำหัวตารางทุกหน้าใหม่ (display:table-header-group เป็นมาตรฐานเบราว์เซอร์ ไม่ต้องใช้ JS ช่วย) */
+#scp-print-root { display: none; }
+.scp-page { font-family: 'Sarabun', sans-serif; font-size: 11px; color: #1e293b; }
+.scp-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary-blue); padding-bottom: 8px; margin-bottom: 10px; }
+.scp-company { font-size: 10px; color: #64748b; line-height: 1.4; }
+.scp-company b { color: #1e293b; font-size: 12px; }
+.scp-title { font-size: 17px; font-weight: 800; color: var(--primary-blue); text-align: right; }
+.scp-meta { font-size: 10px; color: #64748b; text-align: right; }
+.scp-filters { display: flex; gap: 20px; margin-bottom: 8px; flex-wrap: wrap; }
+.scp-filters .lbl { font-size: 11px; color: #64748b; font-weight: 700; margin-right: 4px; }
+.scp-filters .val { font-size: 13px; color: var(--primary-blue); font-weight: 800; }
+table.scp-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+table.scp-table thead { display: table-header-group; }
+table.scp-table th { background: var(--primary-blue); color: #fff; padding: 4px 6px; text-align: left; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+table.scp-table td { padding: 3px 6px; border-bottom: 1px solid #e2e8f0; }
+table.scp-table td.num { text-align: right; }
+table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.scp-foot { margin-top: 12px; font-size: 11px; color: #64748b; text-align: right; }
+@media print {
+  body.print-scp { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+  body.print-scp > *:not(#scp-print-root) { display: none !important; }
+  body.print-scp #scp-print-root { display: block !important; }
+  @page scpreport { size: A4 portrait; margin: 15mm; }
+  .scp-page { page: scpreport; }
+  .scp-page .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
 </style>
 </head>
 <body>
@@ -702,8 +731,8 @@ table.ihist-table .ihist-unit { color: #64748b; font-weight: 400; }
 
   <!-- ═══════════════ STOCK MOVEMENT ═══════════════ -->
   <div class="page-view" id="page-stockmove">
-    <div class="page-header d-flex justify-content-between align-items-start">
-      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-right-left me-2"></i>Stock Movement</h4><div class="text-white-50 small">รวมประวัติการเบิกวัตถุดิบ/แพ็คเกจจิ้งทุกรายการ (เบิกเข้าไลน์ผลิต / เบิกไปเตรียม / ของเสีย) — ไม่รวม FG</div></div>
+    <div class="page-header">
+      <h4 class="mb-0 text-white"><i class="fa-solid fa-right-left me-2"></i>Stock Movement</h4><div class="text-white-50 small">รวมประวัติการเบิกวัตถุดิบ/แพ็คเกจจิ้งทุกรายการ (เบิกเข้าไลน์ผลิต / เบิกไปเตรียม / ของเสีย) — ไม่รวม FG</div>
     </div>
     <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 align-items-center mb-2">
       <select class="form-select w-auto" id="smType" onchange="stockMoveRenderTable()">
@@ -985,6 +1014,7 @@ table.ihist-table .ihist-unit { color: #64748b; font-weight: 400; }
       <select class="form-select w-auto" id="scType" onchange="stockCardLoadItems()"><option value="rm">วัตถุดิบสด</option><option value="dry">วัตถุดิบแห้ง</option><option value="chem">วัตถุดิบเคมี</option><option value="prep">วัตถุดิบพร้อมผลิต</option><option value="pkg">แพ็คเกจจิ้ง</option><option value="fg">สินค้าสำเร็จรูป</option></select>
       <select class="form-select w-auto" id="scItem" onchange="stockCardRender()"></select>
       <button class="btn btn-light" onclick="stockCardExportCsv()" title="ส่งออกเป็น CSV (เปิดใน Excel ได้)"><i class="fa-solid fa-file-csv me-1"></i>Export CSV</button>
+      <button class="btn btn-light" onclick="stockCardPrintOpen()" title="พิมพ์การ์ดสต็อก เลือกช่วงเดือนได้"><i class="fa-solid fa-print me-1"></i>พิมพ์</button>
     </div>
     <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
       <thead><tr><th>วันที่</th><th>ประเภท</th><th>เลขที่เอกสาร</th><th>Lot</th><th class="text-end">รับเข้า</th><th class="text-end">จ่ายออก</th><th class="text-end">คงเหลือสะสม</th><th>UOM</th><th>อ้างอิง/ที่มา</th></tr></thead>
@@ -1793,6 +1823,16 @@ table.ihist-table .ihist-unit { color: #64748b; font-weight: 400; }
       <div class="modal-body">
         <div class="alert alert-info small py-2 mb-3" id="erq-info"></div>
         <div class="row g-3" id="erq-fields"></div>
+        <div id="erq-rm-section" style="display:none" class="mt-3">
+          <label class="form-label d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>วัตถุดิบที่ใช้จริง <span class="text-muted fw-normal small">(แก้ไขได้ถ้าใช้ไม่เท่ากับที่เบิกไป — ใช้มากกว่าเดิมจะตัดสต็อกเพิ่ม, ใช้น้อยกว่าเดิมส่วนต่างจะบันทึกเป็น "ของเสีย" อัตโนมัติ ไม่คืนเข้าสต็อก)</span></span>
+            <span id="erq-rm-loss" class="small"></span>
+          </label>
+          <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+            <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end">พร้อมใช้ในสูตร</th><th style="width:130px">เบิกตั้งต้น</th><th>หน่วย</th><th class="text-end">% หาย</th></tr></thead>
+            <tbody id="erq-rm-rows"></tbody>
+          </table></div>
+        </div>
         <div class="mt-3">
           <label class="form-label">เหตุผลที่ขอแก้ไข<span class="text-danger">*</span></label>
           <textarea id="erq-reason" class="form-control" rows="2" placeholder="เช่น กรอกจำนวนผิด"></textarea>
@@ -2140,7 +2180,7 @@ table.ihist-table .ihist-unit { color: #64748b; font-weight: 400; }
         </div>
         <hr>
         <label class="form-label d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <span>วัตถุดิบที่ใช้จริง <span class="text-muted fw-normal small">(แก้ไขได้ถ้าใช้ไม่เท่ากับที่เบิกไป — บันทึกแล้วปรับสต็อกจริงทันที)</span></span>
+          <span>วัตถุดิบที่ใช้จริง <span class="text-muted fw-normal small">(แก้ไขได้ถ้าใช้ไม่เท่ากับที่เบิกไป — ใช้มากกว่าเดิมจะตัดสต็อกเพิ่ม, ใช้น้อยกว่าเดิมส่วนต่างจะบันทึกเป็น "ของเสีย" อัตโนมัติ ไม่คืนเข้าสต็อก)</span></span>
           <span id="pr-rm-loss" class="small"></span>
         </label>
         <div class="table-responsive"><table class="table table-sm align-middle mb-0">
@@ -2325,6 +2365,37 @@ table.ihist-table .ihist-unit { color: #64748b; font-weight: 400; }
       <div class="modal-footer modal-footer-light">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
         <button type="button" class="btn btn-brand" onclick="packboxEditSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: พิมพ์การ์ดสต็อก (เลือกช่วงเดือน) ═══════════════ -->
+<div class="modal fade" id="scPrintModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-print me-2"></i>พิมพ์การ์ดสต็อก</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="small text-muted mb-3" id="scp-item-info"></div>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">ตั้งแต่เดือน</label>
+            <input id="scp-from" type="month" class="form-control">
+          </div>
+          <div class="col-6">
+            <label class="form-label">ถึงเดือน</label>
+            <input id="scp-to" type="month" class="form-control">
+          </div>
+        </div>
+        <div class="form-text">ยอดคงเหลือต้นงวดจะยกยอดมาจากรายการก่อนหน้าให้อัตโนมัติ ไม่ต้องกังวลว่าเลือกเดือนกลางๆ แล้วยอดจะผิด</div>
+        <div class="invalid-feedback d-block" id="scp-err"></div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="stockCardPrintConfirm()"><i class="fa-solid fa-print me-1"></i>พิมพ์</button>
       </div>
     </div>
   </div>
@@ -2745,6 +2816,7 @@ async function refreshCurrentPage() {
   _refreshing = true;
   try {
     _planCache = []; _coCache = []; _bomCache = []; _stockRmCache = []; _stockFgCache = []; _receivedCache = []; _wasteCache = []; _rmLotCache = []; _prepCache = []; _reqOrderCache = []; _reqOrderLinesCache = []; _packBoxCache = []; _stockMoveCache = [];
+    window._prodRecordCache = [];   // ไม่ใช่ let _xCache เหมือนตัวอื่น แต่ fgReceiveLoad เช็ค .length ของตัวนี้เหมือนกัน (ดูคอมเมนต์ที่ fgReceiveLoad)
     await Promise.all([fgMasterLoad(), rmMasterLoad()]);
     if (PAGE_LOADERS[_currentPage]) await PAGE_LOADERS[_currentPage]();
     if (_hasRole('admin')) signupreqRefreshBadge();
@@ -4918,6 +4990,15 @@ async function editReqOpen(type, id) {
   document.getElementById('erq-reason').value = '';
   document.getElementById('erq-save-btn').innerHTML = isAdmin ? '<i class="fa-solid fa-floppy-disk me-1"></i>บันทึกการแก้ไข' : '<i class="fa-solid fa-paper-plane me-1"></i>ส่งคำขอแก้ไข';
   _modalClearErrors(['erq-reason']);
+  // วัตถุดิบที่ใช้จริง (ผู้ใช้ขอ 2026-10-05 "แก้ไขของเดิมให้ขึ้นเหมือนตัวใหม่ด้วย") — เฉพาะ production_records
+  // ใช้ฟังก์ชันกลาง _rmUse* ชุดเดียวกับ prodRecordModal (ดูคอมเมนต์ที่ _rmUseLoadRows)
+  const rmSection = document.getElementById('erq-rm-section');
+  if (type === 'production_records') {
+    rmSection.style.display = '';
+    await _rmUseLoadRows('erq', row.MO_ID);
+  } else {
+    rmSection.style.display = 'none';
+  }
   bootstrap.Modal.getOrCreateInstance(document.getElementById('editReqModal')).show();
 }
 async function editReqSubmit() {
@@ -4942,11 +5023,28 @@ async function editReqSubmit() {
     all[f.k] = v;
   }
   if (all.ExpDate && all.MfgDate && all.ExpDate < all.MfgDate) { _modalShowError('erq-f-ExpDate', 'วันหมดอายุต้องไม่ก่อนวันผลิต'); return; }
-  const reason = document.getElementById('erq-reason').value.trim();
-  if (!reason) { _modalShowError('erq-reason', 'ระบุเหตุผลที่ขอแก้ไข ให้แอดมินใช้ประกอบการอนุมัติ'); return; }
+  // วัตถุดิบที่ใช้จริง (เฉพาะ production_records) — ตรวจ + เตรียมไว้ก่อน เผื่อผู้ใช้แก้แค่ตรงนี้อย่างเดียว
+  // โดยไม่แตะฟิลด์ปกติเลย จะได้ไม่โดนบล็อกด้วย "ไม่มีช่องไหนเปลี่ยน" ด้านล่าง — ส่วนนี้มีผลทันทีเสมอ ไม่ผ่าน
+  // คำขอแก้ไข (เหมือน prodRecordModalSave) ไม่ว่าฟิลด์ปกติจะต้องรออนุมัติหรือไม่ก็ตาม
+  let rmCorrections = [];
+  if (type === 'production_records') {
+    rmCorrections = _rmUseReadCorrections('erq');
+    for (const c of rmCorrections) {
+      if (!(c.actual >= 0)) { Swal.fire('จำนวนวัตถุดิบไม่ถูกต้อง', `กรอกจำนวนที่ใช้จริงของ ${c.issueId} ให้ไม่ติดลบ`, 'error'); return; }
+    }
+  }
+  const rmChangedCount = rmCorrections.filter(c => Math.abs(c.actual - c.original) > 1e-9).length;
   const p_new = _editChanged(row, all);
-  if (!Object.keys(p_new).length) { Swal.fire('ไม่มีช่องไหนเปลี่ยน', 'แก้ข้อมูลช่องที่ผิดก่อนกดส่ง', 'info'); return; }
-  if (!(await _editSubmitRequest(type, id, p_new, reason))) return;
+  if (!Object.keys(p_new).length && !rmChangedCount) { Swal.fire('ไม่มีช่องไหนเปลี่ยน', 'แก้ข้อมูลช่องที่ผิดก่อนกดส่ง', 'info'); return; }
+  if (Object.keys(p_new).length) {
+    const reason = document.getElementById('erq-reason').value.trim();
+    if (!reason) { _modalShowError('erq-reason', 'ระบุเหตุผลที่ขอแก้ไข ให้แอดมินใช้ประกอบการอนุมัติ'); return; }
+    if (!(await _editSubmitRequest(type, id, p_new, reason))) return;
+  }
+  if (rmChangedCount) {
+    const failedMsgs = await _rmUseApplyCorrections(rmCorrections);
+    if (failedMsgs.length) Swal.fire('ปรับจำนวนวัตถุดิบบางรายการไม่สำเร็จ', failedMsgs.join('<br>'), 'warning');
+  }
   bootstrap.Modal.getInstance(document.getElementById('editReqModal')).hide();
   _stockRmCache = []; _stockFgCache = []; _rmLotCache = [];
   await rcvEditLoadPending();
@@ -7468,22 +7566,9 @@ async function prodRecordOpenForm(moId) {
   document.getElementById('pr-lot').value = mo.Lot || _genLotForDate(mo.PlanDate);
   document.getElementById('pr-mfg').value = mfgDefault;
   document.getElementById('pr-exp').value = expDefault;
-  // ดึงวัตถุดิบที่เบิกไปของ MO นี้มาโชว์ พร้อมช่องแก้ "เบิกตั้งต้น" (ผู้ใช้ขอ 2026-10-04) — ค่าเริ่มต้น = ที่เบิกไป
-  // เดิมทุกแถว แก้แล้วกดบันทึกจะเรียก issue_qty_correct ปรับ QtyIssued + สต็อกจริงทันทีเฉพาะแถวที่ค่าเปลี่ยน
-  // ต้องมี _rmMasterCache ไว้แสดงชื่อ — ถ้าเข้าหน้านี้เป็นหน้าแรกของ session (ยังไม่เคยโหลด RM master จาก
-  // หน้าอื่นมาก่อน) ชื่อจะโชว์เป็นรหัสซ้ำแทน (บั๊กที่เจอจริง 2026-10-04) prodRecordLoad เองไม่เคยกันจุดนี้ไว้
-  if (!_rmMasterCache.length) await rmMasterLoad();
-  const issRows = await sbRun(_sb.from('issue_production').select('*').eq('MO_ID', moId), 'โหลดวัตถุดิบที่เบิก') || [];
-  document.getElementById('pr-rm-rows').innerHTML = issRows.length ? issRows.map(r => {
-    const rm = _rmMasterCache.find(x => x.RM_ID === r.RM_ID);
-    return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}">
-      <td><code>${esc(r.RM_ID)}</code></td><td>${esc(rm?.RM_Name || r.RM_ID)}</td>
-      <td class="text-end text-muted">${_rmFmtQty(r.QtyIssued)}</td>
-      <td><input type="number" min="0" step="any" class="form-control form-control-sm pr-rm-qty" value="${r.QtyIssued}" oninput="prRmRecalc()"></td>
-      <td class="small text-muted">${esc(r.Unit || rm?.Unit || '')}</td>
-      <td class="text-end small pr-rm-pct"></td></tr>`;
-  }).join('') : '<tr><td colspan="6" class="text-center text-muted py-2">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>';
-  prRmRecalc();
+  // ดึงวัตถุดิบที่เบิกไปของ MO นี้มาโชว์ พร้อมช่องแก้ "เบิกตั้งต้น" (ผู้ใช้ขอ 2026-10-04) — ใช้ฟังก์ชันกลาง
+  // _rmUse* ร่วมกับตัวแก้ไขบันทึกผลิตเดิมใน editReqOpen (ผู้ใช้ขอ 2026-10-05 ให้ขึ้นเหมือนกัน)
+  await _rmUseLoadRows('pr', moId);
   new bootstrap.Modal(document.getElementById('prodRecordModal')).show();
 }
 // สุทธิ = ได้ทั้งหมด − เสีย (Scrap) เสมอ ไม่ให้ติดลบ (อ่านอย่างเดียว ผู้ใช้ขอ 2026-10-04 "จะได้ตี Scrap ถูก" —
@@ -7494,33 +7579,71 @@ function prQtyRecalc() {
   const net = Math.max(0, Math.round((gross - defect) * 10000) / 10000);
   document.getElementById('pr-qty').value = net || (net === 0 ? 0 : '');
 }
+// ตาราง "วัตถุดิบที่ใช้จริง" ใช้ร่วมกัน 2 จุด: บันทึกผลิตใหม่ (#pr-rm-*, prodRecordModal) และแก้ไขบันทึกผลิต
+// เดิมผ่าน "คำขอแก้ไข" (#erq-rm-*, editReqOpen) — ผู้ใช้ขอ 2026-10-05 ให้ตัวแก้ไขของเดิมมีเหมือนตัวใหม่ด้วย
+// ตรรกะเดียวกันทุกอย่าง ต่างแค่ id prefix จึงรวมเป็นฟังก์ชันกลางรับ prefix แทนก็อปโค้ดสองชุด
+function _rmUseRowHTML(prefix, r, rm) {
+  return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}">
+    <td><code>${esc(r.RM_ID)}</code></td><td>${esc(rm?.RM_Name || r.RM_ID)}</td>
+    <td class="text-end text-muted">${_rmFmtQty(r.QtyIssued)}</td>
+    <td><input type="number" min="0" step="any" class="form-control form-control-sm ${prefix}-rm-qty" value="${r.QtyIssued}" oninput="_rmUseRecalc('${prefix}')"></td>
+    <td class="small text-muted">${esc(r.Unit || rm?.Unit || '')}</td>
+    <td class="text-end small ${prefix}-rm-pct"></td></tr>`;
+}
+// ต้องมี _rmMasterCache ไว้แสดงชื่อ — ถ้าเข้าเป็นหน้าแรกของ session (ยังไม่เคยโหลด RM master จากหน้าอื่นมา
+// ก่อน) ชื่อจะโชว์เป็นรหัสซ้ำแทน (บั๊กที่เจอจริง 2026-10-04)
+async function _rmUseLoadRows(prefix, moId) {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  const issRows = await sbRun(_sb.from('issue_production').select('*').eq('MO_ID', moId), 'โหลดวัตถุดิบที่เบิก') || [];
+  document.getElementById(`${prefix}-rm-rows`).innerHTML = issRows.length
+    ? issRows.map(r => _rmUseRowHTML(prefix, r, _rmMasterCache.find(x => x.RM_ID === r.RM_ID))).join('')
+    : '<tr><td colspan="6" class="text-center text-muted py-2">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>';
+  _rmUseRecalc(prefix);
+}
 // % หายรวม = (เบิกเดิม − ใช้จริง) ÷ เบิกเดิม × 100 (ยืนยันสูตรกับผู้ใช้ 2026-10-04) — นับเฉพาะหมวดวัตถุดิบจริง
 // (CAT_RAW_ALL: สด/แห้ง/เคมี/พร้อมผลิต) ไม่รวมแพ็คเกจจิ้ง เพราะกล่อง/ถุง/เชือกไม่มีแนวคิด "หาย" จากการแปรรูป
 // แบบวัตถุดิบ รวมข้ามหน่วย (กก./ชิ้น) ไม่ได้อยู่แล้วถ้าปนแพ็คเกจจิ้งเข้าไปด้วย
-function prRmRecalc() {
+function _rmUseRecalc(prefix) {
   let sumOrig = 0, sumActual = 0;
-  document.querySelectorAll('#pr-rm-rows tr[data-issue]').forEach(tr => {
+  document.querySelectorAll(`#${prefix}-rm-rows tr[data-issue]`).forEach(tr => {
     // % หายรายตัว — โชว์ทุกแถว (รวมแพ็คเกจจิ้งด้วย เพื่อให้เห็นครบ) แยกจาก % หายรวมด้านบนที่นับเฉพาะวัตถุดิบจริง
     const orig = parseFloat(tr.dataset.original) || 0;
-    const actual = parseFloat(tr.querySelector('.pr-rm-qty').value) || 0;
-    const pctCell = tr.querySelector('.pr-rm-pct');
+    const actual = parseFloat(tr.querySelector(`.${prefix}-rm-qty`).value) || 0;
+    const pctCell = tr.querySelector(`.${prefix}-rm-pct`);
     if (orig > 0) {
       const rowPct = (orig - actual) / orig * 100;
       pctCell.textContent = rowPct >= 0 ? `${rowPct.toFixed(2)}%` : `+${Math.abs(rowPct).toFixed(2)}%`;
-      pctCell.className = 'text-end small pr-rm-pct ' + (Math.abs(rowPct) < 0.01 ? 'text-success' : rowPct > 0 ? 'text-danger' : 'text-warning');
+      pctCell.className = `text-end small ${prefix}-rm-pct ` + (Math.abs(rowPct) < 0.01 ? 'text-success' : rowPct > 0 ? 'text-danger' : 'text-warning');
     } else {
       pctCell.textContent = '-';
-      pctCell.className = 'text-end small pr-rm-pct text-muted';
+      pctCell.className = `text-end small ${prefix}-rm-pct text-muted`;
     }
     if (!CAT_RAW_ALL.includes(tr.dataset.cat)) return;
     sumOrig += orig;
     sumActual += actual;
   });
-  const el = document.getElementById('pr-rm-loss');
+  const el = document.getElementById(`${prefix}-rm-loss`);
   if (!sumOrig) { el.textContent = ''; return; }
   const pct = (sumOrig - sumActual) / sumOrig * 100;
   el.textContent = pct >= 0 ? `% หายรวม: ${pct.toFixed(2)}%` : `% ใช้เกินที่เบิก: ${Math.abs(pct).toFixed(2)}%`;
   el.className = 'small fw-semibold ' + (Math.abs(pct) < 0.01 ? 'text-success' : pct > 0 ? 'text-danger' : 'text-warning');
+}
+function _rmUseReadCorrections(prefix) {
+  return [...document.querySelectorAll(`#${prefix}-rm-rows tr[data-issue]`)].map(tr => ({
+    issueId: tr.dataset.issue,
+    original: parseFloat(tr.dataset.original) || 0,
+    actual: parseFloat(tr.querySelector(`.${prefix}-rm-qty`).value),
+  }));
+}
+// ปรับ QtyIssued + สต็อกจริงทันทีเฉพาะแถวที่ค่าเปลี่ยน ผ่าน issue_qty_correct (ไม่ผ่านคำขอแก้ไข — มีผลทันที
+// เสมอทุกสิทธิ์ ตามที่ผู้ใช้ยืนยัน 2026-10-04 ไม่ว่าจะเรียกจากบันทึกผลิตใหม่หรือแก้ไขของเดิมก็ตาม) คืนรายการ
+// ข้อความ error ของแถวที่ล้มเหลว (ว่าง = สำเร็จหมด/ไม่มีอะไรต้องแก้)
+async function _rmUseApplyCorrections(corrections) {
+  const changed = corrections.filter(c => Math.abs(c.actual - c.original) > 1e-9);
+  if (!changed.length) return [];
+  const results = await Promise.all(changed.map(c => _sb.rpc('issue_qty_correct', { p_issue_id: c.issueId, p_new_qty: c.actual })));
+  _stockRmCache = []; _rmLotCache = [];
+  return changed.map((c, i) => results[i].error ? `${esc(c.issueId)}: ${esc(results[i].error.message)}` : null).filter(Boolean);
 }
 async function prodRecordModalSave() {
   _modalClearErrors(['pr-qty-gross', 'pr-qty', 'pr-lot']);
@@ -7531,16 +7654,12 @@ async function prodRecordModalSave() {
   if (!gross || gross <= 0) { _modalShowError('pr-qty-gross', 'กรอกจำนวนที่ได้ทั้งหมดให้ถูกต้อง'); return; }
   if (!(qty > 0)) { _modalShowError('pr-qty', 'จำนวนสุทธิต้องมากกว่า 0 — เสียเยอะเกินจำนวนที่ได้ทั้งหมด'); return; }
   if (!lot) { _modalShowError('pr-lot', 'กรอก Lot'); return; }
-  // วัตถุดิบที่ใช้จริง: เก็บเฉพาะแถวที่ค่าต่างจากที่เบิกไปเดิม (เท่ากันไม่ต้องยิง RPC เปล่าๆ)
-  const rmCorrections = [...document.querySelectorAll('#pr-rm-rows tr[data-issue]')].map(tr => ({
-    issueId: tr.dataset.issue,
-    original: parseFloat(tr.dataset.original) || 0,
-    actual: parseFloat(tr.querySelector('.pr-rm-qty').value),
-  }));
+  // วัตถุดิบที่ใช้จริง: ตรวจก่อนบันทึก (เก็บเฉพาะแถวที่ค่าต่างจากที่เบิกไปเดิมไว้ใช้ทีหลัง ไม่ต้องยิง RPC เปล่าๆ)
+  const rmCorrections = _rmUseReadCorrections('pr');
   for (const c of rmCorrections) {
     if (!(c.actual >= 0)) { Swal.fire('จำนวนวัตถุดิบไม่ถูกต้อง', `กรอกจำนวนที่ใช้จริงของ ${c.issueId} ให้ไม่ติดลบ`, 'error'); return; }
   }
-  const changed = rmCorrections.filter(c => Math.abs(c.actual - c.original) > 1e-9);
+  const changedCount = rmCorrections.filter(c => Math.abs(c.actual - c.original) > 1e-9).length;
   const payload = {
     Prod_ID: genId('PR'), MO_ID: _prodMoId, FG_ID: _planCache.find(p => p.MO_ID === _prodMoId).FG_ID,
     QtyProduced: qty, QtyGross: gross, QtyDefect: defect, ProdLot: lot,
@@ -7550,20 +7669,14 @@ async function prodRecordModalSave() {
   const ok = await sbRun(_sb.from('production_records').insert(payload), 'บันทึกผลิตไม่สำเร็จ');
   if (ok === null) return;
   await sbRun(_sb.from('manufacturing_orders').update({ Status: 'ผลิตแล้ว' }).eq('MO_ID', _prodMoId), 'อัปเดตสถานะ MO ไม่สำเร็จ');
-  // ปรับจำนวนวัตถุดิบที่ใช้จริง — มีผลทันทีเสมอ (ไม่ผ่านคำขอแก้ไข ตามที่ผู้ใช้ยืนยัน 2026-10-04) ปรับ
-  // QtyIssued + สต็อกจริง (stock_rm_lot/stock_balance) ให้อัตโนมัติผ่าน issue_qty_correct ต่อแถวที่เปลี่ยน
-  if (changed.length) {
-    const results = await Promise.all(changed.map(c => _sb.rpc('issue_qty_correct', { p_issue_id: c.issueId, p_new_qty: c.actual })));
-    const failedMsgs = changed.map((c, i) => results[i].error ? `${esc(c.issueId)}: ${esc(results[i].error.message)}` : null).filter(Boolean);
-    if (failedMsgs.length) {
-      Swal.fire('บันทึกผลิตแล้ว แต่ปรับจำนวนวัตถุดิบบางรายการไม่สำเร็จ', failedMsgs.join('<br>'), 'warning');
-    }
-    _stockRmCache = []; _rmLotCache = [];
+  const failedMsgs = await _rmUseApplyCorrections(rmCorrections);
+  if (failedMsgs.length) {
+    Swal.fire('บันทึกผลิตแล้ว แต่ปรับจำนวนวัตถุดิบบางรายการไม่สำเร็จ', failedMsgs.join('<br>'), 'warning');
   }
   bootstrap.Modal.getInstance(document.getElementById('prodRecordModal')).hide();
   await planLoad();
   prodRecordLoad();
-  if (changed.length) stockRmLoad();
+  if (changedCount) stockRmLoad();
 }
 async function prodRecordDelete(id) {
   const c = await Swal.fire({ title: 'ลบรายการนี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
@@ -7574,17 +7687,31 @@ async function prodRecordDelete(id) {
 // ═══════════════════════════════════════════════════════════
 // FG RECEIVE
 // ═══════════════════════════════════════════════════════════
+let _fgReadyMap = {};   // Prod_ID -> แถวใน "รอรับเข้าคลัง" พร้อม _received/_remaining (ไว้ให้ fgReceiveOpenForm ใช้ตั้งค่าเริ่มต้น)
 async function fgReceiveLoad() {
-  if (!window._prodRecordCache) await prodRecordLoad();
+  // เดิมเช็ค !window._prodRecordCache เฉยๆ — พออาเรย์ว่าง [] ก็ยัง truthy เลยข้ามการโหลดใหม่ตลอดหลังจากรอบแรก
+  // ของ session (กดรีเฟรชหน้านี้แล้วตาราง "รอรับเข้าคลัง" ไม่เคยอัปเดตจริง) แก้ให้เช็ค .length แบบเดียวกับ
+  // cache อื่นๆ ทั้งไฟล์ (บั๊กที่เจอจริง 2026-10-05 ตอนไล่ตรวจปุ่มรีเฟรชทุกหน้า)
+  if (!window._prodRecordCache?.length) await prodRecordLoad();
   const [fgReceived] = await Promise.all([
     sbRun(_sb.from('fg_receive').select('*').order('ReceiveDate', { ascending: false }), 'โหลดประวัติรับ FG'),
     rcvEditLoadPending(),
   ]).then(([h]) => [h || []]);
-  const receivedProdIds = new Set(fgReceived.map(r => r.Prod_ID));
+  // รับ FG เข้าคลังได้หลายครั้งสะสมต่อ 1 ใบบันทึกผลิต (ผู้ใช้ขอ 2026-10-05: ผลิตล็อตเดียวแต่กินเวลา 2-3 วัน
+  // รับเข้าคลังทุกวัน Lot เดียวกันทั้งหมด) — เดิมรับแล้วแม้แค่บางส่วนก็ตัดออกจาก "รอรับเข้าคลัง" ทันที ทำให้รับ
+  // ส่วนที่เหลือของวันถัดไปไม่ได้เลย ต้องคำนวณยอดที่รับไปแล้วสะสมต่อ Prod_ID แล้วเทียบกับ QtyProduced แทน
+  const receivedByProdId = {};
+  fgReceived.forEach(r => { if (r.Prod_ID) receivedByProdId[r.Prod_ID] = (receivedByProdId[r.Prod_ID] || 0) + (parseFloat(r.Qty) || 0); });
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
-  const ready = (window._prodRecordCache||[]).filter(p => !receivedProdIds.has(p.Prod_ID));
+  const ready = (window._prodRecordCache||[]).map(p => {
+    const received = receivedByProdId[p.Prod_ID] || 0;
+    return { ...p, _received: received, _remaining: Math.max(0, (parseFloat(p.QtyProduced) || 0) - received) };
+  }).filter(p => p._remaining > 1e-6);
+  _fgReadyMap = Object.fromEntries(ready.map(p => [p.Prod_ID, p]));
   document.getElementById('fgReceiveReadyTableBody').innerHTML = ready.map(p => `
-    <tr><td>${esc(p.Prod_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${esc(p.ProdLot)}</td><td>${_bomFmtQty(p.QtyProduced)}</td><td>${fmtDate(p.ExpDate)}</td>
+    <tr><td>${esc(p.Prod_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${esc(p.ProdLot)}</td>
+    <td>${_bomFmtQty(p.QtyProduced)}${p._received > 0 ? `<br><span class="text-muted small">รับแล้ว ${_bomFmtQty(p._received)} · เหลือ ${_bomFmtQty(p._remaining)}</span>` : ''}</td>
+    <td>${fmtDate(p.ExpDate)}</td>
     <td><button class="btn btn-sm btn-success" onclick="fgReceiveOpenForm('${p.Prod_ID}')"><i class="fa-solid fa-box-open me-1"></i>รับเข้าคลัง</button></td></tr>`).join('')
     || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีรายการรอรับเข้าคลัง</td></tr>';
   document.getElementById('fgReceiveHistTableBody').innerHTML = fgReceived.map(r => `
@@ -7597,14 +7724,17 @@ let _fgReceiveProdId = null;
 // ต้องกรอกด้วย mode แทนที่จะแยกโมดัล (ผู้ใช้ขอ 2026-09-28)
 let _fgReceiveMode = 'line';
 function fgReceiveOpenForm(prodId) {
-  const p = (window._prodRecordCache||[]).find(x => x.Prod_ID === prodId);
+  const p = _fgReadyMap[prodId] || (window._prodRecordCache||[]).find(x => x.Prod_ID === prodId);
   _fgReceiveProdId = prodId;
   _fgReceiveMode = 'line';
   document.getElementById('fgr-general-fields').classList.add('d-none');
   document.getElementById('fgr-general-note-wrap').classList.add('d-none');
   _modalClearErrors(['fgr-qty']);
-  document.getElementById('fgr-title').textContent = `รับ FG เข้าคลัง (${prodId})`;
-  document.getElementById('fgr-qty').value = p.QtyProduced;
+  // ผลิตล็อตเดียวแต่รับเข้าคลังได้หลายครั้งสะสม (2026-10-05) — ตั้งค่าเริ่มต้นเป็น "เหลือที่ยังไม่รับ" ไม่ใช่
+  // ยอดผลิตเต็มจำนวน เผื่อเคยรับไปแล้วบางส่วนก่อนหน้า (p._remaining ไม่มีถ้าเรียกจากที่อื่นที่ยังไม่เคยคำนวณ —
+  // fallback เป็น QtyProduced เต็มจำนวนเหมือนเดิม)
+  document.getElementById('fgr-title').textContent = `รับ FG เข้าคลัง (${prodId})` + (p._received > 0 ? ` — รับไปแล้ว ${_bomFmtQty(p._received)}, เหลือ ${_bomFmtQty(p._remaining)}` : '');
+  document.getElementById('fgr-qty').value = p._remaining ?? p.QtyProduced;
   document.getElementById('fgr-date').value = todayStr();
   new bootstrap.Modal(document.getElementById('fgReceiveModal')).show();
 }
@@ -7641,6 +7771,9 @@ async function fgReceiveModalSave() {
   _modalClearErrors(['fgr-qty']);
   const qty = parseFloat(document.getElementById('fgr-qty').value);
   if (!qty || qty <= 0) { _modalShowError('fgr-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  const ready = _fgReadyMap[_fgReceiveProdId];
+  // กันรับเข้าคลังเกินยอดที่เหลือจากการผลิตจริง (เผื่อผลิตล็อตเดียวแต่รับสะสมหลายวัน 2026-10-05)
+  if (ready && qty > ready._remaining + 1e-6) { _modalShowError('fgr-qty', `เกินยอดที่เหลือ (${_bomFmtQty(ready._remaining)})`); return; }
   const p = (window._prodRecordCache||[]).find(x => x.Prod_ID === _fgReceiveProdId);
   const payload = {
     FGReceive_ID: await _nextFgReceiveId(), Prod_ID: _fgReceiveProdId, FG_ID: p.FG_ID, Lot: p.ProdLot, Qty: qty,
@@ -8294,6 +8427,7 @@ function stockCardLoadItems() {
   stockCardRender();
 }
 let _scLastRows = []; let _scLastLabel = '';
+let _scLastEntries = []; let _scLastUnit = ''; let _scLastFmt = _bomFmtQty;   // ไว้ให้ _scPrintHtml ใช้ตอนพิมพ์เลือกช่วงเดือน
 // ล็อตที่ตัด/รับของแต่ละประเภทธุรกรรม — รวมเป็น string เดียวพอ (ProFlow-style ตาราง 1 แถว = 1 Lot pill,
 // แต่ issue/prep ของ BM Flow ตัดได้หลายล็อตต่อแถวจาก FEFO จึงรวมเป็น "lot1, lot2" ถ้ามีมากกว่า 1)
 function _scAllocLots(alloc) {
@@ -8348,6 +8482,7 @@ async function stockCardRender() {
   // "อ้างอิง/ที่มา" (เดิมคือ "รายการ") ย้ายไปท้ายสุดเป็นตัวหนังสือจางๆ แทนที่จะอยู่คอลัมน์ที่ 2
   const rowsHtml = entries.map(e => {
     balance += e.in - e.out;
+    e.balance = balance;   // เก็บยอดคงเหลือสะสม ณ จุดนี้ไว้ที่ตัวแถวเอง — ให้ _scPrintHtml หายอดยกมาต้นงวดได้ตอนพิมพ์เฉพาะบางเดือน (ไม่ต้องวนคำนวณซ้ำ)
     _scLastRows.push([fmtDate(e.date), e.in ? 'รับเข้า' : 'จ่ายออก', e.ref, e.lot, e.in ? scFmt(e.in) : '', e.out ? scFmt(e.out) : '', scFmt(balance), unit, e.label]);
     return `<tr><td>${fmtDate(e.date)}</td>
       <td>${badge(e.in ? 'รับเข้า' : 'จ่ายออก', e.in ? 'success' : 'danger')}</td>
@@ -8360,11 +8495,83 @@ async function stockCardRender() {
       <td><small class="text-muted">${esc(e.label)}</small></td></tr>`;
   }).join('');
   tbody.innerHTML = rowsHtml || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีการเคลื่อนไหว</td></tr>';
+  _scLastEntries = entries; _scLastUnit = unit; _scLastFmt = scFmt;
 }
 function stockCardExportCsv() {
   if (!_scLastRows.length) { Swal.fire({ toast: true, position: 'top-end', icon: 'warning', showConfirmButton: false, timer: 1800, title: 'ไม่มีข้อมูลให้ส่งออก' }); return; }
   _downloadCsv(`stockcard-${_scLastLabel}-${todayStr()}.csv`,
     ['วันที่', 'ประเภท', 'เลขที่เอกสาร', 'Lot', 'รับเข้า', 'จ่ายออก', 'คงเหลือสะสม', 'UOM', 'อ้างอิง/ที่มา'], _scLastRows);
+}
+// พิมพ์การ์ดสต็อก เลือกช่วงเดือนได้ (ผู้ใช้ขอ 2026-10-05) — ยอดคงเหลือต้นงวดยกมาจากรายการก่อนหน้าช่วงที่เลือก
+// เสมอ (ใช้ e.balance ที่เก็บไว้ตอน stockCardRender วิ่งคำนวณยอดสะสมครั้งแรก ไม่ต้องคำนวณซ้ำ) เลือกเดือน
+// กลางๆ ยอดจะยังถูกต้องเพราะไม่ได้เริ่มนับที่ 0 ใหม่
+function stockCardPrintOpen() {
+  if (!_scLastEntries.length) { Swal.fire('ยังไม่มีข้อมูล', 'เลือกรายการที่มีความเคลื่อนไหวก่อน', 'info'); return; }
+  document.getElementById('scp-item-info').innerHTML = `<b>${esc(_scLastLabel)}</b>`;
+  const dates = _scLastEntries.map(e => e.date).filter(Boolean).sort();
+  document.getElementById('scp-from').value = (dates[0] || todayStr()).slice(0, 7);
+  document.getElementById('scp-to').value = (dates[dates.length - 1] || todayStr()).slice(0, 7);
+  document.getElementById('scp-err').textContent = '';
+  new bootstrap.Modal(document.getElementById('scPrintModal')).show();
+}
+function _scMonthLabel(m) {
+  const [y, mo] = m.split('-').map(Number);
+  return new Date(y, mo - 1, 1).toLocaleDateString('th-TH', { year: 'numeric', month: 'long' });
+}
+function _scPrintHtml(fromMonth, toMonth) {
+  const before = _scLastEntries.filter(e => e.date && e.date.slice(0, 7) < fromMonth);
+  const openBalance = before.length ? before[before.length - 1].balance : 0;
+  const rows = _scLastEntries.filter(e => e.date && e.date.slice(0, 7) >= fromMonth && e.date.slice(0, 7) <= toMonth);
+  const fmt = _scLastFmt;
+  const trs = rows.map(e => `<tr>
+    <td>${fmtDate(e.date)}</td><td>${badge(e.in ? 'รับเข้า' : 'จ่ายออก', e.in ? 'success' : 'danger')}</td>
+    <td>${esc(e.ref)}</td><td>${esc(e.lot)}</td>
+    <td class="num">${e.in ? fmt(e.in) : ''}</td><td class="num">${e.out ? fmt(e.out) : ''}</td>
+    <td class="num"><b>${fmt(e.balance)}</b></td><td>${esc(_scLastUnit)}</td><td>${esc(e.label)}</td>
+  </tr>`).join('');
+  const now = new Date();
+  const closeBalance = rows.length ? rows[rows.length - 1].balance : openBalance;
+  return `<div class="scp-page">
+    <div class="scp-head">
+      <div class="d-flex align-items-center gap-2">
+        <img src="assets/logo-blooming.webp" alt="Blooming Company Limited" style="height:40px">
+        <div class="scp-company"><b>Blooming Company Limited</b><br>BLM Herbal — Stock Card</div>
+      </div>
+      <div>
+        <div class="scp-title">STOCK CARD</div>
+        <div class="scp-meta">พิมพ์ ${fmtDate(todayStr())} ${now.toTimeString().slice(0, 5)} · โดย ${esc(_currentUser?.name || _currentUser?.email || '-')}</div>
+      </div>
+    </div>
+    <div class="scp-filters">
+      <div><span class="lbl">รายการ</span><span class="val">${esc(_scLastLabel)}</span></div>
+      <div><span class="lbl">ช่วงเวลา</span><span class="val">${esc(_scMonthLabel(fromMonth))} – ${esc(_scMonthLabel(toMonth))}</span></div>
+    </div>
+    <table class="scp-table">
+      <thead><tr><th>วันที่</th><th>ประเภท</th><th>เลขที่เอกสาร</th><th>Lot</th><th class="num">รับเข้า</th><th class="num">จ่ายออก</th><th class="num">คงเหลือสะสม</th><th>UOM</th><th>อ้างอิง/ที่มา</th></tr></thead>
+      <tbody>
+        <tr class="scp-open"><td colspan="6">ยอดยกมาต้นงวด</td><td class="num">${fmt(openBalance)}</td><td>${esc(_scLastUnit)}</td><td></td></tr>
+        ${trs || '<tr><td colspan="9" class="text-center text-muted py-3">ไม่มีรายการเคลื่อนไหวในช่วงที่เลือก</td></tr>'}
+      </tbody>
+    </table>
+    <div class="scp-foot">ยอดคงเหลือสิ้นงวด: <b>${fmt(closeBalance)}</b> ${esc(_scLastUnit)}</div>
+  </div>`;
+}
+function stockCardPrintConfirm() {
+  const from = document.getElementById('scp-from').value, to = document.getElementById('scp-to').value;
+  const err = document.getElementById('scp-err');
+  err.textContent = '';
+  if (!from || !to) { err.textContent = 'เลือกเดือนเริ่มต้นและสิ้นสุด'; return; }
+  if (from > to) { err.textContent = 'เดือนเริ่มต้นต้องไม่เกินเดือนสิ้นสุด'; return; }
+  document.getElementById('scp-print-root').innerHTML = _scPrintHtml(from, to);
+  bootstrap.Modal.getInstance(document.getElementById('scPrintModal')).hide();
+  document.body.classList.add('print-scp');
+  const done = () => {
+    document.body.classList.remove('print-scp');
+    document.getElementById('scp-print-root').innerHTML = '';
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -8579,5 +8786,7 @@ async function wasteDelete(id) {
 <!-- ที่พิมพ์ใบเบิกผลิตแบบย่อ (ihist) — คนละ root อีกเช่นกัน -->
 <div id="ihist-print-root"></div>
 <div id="pbqr-print-root"></div>
+<!-- ที่พิมพ์การ์ดสต็อก (เลือกช่วงเดือน) — คนละ root อีกเช่นกัน -->
+<div id="scp-print-root"></div>
 </body>
 </html>
