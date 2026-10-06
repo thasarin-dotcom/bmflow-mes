@@ -439,6 +439,50 @@ table.ihist-table .ihist-unit { color: #64748b; font-weight: 400; }
   table.ihist-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
+/* ใบเบิก (เบิกอื่น ไม่ผูก CO) — พอร์ตหน้าตาจากแม่แบบ "ใบส่งเบิกเบ็ดเตล็ด" ของ ProFlow (.dlvbill-page) ตรงๆ ตามที่
+   ผู้ใช้ขอ 2026-10-06 (ProFlow: C:\Thanpao\Wise\MESDev\ProFlow_Supabase\index.html, class .dlvbill-*, ฟังก์ชัน
+   miscSlipRenderPreview) — ต่างจาก ihist/reqo ตรงที่เป็น **2 หน้าเต็ม A4 ต่อกัน** (ต้นฉบับ+สำเนา, page-break-
+   after:always) ไม่ใช่ 1 หน้าแบ่งครึ่งบน/ล่าง เพราะ ProFlow ทำแบบนี้ (มีหัวกระดาษซ้ำทุกชุด กันพื้นที่พิมพ์ชนกัน
+   ถ้ารายการเยอะ) ไม่ใส่ "รหัสฟอร์ม FM-SM-01-03" หรือที่อยู่/เลขผู้เสียภาษีแบบ ProFlow เพราะนั่นเป็นเอกสาร QMS
+   จริงของ Wise Novation โดยเฉพาะ — BM Flow (Blooming Company Limited) ไม่มีเลขฟอร์ม/ที่อยู่ชุดนั้นจริง จึงใช้
+   แค่ชื่อบริษัท + หน่วยงาน (บรรทัดเดียวกับที่ reqo/ihist ใช้อยู่แล้ว) แทนการเดาข้อมูลที่ไม่มีจริงขึ้นมาเอง */
+.genwd-page { font-family: 'Sarabun', sans-serif; font-size: 12px; color: #1e293b;
+  width: 210mm; min-height: 297mm; box-sizing: border-box; padding: 12mm;
+  background: #fff; margin: 0 auto 16px; box-shadow: 0 2px 10px rgba(0,0,0,.4);
+  display: flex; flex-direction: column; page-break-after: always; }
+.genwd-page:last-child { page-break-after: auto; margin-bottom: 0; }
+.genwd-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary-blue); padding-bottom: 7px; margin-bottom: 7px; }
+.genwd-brand { display: flex; align-items: center; gap: 10px; }
+.genwd-brand img { height: 36px; width: auto; }
+.genwd-company { font-size: 10.5px; color: #64748b; line-height: 1.4; }
+.genwd-meta { text-align: right; font-size: 11.5px; color: #334155; white-space: nowrap; }
+.genwd-meta b { color: var(--primary-blue); }
+.genwd-copytag { display: inline-block; font-size: 10.5px; font-weight: 700; color: var(--primary-blue); border: 1px solid var(--primary-blue); border-radius: 4px; padding: 1px 10px; margin-bottom: 5px; }
+.genwd-title { text-align: center; font-size: 15px; font-weight: 800; color: var(--primary-blue); background: #eaf0fb; padding: 5px 0; border-radius: 6px; margin-bottom: 9px; }
+.genwd-infobox { border: 1px solid #cbd5e1; border-radius: 6px; padding: 7px 14px; margin-bottom: 10px; }
+.genwd-infobox-row { display: grid; grid-template-columns: 140px 1fr; gap: 4px; padding: 1px 0; font-size: 12px; }
+.genwd-infobox-row .lbl { color: #64748b; }
+table.genwd-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.genwd-table th { background: #e2e8f0; color: #1e293b; padding: 4px 7px; text-align: center; font-weight: 700; font-size: 10.5px; }
+table.genwd-table td { padding: 5px 7px; border: 1px solid #e2e8f0; }
+table.genwd-table td.num { text-align: center; color: #94a3b8; }
+table.genwd-table td.qty { text-align: right; font-variant-numeric: tabular-nums; }
+.genwd-notes { font-size: 10.5px; color: #64748b; padding: 5px 0; border-top: 1px solid #e2e8f0; margin-top: 8px; }
+.genwd-notes div { padding: 1px 0; }
+.genwd-footer { display: flex; justify-content: space-between; margin-top: auto; padding-top: 16px; font-size: 11px; color: #64748b; }
+.genwd-sign { text-align: center; width: 31%; }
+.genwd-sign .line { border-top: 1px solid #94a3b8; margin-top: 24px; padding-top: 4px; }
+.genwd-sign .date { margin-top: 6px; font-size: 10px; }
+#genwd-print-root { display: none; }
+@media print {
+  body.print-genwd { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+  body.print-genwd > *:not(#genwd-print-root) { display: none !important; }
+  body.print-genwd #genwd-print-root { display: block !important; }
+  @page genwdreport { size: A4 portrait; margin: 0; }
+  #genwd-print-root .genwd-page { page: genwdreport; box-shadow: none !important; margin: 0 !important; }
+  table.genwd-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 /* ป้าย QR แปะกล่อง — ตาราง 2 คอลัมน์ × 7 แถว = 14 ดวง/A4 พอดี เว้นขอบกระดาษปกติ 10mm รอบด้าน
    (พื้นที่พิมพ์จริง 190×277mm, 277÷7=39.57mm/แถว, 190÷2=95mm/คอลัมน์ — ต้องลดขนาด .pbqr-page ลงตามขอบ
    ไม่งั้นเนื้อหาจะเกิน 1 หน้าไปโผล่หน้าเปล่าๆ หน้าที่ 2 เหมือนบั๊กเดิมที่เคยเจอใน rrpt/prtp/reqo/ihist) */
@@ -6122,9 +6166,29 @@ async function planLoad() {
   if (!_fgMasterCache.length) await fgMasterLoad();
   if (!_coCache.length) await coLoad();
   _planCache = await sbRun(_sb.from('manufacturing_orders').select('*').order('PlanDate', { ascending: false }), 'โหลดแผนผลิต') || [];
+  await _planReconcileFgStatus();
   await rcvEditLoadPending();   // ต้องรู้ว่า MO ไหนมีคำขอลบรออนุมัติอยู่ ก่อนวาดปุ่มจัดการ
   planRenderTable();
   moCalRender();
+}
+// กัน MO ค้างสถานะ "ผลิตแล้ว" ทั้งที่รับ FG เข้าคลังครบแล้ว — เดิมพึ่งการอัปเดตครั้งเดียวใน fgReceiveModalSave
+// ตอนกดรับ FG (เทียบกับ _fgReadyMap ที่โหลดไว้ ซึ่งอาจไม่ตรงกับ DB จริง ณ จังหวะนั้น) ถ้าพลาดจังหวะนั้นแล้วไม่มี
+// กลไกตรวจซ้ำเลย ค้างอยู่อย่างนั้นตลอดไป (บั๊กที่เจอจริง 2026-10-06) แก้ด้วยการตรวจสอบซ้ำทุกครั้งที่โหลดหน้า MO
+// เทียบยอดรับ FG สะสมจริงจาก fg_receive กับ QtyProduced ของบันทึกผลิตตรงๆ ไม่ง้อ cache ที่อาจ stale
+async function _planReconcileFgStatus() {
+  const stuck = _planCache.filter(p => p.Status === 'ผลิตแล้ว');
+  if (!stuck.length) return;
+  const { data: prods } = await _sb.from('production_records').select('Prod_ID,MO_ID,QtyProduced').in('MO_ID', stuck.map(p => p.MO_ID));
+  if (!prods?.length) return;
+  const { data: received } = await _sb.from('fg_receive').select('Prod_ID,Qty').in('Prod_ID', prods.map(r => r.Prod_ID));
+  const sumByProd = {};
+  (received || []).forEach(r => { sumByProd[r.Prod_ID] = (sumByProd[r.Prod_ID] || 0) + (parseFloat(r.Qty) || 0); });
+  const fixMoIds = prods
+    .filter(r => (parseFloat(r.QtyProduced) || 0) > 0 && (sumByProd[r.Prod_ID] || 0) + 1e-6 >= (parseFloat(r.QtyProduced) || 0))
+    .map(r => r.MO_ID);
+  if (!fixMoIds.length) return;
+  await Promise.all(fixMoIds.map(id => _sb.from('manufacturing_orders').update({ Status: 'รับ FG แล้ว' }).eq('MO_ID', id).eq('Status', 'ผลิตแล้ว')));
+  fixMoIds.forEach(id => { const row = _planCache.find(p => p.MO_ID === id); if (row) row.Status = 'รับ FG แล้ว'; });
 }
 function planRenderTable() {
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
@@ -7765,10 +7829,23 @@ function prQtyRecalc() {
 // ตาราง "วัตถุดิบที่ใช้จริง" ใช้ร่วมกัน 2 จุด: บันทึกผลิตใหม่ (#pr-rm-*, prodRecordModal) และแก้ไขบันทึกผลิต
 // เดิมผ่าน "คำขอแก้ไข" (#erq-rm-*, editReqOpen) — ผู้ใช้ขอ 2026-10-05 ให้ตัวแก้ไขของเดิมมีเหมือนตัวใหม่ด้วย
 // ตรรกะเดียวกันทุกอย่าง ต่างแค่ id prefix จึงรวมเป็นฟังก์ชันกลางรับ prefix แทนก็อปโค้ดสองชุด
+// "พร้อมใช้ในสูตร" ต้องคงค่า "ที่ตัดออกจากคลังจริงตอนเบิกครั้งแรก" ไว้ตลอด ไม่ใช่ QtyIssued ตรงๆ — เพราะ
+// issue_qty_correct เขียนทับ QtyIssued ด้วยค่า "เบิกตั้งต้น"(ที่แก้)ล่าสุดทุกครั้ง (ฝั่งลดไม่คืนสต็อก/ไม่แก้
+// LotAlloc เลย ดู migration_2026-10-05_issue_correct_to_waste.sql) ถ้าใช้ QtyIssued ตรงๆ พอแก้แล้วเปิดฟอร์มใหม่
+// "พร้อมใช้ในสูตร" จะกลายเป็นค่าที่เพิ่งแก้ไปแทนค่าที่เบิกจริง (บั๊กที่ผู้ใช้รายงานจริง 2026-10-06) ใช้ผลรวม
+// LotAlloc แทน เพราะฝั่งลดไม่แตะ LotAlloc เลย (ยังเป็นหลักฐานว่าตัดจากคลังมาเท่าไหร่จริง) ส่วนฝั่งเพิ่มก็บวกเข้า
+// LotAlloc ตามจริงอยู่แล้ว ผลรวมนี้จึงตรงกับ "ตัดจากคลังสะสม" เสมอไม่ว่าจะแก้มากี่รอบ — fallback เป็น QtyIssued
+// เฉพาะแถวเก่าที่ไม่มี LotAlloc (ก่อน migration_2026-09-25_rm_lots.sql)
+function _rmUseOrigQty(r) {
+  const alloc = Array.isArray(r.LotAlloc) ? r.LotAlloc : [];
+  const sum = alloc.reduce((s, a) => s + (parseFloat(a.qty) || 0), 0);
+  return sum > 1e-9 ? sum : (parseFloat(r.QtyIssued) || 0);
+}
 function _rmUseRowHTML(prefix, r, rm) {
-  return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}">
+  const orig = _rmUseOrigQty(r);
+  return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${orig}" data-saved="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}">
     <td><code>${esc(r.RM_ID)}</code></td><td>${esc(rm?.RM_Name || r.RM_ID)}</td>
-    <td class="text-end text-muted">${_rmFmtQty(r.QtyIssued)}</td>
+    <td class="text-end text-muted">${_rmFmtQty(orig)}</td>
     <td><div class="d-flex gap-1 align-items-center">
       <input type="number" min="0" step="any" class="form-control form-control-sm ${prefix}-rm-qty${CAT_RAW_ALL.includes(rm?.Category) ? ' bg-warning-subtle' : ''}" value="${r.QtyIssued}" oninput="_rmUseRecalc('${prefix}')">
       ${_rmUseLotBtn(prefix, r.Issue_ID)}
@@ -7794,7 +7871,9 @@ async function _rmUseLotEditOpen(prefix, issueId) {
   if (!_rmLotCache.length) await rmLotLoad();
   const tr = document.querySelector(`#${prefix}-rm-rows tr[data-issue="${issueId}"]`);
   const liveQty = parseFloat(tr?.querySelector(`.${prefix}-rm-qty`)?.value) || 0;
-  const original = parseFloat(tr?.dataset.original) || 0;
+  // เทียบกับ data-saved (QtyIssued ล่าสุดที่บันทึกจริงใน DB) ไม่ใช่ data-original (ซึ่งตอนนี้หมายถึง "ตัดจาก
+  // คลังสะสม" แล้ว — เลขคนละความหมายกัน ดูคอมเมนต์ที่ _rmUseRowHTML)
+  const original = parseFloat(tr?.dataset.saved) || 0;
   if (Math.abs(liveQty - original) > 0.0005) {
     Swal.fire('บันทึก "เบิกตั้งต้น" ก่อน', `แก้ไขจำนวน "เบิกตั้งต้น" ของแถวนี้ไว้แต่ยังไม่ได้กดบันทึก — ต้องกด "บันทึก"/"บันทึกการแก้ไข" ของฟอร์มนี้ก่อน ถึงจะเลือกล็อตให้ตรงกับจำนวนใหม่ (${_rmFmtQty(liveQty)}) ได้ ตอนนี้ระบบยังอ้างอิงยอดเดิมที่บันทึกไว้จริง (${_rmFmtQty(original)})`, 'info');
     return;
@@ -7847,9 +7926,12 @@ function _rmUseRecalc(prefix) {
   el.className = 'small fw-semibold ' + (Math.abs(pct) < 0.01 ? 'text-success' : pct > 0 ? 'text-danger' : 'text-warning');
 }
 function _rmUseReadCorrections(prefix) {
+  // เทียบ "เปลี่ยนไหม" กับ data-saved (QtyIssued ล่าสุดที่บันทึกจริง) ไม่ใช่ data-original (ยอดตัดจากคลัง
+  // สะสม) — ไม่งั้นแถวที่เคยแก้ลดมาก่อนแล้วพิมพ์กลับไปเท่ายอดตัดจากคลังเดิมเป๊ะ จะถูกมองว่า "ไม่เปลี่ยน" และ
+  // ไม่ยิง issue_qty_correct ทั้งที่ QtyIssued จริงยังเป็นค่าที่แก้ไว้ก่อนหน้า
   return [...document.querySelectorAll(`#${prefix}-rm-rows tr[data-issue]`)].map(tr => ({
     issueId: tr.dataset.issue,
-    original: parseFloat(tr.dataset.original) || 0,
+    original: parseFloat(tr.dataset.saved) || 0,
     actual: parseFloat(tr.querySelector(`.${prefix}-rm-qty`).value),
   }));
 }
@@ -8194,15 +8276,105 @@ async function fgoutLoad() {
   const rmWd = rmWdRes.error ? [] : rmWdRes.data;
   const adhocFg = withdraws.filter(w => !w.Order_ID);
   const merged = [
-    ...rmWd.map(w => ({ kind: 'M', id: w.Withdraw_ID, name: rmMap[w.RM_ID]?.RM_Name || w.RM_ID, type: catLabel(rmMap[w.RM_ID]?.Category), cat: rmMap[w.RM_ID]?.Category, qty: w.Qty, unit: w.Unit, note: w.Note, date: w.WithdrawDate })),
-    ...adhocFg.map(w => ({ kind: 'F', id: w.WD_ID, name: fgMap[w.FG_ID]?.FG_Name || w.FG_ID, type: 'สินค้าสำเร็จรูป', qty: w.Qty, unit: fgMap[w.FG_ID]?.Unit, note: w.Note, date: w.WithdrawDate })),
+    ...rmWd.map(w => ({ kind: 'M', id: w.Withdraw_ID, name: rmMap[w.RM_ID]?.RM_Name || w.RM_ID, type: catLabel(rmMap[w.RM_ID]?.Category), cat: rmMap[w.RM_ID]?.Category, qty: w.Qty, unit: w.Unit, lot: w.Lot, note: w.Note, date: w.WithdrawDate, docNo: w.DocNo })),
+    ...adhocFg.map(w => ({ kind: 'F', id: w.WD_ID, name: fgMap[w.FG_ID]?.FG_Name || w.FG_ID, type: 'สินค้าสำเร็จรูป', qty: w.Qty, unit: fgMap[w.FG_ID]?.Unit, lot: w.Lot, note: w.Note, date: w.WithdrawDate, docNo: w.DocNo })),
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
+  _genwdHistCache = merged;
   document.getElementById('genwdHistTableBody').innerHTML = (merged.map(w => `
     <tr><td><code>${esc(w.id)}</code></td><td>${w.kind === 'F' ? badge(w.type, 'primary') : catBadge(w.type)}</td><td>${esc(w.name)}</td>
     <td class="text-end">${_qtyFmtByCat(w.qty, w.cat)} ${esc(w.unit||'')}</td><td>${esc(w.note||'-')}</td><td>${fmtDate(w.date)}</td>
-    <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="genwdDelete('${w.kind}','${esc(w.id)}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+    <td class="text-center"><button class="btn btn-sm btn-outline-secondary" onclick="genwdPrint('${w.kind}','${esc(w.id)}')" title="พิมพ์ใบเบิก"><i class="fa-solid fa-print"></i></button>
+    <button class="btn btn-sm btn-outline-danger" onclick="genwdDelete('${w.kind}','${esc(w.id)}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
     || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีรายการเบิก</td></tr>')
     + (rmWdRes.error ? `<tr><td colspan="7" class="text-center py-2 small text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>เบิกวัตถุดิบ/แพ็คเกจจิ้งยังใช้ไม่ได้ — รัน <code>migration_2026-09-28_rm_withdraw.sql</code> ก่อน</td></tr>` : '');
+}
+// ใบเบิก (เบิกอื่น ไม่ผูก CO) — 1 รายการต่อใบ เหมือน issueHistPrint แต่ไม่ query เพิ่ม เพราะข้อมูลที่ต้องโชว์
+// ทั้งหมดอยู่ใน _genwdHistCache (ที่ fgoutLoad คำนวณไว้แล้ว) ครบอยู่แล้ว ไม่ต้องยิง DB ซ้ำตอนกดพิมพ์ — พิมพ์ตรง
+// ทันทีไม่มีตัวอย่างก่อนเหมือน ihist เพราะเป็นแค่สรุปรายการที่เบิกไปแล้วจริง ไม่ใช่แบบฟอร์มขออนุมัติ
+let _genwdHistCache = [];
+// เลขที่เอกสาร "ใบส่งเบิกเบ็ดเตล็ด" รันแยกจากรหัสระบบภายใน (Withdraw_ID/WD_ID) ตามที่ผู้ใช้ขอ 2026-10-06 —
+// รูปแบบ MI-YYYYMM-### รีเซ็ตทุกเดือน ใช้เลขชุดเดียวกันทั้งฝั่งวัตถุดิบ (rm_withdraw) และฝั่ง FG ที่ไม่ผูก CO
+// (fg_withdraw.Order_ID เป็น null) เพราะโชว์รวมเป็นประวัติเดียวกันอยู่แล้ว ต้องรัน
+// migration_2026-10-06_genwd_docno.sql ก่อนคอลัมน์ DocNo ถึงจะมีจริง
+async function _nextGenwdDocNo() {
+  const now = new Date();
+  const prefix = `MI-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const [rm, fg] = await Promise.all([
+    _sb.from('rm_withdraw').select('DocNo').like('DocNo', `${prefix}-%`),
+    _sb.from('fg_withdraw').select('DocNo').like('DocNo', `${prefix}-%`),
+  ]);
+  const re = new RegExp(`^${prefix}-(\\d+)$`);
+  const nums = [...(rm.data || []), ...(fg.data || [])]
+    .map(r => (r.DocNo && r.DocNo.match(re)) ? r.DocNo.match(re)[1] : null).filter(Boolean).map(Number);
+  const max = nums.length ? Math.max(...nums) : 0;
+  return `${prefix}-${String(max + 1).padStart(3, '0')}`;
+}
+// ออกเลขที่เอกสารแบบ lazy ตอนพิมพ์ครั้งแรกเท่านั้น (ไม่ใช่ตอนบันทึกเบิก) กันรายการที่ไม่เคยพิมพ์มากินเลขเปล่าๆ
+// — พิมพ์ซ้ำครั้งต่อไปใช้เลขเดิมที่เคยออกไว้เสมอ (เขียนกลับ _genwdHistCache โดยตรง ไม่ต้องรอ fgoutLoad รีโหลด)
+async function genwdPrint(kind, id) {
+  const w = _genwdHistCache.find(x => x.kind === kind && String(x.id) === String(id));
+  if (!w) return;
+  if (!w.docNo) {
+    const docNo = await _nextGenwdDocNo();
+    const table = kind === 'M' ? 'rm_withdraw' : 'fg_withdraw';
+    const idCol = kind === 'M' ? 'Withdraw_ID' : 'WD_ID';
+    const { error } = await _sb.from(table).update({ DocNo: docNo }).eq(idCol, id);
+    if (error) {
+      Swal.fire('ออกเลขที่เอกสารไม่สำเร็จ', `${esc(error.message)} — รัน migration_2026-10-06_genwd_docno.sql ก่อน (จะพิมพ์ต่อโดยใช้เลขที่ระบบแทนไปก่อน)`, 'warning');
+    } else {
+      w.docNo = docNo;
+    }
+  }
+  document.getElementById('genwd-print-root').innerHTML = _genwdPrintHTML(w);
+  document.body.classList.add('print-genwd');
+  const done = () => {
+    document.body.classList.remove('print-genwd');
+    document.getElementById('genwd-print-root').innerHTML = '';
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+// หน้าตาพอร์ตตรงจาก ProFlow's .dlvbill-page (miscSlipRenderPreview) — header บริษัท/meta ชิดขวา, แถบหัวเรื่อง
+// พื้นสี, กล่องข้อมูลแบบ cust-box (ใช้แทนด้วยประเภท/วัตถุประสงค์เพราะ genwd ไม่มีลูกค้าจริง), ตารางรายการ,
+// หมายเหตุ, ท้ายกระดาษ 3 ช่องเซ็น — ไม่ใส่รหัสฟอร์ม/ที่อยู่/เลขภาษีเหมือนต้นฉบับเพราะเป็นข้อมูล QMS ของ Wise
+// Novation โดยเฉพาะ ไม่มีจริงฝั่ง Blooming (ดูคอมเมนต์ที่ CSS block ด้านบน)
+function _genwdPageHTML(w, copyLabel) {
+  return `<div class="genwd-page">
+    <div class="genwd-head">
+      <div class="genwd-brand"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
+        <div class="genwd-company"><b>ที่อยู่:</b> บริษัท บลูมมิ่ง จำกัด (สำนักงานใหญ่)<br>
+          เลขที่ 959 อาคารไซเบอร์พริ้นท์ ชั้นที่ 3,7 ซอยรัชดาภิเษก 3 (ซอยสุทธิพร)<br>
+          ถนนรัชดาภิเษก แขวงดินแดง เขตดินแดง กรุงเทพมหานคร 10400<br>
+          TAX ID: 0105535064032 ติดต่อ: 086-355-0358, 02-056-1692-4</div></div>
+      <div class="genwd-meta">
+        <div class="genwd-copytag">${esc(copyLabel)}</div>
+        <div>เลขที่เอกสาร (Document No.): <b>${esc(w.docNo || w.id)}</b></div>
+        <div>วันที่ (Date): <b>${fmtDateLong(w.date)}</b></div>
+      </div>
+    </div>
+    <div class="genwd-title">ใบส่งเบิกเบ็ดเตล็ด / Miscellaneous Issue Note</div>
+    <div class="genwd-infobox">
+      <div class="genwd-infobox-row"><span class="lbl">ประเภท (Type)</span><span>${esc(w.kind === 'F' ? 'สินค้าสำเร็จรูป' : w.type)}</span></div>
+      <div class="genwd-infobox-row"><span class="lbl">วัตถุประสงค์ (Purpose)</span><span>${esc(w.note || '-')}</span></div>
+    </div>
+    <table class="genwd-table">
+      <thead><tr><th style="width:6%">ลำดับ<br>(No.)</th><th style="width:48%">รายละเอียดสินค้า<br>(Description)</th>
+        <th style="width:18%">Lot</th><th style="width:16%">จำนวน<br>(Quantity)</th><th style="width:12%">หน่วย<br>(Unit)</th></tr></thead>
+      <tbody><tr><td class="num">1</td><td>${esc(w.name)}</td><td>${esc(w.lot || '-')}</td><td class="qty">${_qtyFmtByCat(w.qty, w.cat)}</td><td>${esc(w.unit||'')}</td></tr></tbody>
+    </table>
+    <div class="genwd-notes">
+      <div>หมายเหตุ: กรุณาตรวจสอบรายการและจำนวนให้ถูกต้องก่อนรับของ</div>
+    </div>
+    <div class="genwd-footer">
+      <div class="genwd-sign"><div class="line">ผู้เบิก</div><div class="date">วันที่ ...../...../.....</div></div>
+      <div class="genwd-sign"><div class="line">ผู้จ่ายของ</div><div class="date">วันที่ ...../...../.....</div></div>
+      <div class="genwd-sign"><div class="line">ผู้อนุมัติ</div><div class="date">วันที่ ...../...../.....</div></div>
+    </div>
+  </div>`;
+}
+function _genwdPrintHTML(w) {
+  return _genwdPageHTML(w, 'ต้นฉบับ') + _genwdPageHTML(w, 'สำเนา');
 }
 // ── เพิ่มรายการเบิก (วัตถุดิบ/แพ็คเกจจิ้ง/FG ไม่ผูกกับ CO) ──
 function genwdOpenForm() {
@@ -9122,5 +9294,7 @@ async function wasteDelete(id) {
 <div id="pbqr-print-root"></div>
 <!-- ที่พิมพ์การ์ดสต็อก (เลือกช่วงเดือน) — คนละ root อีกเช่นกัน -->
 <div id="scp-print-root"></div>
+<!-- ที่พิมพ์ใบเบิก (เบิกอื่น ไม่ผูก CO) — คนละ root อีกเช่นกัน -->
+<div id="genwd-print-root"></div>
 </body>
 </html>
