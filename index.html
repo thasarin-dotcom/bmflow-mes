@@ -1061,6 +1061,7 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
     <div class="sticky-toolbar d-flex gap-2 mb-2">
       <select class="form-select w-auto" id="scType" onchange="stockCardLoadItems()"><option value="rm">วัตถุดิบสด</option><option value="dry">วัตถุดิบแห้ง</option><option value="chem">วัตถุดิบเคมี</option><option value="prep">วัตถุดิบพร้อมผลิต</option><option value="pkg">แพ็คเกจจิ้ง</option><option value="fg">สินค้าสำเร็จรูป</option></select>
       <select class="form-select w-auto" id="scItem" onchange="stockCardRender()"></select>
+      <select class="form-select w-auto" id="scLot" onchange="_scRenderTable()"><option value="">ทุกล็อต (รวม)</option></select>
       <button class="btn btn-light" onclick="stockCardExportCsv()" title="ส่งออกเป็น CSV (เปิดใน Excel ได้)"><i class="fa-solid fa-file-csv me-1"></i>Export CSV</button>
       <button class="btn btn-light" onclick="stockCardPrintOpen()" title="พิมพ์การ์ดสต็อก เลือกช่วงเดือนได้"><i class="fa-solid fa-print me-1"></i>พิมพ์</button>
     </div>
@@ -7829,14 +7830,17 @@ function prQtyRecalc() {
 // ตาราง "วัตถุดิบที่ใช้จริง" ใช้ร่วมกัน 2 จุด: บันทึกผลิตใหม่ (#pr-rm-*, prodRecordModal) และแก้ไขบันทึกผลิต
 // เดิมผ่าน "คำขอแก้ไข" (#erq-rm-*, editReqOpen) — ผู้ใช้ขอ 2026-10-05 ให้ตัวแก้ไขของเดิมมีเหมือนตัวใหม่ด้วย
 // ตรรกะเดียวกันทุกอย่าง ต่างแค่ id prefix จึงรวมเป็นฟังก์ชันกลางรับ prefix แทนก็อปโค้ดสองชุด
-// "พร้อมใช้ในสูตร" ต้องคงค่า "ที่ตัดออกจากคลังจริงตอนเบิกครั้งแรก" ไว้ตลอด ไม่ใช่ QtyIssued ตรงๆ — เพราะ
-// issue_qty_correct เขียนทับ QtyIssued ด้วยค่า "เบิกตั้งต้น"(ที่แก้)ล่าสุดทุกครั้ง (ฝั่งลดไม่คืนสต็อก/ไม่แก้
-// LotAlloc เลย ดู migration_2026-10-05_issue_correct_to_waste.sql) ถ้าใช้ QtyIssued ตรงๆ พอแก้แล้วเปิดฟอร์มใหม่
-// "พร้อมใช้ในสูตร" จะกลายเป็นค่าที่เพิ่งแก้ไปแทนค่าที่เบิกจริง (บั๊กที่ผู้ใช้รายงานจริง 2026-10-06) ใช้ผลรวม
-// LotAlloc แทน เพราะฝั่งลดไม่แตะ LotAlloc เลย (ยังเป็นหลักฐานว่าตัดจากคลังมาเท่าไหร่จริง) ส่วนฝั่งเพิ่มก็บวกเข้า
-// LotAlloc ตามจริงอยู่แล้ว ผลรวมนี้จึงตรงกับ "ตัดจากคลังสะสม" เสมอไม่ว่าจะแก้มากี่รอบ — fallback เป็น QtyIssued
-// เฉพาะแถวเก่าที่ไม่มี LotAlloc (ก่อน migration_2026-09-25_rm_lots.sql)
+// "พร้อมใช้ในสูตร" ต้องคงค่า "ที่เบิกครั้งแรกตอนสร้างรายการเบิก" ไว้ตลอด ไม่เปลี่ยนไม่ว่าจะแก้ "เบิกตั้งต้น" กี่
+// รอบ (เพิ่มหรือลดก็ตาม) — รอบแรก (เช้า 2026-10-06) เคยแก้ให้อ่านจาก SUM(LotAlloc) แทน QtyIssued ตรงๆ เพราะคิด
+// ว่าฝั่ง "ลด" ไม่แตะ LotAlloc เลยผลรวมยังถูก แต่ลืมฝั่ง "เพิ่ม": issue_qty_correct/_edit_apply_issue_production
+// ฝั่งเพิ่มตัดสต็อกจริงแล้วบวกเข้า LotAlloc ด้วย (ถูกสำหรับ LotAlloc เอง) ผลรวมเลย "ตามการแก้ไป" เท่ากับ
+// QtyIssued ใหม่พอดี บั๊กเดิมเลยยังไม่หาย (ผู้ใช้รายงานซ้ำ 2026-10-06 — "พร้อมใช้ในสูตร ต้องไม่เปลี่ยน")
+// แก้ถูกจริงต้องมีคอลัมน์แยกที่ไม่มีฟังก์ชันไหนแตะหลังสร้างเลย — ใช้ "OrigQty" ใหม่ (migration_2026-10-06_
+// issue_origqty.sql: ตั้งครั้งเดียวตอน rm_issue_post/rm_issue_add สร้างแถว, backfill ของเก่าจาก audit_log
+// INSERT snapshot แรกสุดของแต่ละ Issue_ID ให้แม่นยำกว่าเดา) fallback เป็นผลรวม LotAlloc แล้ว QtyIssued ตรงๆ
+// ตามลำดับ เฉพาะตอนที่ยังไม่รัน migration นั้น (คอลัมน์ OrigQty ยังไม่มีจริงใน DB)
 function _rmUseOrigQty(r) {
+  if (r.OrigQty != null) return parseFloat(r.OrigQty) || 0;
   const alloc = Array.isArray(r.LotAlloc) ? r.LotAlloc : [];
   const sum = alloc.reduce((s, a) => s + (parseFloat(a.qty) || 0), 0);
   return sum > 1e-9 ? sum : (parseFloat(r.QtyIssued) || 0);
@@ -8770,11 +8774,16 @@ async function packboxModalSave() {
   const remainderStatus = remainderBox
     ? (document.querySelector('input[name="pb-remainder-choice"]:checked')?.value === 'close' ? 'ปิด' : 'ค้าง')
     : null;
+  // กล่องที่ปนหลายล็อต (เศษเก่าจากล็อตก่อนๆ เทรวมกันจนเต็มกล่องแรกที่จัดสรร) ให้ได้เลขที่กล่องท้ายสุดของวันเสมอ
+  // ไม่ใช่เลขแรก — ผู้ใช้ขอ 2026-10-06 ให้แยกกล่อง "ปนล็อต" ออกจากกล่อง "ล็อตเดียวล้วน" ได้ง่ายด้วยเลขที่กล่อง
+  // (เรียง stable ก่อน sort จึงไม่กระทบลำดับเติมกล่องจริง แค่สลับว่าใครได้คิวขอเลขใหม่ก่อน/หลัง — ไม่กระทบกล่อง
+  // ที่ต่อจากกล่องค้างเดิมเลยเพราะกล่องนั้นใช้ Box_ID เดิม ไม่ได้ขอเลขใหม่อยู่แล้ว)
+  const sortedClosedBoxes = [...closedBoxes].sort((a, b) => (a.lotAlloc.length > 1 ? 1 : 0) - (b.lotAlloc.length > 1 ? 1 : 0));
   const newNeeded = closedBoxes.filter(b => b.isNew).length + (remainderBox?.isNew ? 1 : 0);
   const newIds = newNeeded ? await _nextBoxIds(newNeeded, packDate) : [];
   let idx = 0;
   const now = new Date().toISOString();
-  const allBoxes = [...closedBoxes.map(b => ({ ...b, status: 'ปิด', closedAt: now })),
+  const allBoxes = [...sortedClosedBoxes.map(b => ({ ...b, status: 'ปิด', closedAt: now })),
     ...(remainderBox ? [{ ...remainderBox, status: remainderStatus, closedAt: remainderStatus === 'ปิด' ? now : null }] : [])];
   for (const b of allBoxes) {
     const boxId = b.isNew ? newIds[idx++] : b.Box_ID;
@@ -8894,6 +8903,9 @@ function stockCardLoadItems() {
 }
 let _scLastRows = []; let _scLastLabel = '';
 let _scLastEntries = []; let _scLastUnit = ''; let _scLastFmt = _bomFmtQty;   // ไว้ให้ _scPrintHtml ใช้ตอนพิมพ์เลือกช่วงเดือน
+// ยอดดิบ "ทุกล็อตรวมกัน" ที่โหลดจาก DB แล้ว ยังไม่ผ่านตัวกรอง Lot (ผู้ใช้ขอ 2026-10-06 "เลือกดูแบบแยกล็อตได้")
+// เก็บแยกไว้ให้สลับตัวกรอง Lot ทำผ่าน _scRenderTable() ได้ทันทีโดยไม่ต้องยิง query ใหม่ทุกครั้ง
+let _scRawEntries = []; let _scRawUnit = ''; let _scRawFmt = _bomFmtQty; let _scRawLabel = '';
 // ล็อตที่ตัด/รับของแต่ละประเภทธุรกรรม — รวมเป็น string เดียวพอ (ProFlow-style ตาราง 1 แถว = 1 Lot pill,
 // แต่ issue/prep ของ BM Flow ตัดได้หลายล็อตต่อแถวจาก FEFO จึงรวมเป็น "lot1, lot2" ถ้ามีมากกว่า 1)
 function _scAllocLots(alloc) {
@@ -8917,8 +8929,14 @@ async function stockCardRender() {
   const type = document.getElementById('scType').value;
   const id = document.getElementById('scItem').value;
   const tbody = document.getElementById('stockCardTableBody');
-  _scLastRows = []; _scLastLabel = document.getElementById('scItem').selectedOptions[0]?.textContent || id || '';
-  if (!id) { tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>'; return; }
+  const lotSel = document.getElementById('scLot');
+  _scRawLabel = document.getElementById('scItem').selectedOptions[0]?.textContent || id || '';
+  if (!id) {
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>';
+    _scRawEntries = []; _scLastRows = []; _scLastEntries = [];
+    lotSel.innerHTML = '<option value="">ทุกล็อต (รวม)</option>';
+    return;
+  }
   let entries = [], unit = '';
   if (type === 'fg') {
     unit = _fgMasterCache.find(f => f.FG_ID === id)?.Unit || '';
@@ -8952,14 +8970,14 @@ async function stockCardRender() {
       ...(recv||[]).map(r => ({ date: r.ReceiveDate, ts: r.CreatedAt, label: 'รับเข้าคลัง', ref: r.Receive_ID, lot: r.Lot || '-', in: r.Qty, out: 0 })),
       // ต่อท้าย "เบิกเข้าไลน์ผลิต" ด้วย Lot ของ MO ที่เบิกไป (= FG Lot ที่จะออกมาในที่สุด ดู MO.Lot) ให้ตามรอยได้
       // ว่าวัตถุดิบล็อตนี้ถูกเบิกไปทำสินค้าล็อตไหน (ผู้ใช้ขอ 2026-10-05 "เบิกเป็น FG Lot ไหน ใส่ด้วย")
-      ...(iss||[]).map(r => ({ date: r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (_planCache.find(p => p.MO_ID === r.MO_ID)?.Lot ? ` → FG Lot ${_planCache.find(p => p.MO_ID === r.MO_ID).Lot}` : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), in: 0, out: r.QtyIssued })),
+      ...(iss||[]).map(r => ({ date: r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (_planCache.find(p => p.MO_ID === r.MO_ID)?.Lot ? ` → FG Lot ${_planCache.find(p => p.MO_ID === r.MO_ID).Lot}` : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), alloc: r.LotAlloc, in: 0, out: r.QtyIssued })),
       ...(waste||[]).map(r => {
         const refId = _wasteRefIssueId(r.Reason);
         const srcIssue = refId ? (iss || []).find(i => i.Issue_ID === refId) : null;
         const lot = r.Lot || (srcIssue ? _scAllocLots(srcIssue.LotAlloc) : null) || (refId && auditLotById[refId]) || '-';
         return { date: r.WasteDate, ts: r.CreatedAt, label: 'ของเสีย', ref: r.Waste_ID, lot, in: 0, out: r.Qty };
       }),
-      ...prepOut.map(r => ({ date: r.PrepDate, ts: r.CreatedAt, label: 'เบิกไปเตรียม', ref: r.Prep_ID, lot: _scAllocLots(r.SourceAlloc), in: 0, out: r.QtyOut })),
+      ...prepOut.map(r => ({ date: r.PrepDate, ts: r.CreatedAt, label: 'เบิกไปเตรียม', ref: r.Prep_ID, lot: _scAllocLots(r.SourceAlloc), alloc: r.SourceAlloc, in: 0, out: r.QtyOut })),
       ...prepIn.map(r => ({ date: r.ReceivedAt ? new Date(r.ReceivedAt).toLocaleDateString('sv-SE') : r.PrepDate, ts: r.ReceivedAt, label: 'รับกลับจากการเตรียม', ref: r.Prep_ID, lot: _lotLabel(_rmLotCache.find(l => l.Lot_ID === r.BackLotID) || { Lot_ID: r.BackLotID }), in: r.QtyBack, out: 0 })),
     ];
   }
@@ -8967,9 +8985,46 @@ async function stockCardRender() {
   entries.sort((a, b) => (new Date(a.date) - new Date(b.date))
     || ((a.ts && b.ts) ? new Date(a.ts) - new Date(b.ts) : 0)
     || ((b.in > 0) - (a.in > 0)));
-  let balance = 0;
   // pkg (แพ็คเกจจิ้ง) นับเป็นชิ้น ไม่ใช่หมวดวัตถุดิบ (ชั่งน้ำหนัก) — ใช้ _bomFmtQty แบบผันแปรเหมือน FG
   const scFmt = (type === 'fg' || type === 'pkg') ? _bomFmtQty : _rmFmtQty;
+  _scRawEntries = entries; _scRawUnit = unit; _scRawFmt = scFmt;
+  // เติมตัวเลือก Lot จากล็อตที่พบจริงทั้งหมดของรายการนี้ (ผู้ใช้ขอ 2026-10-06 "เลือกดูแบบแยกล็อตได้") — แยก
+  // สตริงรวม "lot1, lot2" ของแถวที่ตัดหลายล็อตออกเป็นรายตัวด้วย คงค่าที่เคยเลือกไว้ถ้ายังมีอยู่จริงในล็อตชุดใหม่
+  // (สลับ type/item จะรีเซ็ตกลับ "ทุกล็อต" เพราะล็อตเป็นของคนละรายการกัน ไม่มีทางตรงกันโดยบังเอิญ)
+  const prevLot = lotSel.value;
+  const lots = [...new Set(entries.flatMap(e => (e.lot || '').split(',').map(s => s.trim()).filter(l => l && l !== '-')))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  lotSel.innerHTML = '<option value="">ทุกล็อต (รวม)</option>' + lots.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  lotSel.value = lots.includes(prevLot) ? prevLot : '';
+  _scRenderTable();
+}
+// ยอดของแถวนี้ที่มาจากล็อตที่เลือกเป๊ะๆ — ถ้ามี alloc (LotAlloc/SourceAlloc ที่ FEFO ตัดได้หลายล็อตต่อแถว) แยก
+// เป็นยอดต่อล็อตได้ตรงจริงจากตัวเลขที่เก็บไว้ในนั้น ถ้าไม่มี alloc (รับเข้า/รับกลับจากเตรียม เป็นล็อตเดียวเสมอ
+// อยู่แล้ว) ใช้ยอดเต็มแถวแทนได้เลย — ยกเว้นของเสียบางแถวที่สืบย้อน Lot มาจากรายการเบิกต้นทางที่ตัดหลายล็อต (ของ
+// เสียเองไม่มีสัดส่วนต่อล็อตเก็บไว้จริง เป็น known gap) กรณีนั้นยังโชว์ยอดเต็มแถวซ้ำได้ทุกล็อตที่เกี่ยวข้อง
+function _scQtyForLot(e, lot) {
+  if (Array.isArray(e.alloc) && e.alloc.length) {
+    return e.alloc.filter(a => a.lot === lot).reduce((s, a) => s + (parseFloat(a.qty) || 0), 0);
+  }
+  return (e.lot || '').split(',').map(s => s.trim()).includes(lot) ? (e.in || e.out || 0) : 0;
+}
+function _scFilteredEntries(lot) {
+  if (!lot) return _scRawEntries;
+  return _scRawEntries.map(e => {
+    const q = _scQtyForLot(e, lot);
+    return q > 1e-9 ? { ...e, in: e.in ? q : 0, out: e.out ? q : 0, lot } : null;
+  }).filter(Boolean);
+}
+// วาดตารางจริง (ตามตัวกรอง Lot ปัจจุบัน) — แยกจาก stockCardRender เพื่อสลับตัวกรอง Lot ได้ทันทีโดยไม่ต้องยิง
+// query DB ใหม่ทุกครั้ง (_scRawEntries โหลดไว้ครั้งเดียวต่อ type/item ที่เลือก)
+function _scRenderTable() {
+  const tbody = document.getElementById('stockCardTableBody');
+  const lot = document.getElementById('scLot').value;
+  const entries = _scFilteredEntries(lot);
+  const unit = _scRawUnit, scFmt = _scRawFmt;
+  _scLastRows = [];
+  _scLastLabel = _scRawLabel + (lot ? ` · Lot ${lot}` : '');
+  let balance = 0;
   // หน้าตาตารางพอร์ตมาจาก ProFlow's หน้า "การ์ดสต็อก" ตามที่ผู้ใช้ขอ 2026-10-03 (ส่งสกรีนช็อตมาเทียบ):
   // ประเภท = badge รับเข้า/จ่ายออก สีเขียว/แดง, Lot เป็น badge pill, คอลัมน์ UOM แยกจากตัวเลข,
   // "อ้างอิง/ที่มา" (เดิมคือ "รายการ") ย้ายไปท้ายสุดเป็นตัวหนังสือจางๆ แทนที่จะอยู่คอลัมน์ที่ 2
