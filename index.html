@@ -258,7 +258,9 @@ img.emp-avatar { cursor: zoom-in; }
 .rrpt-lock { position: absolute; inset: 0; background: rgba(30,41,59,.7); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; text-align: center; padding: 20px; }
 .rrpt-lock .box { border: 1px dashed rgba(255,255,255,.45); border-radius: 14px; padding: 22px 30px; background: rgba(255,255,255,.08); }
 .rrpt-page { font-family: 'Sarabun', sans-serif; font-size: 12px; color: #1e293b; width: 297mm; min-height: 210mm; box-sizing: border-box; padding: 12mm;
-  background: #fff; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,.4); display: flex; flex-direction: column; }
+  background: #fff; margin: 0 auto 16px; box-shadow: 0 2px 10px rgba(0,0,0,.4); display: flex; flex-direction: column; page-break-after: always; }
+.rrpt-page:last-child { page-break-after: auto; margin-bottom: 0; }
+.rrpt-copytag { display: inline-block; font-size: 11px; font-weight: 700; color: var(--primary-blue); border: 1px solid var(--primary-blue); border-radius: 4px; padding: 0 9px; margin-left: 8px; vertical-align: middle; }
 .rrpt-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary-blue); padding-bottom: 10px; margin-bottom: 12px; }
 .rrpt-head img { height: 52px; width: auto; }
 .rrpt-company { font-size: 11px; color: #64748b; line-height: 1.5; }
@@ -284,10 +286,10 @@ table.rrpt-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 table.rrpt-table .qty { font-weight: 800; font-size: 13px; color: var(--primary-blue); }
 table.rrpt-table.sum th { background: #334155; }
 table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff; font-weight: 800; font-size: 11.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.rrpt-sum-title { font-size: 13px; font-weight: 800; color: var(--primary-blue); margin: 16px 0 6px; }
-.rrpt-foot { display: flex; justify-content: space-between; margin-top: auto; padding-top: 26px; font-size: 11px; color: #64748b; }
+.rrpt-sum-title { font-size: 13px; font-weight: 800; color: var(--primary-blue); margin: 10px 0 5px; }
+.rrpt-foot { display: flex; justify-content: space-between; margin-top: auto; padding-top: 14px; font-size: 11px; color: #64748b; }
 .rrpt-sign { text-align: center; width: 30%; }
-.rrpt-sign .line { border-top: 1px solid #94a3b8; margin-top: 34px; padding-top: 4px; color: #1e293b; font-weight: 600; }
+.rrpt-sign .line { border-top: 1px solid #94a3b8; margin-top: 22px; padding-top: 4px; color: #1e293b; font-weight: 600; }
 .rrpt-sign .line .th { font-size: 9.5px; color: #94a3b8; font-weight: 400; }
 .rrpt-sign .date { font-size: 10px; margin-top: 8px; }
 .rrpt-title-th { font-size: 11px; color: #64748b; text-align: right; }
@@ -527,6 +529,8 @@ table.scp-table thead { display: table-header-group; }
 table.scp-table th { background: var(--primary-blue); color: #fff; padding: 4px 6px; text-align: left; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 table.scp-table td { padding: 3px 6px; border-bottom: 1px solid #e2e8f0; }
 table.scp-table td.num { text-align: right; }
+table.scp-table td.num.in { color: #15803d; font-weight: 700; }
+table.scp-table td.num.out { color: #dc2626; font-weight: 700; }
 table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .scp-foot { margin-top: 12px; font-size: 11px; color: #64748b; text-align: right; }
 @media print {
@@ -4855,6 +4859,12 @@ const EDIT_TYPES = {
   // manufacturing_orders (sentinel บน Status) ตัวนี้ลงทะเบียนไว้แค่ให้ _editRecCache/_editRecLabel แสดงผล
   // ในหน้า "คำขอแก้ไข" ถูกต้อง ไม่มี form/fields เพราะไม่ได้ใช้ฟอร์มอัตโนมัติ erq-fields
   issue_date_bulk: { label: 'วันที่เบิก (ทั้ง MO)', icon: 'fa-calendar-days', table: 'manufacturing_orders', pk: 'MO_ID' },
+  // แก้ "เบิกตั้งต้น" (ใช้จริง) จากตาราง "วัตถุดิบที่ใช้จริง" ในหน้า "แก้ไขบันทึกผลิต" (ผู้ใช้ขอ 2026-10-06
+  // "ทำไมไม่ขึ้นคำขอแก้ไข") — ใช้ widget ของตัวเอง (_rmUse*) ไม่ใช่ฟอร์มอัตโนมัติ erq-fields จึงไม่มี form/fields
+  // เหมือน issue_lot/issue_date_bulk ลงทะเบียนไว้แค่ให้ _editRecCache/_editRecLabel/_rcvEditDiffHtml แสดงผล
+  // ถูกต้องในหน้า "คำขอแก้ไข" — คนละ type กับ 'issue_production'/'issue_lot' แม้ผูกกับ QtyIssued เหมือนกัน
+  // เพราะ apply function คนละตัว (เรียก issue_qty_correct() ตรงๆ ไม่ใช่ FEFO คืน/ตัดแบบ _edit_apply_issue_production)
+  issue_qty_correct: { label: 'เบิกตั้งต้น (ใช้จริง)', icon: 'fa-sliders', table: 'issue_production', pk: 'Issue_ID' },
 };
 const EDIT_NUM_FIELDS = ['Qty', 'QtyIssued', 'QtyProduced', 'UnitPrice', 'QtyBack'];
 const RCV_EDIT_STATUS_BADGE = { 'รออนุมัติ': 'warning', 'อนุมัติแล้ว': 'success', 'ไม่อนุมัติ': 'danger', 'ยกเลิก': 'secondary',
@@ -4941,6 +4951,10 @@ function _rcvEditDiffHtml(changes, type = 'rm_receive') {
   if (type === 'issue_date_bulk') {
     return `<div class="small"><i class="fa-solid fa-calendar-days me-1"></i>ขอเปลี่ยนวันที่เบิกของทุกวัตถุดิบใน MO นี้เป็น <b>${fmtDateLong(changes?.NewIssueDate?.[1])}</b></div>`;
   }
+  if (type === 'issue_qty_correct') {
+    return `<div class="small"><i class="fa-solid fa-sliders me-1"></i>ขอแก้ "เบิกตั้งต้น" เป็น <b>${_rmFmtQty(changes?.QtyIssued?.[1])}</b>
+      <span class="text-muted">(เดิม ${_rmFmtQty(changes?.QtyIssued?.[0])})</span></div>`;
+  }
   const labels = EDIT_TYPES[type]?.fields || {};
   return Object.entries(changes || {}).map(([f, [from, to]]) =>
     `<div class="small"><b>${esc(labels[f] || f)}:</b> <span class="text-danger text-decoration-line-through">${_rcvEditFmtVal(f, from)}</span>
@@ -4953,7 +4967,7 @@ function _editRecLabel(type, rec) {
   const fg = id => _fgMasterCache.find(f => f.FG_ID === id)?.FG_Name || id;
   switch (type) {
     case 'rm_receive': return [rm(rec.RM_ID), `รับ ${fmtDateLong(rec.ReceiveDate)} · ${_qtyFmtByCat(rec.Qty, _rmMasterCache.find(r => r.RM_ID === rec.RM_ID)?.Category)} ${rec.Unit || ''} · ${rec.Lot || '-'}`];
-    case 'issue_production': return [rm(rec.RM_ID), `${rec.MO_ID} · เบิก ${_qtyFmtByCat(rec.QtyIssued, _rmMasterCache.find(r => r.RM_ID === rec.RM_ID)?.Category)} ${rec.Unit || ''} · ${fmtDateLong(rec.IssueDate)}`];
+    case 'issue_production': case 'issue_qty_correct': return [rm(rec.RM_ID), `${rec.MO_ID} · เบิก ${_qtyFmtByCat(rec.QtyIssued, _rmMasterCache.find(r => r.RM_ID === rec.RM_ID)?.Category)} ${rec.Unit || ''} · ${fmtDateLong(rec.IssueDate)}`];
     case 'production_records': return [fg(rec.FG_ID), `${rec.ProdLot} · ${_bomFmtQty(rec.QtyProduced)} · ผลิต ${fmtDateLong(rec.MfgDate)}`];
     case 'fg_receive': case 'fg_receive_delete': return [fg(rec.FG_ID), `${rec.Lot} · ${_bomFmtQty(rec.Qty)} · รับ ${fmtDateLong(rec.ReceiveDate)}`];
     case 'waste_log': return [rec.ItemType === 'FG' ? fg(rec.FG_ID) : rm(rec.RM_ID), `${rec.ItemType === 'FG' ? _bomFmtQty(rec.Qty) : _qtyFmtByCat(rec.Qty, _rmMasterCache.find(r => r.RM_ID === rec.RM_ID)?.Category)} ${rec.Unit || ''} · ${rec.Reason || ''} · ${fmtDateLong(rec.WasteDate)}`];
@@ -5127,8 +5141,10 @@ async function editReqSubmit() {
   }
   if (all.ExpDate && all.MfgDate && all.ExpDate < all.MfgDate) { _modalShowError('erq-f-ExpDate', 'วันหมดอายุต้องไม่ก่อนวันผลิต'); return; }
   // วัตถุดิบที่ใช้จริง (เฉพาะ production_records) — ตรวจ + เตรียมไว้ก่อน เผื่อผู้ใช้แก้แค่ตรงนี้อย่างเดียว
-  // โดยไม่แตะฟิลด์ปกติเลย จะได้ไม่โดนบล็อกด้วย "ไม่มีช่องไหนเปลี่ยน" ด้านล่าง — ส่วนนี้มีผลทันทีเสมอ ไม่ผ่าน
-  // คำขอแก้ไข (เหมือน prodRecordModalSave) ไม่ว่าฟิลด์ปกติจะต้องรออนุมัติหรือไม่ก็ตาม
+  // โดยไม่แตะฟิลด์ปกติเลย จะได้ไม่โดนบล็อกด้วย "ไม่มีช่องไหนเปลี่ยน" ด้านล่าง — ผ่านคำขอแก้ไข (type
+  // 'issue_qty_correct') เหมือนฟิลด์ปกติอื่นในฟอร์มเดียวกัน ไม่ใช่มีผลทันทีตรงๆ แบบ prodRecordModalSave อีก
+  // ต่อไป (ผู้ใช้ขอ 2026-10-06 "ทำไมไม่ขึ้นคำขอแก้ไข เลขมันเปลี่ยนไปเลย เวลาหัวหน้ากด ต้องมาที่แอดมิน" —
+  // ยืนยันขอบเขตแล้ว: แอดมินมีผลทันที Role อื่นต้องรออนุมัติ)
   let rmCorrections = [];
   if (type === 'production_records') {
     rmCorrections = _rmUseReadCorrections('erq');
@@ -5139,14 +5155,19 @@ async function editReqSubmit() {
   const rmChangedCount = rmCorrections.filter(c => Math.abs(c.actual - c.original) > 1e-9).length;
   const p_new = _editChanged(row, all);
   if (!Object.keys(p_new).length && !rmChangedCount) { Swal.fire('ไม่มีช่องไหนเปลี่ยน', 'แก้ข้อมูลช่องที่ผิดก่อนกดส่ง', 'info'); return; }
-  if (Object.keys(p_new).length) {
-    const reason = document.getElementById('erq-reason').value.trim();
+  // เหตุผลใช้ร่วมกันทั้งฟิลด์ปกติและ "เบิกตั้งต้น" (ช่องเดียว ไม่ต้องกรอกซ้ำ) — บังคับกรอกถ้ามีอะไรเปลี่ยนเลย
+  // ไม่ว่าจะเป็นฟิลด์ปกติหรือ "เบิกตั้งต้น" อย่างใดอย่างหนึ่งก็ตาม
+  let reason = '';
+  if (Object.keys(p_new).length || rmChangedCount) {
+    reason = document.getElementById('erq-reason').value.trim();
     if (!reason) { _modalShowError('erq-reason', 'ระบุเหตุผลที่ขอแก้ไข ให้แอดมินใช้ประกอบการอนุมัติ'); return; }
+  }
+  if (Object.keys(p_new).length) {
     if (!(await _editSubmitRequest(type, id, p_new, reason))) return;
   }
   if (rmChangedCount) {
-    const failedMsgs = await _rmUseApplyCorrections(rmCorrections);
-    if (failedMsgs.length) Swal.fire('ปรับจำนวนวัตถุดิบบางรายการไม่สำเร็จ', failedMsgs.join('<br>'), 'warning');
+    const failedMsgs = await _rmUseSubmitCorrections(rmCorrections, reason);
+    if (failedMsgs.length) Swal.fire('ส่งคำขอแก้ไขจำนวนวัตถุดิบบางรายการไม่สำเร็จ', failedMsgs.join('<br>'), 'warning');
   }
   bootstrap.Modal.getInstance(document.getElementById('editReqModal')).hide();
   _stockRmCache = []; _stockFgCache = []; _rmLotCache = [];
@@ -5587,7 +5608,14 @@ function _fmtDateEn(s) {
   const [y, m, d] = String(s).slice(0, 10).split('-').map(Number);
   return `${String(d).padStart(2, '0')} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
 }
+// พิมพ์เป็น 2 ชุด ต้นฉบับ+สำเนา (ผู้ใช้ขอ 2026-10-07) — คนละแนวกับ reqo/genwd (หน้าเดียวแบ่งครึ่ง/2 หน้าเต็ม
+// ตายตัว) เพราะใบนี้แนวนอน รายการอาจยาวล้นมากกว่า 1 หน้าได้เอง (page-break-inside:avoid ต่อแถวอยู่แล้ว) —
+// ให้แต่ละชุดไหลข้ามหน้าได้เองตามจำนวนรายการจริง แล้วค่อยขึ้นชุดถัดไปด้วย page-break-after:always บน .rrpt-page
+// (ไม่ใช่ fixed "1 หน้าต่อชุด" แบบ dlvbill/genwd) — เรียก _rrptPageHtml(copyLabel) 2 ครั้งต่อกัน
 function _rrptHtml() {
+  return _rrptPageHtml('ต้นฉบับ / Original') + _rrptPageHtml('สำเนา / Copy');
+}
+function _rrptPageHtml(copyLabel) {
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
   const catOf = r => rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
   const rows = [..._rrpt.rows].sort((a, b) =>
@@ -5624,10 +5652,10 @@ function _rrptHtml() {
     <div class="rrpt-head">
       <div class="d-flex align-items-center gap-3">
         <img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
-        <div class="rrpt-company"><b>Blooming Company Limited</b><br>BLM Herbal — Raw Material Warehouse</div>
+        <div class="rrpt-company"><b>Blooming Company Limited</b><br>BLM Herbal — Raw Material Warehouse<br>คลัง 10 (คลังผลิตชั้น 3)</div>
       </div>
       <div>
-        <div class="rrpt-title">GOODS RECEIVING REPORT</div>
+        <div class="rrpt-title">GOODS RECEIVING REPORT<span class="rrpt-copytag">${esc(copyLabel)}</span></div>
         <div class="rrpt-title-th">รายงานรับวัตถุดิบ / แพ็คเกจจิ้ง</div>
         <div class="rrpt-no">RC No: ${_rrpt.confirmed ? esc(_rrpt.rcNo) : '(Not confirmed)'}</div>
         <div class="rrpt-meta">Printed ${_fmtDateEn(todayStr())} ${now.toTimeString().slice(0, 5)} · by ${esc(_currentUser?.name || _currentUser?.email || '-')}</div>
@@ -5636,13 +5664,14 @@ function _rrptHtml() {
     <div class="rrpt-filters">
       <div><span class="lbl">Receiving Date</span><span class="val">${_fmtDateEn(date)}</span></div>
       <div><span class="lbl">Supplier</span><span class="val">${esc(!_rrpt.supplier ? 'All' : _rrpt.supplier === RRPT_NO_SUPPLIER ? 'Not specified' : _rrpt.supplier)}</span></div>
+      <div><span class="lbl">Warehouse</span><span class="val">คลัง 10 (คลังผลิตชั้น 3)</span></div>
       <span class="minor">Items: <b>${rows.length}</b></span>
     </div>
     ${rows.length ? `
     <table class="rrpt-table">
-      <thead><tr><th style="width:3%">No.</th><th style="width:6%">Code</th><th style="width:26%">Description</th><th style="width:7%">Category</th>
+      <thead><tr><th style="width:3%">No.</th><th style="width:6%">Code</th><th style="width:23%">Description</th><th style="width:7%">Category</th>
         ${showSup ? '<th style="width:8%">Supplier</th>' : ''}<th style="width:8%">Lot No.</th><th style="width:8%">Mfg. Date</th><th style="width:8%">Exp. Date</th>
-        <th class="num" style="width:6%">Qty</th><th style="width:4%">Unit</th><th class="num" style="width:7%">Unit Price</th><th>Remarks</th></tr></thead>
+        <th class="num" style="width:9%">Qty</th><th style="width:4%">Unit</th><th class="num" style="width:7%">Unit Price</th><th>Remarks</th></tr></thead>
       <tbody>${trs}</tbody>
     </table>
     <div class="rrpt-sum-title">Summary by Item</div>
@@ -7939,15 +7968,38 @@ function _rmUseReadCorrections(prefix) {
     actual: parseFloat(tr.querySelector(`.${prefix}-rm-qty`).value),
   }));
 }
-// ปรับ QtyIssued + สต็อกจริงทันทีเฉพาะแถวที่ค่าเปลี่ยน ผ่าน issue_qty_correct (ไม่ผ่านคำขอแก้ไข — มีผลทันที
-// เสมอทุกสิทธิ์ ตามที่ผู้ใช้ยืนยัน 2026-10-04 ไม่ว่าจะเรียกจากบันทึกผลิตใหม่หรือแก้ไขของเดิมก็ตาม) คืนรายการ
-// ข้อความ error ของแถวที่ล้มเหลว (ว่าง = สำเร็จหมด/ไม่มีอะไรต้องแก้)
+// ปรับ QtyIssued + สต็อกจริงทันทีเฉพาะแถวที่ค่าเปลี่ยน ผ่าน issue_qty_correct ตรงๆ (ไม่ผ่านคำขอแก้ไข) — ใช้
+// เฉพาะตอน "บันทึกผลิตใหม่" (prodRecordModalSave) เท่านั้น ตามที่ผู้ใช้ยืนยัน 2026-10-04 ว่าเป็นการบันทึกครั้ง
+// แรก มีผลทันทีทุกสิทธิ์ได้ — **ต่างจาก** _rmUseSubmitCorrections ด้านล่าง ที่ใช้ตอน "แก้ไขบันทึกผลิตของเดิม"
+// (editReqSubmit) ซึ่งต้องผ่านคำขอแก้ไขแล้ว (ผู้ใช้ขอ 2026-10-06 ให้สอดคล้องกับฟิลด์อื่นในฟอร์มเดียวกัน) คืน
+// รายการข้อความ error ของแถวที่ล้มเหลว (ว่าง = สำเร็จหมด/ไม่มีอะไรต้องแก้)
 async function _rmUseApplyCorrections(corrections) {
   const changed = corrections.filter(c => Math.abs(c.actual - c.original) > 1e-9);
   if (!changed.length) return [];
   const results = await Promise.all(changed.map(c => _sb.rpc('issue_qty_correct', { p_issue_id: c.issueId, p_new_qty: c.actual })));
   _stockRmCache = []; _rmLotCache = [];
   return changed.map((c, i) => results[i].error ? `${esc(c.issueId)}: ${esc(results[i].error.message)}` : null).filter(Boolean);
+}
+// เวอร์ชัน "แก้ไขบันทึกผลิตของเดิม" — ส่งเป็นคำขอแก้ไข (type 'issue_qty_correct') แทนการเรียก issue_qty_correct
+// ตรงๆ (ผู้ใช้ขอ 2026-10-06 "ทำไมไม่ขึ้นคำขอแก้ไข เลขมันเปลี่ยนไปเลย เวลาหัวหน้ากด ต้องมาที่แอดมิน") แอดมิน
+// ยังมีผลทันทีเหมือนเดิม (auto-approve ทันทีหลังสร้างคำขอ — แพทเทิร์นเดียวกับ _editSubmitRequest ที่ฟิลด์อื่น
+// ในฟอร์มเดียวกันใช้อยู่แล้ว) Role อื่นสร้างคำขอค้างไว้ที่หน้า "คำขอแก้ไข" ให้แอดมินอนุมัติทีหลัง ใช้เหตุผล
+// เดียวกับที่กรอกใน "เหตุผลที่ขอแก้ไข" ของฟอร์มนี้ (ไม่มีช่องเหตุผลแยกต่างหากให้กรอกซ้ำ)
+async function _rmUseSubmitCorrections(corrections, reason) {
+  const changed = corrections.filter(c => Math.abs(c.actual - c.original) > 1e-9);
+  if (!changed.length) return [];
+  const isAdmin = _hasRole('admin');
+  const results = await Promise.all(changed.map(async c => {
+    const { data: reqId, error } = await _sb.rpc('edit_request_create', { p_type: 'issue_qty_correct', p_record_id: c.issueId, p_new: { QtyIssued: c.actual }, p_reason: reason });
+    if (error) return `${esc(c.issueId)}: ${esc(error.message)}`;
+    if (isAdmin) {
+      const { error: apErr } = await _sb.rpc('edit_request_approve', { p_req_id: reqId, p_note: 'แอดมินแก้ไขเอง' });
+      if (apErr) return `${esc(c.issueId)}: ${esc(apErr.message)}`;
+    }
+    return null;
+  }));
+  _stockRmCache = []; _rmLotCache = [];
+  return results.filter(Boolean);
 }
 async function prodRecordModalSave() {
   _modalClearErrors(['pr-qty-gross', 'pr-qty', 'pr-lot']);
@@ -9073,8 +9125,8 @@ function _scPrintHtml(fromMonth, toMonth) {
   const fmt = _scLastFmt;
   const trs = rows.map(e => `<tr>
     <td>${fmtDate(e.date)}</td><td>${badge(e.in ? 'รับเข้า' : 'จ่ายออก', e.in ? 'success' : 'danger')}</td>
-    <td>${esc(e.ref)}</td><td>${esc(e.lot)}</td>
-    <td class="num">${e.in ? fmt(e.in) : ''}</td><td class="num">${e.out ? fmt(e.out) : ''}</td>
+    <td>${esc(e.lot)}</td>
+    <td class="num in">${e.in ? fmt(e.in) : ''}</td><td class="num out">${e.out ? fmt(e.out) : ''}</td>
     <td class="num"><b>${fmt(e.balance)}</b></td><td>${esc(_scLastUnit)}</td><td>${esc(e.label)}</td>
   </tr>`).join('');
   const now = new Date();
@@ -9093,12 +9145,13 @@ function _scPrintHtml(fromMonth, toMonth) {
     <div class="scp-filters">
       <div><span class="lbl">รายการ</span><span class="val">${esc(_scLastLabel)}</span></div>
       <div><span class="lbl">ช่วงเวลา</span><span class="val">${esc(_scMonthLabel(fromMonth))} – ${esc(_scMonthLabel(toMonth))}</span></div>
+      <div><span class="lbl">คลัง</span><span class="val">คลัง 10 (คลังผลิตชั้น 3)</span></div>
     </div>
     <table class="scp-table">
-      <thead><tr><th>วันที่</th><th>ประเภท</th><th>เลขที่เอกสาร</th><th>Lot</th><th class="num">รับเข้า</th><th class="num">จ่ายออก</th><th class="num">คงเหลือสะสม</th><th>UOM</th><th>อ้างอิง/ที่มา</th></tr></thead>
+      <thead><tr><th>วันที่</th><th>ประเภท</th><th>Lot</th><th class="num">รับเข้า</th><th class="num">จ่ายออก</th><th class="num">คงเหลือสะสม</th><th>UOM</th><th>อ้างอิง/ที่มา</th></tr></thead>
       <tbody>
-        <tr class="scp-open"><td colspan="6">ยอดยกมาต้นงวด</td><td class="num">${fmt(openBalance)}</td><td>${esc(_scLastUnit)}</td><td></td></tr>
-        ${trs || '<tr><td colspan="9" class="text-center text-muted py-3">ไม่มีรายการเคลื่อนไหวในช่วงที่เลือก</td></tr>'}
+        <tr class="scp-open"><td colspan="5">ยอดยกมาต้นงวด</td><td class="num">${fmt(openBalance)}</td><td>${esc(_scLastUnit)}</td><td></td></tr>
+        ${trs || '<tr><td colspan="8" class="text-center text-muted py-3">ไม่มีรายการเคลื่อนไหวในช่วงที่เลือก</td></tr>'}
       </tbody>
     </table>
     <div class="scp-foot">ยอดคงเหลือสิ้นงวด: <b>${fmt(closeBalance)}</b> ${esc(_scLastUnit)}</div>
