@@ -9023,7 +9023,13 @@ async function stockCardRender() {
       // ต่อท้าย "เบิกเข้าไลน์ผลิต" ด้วย Lot ของ MO ที่เบิกไป (= FG Lot ที่จะออกมาในที่สุด ดู MO.Lot) ให้ตามรอยได้
       // ว่าวัตถุดิบล็อตนี้ถูกเบิกไปทำสินค้าล็อตไหน (ผู้ใช้ขอ 2026-10-05 "เบิกเป็น FG Lot ไหน ใส่ด้วย")
       ...(iss||[]).map(r => ({ date: r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (_planCache.find(p => p.MO_ID === r.MO_ID)?.Lot ? ` → FG Lot ${_planCache.find(p => p.MO_ID === r.MO_ID).Lot}` : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), alloc: r.LotAlloc, in: 0, out: r.QtyIssued })),
-      ...(waste||[]).map(r => {
+      // ของเสียที่เกิดจากแก้ "เบิกตั้งต้น" ลดจำนวน (StockAdjusted=false — ดู migration_2026-10-05_
+      // issue_correct_to_waste.sql) ตัดออกจากการ์ดสต็อกไปเลย (ผู้ใช้ขอ 2026-10-07 รอบสอง "จะงง" — รอบแรกลอง
+      // โชว์เป็นแถว "หมายเหตุ" ไม่กระทบยอดแล้ว แต่ยังรกตาอยู่ดี) ยอดนี้ไม่ใช่การตัดสต็อกจริง (ของถูกตัดเต็ม
+      // จำนวนไปแล้วตั้งแต่ตอนเบิกเข้าไลน์ผลิต นับอยู่ในแถว "เบิกเข้าไลน์ผลิต" ข้างบนนี้แล้ว) ยอดจริงไปดูที่หน้า
+      // "สต็อกของเสีย" โดยตรง — ของเสียจริงที่ตัดสต็อกจริง (StockAdjusted=true/ไม่มีคอลัมน์นี้ยัง) ยังโชว์เป็น
+      // แถว "จ่ายออก" ปกติเหมือนเดิมทุกประการ ไม่ได้ตัดออก
+      ...(waste||[]).filter(r => r.StockAdjusted !== false).map(r => {
         const refId = _wasteRefIssueId(r.Reason);
         const srcIssue = refId ? (iss || []).find(i => i.Issue_ID === refId) : null;
         const lot = r.Lot || (srcIssue ? _scAllocLots(srcIssue.LotAlloc) : null) || (refId && auditLotById[refId]) || '-';
