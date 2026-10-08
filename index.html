@@ -8052,7 +8052,10 @@ function _rmUsePackagingRecalc(prefix, grossQty) {
     const scrapPct = parseFloat(tr.dataset.scrap) || 0;
     const input = tr.querySelector(`.${prefix}-rm-qty`);
     if (!input) return;
-    input.value = Math.round((perUnit * grossQty / (1 - scrapPct / 100)) * 10000) / 10000;
+    // แพ็คเกจจิ้งปัดเป็นจำนวนเต็มเสมอ (ผู้ใช้ขอ 2026-10-08 "ไม่มีทศนิยม" — ของจริงแบ่งเศษซอง/เศษกล่องไม่ได้)
+    // ใช้ _issgenRound ตัวเดียวกับที่หน้า "เบิกเบ็ดเตล็ด" ใช้ปัดแพ็คเกจจิ้งอยู่แล้ว (Math.round ธรรมดา ไม่ใช่
+    // ceil) ให้กติกาปัดเลขของแพ็คเกจจิ้งเหมือนกันทั้งแอป ไม่ใช่คิดกฎใหม่เฉพาะจุดนี้
+    input.value = _issgenRound(perUnit * grossQty / (1 - scrapPct / 100), CAT_PKG);
   });
   _rmUseRecalc(prefix);
 }
