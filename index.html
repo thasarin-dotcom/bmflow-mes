@@ -461,11 +461,16 @@ table.ihist-table .ihist-unit { color: #64748b; font-weight: 400; }
 .prp-highlight > div { flex: 1; }
 .prp-highlight .lbl { display: block; font-size: 8.5px; color: #64748b; font-weight: 700; }
 .prp-highlight b { font-size: 14px; color: var(--primary-blue); }
-.prp-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 18px; margin-bottom: 10px; font-size: 10.5px; }
+.prp-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px 14px; margin-bottom: 8px; font-size: 10.5px; line-height: 1.3; }
 .prp-meta .lbl { color: #64748b; font-weight: 700; margin-right: 4px; }
-table.prp-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 6px; }
-table.prp-table th { background: var(--primary-blue); color: #fff; padding: 4px; text-align: center; font-weight: 700; font-size: 9.5px; }
-table.prp-table td { padding: 4px 5px; border: 1px solid #e2e8f0; text-align: center; vertical-align: middle; }
+.prp-meta .prp-emph { color: var(--primary-blue); font-size: 12px; }
+/* table-layout:fixed บังคับให้ความกว้างคอลัมน์ตาม % ที่ตั้งไว้จริงๆ (เหมือน .rrpt-table — ไม่งั้น browser
+   auto layout จะยืดคอลัมน์ "วัตถุดิบ"/"ล็อตที่ตัด" ตามเนื้อหายาวสุดเอง ไม่สนใจ width ที่ตั้งไว้) คู่กับ
+   overflow-wrap ให้ข้อความยาว (เช่น ล็อตที่ตัดหลายล็อต) ตัดคำลงบรรทัดใหม่แทนการดันตารางกว้างขึ้น (ผู้ใช้ขอ
+   2026-10-08 "ยอคอลัมน์วัตถุดิบลง ให้ล็อตที่ตัดขยายได้ ตัวหนังสือไม่ขาด") */
+table.prp-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 6px; table-layout: fixed; }
+table.prp-table th { background: var(--primary-blue); color: #fff; padding: 4px; text-align: center; font-weight: 700; font-size: 9.5px; overflow-wrap: break-word; }
+table.prp-table td { padding: 4px 5px; border: 1px solid #e2e8f0; text-align: center; vertical-align: middle; overflow-wrap: break-word; }
 table.prp-table td.prp-item { text-align: left; }
 table.prp-table .prp-qty-num { font-weight: 700; color: var(--primary-blue); }
 table.prp-table .prp-unit { color: #64748b; font-weight: 400; }
@@ -7895,23 +7900,46 @@ async function prodRecordLoad() {
     <td class="text-nowrap">${_editBtn('production_records', h.Prod_ID)}<button class="btn btn-sm btn-outline-secondary" onclick="prodRecordPrint('${h.Prod_ID}')" title="พิมพ์ใบบันทึกผลิต (ส่งบัญชี)"><i class="fa-solid fa-print"></i></button><button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
     || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
 }
-// ใบบันทึกผลิต (prp) — 1 ใบต่อ 1 Prod_ID ไว้ส่งบัญชีบันทึกข้อมูล (2026-10-08) — เหมือน issueHistPrint ทุก
-// ประการ (A4 เต็มแผ่นแบ่งครึ่ง ต้นฉบับ/สำเนา, พิมพ์ตรงทันทีไม่มีตัวอย่างก่อนเพราะเป็นแค่สรุปข้อมูลที่มีอยู่แล้ว)
-// ต่างแค่สรุปฝั่ง "ผลิตได้เท่าไหร่" (output) ไม่ใช่ฝั่งเบิกวัตถุดิบที่ ihist สรุปอยู่แล้ว — query fg_receive
-// สดตอนกดพิมพ์เหมือน ihist เพื่อโชว์สถานะ "รับเข้าคลังแล้วหรือยัง" (รับได้หลายครั้งสะสม ดู fg_receive partial)
+// ใบบันทึกผลิต (prp) — ไว้ส่งบัญชีบันทึกข้อมูล (2026-10-08) — เหมือน issueHistPrint ทุกประการ (A4 เต็มแผ่น
+// แบ่งครึ่ง ต้นฉบับ/สำเนา, พิมพ์ตรงทันทีไม่มีตัวอย่างก่อนเพราะเป็นแค่สรุปข้อมูลที่มีอยู่แล้ว) ต่างแค่สรุปฝั่ง
+// "ผลิตได้เท่าไหร่" (output) ไม่ใช่ฝั่งเบิกวัตถุดิบที่ ihist สรุปอยู่แล้ว — query fg_receive สดตอนกดพิมพ์เหมือน
+// ihist เพื่อโชว์สถานะ "รับเข้าคลังแล้วหรือยัง"
+//
+// "ปริ้นตาม Lot" (ผู้ใช้ขอ 2026-10-08): ผลิต Lot เดียวกันอาจบันทึกผลิตแยกหลายใบ/หลาย MO ได้ (เช่น ผลิตคนละวัน)
+// — กดปริ้นจากแถวไหนในประวัติก็ได้ ระบบหาแถวอื่นที่ Lot เดียวกัน (+ สินค้าเดียวกัน กันชื่อ Lot ชนกันข้ามสินค้า)
+// มารวมเป็นใบเดียวให้อัตโนมัติ (ไม่มีตัวเลือก Lot แยกต่างหาก) ยืนยันแล้ว: รวมยอดผลิต/เสีย/ได้ทั้งหมด, วันผลิต
+// ใช้วันแรกสุด, วันรับเข้าคลัง FG ใช้วันสุดท้ายสุด, ตารางวัตถุดิบรวมยอดตามรหัส (ไม่แยกตาม MO) แม้มาจากคนละ MO
 async function prodRecordPrint(id) {
-  const h = (window._prodRecordCache || []).find(x => x.Prod_ID === id);
-  if (!h) return;
+  const base = (window._prodRecordCache || []).find(x => x.Prod_ID === id);
+  if (!base) return;
   if (!_rmMasterCache.length) await rmMasterLoad();
-  const fg = _fgMasterCache.find(f => f.FG_ID === h.FG_ID);
-  // รายการวัตถุดิบที่เบิกไปของ MO นี้ (ผู้ใช้ขอ 2026-10-08 "ไม่เห็นมีรายการของที่เบิกเลย" — รอบแรกทำแค่ฝั่ง
-  // ผลผลิตออก ลืมฝั่งเบิกวัตถุดิบเข้าไปด้วย) ใช้ตรรกะเดียวกับ issueHistPrint/_issueHistHalfHTML ทุกประการ
-  const [fgRecv, iss] = await Promise.all([
-    sbRun(_sb.from('fg_receive').select('*').eq('Prod_ID', id), 'โหลดข้อมูลพิมพ์ไม่สำเร็จ'),
-    sbRun(_sb.from('issue_production').select('*').eq('MO_ID', h.MO_ID), 'โหลดข้อมูลพิมพ์ไม่สำเร็จ'),
+  const fg = _fgMasterCache.find(f => f.FG_ID === base.FG_ID);
+  const group = await sbRun(_sb.from('production_records').select('*').eq('ProdLot', base.ProdLot).eq('FG_ID', base.FG_ID), 'โหลดข้อมูลพิมพ์ไม่สำเร็จ') || [base];
+  const moIds = [...new Set(group.map(r => r.MO_ID))];
+  const prodIds = group.map(r => r.Prod_ID);
+  const [fgRecv, issAll] = await Promise.all([
+    sbRun(_sb.from('fg_receive').select('*').in('Prod_ID', prodIds), 'โหลดข้อมูลพิมพ์ไม่สำเร็จ'),
+    sbRun(_sb.from('issue_production').select('*').in('MO_ID', moIds), 'โหลดข้อมูลพิมพ์ไม่สำเร็จ'),
   ]);
+  // รวมยอดข้ามบันทึกผลิต (null ทั้งหมด = ยังไม่เคยมีแถวไหนกรอกไว้ แสดง '-' เหมือนเดิม ไม่ใช่ 0 ปลอมๆ)
+  const sumOrNull = k => { const vals = group.map(r => r[k]).filter(v => v != null); return vals.length ? vals.reduce((s, v) => s + (parseFloat(v) || 0), 0) : null; };
+  const h = {
+    Prod_ID: prodIds.join(', '), MO_ID: moIds.join(', '), FG_ID: base.FG_ID, ProdLot: base.ProdLot,
+    QtyProduced: sumOrNull('QtyProduced') ?? 0, QtyGross: sumOrNull('QtyGross'), QtyDefect: sumOrNull('QtyDefect'),
+    MfgDate: group.map(r => r.MfgDate).sort()[0],
+    Note: [...new Set(group.map(r => r.Note).filter(Boolean))].join(' / ') || null,
+  };
+  // รวมวัตถุดิบตามรหัส ข้าม MO (ยืนยันกับผู้ใช้แล้ว) — รวม LotAlloc ด้วยเพื่อให้คอลัมน์ "ล็อตที่ตัด" ถูกต้อง
+  // (ไม่ใช่แค่โชว์ของ MO ใดโดด ๆ) ใช้ _mergeLotAllocJs ตรรกะเดียวกับ _merge_lot_alloc ฝั่ง SQL ที่แก้ไปแล้ว
+  const issByRm = {};
+  (issAll || []).forEach(r => {
+    const g = issByRm[r.RM_ID] || (issByRm[r.RM_ID] = { RM_ID: r.RM_ID, Unit: r.Unit, QtyIssued: 0, LotAlloc: [] });
+    g.QtyIssued += parseFloat(r.QtyIssued) || 0;
+    if (Array.isArray(r.LotAlloc)) g.LotAlloc.push(...r.LotAlloc);
+  });
+  const iss = Object.values(issByRm).map(g => ({ ...g, LotAlloc: _mergeLotAllocJs(g.LotAlloc) }));
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
-  document.getElementById('prp-print-root').innerHTML = _prpPrintHTML(h, fg, fgRecv || [], iss || [], rmMap);
+  document.getElementById('prp-print-root').innerHTML = _prpPrintHTML(h, fg, fgRecv || [], iss, rmMap);
   document.body.classList.add('print-prp');
   const done = () => {
     document.body.classList.remove('print-prp');
@@ -7921,11 +7949,23 @@ async function prodRecordPrint(id) {
   window.addEventListener('afterprint', done);
   window.print();
 }
+// รวม LotAlloc หลายแถว ({lot_id, lot, exp, qty}) เป็นอันเดียวโดย group ตาม lot_id แล้วบวก qty — เวอร์ชัน JS
+// ของ _merge_lot_alloc ฝั่ง SQL (migration_2026-10-06_lotalloc_merge.sql) ใช้หลักการเดียวกัน กันปัญหาล็อต
+// ซ้ำโผล่ 2 แถวแบบที่เคยแก้ไปแล้วฝั่งเบิกวัตถุดิบ ไม่ให้เกิดซ้ำที่นี่ตอนรวมวัตถุดิบข้าม MO
+function _mergeLotAllocJs(items) {
+  const merged = [];
+  (items || []).forEach(item => {
+    const existing = merged.find(m => m.lot_id === item.lot_id);
+    if (existing) existing.qty = (parseFloat(existing.qty) || 0) + (parseFloat(item.qty) || 0);
+    else merged.push({ ...item, qty: parseFloat(item.qty) || 0 });
+  });
+  return merged;
+}
 function _prpHalfHTML(h, fg, fgRecv, iss, rmMap, copyLabel) {
-  // วันที่รับเข้าคลัง FG: แค่วันเดือนปีล้วนๆ ไม่ใส่จำนวนกำกับ (ผู้ใช้ขอ 2026-10-08) — ใช้ fmtDate (สั้น เช่น
-  // "5 ต.ค. 2569") ไม่ใช่ fmtDateLong (เดือนเต็ม) ตามที่ขอ "ใส่แค่วันเดือนปี"
+  // วันที่รับเข้าคลัง FG: โชว์แค่ "วันสุดท้ายที่รับ" วันเดียว (ผู้ใช้ขอ 2026-10-08 รอบ "ปริ้นตาม Lot" — รับ FG
+  // ได้หลายครั้งสะสม/หลายบันทึกผลิตที่ถูกรวมเป็นใบเดียวกันก็อาจมีหลายวันที่รับ เอาแค่วันล่าสุดพอ ไม่ต้องลิสต์หมด)
   const recvRows = [...fgRecv].sort((a, b) => (a.ReceiveDate || '').localeCompare(b.ReceiveDate || ''));
-  const recvStatus = !recvRows.length ? 'ยังไม่รับเข้าคลัง' : recvRows.map(r => fmtDate(r.ReceiveDate)).join(', ');
+  const recvStatus = !recvRows.length ? 'ยังไม่รับเข้าคลัง' : fmtDate(recvRows[recvRows.length - 1].ReceiveDate);
   // รายการวัตถุดิบที่เบิกไป — เรียงตามรหัส แยกกลุ่มวัตถุดิบก่อนแพ็คเกจจิ้งเสมอ เหมือน _issueHistHalfHTML เป๊ะ
   const sortedIss = [...iss].sort((a, b) => {
     const catA = rmMap[a.RM_ID]?.Category || 'วัตถุดิบ', catB = rmMap[b.RM_ID]?.Category || 'วัตถุดิบ';
@@ -7952,13 +7992,13 @@ function _prpHalfHTML(h, fg, fgRecv, iss, rmMap, copyLabel) {
     </div>
     <div class="prp-meta">
       <div><span class="lbl">MO</span>${esc(h.MO_ID)}</div>
-      <div><span class="lbl">วันผลิต</span>${fmtDateLong(h.MfgDate)}</div>
       <div><span class="lbl">ได้ทั้งหมด</span>${h.QtyGross != null ? `${_bomFmtQty(h.QtyGross)} ${esc(fg?.Unit || '')}` : '-'}</div>
       <div><span class="lbl">เสีย (Scrap)</span>${h.QtyDefect != null ? `${_bomFmtQty(h.QtyDefect)} ${esc(fg?.Unit || '')}` : '-'}</div>
-      <div style="grid-column:1/-1"><span class="lbl">รับเข้าคลัง FG</span>${esc(recvStatus)}</div>
+      <div><span class="lbl">วันผลิต</span>${fmtDateLong(h.MfgDate)}</div>
+      <div><span class="lbl">รับเข้าคลัง FG</span><b class="prp-emph">${esc(recvStatus)}</b></div>
     </div>
     <table class="prp-table">
-      <thead><tr><th style="width:6%">ลำดับ</th><th>วัตถุดิบ</th><th style="width:13%">จำนวนเบิก</th><th style="width:9%">หน่วย</th><th style="width:24%">ล็อตที่ตัด</th></tr></thead>
+      <thead><tr><th style="width:6%">ลำดับ</th><th style="width:42%">วัตถุดิบ</th><th style="width:13%">จำนวนเบิก</th><th style="width:9%">หน่วย</th><th style="width:30%">ล็อตที่ตัด</th></tr></thead>
       <tbody>${issRows || '<tr><td colspan="5" class="text-center text-muted">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>'}</tbody>
     </table>
     ${h.Note ? `<div class="prp-note"><b>หมายเหตุ:</b> ${esc(h.Note)}</div>` : ''}
