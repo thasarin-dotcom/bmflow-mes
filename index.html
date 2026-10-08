@@ -440,6 +440,52 @@ table.ihist-table .ihist-unit { color: #64748b; font-weight: 400; }
   #ihist-print-root .ihist-page { page: ihistreport; box-shadow: none; margin: 0; }
   table.ihist-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+/* ใบบันทึกผลิต (prp) — สรุปผลผลิตจริง 1 Prod_ID ต่อ 1 ใบ สำหรับส่งบัญชีบันทึกข้อมูล (2026-10-08 ผู้ใช้ขอ
+   "ให้ปริ้นบันทึกผลิตได้") — ก๊อปโครง .ihist-page มาเป๊ะ (A4 เต็มแผ่น แบ่งครึ่งบน/ล่าง ต้นฉบับ/สำเนา) เพราะเป็น
+   เอกสารประเภทเดียวกัน (สรุปข้อมูลที่บันทึกไว้แล้ว ไม่ใช่แบบฟอร์มขออนุมัติ) ต่างแค่เป็นฝั่ง "ผลิตได้เท่าไหร่"
+   (output) ไม่ใช่ฝั่ง "เบิกวัตถุดิบอะไรไปบ้าง" (input) ที่ ihist สรุปอยู่แล้ว — ไม่มีตารางรายการเหมือน ihist
+   เพราะมีแค่ค่าเดียว (ผลผลิตของ Prod_ID นั้น) ใช้ meta grid ล้วนพอ */
+.prp-page { font-family: 'Sarabun', sans-serif; color: #1e293b; width: 210mm; height: 297mm; box-sizing: border-box;
+  background: #fff; margin: 0 auto 10px; box-shadow: 0 2px 10px rgba(0,0,0,.4); display: flex; flex-direction: column; }
+.prp-half { height: 148.5mm; box-sizing: border-box; padding: 6mm 14mm; display: flex; flex-direction: column; font-size: 10.5px; overflow: hidden; }
+.prp-cut { text-align: center; border-top: 1px dashed #94a3b8; position: relative; height: 0; }
+.prp-cut span { position: relative; top: -7px; display: inline-block; background: #fff; padding: 0 10px; font-size: 9px; color: #94a3b8; }
+.prp-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-blue); padding-bottom: 6px; margin-bottom: 8px; }
+.prp-head-left { display: flex; align-items: center; gap: 8px; }
+.prp-head img { height: 30px; }
+.prp-company { font-size: 9.5px; color: #64748b; }
+.prp-title { font-size: 15px; font-weight: 800; color: var(--primary-blue); text-align: right; }
+.prp-copy-label { font-size: 10px; font-weight: 700; color: #fff; background: var(--primary-blue); border-radius: 3px; padding: 1px 7px; margin-left: 6px; vertical-align: middle; }
+.prp-no { font-size: 10.5px; color: #1e293b; text-align: right; margin-top: 2px; }
+.prp-highlight { display: flex; gap: 10px; margin-bottom: 10px; padding: 6px 10px; border: 1.5px solid var(--primary-blue); border-radius: 4px; background: #eff6ff; }
+.prp-highlight > div { flex: 1; }
+.prp-highlight .lbl { display: block; font-size: 8.5px; color: #64748b; font-weight: 700; }
+.prp-highlight b { font-size: 14px; color: var(--primary-blue); }
+.prp-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 18px; margin-bottom: 10px; font-size: 10.5px; }
+.prp-meta .lbl { color: #64748b; font-weight: 700; margin-right: 4px; }
+table.prp-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 6px; }
+table.prp-table th { background: var(--primary-blue); color: #fff; padding: 4px; text-align: center; font-weight: 700; font-size: 9.5px; }
+table.prp-table td { padding: 4px 5px; border: 1px solid #e2e8f0; text-align: center; vertical-align: middle; }
+table.prp-table td.prp-item { text-align: left; }
+table.prp-table .prp-qty-num { font-weight: 700; color: var(--primary-blue); }
+table.prp-table .prp-unit { color: #64748b; font-weight: 400; }
+.prp-note { border: 1px solid #e2e8f0; border-radius: 3px; padding: 5px 8px; font-size: 10px; min-height: 22px; margin-bottom: 10px; }
+.prp-sign { display: flex; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 8px; }
+.prp-sign > div { flex: 1; text-align: center; font-size: 9.5px; }
+.prp-sign .role { font-weight: 700; }
+.prp-sign .sigspace { height: 8mm; }
+.prp-sign .sigline { border-top: 1px solid #1e293b; margin: 0 8px 4px; padding-top: 2px; color: #64748b; }
+.prp-sign .dateline { margin-top: 2px; color: #64748b; }
+.prp-footer { margin-top: 4px; padding-top: 4px; font-size: 9px; color: #64748b; text-align: right; }
+#prp-print-root { display: none; }
+@media print {
+  body.print-prp { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+  body.print-prp > *:not(#prp-print-root) { display: none !important; }
+  body.print-prp #prp-print-root { display: block !important; }
+  @page prpreport { size: A4 portrait; margin: 0; }
+  #prp-print-root .prp-page { page: prpreport; box-shadow: none; margin: 0; }
+  table.prp-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
 
 /* ใบเบิก (เบิกอื่น ไม่ผูก CO) — พอร์ตหน้าตาจากแม่แบบ "ใบส่งเบิกเบ็ดเตล็ด" ของ ProFlow (.dlvbill-page) ตรงๆ ตามที่
    ผู้ใช้ขอ 2026-10-06 (ProFlow: C:\Thanpao\Wise\MESDev\ProFlow_Supabase\index.html, class .dlvbill-*, ฟังก์ชัน
@@ -4506,11 +4552,12 @@ function receivedRenderTable() {
     const used = lot && lot.Qty < lot.QtyReceived;
     const pending = pendingByRcv[r.Receive_ID];
     // (คอลัมน์ "คงเหลือในล็อต" เอาออกตามที่ผู้ใช้ขอ 2026-09-26 — ดูคงเหลือรายล็อตได้ที่หน้าสต็อก)
-    // แก้ไข = ส่งคำขอให้แอดมินอนุมัติ (มีคำขอค้างอยู่ = ปุ่มพาไปดูคำขอนั้น) · ลบได้เฉพาะใบรับที่ล็อตยังไม่ถูกใช้
+    // แก้ไข = ส่งคำขอให้แอดมินอนุมัติ (มีคำขอค้างอยู่ = ปุ่มพาไปดูคำขอนั้น) · ลบได้เสมอ แต่ล็อตที่ถูกเบิก/ตัด
+    // ไปแล้วจะเตือนหนักๆ ก่อนให้ตัดสินใจอีกที แทนที่จะล็อกปุ่มไว้เฉยๆ โดยไม่ให้ลองเลย (ผู้ใช้ขอ 2026-10-07 —
+    // เดิมซ่อนปุ่มเป็นไอคอนล็อกอย่างเดียว กดอะไรไม่ได้เลย) ฝั่ง SQL (rm_receive_delete) ยังกันเหนียวไว้เหมือนเดิม
+    // ถ้าล็อตถูกใช้ไปแล้วจริง จะ reject พร้อมเหตุผลชัดเจน ไม่ได้ปล่อยให้ลบได้เสมอไปแบบไม่มีการป้องกัน
     const editBtn = _editBtn('rm_receive', r.Receive_ID);
-    const delBtn = used
-      ? `<span class="text-muted" title="ล็อตนี้ถูกเบิก/ตัดของเสียไปแล้ว ลบใบรับไม่ได้"><i class="fa-solid fa-lock"></i></span>`
-      : `<button class="btn btn-sm btn-outline-danger" onclick="receivedDelete('${esc(r.Receive_ID)}')" title="ลบใบรับ"><i class="fa-solid fa-trash"></i></button>`;
+    const delBtn = `<button class="btn btn-sm btn-outline-danger" onclick="receivedDelete('${esc(r.Receive_ID)}')" title="${used ? 'ล็อตนี้ถูกเบิก/ตัดของเสียไปแล้วบางส่วน — ลบได้แต่ต้องยืนยันอีกที' : 'ลบใบรับ'}"><i class="fa-solid fa-trash"></i></button>`;
     const action = `<span class="text-nowrap">${editBtn}${delBtn}</span>`;
     const rcTag = r.RC_No ? `<div class="small text-primary" title="ออกใบรายงานรับแล้ว"><i class="fa-solid fa-file-lines me-1"></i>${esc(r.RC_No)}</div>` : '';
     const pendTag = pending ? `<div><span class="badge text-bg-warning"><i class="fa-solid fa-hourglass-half me-1"></i>รออนุมัติแก้ไข</span></div>` : '';
@@ -5053,9 +5100,12 @@ async function editReqOpen(type, id) {
   const { data: row, error } = await _sb.from(t.table).select('*').eq(t.pk, id).maybeSingle();
   if (error || !row) { Swal.fire('โหลดรายการไม่ได้', esc(error?.message || 'ไม่พบรายการ'), 'error'); return; }
   let lockLot = false;
+  let fgRecvRows = [];
   if (type === 'production_records') {
-    const { count } = await _sb.from('fg_receive').select('FGReceive_ID', { count: 'exact', head: true }).eq('Prod_ID', id);
-    lockLot = count > 0;
+    // ดึงทั้งแถว (ไม่ใช่แค่ count) ไว้โชว์สถานะ "รับเข้าคลัง FG" ต่อท้ายแถววันผลิต/วันหมดอายุด้วย (ผู้ใช้ขอ
+    // 2026-10-08) — ใช้ query เดียวกับที่ lockLot ใช้อยู่แล้ว ไม่ต้องยิงซ้ำสอง query
+    fgRecvRows = (await _sb.from('fg_receive').select('*').eq('Prod_ID', id)).data || [];
+    lockLot = fgRecvRows.length > 0;
   }
   _editForm = { type, id, row };
   const isAdmin = _hasRole('admin');
@@ -5078,6 +5128,13 @@ async function editReqOpen(type, id) {
     return `<div class="${f.type === 'textarea' ? 'col-12' : 'col-md-6'}"><label class="form-label">${lbl}</label>${input}
       ${f.unit ? '' : `<div class="invalid-feedback" id="erq-f-${f.k}-err"></div>`}</div>`;
   }).join('');
+  // สถานะ "รับเข้าคลัง FG" ต่อท้ายแถววันผลิต/วันหมดอายุ (ผู้ใช้ขอ 2026-10-08 "ต่อท้ายวันที่ผลิต") — แสดง
+  // อย่างเดียว ไม่ใช่ช่องแก้ไข (ไม่มีผลต่อ p_new/คำขอแก้ไข) รองรับรับเข้าคลังหลายครั้งสะสมเหมือนหน้าพิมพ์
+  if (type === 'production_records') {
+    const recvStatus = !fgRecvRows.length ? 'ยังไม่รับเข้าคลัง' : fgRecvRows.map(r => fmtDate(r.ReceiveDate)).join(', ');
+    document.getElementById('erq-f-ExpDate')?.closest('.col-md-6')?.insertAdjacentHTML('afterend',
+      `<div class="col-12"><label class="form-label text-muted small mb-1"><i class="fa-solid fa-box-open me-1"></i>รับเข้าคลัง FG</label><div class="form-control-plaintext py-0">${esc(recvStatus)}</div></div>`);
+  }
   // "จำนวนผลิตได้ (สุทธิ)" คำนวณอัตโนมัติ = ได้ทั้งหมด − เสีย เฉพาะตอนผู้ใช้พิมพ์จริง (ไม่เรียกตอนเปิดฟอร์ม
   // เพราะแถวเก่าที่ยังไม่มี QtyGross/QtyDefect จะโดนคำนวณทับเป็น 0 ทั้งที่ของจริงมีค่าสุทธิอยู่แล้ว)
   if (type === 'production_records') {
@@ -5089,6 +5146,10 @@ async function editReqOpen(type, id) {
     };
     document.getElementById('erq-f-QtyGross')?.addEventListener('input', recalc);
     document.getElementById('erq-f-QtyDefect')?.addEventListener('input', recalc);
+    // แพ็คเกจจิ้งอิงแค่ "ได้ทั้งหมด" เท่านั้น (ไม่อิงเสีย) — แยกจาก recalc() ด้านบนไว้ ผูกเฉพาะ QtyGross
+    // ไม่เรียกตอนเปิดฟอร์มเหมือนกับ recalc() ข้างบน (กันเผลอคำนวณทับค่าที่ถูกต้องอยู่แล้วทันทีที่เปิด)
+    document.getElementById('erq-f-QtyGross')?.addEventListener('input', () =>
+      _rmUsePackagingRecalc('erq', parseFloat(document.getElementById('erq-f-QtyGross')?.value) || 0));
   }
   document.getElementById('erq-reason').value = '';
   document.getElementById('erq-save-btn').innerHTML = isAdmin ? '<i class="fa-solid fa-floppy-disk me-1"></i>บันทึกการแก้ไข' : '<i class="fa-solid fa-paper-plane me-1"></i>ส่งคำขอแก้ไข';
@@ -5402,11 +5463,19 @@ function _rcvEditRealtime(payload) {
   rcvEditLoadPending().then(() => { if (_currentPage === 'received') _rcvEditRenderBanner(); });
 }
 
+// ปุ่มลบโชว์เสมอ (ผู้ใช้ขอ 2026-10-07 "ไม่ให้ล็อก แค่ตอนจะลบค่อยแนะนำให้ตัดสินใจอีกที" — เดิมล็อตที่เบิก/ตัด
+// ไปแล้วซ่อนปุ่มเป็นไอคอนล็อกเฉยๆ กดอะไรไม่ได้เลย) เตือนหนักๆ ก่อนถ้าล็อตถูกใช้ไปแล้วบางส่วน แต่ฝั่ง SQL
+// (rm_receive_delete) ยัง RAISE EXCEPTION กันไว้เหมือนเดิมถ้าลบจริงไม่ได้ (ล็อตถูกเบิก/ตัดไปแล้ว) — ให้เหตุผล
+// ที่ชัดเจนตรงๆ ผ่าน _rmLotRpcErr แทนการบล็อกไว้ล่วงหน้าโดยไม่ให้ลองเลย
 async function receivedDelete(id) {
   const rc = _receivedCache.find(r => r.Receive_ID === id)?.RC_No;
+  const lot = _rmLotCache.find(l => l.Receive_ID === id);
+  const used = lot && lot.Qty < lot.QtyReceived;
   const c = await Swal.fire({ title: 'ลบรายการรับนี้?', icon: 'warning',
-    html: 'ล็อตนี้และยอดสต็อกจะถูกหักออกด้วย' + (rc ? `<div class="alert alert-warning small mt-3 mb-0 text-start">รายการนี้อยู่ในใบรายงานรับ <b>RC No ${esc(rc)}</b> แล้ว — ลบแล้วใบที่พิมพ์ไปจะไม่ตรงกับระบบ ให้พิมพ์ซ้ำจากเลขเดิมแทนใบเก่า</div>` : ''),
-    showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
+    html: 'ล็อตนี้และยอดสต็อกจะถูกหักออกด้วย'
+      + (used ? `<div class="alert alert-danger small mt-3 mb-0 text-start"><b>⚠️ ล็อตนี้ถูกเบิก/ตัดของเสียไปแล้ว ${_rmFmtQty(lot.QtyReceived - lot.Qty)} จาก ${_rmFmtQty(lot.QtyReceived)}</b> — ถ้ายังมีการเบิก/ตัดค้างอยู่จริง ระบบจะลบไม่สำเร็จและแจ้งเหตุผลให้ ลองพิจารณาอีกครั้งก่อนกดยืนยัน</div>` : '')
+      + (rc ? `<div class="alert alert-warning small mt-3 mb-0 text-start">รายการนี้อยู่ในใบรายงานรับ <b>RC No ${esc(rc)}</b> แล้ว — ลบแล้วใบที่พิมพ์ไปจะไม่ตรงกับระบบ ให้พิมพ์ซ้ำจากเลขเดิมแทนใบเก่า</div>` : ''),
+    showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: used ? 'ยืนยันลบ' : 'ลบ', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
   const { error } = await _sb.rpc('rm_receive_delete', { p_receive_id: id });
   if (error) { _rmLotRpcErr(error, 'ลบไม่สำเร็จ'); return; }
@@ -7823,8 +7892,85 @@ async function prodRecordLoad() {
   window._prodRecordCache = hist;
   document.getElementById('prodHistTableBody').innerHTML = hist.map(h => `
     <tr><td>${esc(h.Prod_ID)}</td><td>${esc(fgMap[h.FG_ID]?.FG_Name || h.FG_ID)}</td><td>${_bomFmtQty(h.QtyProduced)}</td><td>${esc(h.ProdLot)}</td><td>${fmtDate(h.MfgDate)}</td><td>${fmtDate(h.ExpDate)}</td>
-    <td class="text-nowrap">${_editBtn('production_records', h.Prod_ID)}<button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+    <td class="text-nowrap">${_editBtn('production_records', h.Prod_ID)}<button class="btn btn-sm btn-outline-secondary" onclick="prodRecordPrint('${h.Prod_ID}')" title="พิมพ์ใบบันทึกผลิต (ส่งบัญชี)"><i class="fa-solid fa-print"></i></button><button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
     || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+}
+// ใบบันทึกผลิต (prp) — 1 ใบต่อ 1 Prod_ID ไว้ส่งบัญชีบันทึกข้อมูล (2026-10-08) — เหมือน issueHistPrint ทุก
+// ประการ (A4 เต็มแผ่นแบ่งครึ่ง ต้นฉบับ/สำเนา, พิมพ์ตรงทันทีไม่มีตัวอย่างก่อนเพราะเป็นแค่สรุปข้อมูลที่มีอยู่แล้ว)
+// ต่างแค่สรุปฝั่ง "ผลิตได้เท่าไหร่" (output) ไม่ใช่ฝั่งเบิกวัตถุดิบที่ ihist สรุปอยู่แล้ว — query fg_receive
+// สดตอนกดพิมพ์เหมือน ihist เพื่อโชว์สถานะ "รับเข้าคลังแล้วหรือยัง" (รับได้หลายครั้งสะสม ดู fg_receive partial)
+async function prodRecordPrint(id) {
+  const h = (window._prodRecordCache || []).find(x => x.Prod_ID === id);
+  if (!h) return;
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  const fg = _fgMasterCache.find(f => f.FG_ID === h.FG_ID);
+  // รายการวัตถุดิบที่เบิกไปของ MO นี้ (ผู้ใช้ขอ 2026-10-08 "ไม่เห็นมีรายการของที่เบิกเลย" — รอบแรกทำแค่ฝั่ง
+  // ผลผลิตออก ลืมฝั่งเบิกวัตถุดิบเข้าไปด้วย) ใช้ตรรกะเดียวกับ issueHistPrint/_issueHistHalfHTML ทุกประการ
+  const [fgRecv, iss] = await Promise.all([
+    sbRun(_sb.from('fg_receive').select('*').eq('Prod_ID', id), 'โหลดข้อมูลพิมพ์ไม่สำเร็จ'),
+    sbRun(_sb.from('issue_production').select('*').eq('MO_ID', h.MO_ID), 'โหลดข้อมูลพิมพ์ไม่สำเร็จ'),
+  ]);
+  const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  document.getElementById('prp-print-root').innerHTML = _prpPrintHTML(h, fg, fgRecv || [], iss || [], rmMap);
+  document.body.classList.add('print-prp');
+  const done = () => {
+    document.body.classList.remove('print-prp');
+    document.getElementById('prp-print-root').innerHTML = '';
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+function _prpHalfHTML(h, fg, fgRecv, iss, rmMap, copyLabel) {
+  // วันที่รับเข้าคลัง FG: แค่วันเดือนปีล้วนๆ ไม่ใส่จำนวนกำกับ (ผู้ใช้ขอ 2026-10-08) — ใช้ fmtDate (สั้น เช่น
+  // "5 ต.ค. 2569") ไม่ใช่ fmtDateLong (เดือนเต็ม) ตามที่ขอ "ใส่แค่วันเดือนปี"
+  const recvRows = [...fgRecv].sort((a, b) => (a.ReceiveDate || '').localeCompare(b.ReceiveDate || ''));
+  const recvStatus = !recvRows.length ? 'ยังไม่รับเข้าคลัง' : recvRows.map(r => fmtDate(r.ReceiveDate)).join(', ');
+  // รายการวัตถุดิบที่เบิกไป — เรียงตามรหัส แยกกลุ่มวัตถุดิบก่อนแพ็คเกจจิ้งเสมอ เหมือน _issueHistHalfHTML เป๊ะ
+  const sortedIss = [...iss].sort((a, b) => {
+    const catA = rmMap[a.RM_ID]?.Category || 'วัตถุดิบ', catB = rmMap[b.RM_ID]?.Category || 'วัตถุดิบ';
+    return (_BOM_CAT_ORDER[catA] ?? 9) - (_BOM_CAT_ORDER[catB] ?? 9)
+      || String(a.RM_ID).localeCompare(String(b.RM_ID), undefined, { numeric: true });
+  });
+  const issRows = sortedIss.map((r, i) => {
+    const rCat = rmMap[r.RM_ID]?.Category;
+    return `<tr><td>${i + 1}</td><td class="prp-item">${esc(r.RM_ID)} — ${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td>
+      <td class="prp-qty-num">${_qtyFmtByCat(r.QtyIssued, rCat)}</td>
+      <td class="prp-unit">${esc(r.Unit || '')}</td>
+      <td class="prp-item">${Array.isArray(r.LotAlloc) && r.LotAlloc.length ? _lotAllocText(r.LotAlloc, CAT_RAW_ALL.includes(rCat) ? _rmFmtQty : _bomFmtQty, false) : '-'}</td></tr>`;
+  }).join('');
+  return `<div class="prp-half">
+    <div class="prp-head">
+      <div class="prp-head-left"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
+        <div class="prp-company"><b>Blooming Company Limited</b><br>BLM Herbal — Production</div></div>
+      <div><div class="prp-title">ใบบันทึกผลิต<span class="prp-copy-label">${esc(copyLabel)}</span></div><div class="prp-no">เลขที่ผลิต: ${esc(h.Prod_ID)}</div></div>
+    </div>
+    <div class="prp-highlight">
+      <div><span class="lbl">สินค้า</span><b>${esc(h.FG_ID || '-')} — ${esc(fg?.FG_Name || '-')}</b></div>
+      <div><span class="lbl">Lot ผลิต</span><b>${esc(h.ProdLot || '-')}</b></div>
+      <div><span class="lbl">ผลิตได้สุทธิ</span><b>${_bomFmtQty(h.QtyProduced)} ${esc(fg?.Unit || '')}</b></div>
+    </div>
+    <div class="prp-meta">
+      <div><span class="lbl">MO</span>${esc(h.MO_ID)}</div>
+      <div><span class="lbl">วันผลิต</span>${fmtDateLong(h.MfgDate)}</div>
+      <div><span class="lbl">ได้ทั้งหมด</span>${h.QtyGross != null ? `${_bomFmtQty(h.QtyGross)} ${esc(fg?.Unit || '')}` : '-'}</div>
+      <div><span class="lbl">เสีย (Scrap)</span>${h.QtyDefect != null ? `${_bomFmtQty(h.QtyDefect)} ${esc(fg?.Unit || '')}` : '-'}</div>
+      <div style="grid-column:1/-1"><span class="lbl">รับเข้าคลัง FG</span>${esc(recvStatus)}</div>
+    </div>
+    <table class="prp-table">
+      <thead><tr><th style="width:6%">ลำดับ</th><th>วัตถุดิบ</th><th style="width:13%">จำนวนเบิก</th><th style="width:9%">หน่วย</th><th style="width:24%">ล็อตที่ตัด</th></tr></thead>
+      <tbody>${issRows || '<tr><td colspan="5" class="text-center text-muted">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>'}</tbody>
+    </table>
+    ${h.Note ? `<div class="prp-note"><b>หมายเหตุ:</b> ${esc(h.Note)}</div>` : ''}
+    <div class="prp-sign">
+      <div><div class="role">ผู้บันทึก</div><div class="sigspace"></div><div class="sigline">ลายเซ็น</div><div class="dateline">วันที่ .......... / .......... / ..........</div></div>
+      <div><div class="role">ผู้ตรวจสอบ</div><div class="sigspace"></div><div class="sigline">ลายเซ็น</div><div class="dateline">วันที่ .......... / .......... / ..........</div></div>
+    </div>
+    <div class="prp-footer">พิมพ์เมื่อ ${fmtDateLong(todayStr())} โดย ${esc(_currentUser?.name || _currentUser?.email || '-')}</div>
+  </div>`;
+}
+function _prpPrintHTML(h, fg, fgRecv, iss, rmMap) {
+  return `<div class="prp-page">${_prpHalfHTML(h, fg, fgRecv, iss, rmMap, 'ต้นฉบับ')}<div class="prp-cut"><span><i class="fa-solid fa-scissors"></i> ตัดตามรอยประ</span></div>${_prpHalfHTML(h, fg, fgRecv, iss, rmMap, 'สำเนา')}</div>`;
 }
 let _prodMoId = null;
 async function prodRecordOpenForm(moId) {
@@ -7855,6 +8001,7 @@ function prQtyRecalc() {
   const defect = parseFloat(document.getElementById('pr-qty-defect').value) || 0;
   const net = Math.max(0, Math.round((gross - defect) * 10000) / 10000);
   document.getElementById('pr-qty').value = net || (net === 0 ? 0 : '');
+  _rmUsePackagingRecalc('pr', gross);
 }
 // ตาราง "วัตถุดิบที่ใช้จริง" ใช้ร่วมกัน 2 จุด: บันทึกผลิตใหม่ (#pr-rm-*, prodRecordModal) และแก้ไขบันทึกผลิต
 // เดิมผ่าน "คำขอแก้ไข" (#erq-rm-*, editReqOpen) — ผู้ใช้ขอ 2026-10-05 ให้ตัวแก้ไขของเดิมมีเหมือนตัวใหม่ด้วย
@@ -7876,7 +8023,11 @@ function _rmUseOrigQty(r) {
 }
 function _rmUseRowHTML(prefix, r, rm) {
   const orig = _rmUseOrigQty(r);
-  return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${orig}" data-saved="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}">
+  // QtyPerUnit ต่อแถว (จาก QtyBase/ForQty ที่ snapshot ไว้ตอนเบิกจริง) + ScrapPct — เก็บไว้เป็น data attribute
+  // ให้ _rmUsePackagingRecalc ใช้คำนวณ "เบิกตั้งต้น" ของแพ็คเกจจิ้งใหม่ตอน "ได้ทั้งหมด" เปลี่ยน (ผู้ใช้ขอ
+  // 2026-10-08) ไม่มีค่าถ้าแถวนี้ไม่มี ForQty/QtyBase (เช่น มาจาก "เบิกเบ็ดเตล็ด"/"เบิกเพิ่ม" ที่ไม่มีสูตรอ้างอิง)
+  const perUnit = (r.QtyBase != null && r.ForQty) ? parseFloat(r.QtyBase) / parseFloat(r.ForQty) : '';
+  return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${orig}" data-saved="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}" data-perunit="${perUnit}" data-scrap="${r.ScrapPct ?? 0}">
     <td><code>${esc(r.RM_ID)}</code></td><td>${esc(rm?.RM_Name || r.RM_ID)}</td>
     <td class="text-end text-muted">${_rmFmtQty(orig)}</td>
     <td><div class="d-flex gap-1 align-items-center">
@@ -7886,6 +8037,24 @@ function _rmUseRowHTML(prefix, r, rm) {
     <td class="text-end small ${prefix}-rm-waste"></td>
     <td class="small text-muted">${esc(r.Unit || rm?.Unit || '')}</td>
     <td class="text-end small ${prefix}-rm-pct"></td></tr>`;
+}
+// อัปเดต "เบิกตั้งต้น" ของแพ็คเกจจิ้งทุกแถวอัตโนมัติตาม "ได้ทั้งหมด" ที่เพิ่งพิมพ์ (ผู้ใช้ขอ 2026-10-08 "ยอดได้
+// ทั้งหมดที่คีย์ จะไปเปลี่ยนยอดแพ็คเกจด้วย" — ใช้ทั้งหน้าบันทึกผลิตใหม่และแก้ไขบันทึกผลิต ยืนยันแล้ว) สูตร:
+// QtyPerUnit (จาก data-perunit ที่ snapshot ไว้ตอนเบิกจริง) × ได้ทั้งหมด ÷ (1 − %Scrap/100) — สูตรเดียวกับตอน
+// เบิกจริงทุกประการ ใช้กับทุกแถวหมวดแพ็คเกจจิ้งเหมือนกันหมด (รวมกล่องด้วย ตามที่ยืนยัน ไม่แยกคำนวณพิเศษเป็น
+// จำนวนกล่อง) เขียนทับ "เบิกตั้งต้น" ตรงๆ ทันที (ยืนยันแล้วว่าไม่ใช่แค่ค่าแนะนำ) ข้ามแถวที่ไม่มี QtyPerUnit
+// (เช่น มาจาก "เบิกเบ็ดเตล็ด"/"เบิกเพิ่ม" ที่ไม่มีสูตรอ้างอิงให้คำนวณ) ไม่กระทบวัตถุดิบสด/แห้ง/เคมีเลย
+function _rmUsePackagingRecalc(prefix, grossQty) {
+  if (!(grossQty > 0)) return;
+  document.querySelectorAll(`#${prefix}-rm-rows tr[data-cat="${CAT_PKG}"]`).forEach(tr => {
+    const perUnit = parseFloat(tr.dataset.perunit);
+    if (!(perUnit > 0)) return;
+    const scrapPct = parseFloat(tr.dataset.scrap) || 0;
+    const input = tr.querySelector(`.${prefix}-rm-qty`);
+    if (!input) return;
+    input.value = Math.round((perUnit * grossQty / (1 - scrapPct / 100)) * 10000) / 10000;
+  });
+  _rmUseRecalc(prefix);
 }
 // เลือกว่า "เบิกตั้งต้น" (ที่แก้ในฟอร์มนี้) มาจากล็อตไหนบ้าง (ผู้ใช้ขอ 2026-10-05) — ใช้ตัวเลือกล็อตเดิมที่มี
 // อยู่แล้ว (issueLotModal/issueLotEditOpen ของปุ่ม "แก้ไขล็อตที่เบิก") ไม่สร้างใหม่ซ้ำซ้อน ต่างแค่ยอดที่ต้อง
@@ -9410,5 +9579,7 @@ async function wasteDelete(id) {
 <div id="scp-print-root"></div>
 <!-- ที่พิมพ์ใบเบิก (เบิกอื่น ไม่ผูก CO) — คนละ root อีกเช่นกัน -->
 <div id="genwd-print-root"></div>
+<!-- ที่พิมพ์ใบบันทึกผลิต — คนละ root อีกเช่นกัน -->
+<div id="prp-print-root"></div>
 </body>
 </html>
