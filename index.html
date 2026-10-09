@@ -1120,7 +1120,9 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
       <button class="btn btn-light" onclick="stockCardExportCsv()" title="ส่งออกเป็น CSV (เปิดใน Excel ได้)"><i class="fa-solid fa-file-csv me-1"></i>Export CSV</button>
       <button class="btn btn-light" onclick="stockCardPrintOpen()" title="พิมพ์การ์ดสต็อก เลือกช่วงเดือนได้"><i class="fa-solid fa-print me-1"></i>พิมพ์</button>
     </div>
-    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
+    <div class="scroll-content">
+      <div class="row g-2 mb-2" id="scKpis"></div>
+      <div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
       <thead><tr><th>วันที่</th><th>ประเภท</th><th>เลขที่เอกสาร</th><th>Lot</th><th class="text-end">รับเข้า</th><th class="text-end">จ่ายออก</th><th class="text-end">คงเหลือสะสม</th><th>UOM</th><th>อ้างอิง/ที่มา</th></tr></thead>
       <tbody id="stockCardTableBody"></tbody>
     </table></div></div></div>
@@ -9170,6 +9172,7 @@ let _scLastEntries = []; let _scLastUnit = ''; let _scLastFmt = _bomFmtQty;   //
 // ยอดดิบ "ทุกล็อตรวมกัน" ที่โหลดจาก DB แล้ว ยังไม่ผ่านตัวกรอง Lot (ผู้ใช้ขอ 2026-10-06 "เลือกดูแบบแยกล็อตได้")
 // เก็บแยกไว้ให้สลับตัวกรอง Lot ทำผ่าน _scRenderTable() ได้ทันทีโดยไม่ต้องยิง query ใหม่ทุกครั้ง
 let _scRawEntries = []; let _scRawUnit = ''; let _scRawFmt = _bomFmtQty; let _scRawLabel = '';
+let _scRawType = ''; let _scRawId = '';   // เก็บไว้คำนวณ "มูลค่าคงเหลือ" ตอนวาด KPI (ดู _scValueForBalance)
 // ล็อตที่ตัด/รับของแต่ละประเภทธุรกรรม — รวมเป็น string เดียวพอ (ProFlow-style ตาราง 1 แถว = 1 Lot pill,
 // แต่ issue/prep ของ BM Flow ตัดได้หลายล็อตต่อแถวจาก FEFO จึงรวมเป็น "lot1, lot2" ถ้ามีมากกว่า 1)
 function _scAllocLots(alloc) {
@@ -9197,8 +9200,9 @@ async function stockCardRender() {
   _scRawLabel = document.getElementById('scItem').selectedOptions[0]?.textContent || id || '';
   if (!id) {
     tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">ไม่มีข้อมูล</td></tr>';
-    _scRawEntries = []; _scLastRows = []; _scLastEntries = [];
+    _scRawEntries = []; _scLastRows = []; _scLastEntries = []; _scRawType = ''; _scRawId = '';
     lotSel.innerHTML = '<option value="">ทุกล็อต (รวม)</option>';
+    document.getElementById('scKpis').innerHTML = '';
     return;
   }
   let entries = [], unit = '';
@@ -9257,7 +9261,7 @@ async function stockCardRender() {
     || ((b.in > 0) - (a.in > 0)));
   // pkg (แพ็คเกจจิ้ง) นับเป็นชิ้น ไม่ใช่หมวดวัตถุดิบ (ชั่งน้ำหนัก) — ใช้ _bomFmtQty แบบผันแปรเหมือน FG
   const scFmt = (type === 'fg' || type === 'pkg') ? _bomFmtQty : _rmFmtQty;
-  _scRawEntries = entries; _scRawUnit = unit; _scRawFmt = scFmt;
+  _scRawEntries = entries; _scRawUnit = unit; _scRawFmt = scFmt; _scRawType = type; _scRawId = id;
   // เติมตัวเลือก Lot จากล็อตที่พบจริงทั้งหมดของรายการนี้ (ผู้ใช้ขอ 2026-10-06 "เลือกดูแบบแยกล็อตได้") — แยก
   // สตริงรวม "lot1, lot2" ของแถวที่ตัดหลายล็อตออกเป็นรายตัวด้วย คงค่าที่เคยเลือกไว้ถ้ายังมีอยู่จริงในล็อตชุดใหม่
   // (สลับ type/item จะรีเซ็ตกลับ "ทุกล็อต" เพราะล็อตเป็นของคนละรายการกัน ไม่มีทางตรงกันโดยบังเอิญ)
@@ -9284,6 +9288,25 @@ function _scFilteredEntries(lot) {
     const q = _scQtyForLot(e, lot);
     return q > 1e-9 ? { ...e, in: e.in ? q : 0, out: e.out ? q : 0, lot } : null;
   }).filter(Boolean);
+}
+// มูลค่าคงเหลือ ณ ยอดสะสมล่าสุด (balance) ของรายการ/ล็อตที่กำลังดูอยู่ — ใช้ราคาเดียวกับที่หน้า Stock ใช้โชว์
+// "มูลค่ารวม/ราคาเฉลี่ย" (ดู _rmAvgCost/_stockRenderByCategory) ไม่คำนวณแยกเอง กันคิดราคาไม่ตรงกับหน้าอื่น:
+// - ไม่เลือก Lot (ดูรวมทุกล็อต) ใช้ราคาเฉลี่ยถ่วงน้ำหนักของล็อตที่ยังเหลืออยู่จริงตอนนี้ (_rmAvgCost)
+// - เลือก Lot เจาะจง ใช้ราคา/หน่วยของล็อตนั้นเลย (ตรงกว่าราคาเฉลี่ยรวม) ถ้าล็อตนั้นเคยรับเข้าแบบใส่ราคา
+// - FG ไม่มีต้นทุนต่อหน่วยแบบ RM เก็บไว้ตรงๆ ใช้ "ราคาขาย" (SellPrice) แทนแล้วติดป้ายกำกับให้ชัดว่าเป็นราคาขาย
+// null = ไม่มีข้อมูลราคาให้คิด (ยังไม่เคยตั้งราคาไว้เลย) ไม่ใช่บั๊ก
+function _scValueForBalance(type, id, lot, balance) {
+  if (type === 'fg') {
+    const fg = _fgMasterCache.find(f => f.FG_ID === id);
+    return (fg && fg.SellPrice != null) ? { value: fg.SellPrice * balance, label: 'ราคาขาย' } : null;
+  }
+  if (lot) {
+    const l = _lotsFefo(id).find(x => _lotLabel(x) === lot);
+    const p = l && l.Receive_ID ? _rmPriceMap[l.Receive_ID] : null;
+    return p != null ? { value: p * balance, label: 'ต้นทุน' } : null;
+  }
+  const avg = _rmAvgCost(id);
+  return avg != null ? { value: avg * balance, label: 'ต้นทุน' } : null;
 }
 // วาดตารางจริง (ตามตัวกรอง Lot ปัจจุบัน) — แยกจาก stockCardRender เพื่อสลับตัวกรอง Lot ได้ทันทีโดยไม่ต้องยิง
 // query DB ใหม่ทุกครั้ง (_scRawEntries โหลดไว้ครั้งเดียวต่อ type/item ที่เลือก)
@@ -9314,6 +9337,16 @@ function _scRenderTable() {
   }).join('');
   tbody.innerHTML = rowsHtml || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีการเคลื่อนไหว</td></tr>';
   _scLastEntries = entries; _scLastUnit = unit; _scLastFmt = scFmt;
+  // KPI สรุปของรายการ/ล็อตที่กำลังดูอยู่ (ผู้ใช้ขอ 2026-10-09) — คิดจากเฉพาะ entries ที่ผ่านตัวกรอง Lot ปัจจุบัน
+  const totalIn = entries.reduce((s, e) => s + (e.in || 0), 0);
+  const totalOut = entries.reduce((s, e) => s + (e.out || 0), 0);
+  const val = _scValueForBalance(_scRawType, _scRawId, lot, balance);
+  document.getElementById('scKpis').innerHTML = [
+    { n: `${scFmt(totalIn)} <small class="fw-normal text-muted">${esc(unit)}</small>`, l: 'รวมรับเข้า' },
+    { n: `${scFmt(totalOut)} <small class="fw-normal text-muted">${esc(unit)}</small>`, l: 'รวมจ่ายออก' },
+    { n: `${scFmt(balance)} <small class="fw-normal text-muted">${esc(unit)}</small>`, l: 'คงเหลือสะสม', cls: balance < 0 ? 'kpi-danger' : '' },
+    { n: val ? `฿${_fmtBaht(val.value)}` : '<span class="text-muted">—</span>', l: val ? `มูลค่าคงเหลือ (${val.label})` : 'มูลค่าคงเหลือ (ไม่มีข้อมูลราคา)' },
+  ].map(k => `<div class="col-6 col-md-3"><div class="kpi-card ${k.cls || ''}"><div class="kpi-num">${k.n}</div><div class="kpi-label">${k.l}</div></div></div>`).join('');
 }
 function stockCardExportCsv() {
   if (!_scLastRows.length) { Swal.fire({ toast: true, position: 'top-end', icon: 'warning', showConfirmButton: false, timer: 1800, title: 'ไม่มีข้อมูลให้ส่งออก' }); return; }
