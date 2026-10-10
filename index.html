@@ -901,7 +901,7 @@ table.scp-table tr.scp-open td { background: #f1f5f9; font-weight: 700; -webkit-
     <div class="sticky-toolbar"><div class="search-wrap mb-2"><input class="form-control search-input" id="planSearch" placeholder="ค้นหา..." oninput="planRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('planSearch').value='';planRenderTable()"></i></div></div>
     <div class="scroll-content">
       <div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
-        <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>Lot</th><th>อ้างอิง CO</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+        <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>Lot</th><th>อ้างอิง CO</th><th>สถานะ</th><th>ผู้สร้าง</th><th>จัดการ</th></tr></thead>
         <tbody id="planTableBody"></tbody>
       </table></div></div>
     </div>
@@ -3667,7 +3667,8 @@ function rmMasterRenderTable() {
   const filter = document.getElementById('rmMasterCategoryFilter').value;
   const catRows = _rmMasterCache.filter(r => catMatches(r.Category, filter));
   const sup = _rmMasterFillSuppliers(catRows);
-  const rows = catRows.filter(r => !sup || _rmSupplierKey(r) === sup);
+  const rows = catRows.filter(r => !sup || _rmSupplierKey(r) === sup)
+    .sort((a, b) => a.RM_ID.localeCompare(b.RM_ID, undefined, { numeric: true }));   // ผู้ใช้ขอ 2026-10-09 "ให้เรียงตามรหัส" (เดิมเรียงตามชื่อจาก query _rmMasterCache ทำให้รายการชื่อซ้ำกันแต่คนละรหัสปนกันไม่เป็นระเบียบ) — เรียงเฉพาะตารางนี้ ไม่แตะลำดับ _rmMasterCache ที่หน้าอื่น (dropdown เลือกวัตถุดิบ ฯลฯ) ยังใช้เรียงตามชื่ออยู่ตามเดิม
   document.getElementById('rmMasterTableBody').innerHTML = rows.map(r => {
     // reverse-lookup: รายการที่ทำ/อบมาจากตัวนี้ (SourceRM_ID ชี้กลับมาที่ r) — ให้เห็นจากฝั่งวัตถุดิบต้นทางว่า
     // "ห้ามเบิกตรง ต้องเตรียมก่อน" และเตรียมได้กี่แบบ โดยไม่ต้องไล่หาเองว่ามีแถวไหนอ้างถึง (ผู้ใช้ขอ 2026-09-26)
@@ -4006,6 +4007,20 @@ function _rmAvgCost(rmId) {
   let value = 0, pricedQty = 0;
   _lotsFefo(rmId).forEach(l => { const p = l.Receive_ID && _rmPriceMap[l.Receive_ID]; if (p != null) { value += p * l.Qty; pricedQty += l.Qty; } });
   return pricedQty > 0 ? value / pricedQty : null;
+}
+// วัตถุดิบอื่นที่ "ชื่อเดียวกัน" กับ rmId (ต่างกันแค่คนละรหัส/คนละซัพพลายเออร์ เช่น ขมิ้นสด SPF005-ตลาดไท กับ
+// SPF011-อ่างทอง) — ไม่มีคอลัมน์ผูกกลุ่มจริงจังในข้อมูล (schema ไม่ได้ออกแบบมาแบบนั้น) จับคู่ด้วยชื่อ+หมวดหมู่
+// ตรงกันเป๊ะแทน (วิธีเดียวกับที่ bomSearchMaterial ใช้แยกรายการซ้ำชื่อในดรอปดาวน์อยู่แล้ว) เรียงตามสต็อกคงเหลือ
+// มาก→น้อย ให้ตัวที่มีของพร้อมเบิกที่สุดขึ้นก่อนเป็นค่าเริ่มต้นตอนเสนอให้เลือกซัพตอนเบิก (ผู้ใช้ขอ 2026-10-10:
+// "สูตรแม่บทใส่แค่ชื่อ ไม่ผูกกับรหัส เวลาเบิกให้แนะนำของซัพที่มีของในสต็อก เลือกได้ว่าจะเอาของซัพไหน") — ผลลัพธ์
+// รวม rmId เองด้วยเสมอ (ยาวอย่างน้อย 1 แถว) ให้ใช้เป็น default ได้แม้ไม่มีซัพอื่นชื่อเดียวกันเลย
+function _rmSiblings(rmId) {
+  const base = _rmMasterCache.find(r => r.RM_ID === rmId);
+  if (!base) return [];
+  const name = (base.RM_Name || '').trim();
+  return _rmMasterCache.filter(r => r.Category === base.Category && (r.RM_Name || '').trim() === name)
+    .map(r => ({ ...r, _stock: parseFloat(_stockRmCache.find(s => s.RM_ID === r.RM_ID)?.Qty) || 0 }))
+    .sort((a, b) => b._stock - a._stock);
 }
 // ต้นทุนต่อ 1 หน่วยสินค้า = รวม (ปริมาณที่ต้องเตรียมรวม Scrap ของแต่ละวัตถุดิบ × ราคาเฉลี่ยปัจจุบันของวัตถุดิบนั้น)
 // incomplete = true ถ้ามีวัตถุดิบในสูตรอย่างน้อย 1 ตัวที่ยังไม่เคยรับเข้าแบบใส่ราคา (ต้นทุนที่ได้จะต่ำกว่าจริง)
@@ -6303,7 +6318,10 @@ function planRenderTable() {
   document.getElementById('planTableBody').innerHTML = rows.map(p => {
     let actions;
     if (p.Status === 'วางแผน') {
-      actions = `<button class="btn btn-sm btn-outline-primary me-1" onclick="planOpenForm('${p.MO_ID}')" title="แก้ไข"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="planDelete('${p.MO_ID}')" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
+      // ปุ่มเบิกเข้าไลน์ผลิตตรงจากการ์ด MO เลย (ผู้ใช้ขอ 2026-10-10) — เรียก issueOpenForm ตัวเดียวกับที่หน้า
+      // "เบิกวัตถุดิบ" ใช้อยู่แล้ว ไม่ต้องสลับหน้าไปหา MO นี้อีกรอบ
+      actions = `<button class="btn btn-sm btn-success me-1" onclick="issueOpenForm('${p.MO_ID}')" title="เบิกวัตถุดิบเข้าไลน์ผลิต"><i class="fa-solid fa-dolly"></i></button>`
+        + `<button class="btn btn-sm btn-outline-primary me-1" onclick="planOpenForm('${p.MO_ID}')" title="แก้ไข"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="planDelete('${p.MO_ID}')" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
     } else if (_editPendingFor('manufacturing_orders', p.MO_ID)) {
       actions = `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอลบรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
     } else if (p.Status === 'ปิดงาน') {
@@ -6320,9 +6338,10 @@ function planRenderTable() {
     return `<tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td>
     <td>${p.PlanEndDate && p.PlanEndDate !== p.PlanDate ? `${fmtDate(p.PlanDate)} - ${fmtDate(p.PlanEndDate)}` : fmtDate(p.PlanDate)}</td>
     <td>${esc(p.Lot||'-')}</td><td>${esc(p.Order_ID||'-')}</td><td>${badge(p.Status, MO_STATUS_BADGE[p.Status])}</td>
+    <td class="small text-muted">${esc(p.CreatedBy || '-')}</td>
     <td class="text-nowrap">${actions}</td></tr>`;
   }).join('')
-    || '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มีแผนผลิต</td></tr>';
+    || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีแผนผลิต</td></tr>';
 }
 // MO เบิกวัตถุดิบไปแล้ว (Status ไม่ใช่ "วางแผน") — แก้ไขไม่ได้ ลบตรงไม่ได้ ต้องส่งคำขอให้แอดมินอนุมัติก่อน
 // (อนุมัติแล้วระบบคืนวัตถุดิบที่เบิกไปทั้งหมดกลับเข้าสต็อกให้อัตโนมัติ — ดู migration_2026-09-28_mo_delete_request.sql)
@@ -6469,6 +6488,11 @@ async function planModalSave() {
   } else {
     payload.MO_ID = await _nextMoId();
     payload.Status = 'วางแผน';
+    // คอลัมน์ CreatedBy มาจาก migration_2026-10-10_mo_createdby.sql — ถ้ายังไม่รัน SQL ก็แค่ไม่บันทึกชื่อผู้
+    // สร้าง (ไม่บล็อกการสร้าง MO เหมือนเช็ค Lot/PlanEndDate ข้างบน เพราะเป็นข้อมูลเสริม ไม่ใช่ field บังคับ)
+    if (_planCache.some(r => 'CreatedBy' in r)) {
+      payload.CreatedBy = _currentUser?.name || _currentUser?.email || null;
+    }
     ok = await sbRun(_sb.from('manufacturing_orders').insert(payload), 'สร้าง MO ไม่สำเร็จ');
   }
   if (ok === null) return;
@@ -7626,15 +7650,23 @@ async function issueHistDeleteAllRequest(gi) {
 // ต้องเตรียม = QtyPerUnit × จำนวน ÷ (1 − %Scrap รวมของขั้นตอนเตรียมใน BOM/100) — สูตรกลางอยู่ที่ _bomWithScrap
 let _issueMoId = null;
 let _issueNeed = [];
-function issueOpenForm(moId) {
+// โหลดข้อมูลที่ต้องใช้ (BOM/สต็อก/ราคา) ให้เองถ้ายังไม่เคยโหลด — เดิมฟังก์ชันนี้ถูกเรียกจากหน้า "เบิกวัตถุดิบ"
+// เท่านั้น ซึ่ง issueLoad() โหลดให้ครบก่อนปุ่มจะโผล่อยู่แล้ว แต่ตอนนี้มีปุ่ม "เบิกเข้าไลน์ผลิต" บนการ์ด MO ของ
+// หน้า "คำสั่งผลิต (MO)" ด้วย (ผู้ใช้ขอ 2026-10-10) ซึ่งเข้าหน้านั้นตรงๆ ได้โดยไม่เคยแวะหน้าเบิกวัตถุดิบมาก่อน
+async function issueOpenForm(moId) {
+  if (!_bomCache.length) await bomLoad();
+  if (!_stockRmCache.length) await stockRmLoad();
   const mo = _planCache.find(p => p.MO_ID === moId);
   const fg = _fgMasterCache.find(f => f.FG_ID === mo.FG_ID);
   const need = _bomCache.filter(b => b.FG_ID === mo.FG_ID).map(b => {
     const rm = _rmMasterCache.find(r => r.RM_ID === b.RM_ID);
-    const stock = _stockRmCache.find(s => s.RM_ID === b.RM_ID);
+    // วัตถุดิบชื่อเดียวกันอาจมีหลายรหัส/ซัพพลายเออร์ (ดู _rmSiblings) — ตั้งต้นเลือกตัวที่สต็อกเหลือเยอะสุด
+    // (candidates เรียงมาก→น้อยแล้ว) ผู้ใช้กดเปลี่ยนเป็นซัพอื่นได้ที่ดรอปดาวน์ (ดู issueSupplierChanged)
+    const candidates = _rmSiblings(b.RM_ID);
+    const chosen = candidates[0] || rm;
     // %Scrap ไม่อยู่ใน BOM แล้ว — ความสูญเสียเกิดในขั้น "เตรียมวัตถุดิบ" ก่อนหน้านี้ ที่นี่เบิกตามสูตรตรงๆ
-    return { RM_ID: b.RM_ID, name: rm?.RM_Name || b.RM_ID, category: rm?.Category, unit: b.Unit,
-      qtyPerUnit: parseFloat(b.QtyPerUnit) || 0, steps: [], scrapPct: 0, available: parseFloat(stock?.Qty) || 0 };
+    return { RM_ID: chosen?.RM_ID || b.RM_ID, name: rm?.RM_Name || b.RM_ID, category: rm?.Category, unit: b.Unit,
+      qtyPerUnit: parseFloat(b.QtyPerUnit) || 0, steps: [], scrapPct: 0, candidates, available: parseFloat(chosen?._stock) || 0 };
   }).sort((a, b) => (_BOM_CAT_ORDER[a.category] ?? 0) - (_BOM_CAT_ORDER[b.category] ?? 0));
   if (!need.length) { Swal.fire('ยังไม่มีสูตร', 'สินค้านี้ยังไม่มีสูตรการผลิต (BOM) กรุณาตั้งค่าก่อน', 'info'); return; }
   _issueMoId = moId;
@@ -7647,7 +7679,11 @@ function issueOpenForm(moId) {
     ช่อง "เบิกจริง" ตั้งต้นเท่ากับปริมาณตามสูตร — แก้ได้ถ้าเบิกจริงต่างจากนี้ (สต็อกตัดตามช่องเบิกจริง)`;
   document.getElementById('issue-rows').innerHTML = need.map((n, i) => `
     <tr>
-      <td><div class="fw-semibold">${esc(n.name)}</div><div>${_bomCatBadge(n.category)}</div></td>
+      <td><div class="fw-semibold">${esc(n.name)}</div>
+        ${n.candidates.length > 1 ? `<select class="form-select form-select-sm mt-1" style="font-size:.78rem" onchange="issueSupplierChanged(${i}, this.value)">
+          ${n.candidates.map(c => `<option value="${esc(c.RM_ID)}" ${c.RM_ID === n.RM_ID ? 'selected' : ''}>${esc(c.RM_ID)} — ${esc(c.Supplier || 'ไม่ระบุซัพ')} (เหลือ ${_qtyFmtByCat(c._stock, n.category)})</option>`).join('')}
+        </select>` : ''}
+        <div>${_bomCatBadge(n.category)}</div></td>
       <td class="text-end fw-semibold" id="issue-base-${i}"></td>
       <td class="text-end" id="issue-avail-${i}"></td>
       <td><div class="input-group input-group-sm">
@@ -7677,6 +7713,15 @@ function issueCheckStock(i) {
   document.getElementById(`issue-avail-${i}`).innerHTML = `${_qtyFmtByCat(n.available, n.category)} ${esc(n.unit)}`
     + (short ? `<div class="small text-danger">ขาด ${_qtyFmtByCat(Math.round((qty - n.available) * 10000) / 10000, n.category)}</div>` : '')
     + (plan.length ? `<div class="small text-muted mt-1">ตัดจาก: ${_lotAllocText(plan, n.category && CAT_RAW_ALL.includes(n.category) ? _rmFmtQty : _bomFmtQty)}</div>` : '');
+}
+// ผู้ใช้เลือกซัพพลายเออร์อื่นของวัตถุดิบแถวนี้ (ดรอปดาวน์จาก _rmSiblings) — ชนิดวัตถุดิบเดียวกัน แค่เปลี่ยน
+// RM_ID ที่จะตัดสต็อกจริงกับยอดคงเหลือที่โชว์ จำนวนที่ต้องเบิก/กรอกไว้ไม่เปลี่ยนตาม (ดู issueOpenForm)
+function issueSupplierChanged(i, rmId) {
+  const n = _issueNeed[i];
+  const c = n.candidates.find(x => x.RM_ID === rmId);
+  n.RM_ID = rmId;
+  n.available = parseFloat(c?._stock) || 0;
+  issueCheckStock(i);
 }
 async function issueModalSave() {
   const forQty = parseFloat(document.getElementById('issue-forqty').value);
@@ -7760,9 +7805,11 @@ function issueGenFgChanged() {
     const m = _rmMasterCache.find(r => r.RM_ID === b.RM_ID);
     if (!m) return;
     const qtyPerUnit = parseFloat(b.QtyPerUnit) || 0;
-    const stock = _stockRmCache.find(s => s.RM_ID === b.RM_ID)?.Qty ?? 0;
+    // วัตถุดิบชื่อเดียวกันอาจมีหลายรหัส/ซัพพลายเออร์ (ดู _rmSiblings) — ตั้งต้นเลือกตัวที่สต็อกเหลือเยอะสุด
+    const candidates = _rmSiblings(b.RM_ID);
+    const chosen = candidates[0] || m;
     const qty = planQty ? _issgenRound(qtyPerUnit * planQty, m.Category) : '';
-    tbody.insertAdjacentHTML('beforeend', _issgenRowHTML(m.RM_ID, m.RM_Name, m.Unit, stock, qtyPerUnit, qty, m.Category));
+    tbody.insertAdjacentHTML('beforeend', _issgenRowHTML(chosen.RM_ID, m.RM_Name, m.Unit, chosen._stock, qtyPerUnit, qty, m.Category, candidates));
   });
   _issgenSortRows();
 }
@@ -7794,13 +7841,34 @@ function issueGenQtyChanged() {
     tr.querySelector('.issgen-qty').value = planQty ? _issgenRound(parseFloat(qpu) * planQty, tr.dataset.cat) : '';
   });
 }
-function _issgenRowHTML(rmId, name, unit, stockQty, qtyPerUnit, qty, category) {
+// candidates = ซัพพลายเออร์อื่นของวัตถุดิบชื่อเดียวกัน (ดู _rmSiblings) — มีมากกว่า 1 ตัวถึงจะโชว์ดรอปดาวน์ให้
+// เปลี่ยนซัพ (ดู issgenSupplierChanged) ปล่อยว่าง/undefined ได้สำหรับแถวที่เพิ่มเองแบบอิสระ (issgenAddMaterial
+// ผู้ใช้เลือกรหัสที่ต้องการตรงๆ อยู่แล้ว ไม่ต้องเสนอซัพอื่นซ้ำ)
+function _issgenRowHTML(rmId, name, unit, stockQty, qtyPerUnit, qty, category, candidates) {
+  const cands = candidates && candidates.length > 1 ? candidates : null;
+  const supplierSel = !cands ? '' : `<select class="form-select form-select-sm mt-1 issgen-supplier" style="font-size:.76rem" onchange="issgenSupplierChanged(this)">
+    ${cands.map(c => `<option value="${esc(c.RM_ID)}" ${c.RM_ID === rmId ? 'selected' : ''}>${esc(c.RM_ID)} — ${esc(c.Supplier || 'ไม่ระบุซัพ')} (เหลือ ${_rmFmtQty(c._stock)})</option>`).join('')}
+  </select>`;
   return `<tr class="issgen-row" data-rm="${esc(rmId)}" data-cat="${esc(category || '')}"${qtyPerUnit != null ? ` data-qtyperunit="${qtyPerUnit}"` : ''}>
-    <td><code>${esc(rmId)}</code></td><td>${esc(name)}</td>
-    <td class="text-end small ${(stockQty ?? 0) <= 0 ? 'text-danger fw-semibold' : 'text-muted'}">${stockQty != null ? _rmFmtQty(stockQty) : '—'}</td>
+    <td><code>${esc(rmId)}</code>${supplierSel}</td><td>${esc(name)}</td>
+    <td class="text-end small ${(stockQty ?? 0) <= 0 ? 'text-danger fw-semibold' : 'text-muted'}" data-stockcell>${stockQty != null ? _rmFmtQty(stockQty) : '—'}</td>
     <td><input type="number" min="0" step="any" class="form-control form-control-sm issgen-qty" value="${qty ?? ''}"></td>
     <td class="small text-muted">${esc(unit || '')}</td>
     <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" style="padding:0 8px !important" onclick="this.closest('tr').remove()"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
+}
+// ผู้ใช้เปลี่ยนซัพพลายเออร์ของวัตถุดิบแถวนี้ — อัปเดต data-rm ของแถวให้ตรงกับรหัสที่เลือก (ใช้ตอนบันทึกจริงที่
+// issueGenSave) พร้อมรีเฟรชรหัสที่โชว์กับยอดคงเหลือ ไม่แตะจำนวนที่กรอกไว้ (ชนิดวัตถุดิบเดียวกัน แค่คนละซัพ)
+function issgenSupplierChanged(sel) {
+  const tr = sel.closest('tr');
+  const rmId = sel.value;
+  tr.dataset.rm = rmId;
+  tr.querySelector('td code').textContent = rmId;
+  const stock = _stockRmCache.find(s => s.RM_ID === rmId)?.Qty ?? 0;
+  const cell = tr.querySelector('[data-stockcell]');
+  cell.textContent = _rmFmtQty(stock);
+  cell.classList.toggle('text-danger', stock <= 0);
+  cell.classList.toggle('fw-semibold', stock <= 0);
+  cell.classList.toggle('text-muted', stock > 0);
 }
 // ค้นหา+เลือกวัตถุดิบจาก Master แบบเดียวกับ reqoSearchMaterial/bomSearchMaterial
 function issgenSearchMaterial(q) {
@@ -7861,10 +7929,12 @@ async function issueGenSave() {
     if (!c.isConfirmed) return;
   }
   const moId = await _nextMoId();
-  const okMo = await sbRun(_sb.from('manufacturing_orders').insert({
+  const moPayload = {
     MO_ID: moId, FG_ID: fgId, PlanQty: planQty, PlanDate: issueDate, Lot: lot,
     Status: 'วางแผน', Note: 'สร้างอัตโนมัติจากเบิกเบ็ดเตล็ด',
-  }), 'สร้าง MO ไม่สำเร็จ');
+  };
+  if (_planCache.some(r => 'CreatedBy' in r)) moPayload.CreatedBy = _currentUser?.name || _currentUser?.email || null;
+  const okMo = await sbRun(_sb.from('manufacturing_orders').insert(moPayload), 'สร้าง MO ไม่สำเร็จ');
   if (okMo === null) return;
   const _issIds = await _nextIssueIds(issueDate, rows.map(n => n.RM_ID));
   const { data: alloc, error } = await _sb.rpc('rm_issue_post', {
