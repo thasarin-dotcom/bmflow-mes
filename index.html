@@ -2671,7 +2671,12 @@ function _downloadCsv(filename, headers, rows) {
 // เลขที่เบิก (Issue_ID) = ISS-ปีเดือนวัน-รหัสวัตถุดิบ — ถ้าวันเดียวกันมีเบิกวัตถุดิบตัวเดียวกันจากคนละ MO
 // (หรือสองแถวในชุดเดียวกัน) จะชนกัน (Issue_ID เป็น primary key) ต่อท้าย -2, -3 ... กันชน เหมือน Prep_ID
 // (แก้ 2026-10-03 — ก่อนหน้านี้รายการที่ชนจะเบิกไม่ผ่านเลยจนกว่าจะข้ามวัน)
+// จองแบบ atomic ฝั่ง DB ผ่าน next_issue_ids() ก่อน (migration_2026-10-11_atomic_id_seq_part2.sql) ถ้ายังไม่รัน
+// SQL ค่อย fallback เป็นวิธีเดิม (อ่านรายการที่ใช้แล้วมาเช็คชนเอง)
 async function _nextIssueIds(dateStr, rmIds) {
+  const { data: rpcData, error: rpcErr } = await _sb.rpc('next_issue_ids', { p_date: dateStr, p_rm_ids: rmIds });
+  if (!rpcErr) return rpcData;
+  if (rpcErr.code !== 'PGRST202') console.error(rpcErr);
   const { data } = await _sb.from('issue_production').select('Issue_ID').like('Issue_ID', `ISS-${dateStr}-%`);
   const used = new Set((data || []).map(r => r.Issue_ID));
   return rmIds.map(rmId => {
@@ -2681,10 +2686,16 @@ async function _nextIssueIds(dateStr, rmIds) {
     return id;
   });
 }
-// Lot รับกลับจากการเตรียม = RED-ปีเดือนวัน-ครั้ง (ผู้ใช้ขอ 2026-09-28) — "ครั้ง" นับจากล็อตที่มีอยู่แล้ววันนี้
-// (ทุกวัตถุดิบรวมกัน ไม่แยกตัว) กันชนด้วยเลขถัดไปเสมอ ต้อง rmLotLoad() ให้ _rmLotCache สดก่อนเรียก
-function _genRedLot(dateStr) {
-  const prefix = `RED-${_genLotForDate(dateStr)}-`;
+// Lot รับกลับจากการเตรียม = RED-ปีเดือนวัน-ครั้ง (ผู้ใช้ขอ 2026-09-28) — จองเลขแบบ atomic ฝั่ง DB ผ่าน
+// next_red_lot() ก่อน (migration_2026-10-11_atomic_id_seq_part2.sql) ถ้ายังไม่รัน SQL ค่อย fallback เป็นวิธีเดิม
+// (นับจาก _rmLotCache ที่โหลดไว้ — เดิมไม่ใช่ async เลย เปลี่ยนเป็น async เพื่อให้เรียก RPC ได้ ต้องแก้จุดเรียก
+// ใช้ด้วย — ต้อง rmLotLoad() ให้ _rmLotCache สดก่อนเรียก ถ้าใช้ fallback)
+async function _genRedLot(dateStr) {
+  const ymd = _genLotForDate(dateStr);
+  const { data, error } = await _sb.rpc('next_red_lot', { p_ymd: ymd });
+  if (!error) return data;
+  if (error.code !== 'PGRST202') console.error(error);
+  const prefix = `RED-${ymd}-`;
   const n = _rmLotCache.filter(l => (l.Lot || '').startsWith(prefix)).length + 1;
   return prefix + String(n).padStart(2, '0');
 }
@@ -5866,7 +5877,12 @@ async function reqOrderLoad() {
 function _reqLinesOf(reqId) { return _reqOrderLinesCache.filter(l => l.Req_ID === reqId); }
 // เลขที่ใบขอเบิก REQ-ปี-ลำดับ วิ่งไปเรื่อยๆ ต่อปี — อ่านค่ามากสุดที่มีจริงแล้ว+1 (บทเรียนเดียวกับ _nextMoId /
 // RC No: ต้อง max-based ไม่ใช่ count-based กันเลขซ้ำถ้ามีช่องว่างในลำดับ)
+// จองเลขแบบ atomic ฝั่ง DB ผ่าน next_req_id() ก่อน (migration_2026-10-11_atomic_id_seq_part2.sql) ถ้ายังไม่รัน
+// SQL (PGRST202) ค่อย fallback เป็นวิธีเดิม — เหมือน _nextMoId() ทุกประการ
 async function _nextReqId() {
+  const { data: rpcData, error: rpcErr } = await _sb.rpc('next_req_id');
+  if (!rpcErr) return rpcData;
+  if (rpcErr.code !== 'PGRST202') console.error(rpcErr);
   const year = new Date().getFullYear();
   const prefix = `REQ-${year}-`;
   const { data, error } = await _sb.from('req_orders').select('Req_ID').like('Req_ID', `${prefix}%`);
@@ -7127,7 +7143,7 @@ async function prepOpenSteps(id) {
   const steps = Array.isArray(p.Steps) && p.Steps.length ? p.Steps : PREP_DEFAULT_STEPS.map(s => ({ step: s, weight: null }));
   document.getElementById('preps-rows').innerHTML = steps.map(s => _prepStepRowHTML(s.step, s.weight)).join('');
   document.getElementById('preps-unit').textContent = t?.Unit || p.Unit || '';
-  document.getElementById('preps-lot').value = _genRedLot(todayStr());
+  document.getElementById('preps-lot').value = await _genRedLot(todayStr());
   // อายุหลังเตรียมนับรวมวันที่เริ่มเตรียม (PrepDate) ไม่ใช่วันนี้ที่กดรับกลับ — ถ้ารับกลับข้ามวันจาก
   // วันเตรียม อายุจะสั้นลงตามจริง ไม่ใช่นับใหม่จากวันที่กดปุ่ม · ยังไม่ได้ตั้ง ShelfLifeDays ต่อรายการไว้ก็
   // auto ได้เลยถ้าเป็นวัตถุดิบพร้อมผลิต (ของสด ใช้ค่ามาตรฐาน 3 วัน) ของแห้ง/เคมีต้องตั้งเองเพราะต่างกันมาก
@@ -8736,7 +8752,12 @@ let _genwdHistCache = [];
 // รูปแบบ MI-YYYYMM-### รีเซ็ตทุกเดือน ใช้เลขชุดเดียวกันทั้งฝั่งวัตถุดิบ (rm_withdraw) และฝั่ง FG ที่ไม่ผูก CO
 // (fg_withdraw.Order_ID เป็น null) เพราะโชว์รวมเป็นประวัติเดียวกันอยู่แล้ว ต้องรัน
 // migration_2026-10-06_genwd_docno.sql ก่อนคอลัมน์ DocNo ถึงจะมีจริง
+// จองเลขแบบ atomic ฝั่ง DB ผ่าน next_genwd_docno() ก่อน (migration_2026-10-11_atomic_id_seq_part2.sql) ถ้ายัง
+// ไม่รัน SQL ค่อย fallback เป็นวิธีเดิม
 async function _nextGenwdDocNo() {
+  const { data: rpcData, error: rpcErr } = await _sb.rpc('next_genwd_docno');
+  if (!rpcErr) return rpcData;
+  if (rpcErr.code !== 'PGRST202') console.error(rpcErr);
   const now = new Date();
   const prefix = `MI-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
   const [rm, fg] = await Promise.all([
@@ -9183,8 +9204,13 @@ function packboxRecalc() {
   remWrap.style.display = remainderBox ? '' : 'none';
 }
 // เลขที่กล่อง = CT-ลำดับ/yymmdd (วันที่แพ็ค) — ลำดับนับใหม่ทุกวัน (เหมือน Lot รับกลับจากการเตรียม RED-yymmdd-NN)
+// จองแบบ atomic ฝั่ง DB ผ่าน next_box_ids() ก่อน (migration_2026-10-11_atomic_id_seq_part2.sql, จองได้ทีเดียว
+// หลายเลขพร้อมกัน) ถ้ายังไม่รัน SQL ค่อย fallback เป็นวิธีเดิม
 async function _nextBoxIds(n, dateStr) {
   const ymd = _genLotForDate(dateStr);
+  const { data: rpcData, error: rpcErr } = await _sb.rpc('next_box_ids', { p_n: n, p_ymd: ymd });
+  if (!rpcErr) return rpcData;
+  if (rpcErr.code !== 'PGRST202') console.error(rpcErr);
   const suffix = `/${ymd}`;
   const { data } = await _sb.from('pack_boxes').select('Box_ID').like('Box_ID', `CT-%${suffix}`);
   const re = new RegExp(`^CT-(\\d+)${suffix.replace('/', '\\/')}$`);
