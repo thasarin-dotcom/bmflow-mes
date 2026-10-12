@@ -5273,7 +5273,11 @@ function _rcvEditDiffHtml(changes, type = 'rm_receive') {
   // NewIssueDate ไม่ใช่คอลัมน์จริงของ manufacturing_orders (ดู migration_2026-10-03_issue_date_bulk.sql) —
   // โชว์วันที่ใหม่ที่ขอเปลี่ยนแทน ไม่ใช่ "จาก → เป็น" ทั่วไป เพราะกระทบหลายแถว (ทุกวัตถุดิบใน MO นี้) พร้อมกัน
   if (type === 'issue_date_bulk') {
-    return `<div class="small"><i class="fa-solid fa-calendar-days me-1"></i>ขอเปลี่ยนวันที่เบิกของทุกวัตถุดิบใน MO นี้เป็น <b>${fmtDateLong(changes?.NewIssueDate?.[1])}</b></div>`;
+    // มีวันที่เดิมอยู่ด้วย ([old,new]) = รายการที่เปลี่ยนไปแล้วเลย (issue_date_bulk_change) ไม่ใช่คำขอที่รออนุมัติ
+    const oldD = changes?.NewIssueDate?.[0];
+    return oldD
+      ? `<div class="small"><i class="fa-solid fa-calendar-days me-1"></i>เปลี่ยนวันที่เบิกของทุกวัตถุดิบใน MO นี้ จาก <b>${fmtDateLong(oldD)}</b> เป็น <b>${fmtDateLong(changes?.NewIssueDate?.[1])}</b></div>`
+      : `<div class="small"><i class="fa-solid fa-calendar-days me-1"></i>ขอเปลี่ยนวันที่เบิกของทุกวัตถุดิบใน MO นี้เป็น <b>${fmtDateLong(changes?.NewIssueDate?.[1])}</b></div>`;
   }
   if (type === 'issue_qty_correct') {
     return `<div class="small"><i class="fa-solid fa-sliders me-1"></i>ขอแก้ "เบิกตั้งต้น" เป็น <b>${_rmFmtQty(changes?.QtyIssued?.[1])}</b>
@@ -5731,6 +5735,11 @@ function _rcvEditRealtime(payload) {
     timer: 8000, timerProgressBar: true, didOpen: el => el.addEventListener('click', () => { Swal.close(); go(); }) });
   if (payload.table === 'signup_requests') {
     if (payload.eventType === 'INSERT' && _hasRole('admin')) toast('info', `คำขอสมัครใช้งานใหม่: ${n.FirstName || ''} ${n.LastName || ''}`, 'กดเพื่อดู');
+  } else if (payload.eventType === 'INSERT' && n.Type === 'issue_date_bulk' && n.Status === 'อนุมัติแล้ว') {
+    // แจ้งเตือนว่ามีคนเปลี่ยนวันที่เบิกไปแล้ว (ไม่ใช่คำขอ) — เฉพาะหัวหน้าขึ้นไป และไม่แจ้งตัวเองที่เป็นคนแก้
+    if (_hasRole('supervisor') && n.RequestedByID !== me) {
+      toast('info', `${n.RequestedBy || 'ผู้ใช้'} เปลี่ยนวันที่เบิก ${n.RecordID}`, `เป็น ${fmtDate(n.Changes?.NewIssueDate?.[1])} — กดเพื่อดูประวัติ`);
+    }
   } else if (payload.eventType === 'INSERT' && _hasRole('admin') && n.RequestedByID !== me) {
     toast('info', `คำขอแก้ไข${EDIT_TYPES[n.Type]?.label || ''}ใหม่จาก ${n.RequestedBy || 'ผู้ใช้'}`, `${_rcvLabelAny(n.Type, n.RecordID)} — กดเพื่อดู`);
   } else if (payload.eventType === 'UPDATE' && n.RequestedByID === me && ['อนุมัติแล้ว', 'ไม่อนุมัติ'].includes(n.Status) && n.ReviewNote !== 'แอดมินแก้ไขเอง') {
@@ -7713,40 +7722,30 @@ function _issueDateBulkBtn(moId) {
   if (_editPendingFor('issue_date_bulk', moId)) return `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอแก้ไขวันที่เบิกรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
   return `<button class="btn btn-sm btn-outline-secondary" onclick="issueDateBulkEdit('${esc(moId)}')" title="แก้วันที่เบิกวัตถุดิบ (ทั้ง MO นี้)"><i class="fa-solid fa-calendar-days"></i></button>`;
 }
-// หัวหน้างานขึ้นไปแก้ได้ทันที ไม่ต้องรออนุมัติ (ผู้ใช้ขอ 2026-10-12 "แก้วันที่เบิกเข้าไลน์ ระดับหัวหน้าแก้ได้เลย") —
-// IssueDate เป็นแค่วันที่แสดง/เรียงลำดับ ไม่กระทบสต็อก/ยอดใดๆ (เหตุผลเดียวกับที่คำขอเดิมไม่แตะสต็อก) จึงอัปเดตตรงได้:
-// RLS ของ issue_production ยอมให้ authenticated UPDATE อยู่แล้ว (จำกัดแค่ DELETE ที่ต้องหัวหน้างานขึ้นไป) การจำกัดว่า
-// ใครแก้ตรงได้ทำฝั่งหน้าเว็บด้วย _hasRole('supervisor') เหมือนปุ่มอื่นๆ ที่แก้ตรง; operator ยังต้องส่งคำขอเหมือนเดิม
-// และ audit trigger บันทึกทุกแถวที่เปลี่ยนไว้ให้อัตโนมัติ
+// ทุกคนแก้วันที่เบิกได้ทันที ไม่ต้องรออนุมัติ แค่แจ้งเตือนหัวหน้า/แอดมินไว้ (ผู้ใช้ขอ 2026-10-12 "วันที่เบิก ให้เปลี่ยนได้
+// เลย ไม่ต้องรอขอ แค่แจ้งเตือนไว้" — รอบก่อนเปิดให้เฉพาะหัวหน้างาน รอบนี้เปิดทุกบทบาท) IssueDate เป็นแค่วันที่แสดง/เรียง
+// ลำดับ ไม่กระทบสต็อก/ยอดใดๆ ทำผ่าน RPC issue_date_bulk_change (migration_2026-10-12_issue_date_bulk_change.sql)
+// ที่อัปเดตทุกแถวของ MO + บันทึกประวัติลงหน้า "คำขอแก้ไข" เป็นรายการสถานะ "อนุมัติแล้ว" (เปลี่ยนเอง) ให้ตรวจย้อนได้
+// และหัวหน้า/แอดมินที่ออนไลน์อยู่เห็น toast แจ้งเตือนผ่าน realtime (_rcvEditRealtime)
 async function issueDateBulkEdit(moId) {
   const rows = _issueHistCache.filter(h => h.MO_ID === moId);
   if (!rows.length) return;
-  const direct = _hasRole('supervisor');
   const { value: form } = await Swal.fire({
-    title: 'แก้วันที่เบิกวัตถุดิบ', confirmButtonText: direct ? 'บันทึก' : 'ส่งคำขอ', cancelButtonText: 'ยกเลิก', showCancelButton: true, focusConfirm: false,
-    html: `<div class="text-start small mb-3">MO <b>${esc(moId)}</b> · ${rows.length} วัตถุดิบ — เปลี่ยนวันที่เบิกของทุกรายการพร้อมกัน</div>
+    title: 'แก้วันที่เบิกวัตถุดิบ', confirmButtonText: 'บันทึก', cancelButtonText: 'ยกเลิก', showCancelButton: true, focusConfirm: false,
+    html: `<div class="text-start small mb-3">MO <b>${esc(moId)}</b> · ${rows.length} วัตถุดิบ — เปลี่ยนวันที่เบิกของทุกรายการพร้อมกัน เปลี่ยนได้ทันที ระบบจะแจ้งหัวหน้า/แอดมินว่ามีการแก้ไข</div>
       <div class="text-start mb-2"><label class="form-label small mb-1">วันที่เบิกใหม่</label>
-        <input id="idb-date" type="date" class="swal2-input m-0" value="${esc(rows[0].IssueDate || '')}"></div>
-      ${direct ? '' : `<div class="text-start"><label class="form-label small mb-1">เหตุผลที่ขอแก้ไข</label>
-        <textarea id="idb-reason" class="swal2-textarea m-0" placeholder="เช่น พิมพ์วันที่ผิดตอนเบิก"></textarea></div>`}`,
+        <input id="idb-date" type="date" class="swal2-input m-0" value="${esc(rows[0].IssueDate || '')}"></div>`,
     preConfirm: () => {
       const date = document.getElementById('idb-date').value;
-      const reason = direct ? '' : document.getElementById('idb-reason').value.trim();
       if (!date) { Swal.showValidationMessage('เลือกวันที่เบิกใหม่'); return false; }
-      if (!direct && !reason) { Swal.showValidationMessage('ระบุเหตุผลที่ขอแก้ไข'); return false; }
-      return { date, reason };
+      return { date };
     },
   });
   if (!form) return;
-  if (direct) {
-    if (await sbRun(_sb.from('issue_production').update({ IssueDate: form.date }).eq('MO_ID', moId), 'แก้วันที่เบิกไม่สำเร็จ') === null) return;
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2000, title: 'แก้วันที่เบิกแล้ว' });
-    await issueLoad();
-    return;
-  }
-  const { error } = await _sb.rpc('issue_date_bulk_edit_request_create', { p_mo_id: moId, p_new_date: form.date, p_reason: form.reason });
-  if (error) { Swal.fire('ส่งคำขอไม่สำเร็จ', esc(error.message), 'error'); return; }
-  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: 'ส่งคำขอแล้ว — รอแอดมินอนุมัติ' });
+  if (form.date === rows[0].IssueDate && rows.every(r => r.IssueDate === form.date)) return;
+  const { error } = await _sb.rpc('issue_date_bulk_change', { p_mo_id: moId, p_new_date: form.date });
+  if (error) { _rpcErr(error, 'แก้วันที่เบิกไม่สำเร็จ', 'migration_2026-10-12_issue_date_bulk_change.sql'); return; }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: 'แก้วันที่เบิกแล้ว — แจ้งเตือนหัวหน้า/แอดมินแล้ว' });
   await Promise.all([issueLoad(), rcvEditLoadPending()]);
 }
 // ── เพิ่มรายการเบิกให้ MO ที่เบิกไปแล้ว (2026-10-04) ──
