@@ -783,6 +783,27 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
           </div>
         </div>
       </div>
+      <!-- คำนวณวัตถุดิบตามจำนวนแบท (ผู้ใช้ขอ 2026-10-12 "6 แบท กับ 7 แบท ใช้อะไรเท่าไหร่ จะได้รู้ว่าต้องสั่ง
+           อะไรล่วงหน้าเท่าไหร่") — เทียบ 2 แผนข้างกัน แก้จำนวนแบท/จำนวนวันได้ ดู dashPlanRender() -->
+      <div class="glass-card mt-3 mb-0">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+          <div>
+            <h6 class="mb-1"><i class="fa-solid fa-calculator me-2 text-primary"></i>คำนวณวัตถุดิบตามจำนวนแบท</h6>
+            <div class="small text-muted" id="dpInfo"></div>
+          </div>
+          <div class="d-flex flex-wrap gap-2 align-items-center">
+            <select id="dpFg" class="form-select form-select-sm w-auto" onchange="dashPlanFgChanged()" title="สินค้า"></select>
+            <div class="input-group input-group-sm" style="width:170px"><span class="input-group-text">แผน A</span><input type="number" min="0" step="1" id="dpA" value="6" class="form-control" oninput="dashPlanRender()"><span class="input-group-text">แบท</span></div>
+            <div class="input-group input-group-sm" style="width:170px"><span class="input-group-text">แผน B</span><input type="number" min="0" step="1" id="dpB" value="7" class="form-control" oninput="dashPlanRender()"><span class="input-group-text">แบท</span></div>
+            <div class="input-group input-group-sm" style="width:130px"><span class="input-group-text">×</span><input type="number" min="1" step="1" id="dpDays" value="1" class="form-control" oninput="dashPlanRender()"><span class="input-group-text">วัน</span></div>
+          </div>
+        </div>
+        <div class="table-responsive"><table class="table table-sm table-hover mb-0">
+          <thead id="dpHead"></thead>
+          <tbody id="dpBody"><tr><td class="text-center text-muted py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังโหลด...</td></tr></tbody>
+        </table></div>
+        <div class="small text-muted mt-2"><i class="fa-solid fa-circle-info me-1"></i>ต่อ 1 แบท = ตามสูตร BOM · ใช้จริง = ยอด "เบิกตั้งต้น" จากหน้าบันทึกผลิตของ MO ที่ผลิตจำนวนแบทนั้นพอดี (มีหลายรอบ = ค่าเฉลี่ย, ยังไม่เคยผลิต = ว่าง) · คงเหลือ = รวมทุกซัพพลายเออร์ที่ชื่อเดียวกัน ไม่นับล็อตที่หมดอายุแล้ว และยังไม่หักของที่ MO อื่นวางแผนไว้แต่ยังไม่ได้เบิก</div>
+      </div>
     </div>
   </div>
 
@@ -943,7 +964,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
 
   <!-- ═══════════════ MODAL: รายละเอียดแผนผลิตวันที่เลือก (ปฏิทิน) ═══════════════ -->
   <div class="modal fade" id="moCalDayModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header modal-header-brand">
           <h5 class="modal-title"><i class="fa-solid fa-calendar-day me-2"></i><span id="moCalDayTitle">แผนผลิตวันที่</span></h5>
@@ -951,7 +972,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
         </div>
         <div class="modal-body">
           <div class="table-responsive"><table class="table table-hover mb-0">
-            <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>Lot</th><th>สถานะ</th></tr></thead>
+            <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>Lot</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
             <tbody id="moCalDayBody"></tbody>
           </table></div>
         </div>
@@ -3732,6 +3753,129 @@ async function dashboardLoad() {
   document.getElementById('dashExpiringBody').innerHTML = fgExpiring.slice(0, 10).map(s =>
     `<tr><td>${esc(s.product_master?.FG_Name || s.FG_ID)}</td><td>${esc(s.Lot)}</td><td class="text-end">${_bomFmtQty(s.Qty)}</td><td>${fmtDate(s.ExpDate)}</td><td>${_dashDaysBadge(daysUntil(s.ExpDate))}</td></tr>`
   ).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มีล็อตใกล้หมดอายุ</td></tr>';
+
+  await dashPlanInit();
+}
+
+// ── คำนวณวัตถุดิบตามจำนวนแบท (ผู้ใช้ขอ 2026-10-12) ──
+// ใช้ BOM × ขนาดแบท (product_master.BatchSize — ตัวเดียวกับหน้าสร้าง MO/เบิกเบ็ดเตล็ด) × จำนวนแบท × จำนวนวัน
+// เทียบกับของที่มีอยู่ตอนนี้ แล้วบอกว่าต้องสั่งเพิ่มเท่าไหร่ — แสดง 2 แผนข้างกัน (ค่าเริ่มต้น 6 กับ 7 แบทตามที่
+// ผู้ใช้ถาม) แก้ตัวเลขเองได้ คำนวณสดในหน้าเว็บ ไม่บันทึกอะไรลงฐานข้อมูล
+async function dashPlanInit() {
+  if (!_fgMasterCache.length) await fgMasterLoad();
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  if (!_bomCache.length) await bomLoad();
+  if (!_stockRmCache.length) await stockRmLoad();
+  if (!_rmLotCache.length) await rmLotLoad();
+  const sel = document.getElementById('dpFg');
+  const fgs = _fgMasterCache.filter(f => _bomCache.some(b => b.FG_ID === f.FG_ID));
+  const prev = sel.value;
+  sel.innerHTML = fgs.map(f => `<option value="${esc(f.FG_ID)}">${esc(f.FG_Name)}</option>`).join('');
+  if (prev && fgs.some(f => f.FG_ID === prev)) sel.value = prev;
+  else if (fgs.some(f => f.BatchSize > 0)) sel.value = fgs.find(f => f.BatchSize > 0).FG_ID;
+  await _dashPlanLoadHist();
+  dashPlanRender();
+}
+async function dashPlanFgChanged() { await _dashPlanLoadHist(); dashPlanRender(); }
+// ยอดใช้จริงของรอบผลิตที่ผ่านมา (ผู้ใช้ขอ 2026-10-12: ช่อง "ใช้ 6/7 แบท" ต้องมาจากของที่เบิกผลิตจริง ไม่ใช่คูณ
+// จากสูตร — เลือกแบบ "ดึงรอบที่ผลิต N แบทพอดี" ไม่ใช่เฉลี่ยต่อแบทแล้วคูณ) — เอาเฉพาะ MO ที่มีบันทึกผลิตแล้ว
+// เพราะ QtyIssued ของ MO พวกนั้นผ่านการแก้ "เบิกตั้งต้น" ให้ตรงกับที่ใช้จริงแล้ว (issue_qty_correct) รวมรายการ
+// ที่เบิกเพิ่มทีหลังด้วย — จำนวนแบทของรอบ = จำนวนที่จะผลิตตอนเบิก (ForQty) ÷ ขนาดแบท (ถ้าไม่มี ForQty เช่น
+// เบิกเบ็ดเตล็ด ใช้ PlanQty ของ MO แทน)
+let _dpHist = { fgId: null, runs: [] };
+async function _dashPlanLoadHist() {
+  const fg = _fgMasterCache.find(f => f.FG_ID === document.getElementById('dpFg').value);
+  _dpHist = { fgId: fg?.FG_ID || null, runs: [] };
+  const batch = parseFloat(fg?.BatchSize) || 0;
+  if (!fg || !(batch > 0)) return;
+  const prods = await sbRun(_sb.from('production_records').select('MO_ID').eq('FG_ID', fg.FG_ID), 'โหลดประวัติผลิตไม่สำเร็จ') || [];
+  const moIds = [...new Set(prods.map(p => p.MO_ID).filter(Boolean))];
+  if (!moIds.length) return;
+  const [mos, iss] = await Promise.all([
+    sbRun(_sb.from('manufacturing_orders').select('MO_ID,PlanQty,PlanDate').in('MO_ID', moIds), 'โหลดประวัติผลิตไม่สำเร็จ'),
+    sbRun(_sb.from('issue_production').select('MO_ID,RM_ID,QtyIssued,ForQty').in('MO_ID', moIds), 'โหลดประวัติผลิตไม่สำเร็จ'),
+  ]);
+  _dpHist.runs = (mos || []).map(mo => {
+    const rows = (iss || []).filter(r => r.MO_ID === mo.MO_ID);
+    const forQty = parseFloat(rows.find(r => r.ForQty != null)?.ForQty) || parseFloat(mo.PlanQty) || 0;
+    const usage = {};
+    rows.forEach(r => { usage[r.RM_ID] = (usage[r.RM_ID] || 0) + (parseFloat(r.QtyIssued) || 0); });
+    return { moId: mo.MO_ID, date: mo.PlanDate, batches: forQty / batch, usage };
+  }).filter(r => Object.keys(r.usage).length)
+    .sort((x, y) => String(y.date || '').localeCompare(String(x.date || '')));
+}
+// ของที่ใช้ได้จริงตอนนี้ของวัตถุดิบตัวนี้ รวมทุกซัพพลายเออร์ที่ชื่อเดียวกัน (_rmSiblings — ตอนเบิกเลือกซัพไหน
+// ก็ได้อยู่แล้ว) ไม่นับล็อตที่หมดอายุไปแล้ว (สมุนไพรสดอายุสั้น ล็อตที่เลยวันหมดอายุยังค้างในสต็อกจนกว่าจะตัดเป็น
+// ของเสีย ถ้านับรวมจะทำให้คิดว่ามีของพอทั้งที่ใช้ไม่ได้จริง)
+function _dashPlanUsableStock(rmId) {
+  const today = todayStr();
+  return _rmSiblings(rmId).reduce((sum, c) =>
+    sum + _lotsFefo(c.RM_ID).filter(l => !l.ExpDate || l.ExpDate >= today).reduce((s, l) => s + (parseFloat(l.Qty) || 0), 0), 0);
+}
+function dashPlanRender() {
+  const head = document.getElementById('dpHead'), body = document.getElementById('dpBody'), info = document.getElementById('dpInfo');
+  const fg = _fgMasterCache.find(f => f.FG_ID === document.getElementById('dpFg').value);
+  const a = Math.max(0, parseFloat(document.getElementById('dpA').value) || 0);
+  const b = Math.max(0, parseFloat(document.getElementById('dpB').value) || 0);
+  const days = Math.max(1, parseInt(document.getElementById('dpDays').value) || 1);
+  const dayTxt = days > 1 ? ` × ${days} วัน` : '';
+  // รอบผลิตจริงที่ผลิตจำนวนแบทนั้น "พอดี" (เผื่อทศนิยมจากการปัด PlanQty เล็กน้อย) — หลายรอบเอาค่าเฉลี่ย
+  const runs = _dpHist.fgId === fg?.FG_ID ? _dpHist.runs : [];
+  const runsA = a > 0 ? runs.filter(r => Math.abs(r.batches - a) < 0.05) : [];
+  const runsB = b > 0 ? runs.filter(r => Math.abs(r.batches - b) < 0.05) : [];
+  const runNote = rs => !rs.length ? '<div class="small fw-normal text-muted">ยังไม่เคยผลิต</div>'
+    : `<div class="small fw-normal text-muted" title="${esc(rs.map(r => r.moId).join(', '))}">${rs.length === 1 ? `MO ${esc(rs[0].moId)}` : `เฉลี่ย ${rs.length} รอบ`}</div>`;
+  head.innerHTML = `<tr><th>วัตถุดิบ / แพ็คเกจจิ้ง</th><th class="text-end">ต่อ 1 แบท<div class="small fw-normal text-muted">ตามสูตร</div></th>
+    <th class="text-end">ใช้จริง ${_bomFmtQty(a)} แบท${dayTxt}${runNote(runsA)}</th><th class="text-end">ใช้จริง ${_bomFmtQty(b)} แบท${dayTxt}${runNote(runsB)}</th>
+    <th class="text-end">คงเหลือใช้ได้</th><th class="text-end">ต้องสั่งเพิ่ม (${_bomFmtQty(a)} แบท)</th><th class="text-end">ต้องสั่งเพิ่ม (${_bomFmtQty(b)} แบท)</th></tr>`;
+  if (!fg) { info.textContent = ''; body.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีสินค้าที่ตั้งสูตรไว้</td></tr>'; return; }
+  const batch = parseFloat(fg.BatchSize) || 0;
+  if (!(batch > 0)) {
+    info.textContent = '';
+    body.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">สินค้านี้ยังไม่ได้ตั้งขนาดแบท — ตั้งได้ที่หน้า "สูตรแม่บท"</td></tr>';
+    return;
+  }
+  const unit = esc(fg.Unit || 'หน่วย');
+  info.innerHTML = `1 แบท = ${_bomFmtQty(batch)} ${unit} · ${_bomFmtQty(a)} แบท = <b>${_bomFmtQty(batch * a * days)}</b> ${unit} · ${_bomFmtQty(b)} แบท = <b>${_bomFmtQty(batch * b * days)}</b> ${unit}${days > 1 ? ` (รวม ${days} วัน)` : ''}`;
+  // แต่ละบรรทัดในสูตรนับยอดใช้จริงรวมทุกซัพพลายเออร์ที่ชื่อเดียวกัน (ตอนเบิกอาจเลือกซัพอื่นที่ไม่ใช่รหัสในสูตร)
+  const covered = new Set();
+  const lines = _bomCache.filter(x => x.FG_ID === fg.FG_ID).map(x => {
+    const rm = _rmMasterCache.find(r => r.RM_ID === x.RM_ID);
+    const raw = (parseFloat(x.QtyPerUnit) || 0) * batch;
+    const scrapped = _bomWithScrap(raw, _bomScrapTotal(_bomScrapSteps(x)));
+    const ids = _rmSiblings(x.RM_ID).map(c => c.RM_ID);
+    if (!ids.length) ids.push(x.RM_ID);
+    ids.forEach(id => covered.add(id));
+    return { rm, unit: rm?.Unit || x.Unit || '', ids, perBatch: Number.isFinite(scrapped) ? scrapped : raw, stockId: x.RM_ID };
+  });
+  // ของที่เบิกจริงแต่ไม่อยู่ในสูตร (เบิกเพิ่มเอง) ของรอบที่ตรงจำนวนแบท — โชว์ด้วยให้สั่งของครบ ไม่มี "ต่อ 1 แบท"
+  [...new Set([...runsA, ...runsB].flatMap(r => Object.keys(r.usage)))].filter(id => !covered.has(id)).forEach(id => {
+    const rm = _rmMasterCache.find(r => r.RM_ID === id);
+    lines.push({ rm, unit: rm?.Unit || '', ids: [id], perBatch: null, stockId: id, extra: true });
+  });
+  // เรียงแบบเดียวกับใบบันทึกผลิต (_prpHalfHTML): กลุ่มหมวดหมู่ก่อน (_BOM_CAT_ORDER) แล้วตามรหัสในกลุ่ม (ผู้ใช้ขอ 2026-10-12)
+  lines.sort((p, q) => (_BOM_CAT_ORDER[p.rm?.Category || 'วัตถุดิบ'] ?? 9) - (_BOM_CAT_ORDER[q.rm?.Category || 'วัตถุดิบ'] ?? 9)
+    || String(p.stockId).localeCompare(String(q.stockId), undefined, { numeric: true }));
+  const avgUsed =(rs, ids) => rs.length ? rs.reduce((s, r) => s + ids.reduce((t, id) => t + (r.usage[id] || 0), 0), 0) / rs.length * days : null;
+  const qtyCell = (q, cat, u, cls = '') => q == null ? `<td class="text-end text-muted ${cls}">—</td>` : `<td class="text-end ${cls}">${_qtyFmtByCat(_issueQtyRound(q, cat), cat)} ${u}</td>`;
+  const shortCell = (need, stock, cat, u) => {
+    if (need == null) return '<td class="text-end text-muted">—</td>';
+    const short = need - stock;
+    return short > 1e-9
+      ? `<td class="text-end text-danger fw-bold">${_qtyFmtByCat(_issueQtyRound(short, cat), cat)} ${u}</td>`
+      : '<td class="text-end text-success"><i class="fa-solid fa-check me-1"></i>พอ</td>';
+  };
+  body.innerHTML = lines.map(l => {
+    const cat = l.rm?.Category, u = esc(l.unit);
+    const stock = _dashPlanUsableStock(l.stockId);
+    const needA = avgUsed(runsA, l.ids), needB = avgUsed(runsB, l.ids);
+    return `<tr>
+      <td><code class="me-1">${esc(l.stockId)}</code>${esc(l.rm?.RM_Name || l.stockId)} ${_bomCatBadge(cat)}${l.extra ? ' <span class="badge bg-light text-dark border">นอกสูตร</span>' : ''}</td>
+      ${qtyCell(l.perBatch, cat, u, 'text-muted')}${qtyCell(needA, cat, u)}${qtyCell(needB, cat, u)}
+      <td class="text-end">${_qtyFmtByCat(stock, cat)} ${u}</td>
+      ${shortCell(needA, stock, cat, u)}${shortCell(needB, stock, cat, u)}
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="text-center text-muted py-3">สินค้านี้ยังไม่มีรายการในสูตร</td></tr>';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -6428,30 +6572,37 @@ async function _planReconcileFgStatus() {
   await Promise.all(fixMoIds.map(id => _sb.from('manufacturing_orders').update({ Status: 'รับ FG แล้ว' }).eq('MO_ID', id).eq('Status', 'ผลิตแล้ว')));
   fixMoIds.forEach(id => { const row = _planCache.find(p => p.MO_ID === id); if (row) row.Status = 'รับ FG แล้ว'; });
 }
+// ปุ่มจัดการของ MO แถวหนึ่งตามสถานะ — ใช้ร่วมกันทั้งตาราง MO และหน้าต่างรายละเอียดวันในปฏิทินผลิต (ผู้ใช้ขอ
+// 2026-10-12 "ให้แก้ได้ด้วย" ตอนกดดูแผนผลิตวันนั้นในปฏิทิน) กฎเดิมทุกอย่าง: "วางแผน" แก้/ลบ/เบิกตรงได้, เบิกไปแล้ว
+// ต้องผ่านคำขอแก้ไข/ขอลบ
+function _planActionsHtml(p) {
+  let actions;
+  if (p.Status === 'วางแผน') {
+    // ปุ่มเบิกเข้าไลน์ผลิตตรงจากการ์ด MO เลย (ผู้ใช้ขอ 2026-10-10) — เรียก issueOpenForm ตัวเดียวกับที่หน้า
+    // "เบิกวัตถุดิบ" ใช้อยู่แล้ว ไม่ต้องสลับหน้าไปหา MO นี้อีกรอบ
+    actions = `<button class="btn btn-sm btn-success me-1" onclick="issueOpenForm('${p.MO_ID}')" title="เบิกเข้าไลน์ผลิต"><i class="fa-solid fa-dolly"></i></button>`
+      + `<button class="btn btn-sm btn-outline-primary me-1" onclick="planOpenForm('${p.MO_ID}')" title="แก้ไข"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="planDelete('${p.MO_ID}')" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
+  } else if (_editPendingFor('manufacturing_orders', p.MO_ID)) {
+    actions = `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอลบรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
+  } else if (p.Status === 'ปิดงาน') {
+    actions = _editBtn('mo_edit', p.MO_ID) + (_hasRole('supervisor')
+      ? `<button class="btn btn-sm btn-outline-secondary" onclick="planReopenMo('${p.MO_ID}')" title="เปิดงานอีกครั้ง"><i class="fa-solid fa-rotate-left"></i></button>`
+      : '');
+  } else {
+    // "รับ FG แล้ว" (ผู้ใช้ขอ 2026-10-05 — ตั้งให้อัตโนมัติใน fgReceiveModalSave ตอนรับครบ 100%) ปิดงานได้
+    // เหมือน "ผลิตแล้ว" ทุกประการ แค่บอกว่าไปถึงขั้นไหนแล้วชัดเจนขึ้น ไม่ใช่เงื่อนไขใหม่ที่บังคับก่อนปิดงาน
+    actions = _editBtn('mo_edit', p.MO_ID)
+      + `<button class="btn btn-sm btn-outline-danger me-1" onclick="planRequestDelete('${p.MO_ID}')" title="เบิกวัตถุดิบไปแล้ว แก้ไขไม่ได้ — ขอลบ (รอแอดมินอนุมัติ)"><i class="fa-solid fa-trash"></i></button>`
+      + (['ผลิตแล้ว', 'รับ FG แล้ว'].includes(p.Status) ? `<button class="btn btn-sm btn-outline-success" onclick="planCloseMo('${p.MO_ID}')" title="ปิดงาน — จบขั้นตอนของ MO นี้"><i class="fa-solid fa-flag-checkered"></i></button>` : '');
+  }
+  return actions;
+}
 function planRenderTable() {
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const q = (document.getElementById('planSearch').value || '').toLowerCase();
   const rows = _planCache.filter(p => !q || JSON.stringify(p).toLowerCase().includes(q));
   document.getElementById('planTableBody').innerHTML = rows.map(p => {
-    let actions;
-    if (p.Status === 'วางแผน') {
-      // ปุ่มเบิกเข้าไลน์ผลิตตรงจากการ์ด MO เลย (ผู้ใช้ขอ 2026-10-10) — เรียก issueOpenForm ตัวเดียวกับที่หน้า
-      // "เบิกวัตถุดิบ" ใช้อยู่แล้ว ไม่ต้องสลับหน้าไปหา MO นี้อีกรอบ
-      actions = `<button class="btn btn-sm btn-success me-1" onclick="issueOpenForm('${p.MO_ID}')" title="เบิกเข้าไลน์ผลิต"><i class="fa-solid fa-dolly"></i></button>`
-        + `<button class="btn btn-sm btn-outline-primary me-1" onclick="planOpenForm('${p.MO_ID}')" title="แก้ไข"><i class="fa-solid fa-pen"></i></button><button class="btn btn-sm btn-outline-danger" onclick="planDelete('${p.MO_ID}')" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
-    } else if (_editPendingFor('manufacturing_orders', p.MO_ID)) {
-      actions = `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอลบรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
-    } else if (p.Status === 'ปิดงาน') {
-      actions = _editBtn('mo_edit', p.MO_ID) + (_hasRole('supervisor')
-        ? `<button class="btn btn-sm btn-outline-secondary" onclick="planReopenMo('${p.MO_ID}')" title="เปิดงานอีกครั้ง"><i class="fa-solid fa-rotate-left"></i></button>`
-        : '');
-    } else {
-      // "รับ FG แล้ว" (ผู้ใช้ขอ 2026-10-05 — ตั้งให้อัตโนมัติใน fgReceiveModalSave ตอนรับครบ 100%) ปิดงานได้
-      // เหมือน "ผลิตแล้ว" ทุกประการ แค่บอกว่าไปถึงขั้นไหนแล้วชัดเจนขึ้น ไม่ใช่เงื่อนไขใหม่ที่บังคับก่อนปิดงาน
-      actions = _editBtn('mo_edit', p.MO_ID)
-        + `<button class="btn btn-sm btn-outline-danger me-1" onclick="planRequestDelete('${p.MO_ID}')" title="เบิกวัตถุดิบไปแล้ว แก้ไขไม่ได้ — ขอลบ (รอแอดมินอนุมัติ)"><i class="fa-solid fa-trash"></i></button>`
-        + (['ผลิตแล้ว', 'รับ FG แล้ว'].includes(p.Status) ? `<button class="btn btn-sm btn-outline-success" onclick="planCloseMo('${p.MO_ID}')" title="ปิดงาน — จบขั้นตอนของ MO นี้"><i class="fa-solid fa-flag-checkered"></i></button>` : '');
-    }
+    const actions = _planActionsHtml(p);
     return `<tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td>
     <td>${p.PlanEndDate && p.PlanEndDate !== p.PlanDate ? `${fmtDate(p.PlanDate)} - ${fmtDate(p.PlanEndDate)}` : fmtDate(p.PlanDate)}</td>
     <td>${esc(p.Lot||'-')}</td><td>${esc(p.Order_ID||'-')}</td><td>${badge(p.Status, MO_STATUS_BADGE[p.Status])}</td>
@@ -6736,9 +6887,22 @@ function moCalOpenDayModal(dateStr) {
       <td>${esc(mo.MO_ID)}</td><td>${esc(fgMap[mo.FG_ID]?.FG_Name || mo.FG_ID)}</td>
       <td class="text-end">${_bomFmtQty(mo.PlanQty)} ${esc(fgMap[mo.FG_ID]?.Unit || '')}</td>
       <td>${esc(mo.Lot || '-')}</td><td>${badge(mo.Status, MO_STATUS_BADGE[mo.Status])}</td>
-    </tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มีแผนผลิตวันนี้</td></tr>';
+      <td class="text-nowrap">${_planActionsHtml(mo)}</td>
+    </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีแผนผลิตวันนี้</td></tr>';
   bootstrap.Modal.getOrCreateInstance(document.getElementById('moCalDayModal')).show();
 }
+// ปุ่มจัดการในหน้าต่างรายละเอียดวัน (ปุ่มชุดเดียวกับตาราง MO — _planActionsHtml) หลายปุ่มเปิดหน้าต่างอื่นต่อ
+// (แก้ไข/เบิกเข้าไลน์/คำขอแก้ไข) Bootstrap ซ้อนหลาย modal พร้อมกันไม่ได้ จึงปิดหน้าต่างวันก่อน แล้วค่อยรัน onclick
+// เดิมของปุ่มหลังปิดเสร็จ (ดักตอน capture ก่อน onclick ของปุ่มทำงาน) — ปุ่มที่เป็นแค่ Swal ยืนยัน/ไปหน้าอื่น
+// ก็ทำงานตามปกติหลังปิดเหมือนกัน
+document.addEventListener('click', e => {
+  const btn = e.target.closest?.('#moCalDayBody button[onclick]');
+  if (!btn) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const run = btn.onclick, modalEl = document.getElementById('moCalDayModal');
+  modalEl.addEventListener('hidden.bs.modal', () => run.call(btn), { once: true });
+  bootstrap.Modal.getInstance(modalEl)?.hide();
+}, true);
 
 // ═══════════════════════════════════════════════════════════
 // PREP — เตรียมวัตถุดิบ: เบิกสด → คัด/ล้าง/อบ/บด/ย่อย → รับกลับเป็น "วัตถุดิบพร้อมผลิต" (migration_2026-09-25_prep.sql)
@@ -7547,25 +7711,37 @@ function _issueDateBulkBtn(moId) {
   if (_editPendingFor('issue_date_bulk', moId)) return `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอแก้ไขวันที่เบิกรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`;
   return `<button class="btn btn-sm btn-outline-secondary" onclick="issueDateBulkEdit('${esc(moId)}')" title="แก้วันที่เบิกวัตถุดิบ (ทั้ง MO นี้)"><i class="fa-solid fa-calendar-days"></i></button>`;
 }
+// หัวหน้างานขึ้นไปแก้ได้ทันที ไม่ต้องรออนุมัติ (ผู้ใช้ขอ 2026-10-12 "แก้วันที่เบิกเข้าไลน์ ระดับหัวหน้าแก้ได้เลย") —
+// IssueDate เป็นแค่วันที่แสดง/เรียงลำดับ ไม่กระทบสต็อก/ยอดใดๆ (เหตุผลเดียวกับที่คำขอเดิมไม่แตะสต็อก) จึงอัปเดตตรงได้:
+// RLS ของ issue_production ยอมให้ authenticated UPDATE อยู่แล้ว (จำกัดแค่ DELETE ที่ต้องหัวหน้างานขึ้นไป) การจำกัดว่า
+// ใครแก้ตรงได้ทำฝั่งหน้าเว็บด้วย _hasRole('supervisor') เหมือนปุ่มอื่นๆ ที่แก้ตรง; operator ยังต้องส่งคำขอเหมือนเดิม
+// และ audit trigger บันทึกทุกแถวที่เปลี่ยนไว้ให้อัตโนมัติ
 async function issueDateBulkEdit(moId) {
   const rows = _issueHistCache.filter(h => h.MO_ID === moId);
   if (!rows.length) return;
+  const direct = _hasRole('supervisor');
   const { value: form } = await Swal.fire({
-    title: 'แก้วันที่เบิกวัตถุดิบ', confirmButtonText: 'ส่งคำขอ', cancelButtonText: 'ยกเลิก', showCancelButton: true, focusConfirm: false,
+    title: 'แก้วันที่เบิกวัตถุดิบ', confirmButtonText: direct ? 'บันทึก' : 'ส่งคำขอ', cancelButtonText: 'ยกเลิก', showCancelButton: true, focusConfirm: false,
     html: `<div class="text-start small mb-3">MO <b>${esc(moId)}</b> · ${rows.length} วัตถุดิบ — เปลี่ยนวันที่เบิกของทุกรายการพร้อมกัน</div>
       <div class="text-start mb-2"><label class="form-label small mb-1">วันที่เบิกใหม่</label>
         <input id="idb-date" type="date" class="swal2-input m-0" value="${esc(rows[0].IssueDate || '')}"></div>
-      <div class="text-start"><label class="form-label small mb-1">เหตุผลที่ขอแก้ไข</label>
-        <textarea id="idb-reason" class="swal2-textarea m-0" placeholder="เช่น พิมพ์วันที่ผิดตอนเบิก"></textarea></div>`,
+      ${direct ? '' : `<div class="text-start"><label class="form-label small mb-1">เหตุผลที่ขอแก้ไข</label>
+        <textarea id="idb-reason" class="swal2-textarea m-0" placeholder="เช่น พิมพ์วันที่ผิดตอนเบิก"></textarea></div>`}`,
     preConfirm: () => {
       const date = document.getElementById('idb-date').value;
-      const reason = document.getElementById('idb-reason').value.trim();
+      const reason = direct ? '' : document.getElementById('idb-reason').value.trim();
       if (!date) { Swal.showValidationMessage('เลือกวันที่เบิกใหม่'); return false; }
-      if (!reason) { Swal.showValidationMessage('ระบุเหตุผลที่ขอแก้ไข'); return false; }
+      if (!direct && !reason) { Swal.showValidationMessage('ระบุเหตุผลที่ขอแก้ไข'); return false; }
       return { date, reason };
     },
   });
   if (!form) return;
+  if (direct) {
+    if (await sbRun(_sb.from('issue_production').update({ IssueDate: form.date }).eq('MO_ID', moId), 'แก้วันที่เบิกไม่สำเร็จ') === null) return;
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2000, title: 'แก้วันที่เบิกแล้ว' });
+    await issueLoad();
+    return;
+  }
   const { error } = await _sb.rpc('issue_date_bulk_edit_request_create', { p_mo_id: moId, p_new_date: form.date, p_reason: form.reason });
   if (error) { Swal.fire('ส่งคำขอไม่สำเร็จ', esc(error.message), 'error'); return; }
   Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: 'ส่งคำขอแล้ว — รอแอดมินอนุมัติ' });
