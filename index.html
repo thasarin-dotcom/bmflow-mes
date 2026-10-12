@@ -1395,14 +1395,16 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
         <input class="form-check-input" type="checkbox" id="rcvEditMine" onchange="rcvEditRender()">
         <label class="form-check-label text-white small" for="rcvEditMine">เฉพาะคำขอของฉัน</label>
       </div>
-    </div>
-    <!-- แถบดำเนินการหลายรายการพร้อมกัน (ผู้ใช้ขอ 2026-10-05 "ให้เลือกได้หลายรายการ" — คำขอลบทั้งการ์ด/ลบทั้ง MO
-         สร้างคำขอเดี่ยวทีละแถวเยอะมาก อนุมัติทีละแถวไม่ไหว) เฉพาะแอดมิน แสดงเมื่อเลือกอย่างน้อย 1 รายการ -->
-    <div class="d-none align-items-center gap-2 mt-2" id="rcvEditBulkBar">
-      <span class="small text-white" id="rcvEditBulkCount"></span>
-      <button class="btn btn-sm btn-success" onclick="rcvEditBulkApprove()"><i class="fa-solid fa-check-double me-1"></i>อนุมัติที่เลือก</button>
-      <button class="btn btn-sm btn-outline-danger" onclick="rcvEditBulkReject()"><i class="fa-solid fa-xmark me-1"></i>ไม่อนุมัติที่เลือก</button>
-      <button class="btn btn-sm btn-outline-light" onclick="_rcvEditClearSelection()">ล้างการเลือก</button>
+      <!-- แถบดำเนินการหลายรายการพร้อมกัน (ผู้ใช้ขอ 2026-10-05 "ให้เลือกได้หลายรายการ" — คำขอลบทั้งการ์ด/ลบทั้ง MO
+           สร้างคำขอเดี่ยวทีละแถวเยอะมาก อนุมัติทีละแถวไม่ไหว) เฉพาะแอดมิน แสดงเมื่อเลือกอย่างน้อย 1 รายการ
+           — อยู่แถวเดียวกับตัวกรองข้างบน (ผู้ใช้ขอ 2026-10-12 "เลื่อนขึ้นมาข้างบน ไม่ให้เบียดตาราง") เดิมเป็นแถวแยก
+           ใต้ตัวกรองติดหัวตารางพอดี และโผล่/หายทีไรตารางก็ขยับขึ้นลงตาม -->
+      <div class="d-none align-items-center gap-2 ms-2" id="rcvEditBulkBar">
+        <span class="small text-white" id="rcvEditBulkCount"></span>
+        <button class="btn btn-sm btn-success" onclick="rcvEditBulkApprove()"><i class="fa-solid fa-check-double me-1"></i>อนุมัติที่เลือก</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="rcvEditBulkReject()"><i class="fa-solid fa-xmark me-1"></i>ไม่อนุมัติที่เลือก</button>
+        <button class="btn btn-sm btn-outline-light" onclick="_rcvEditClearSelection()">ล้างการเลือก</button>
+      </div>
     </div></div>
     <div class="scroll-content"><div class="glass-card p-0 overflow-hidden"><div class="table-responsive"><table class="table table-hover mb-0 align-middle">
       <thead><tr><th style="width:36px" id="rcvEditSelectAllWrap"><input type="checkbox" class="form-check-input" id="rcvEditSelectAll" onchange="_rcvEditToggleSelectAll(this.checked)"></th><th>วันที่ขอ</th><th>ประเภท</th><th>รายการ</th><th>ขอแก้ (จาก → เป็น)</th><th>เหตุผล</th><th>ผู้ขอ</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
@@ -8440,6 +8442,14 @@ async function prodRecordPrint(id) {
     MfgDate: group.map(r => r.MfgDate).sort()[0],
     Note: [...new Set(group.map(r => r.Note).filter(Boolean))].join(' / ') || null,
   };
+  // เลขที่บนใบ = PR-ปีเดือน-ลำดับ-จำนวน MO เช่น PR-2610-01-2M (ผู้ใช้ขอ 2026-10-12 แทนการต่อเลข Prod_ID ทุกใบ
+  // ที่รวมกัน) — ส่วนหน้า (PR-2610-01) ออกให้ Lot นี้ครั้งแรกที่พิมพ์แล้วเก็บไว้ ปริ้นซ้ำได้เลขเดิม (RPC prod_doc_no,
+  // migration_2026-10-12_prod_doc_no.sql) เดือนนับจากวันผลิตแรกสุดของ Lot ส่วน "xM" นับสดทุกครั้งจากจำนวน MO ที่
+  // รวมอยู่ ถ้ายังไม่รัน SQL (PGRST202) ถอยไปโชว์เลข Prod_ID ต่อกันแบบเดิม ไม่บล็อกการพิมพ์
+  const ym = String(h.MfgDate || todayStr()).slice(2, 4) + String(h.MfgDate || todayStr()).slice(5, 7);
+  const { data: docCore, error: docErr } = await _sb.rpc('prod_doc_no', { p_fg_id: base.FG_ID, p_lot: base.ProdLot, p_ym: ym });
+  if (!docErr && docCore) h.DocNo = `${docCore}-${moIds.length}M`;
+  else if (docErr && docErr.code !== 'PGRST202') console.error(docErr);
   // รวมวัตถุดิบตามรหัส ข้าม MO (ยืนยันกับผู้ใช้แล้ว) — รวม LotAlloc ด้วยเพื่อให้คอลัมน์ "ล็อตที่ตัด" ถูกต้อง
   // (ไม่ใช่แค่โชว์ของ MO ใดโดด ๆ) ใช้ _mergeLotAllocJs ตรรกะเดียวกับ _merge_lot_alloc ฝั่ง SQL ที่แก้ไปแล้ว
   const issByRm = {};
@@ -8494,7 +8504,7 @@ function _prpHalfHTML(h, fg, fgRecv, iss, rmMap, copyLabel) {
     <div class="prp-head">
       <div class="prp-head-left"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
         <div class="prp-company"><b>Blooming Company Limited</b><br>BLM Herbal — Production</div></div>
-      <div><div class="prp-title">ใบบันทึกผลิต<span class="prp-copy-label">${esc(copyLabel)}</span></div><div class="prp-no">เลขที่ผลิต: ${esc(h.Prod_ID)}</div></div>
+      <div><div class="prp-title">ใบบันทึกผลิต<span class="prp-copy-label">${esc(copyLabel)}</span></div><div class="prp-no">เลขที่ผลิต: ${esc(h.DocNo || h.Prod_ID)}</div></div>
     </div>
     <div class="prp-highlight">
       <div><span class="lbl">สินค้า</span><b>${esc(h.FG_ID || '-')} — ${esc(fg?.FG_Name || '-')}</b></div>
