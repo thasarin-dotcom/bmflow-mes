@@ -180,6 +180,55 @@ img.emp-avatar { cursor: zoom-in; }
 .rt-status.on { color: #15803d; }
 .rt-status.on .dot { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
 
+/* ── การ์ดต้นทุนการผลิตต่อ Lot ── */
+.pc-card { border-left: 4px solid var(--primary-blue); margin-bottom: .9rem; transition: box-shadow .15s; }
+.pc-card:hover { box-shadow: 0 6px 18px rgba(15,23,42,.16); }
+.pc-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; cursor: pointer; margin-bottom: .85rem; }
+.pc-head-main { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1rem; }   /* ชื่อ + ชิปรายละเอียดอยู่แถวเดียวกัน (ผู้ใช้ขอ 2026-10-12) ตกบรรทัดเฉพาะจอแคบ */
+.pc-title { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.pc-lot { background: var(--primary-blue); color: #fff; border-radius: 999px; padding: .22em .85em; font-weight: 700; font-size: .84rem; display: inline-flex; align-items: center; gap: .4em; }
+.pc-name { font-size: 1.1rem; font-weight: 700; color: #1e293b; }
+.pc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.pc-chip { background: #f1f5f9; color: #475569; border-radius: 999px; padding: .15em .75em; font-size: .76rem; display: inline-flex; align-items: center; gap: .35em; }
+.pc-chip.strong { background: #e0ecff; color: #1d4ed8; font-weight: 600; }
+.pc-mo-list { font-size: .76rem; color: #94a3b8; }
+.pc-actions { display: flex; align-items: center; gap: .5rem; }
+.pc-chevron { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #f1f5f9; color: #64748b; transition: transform .2s, background .15s; }
+.pc-head:hover .pc-chevron { background: #e2e8f0; }
+.pc-card.open .pc-chevron { transform: rotate(180deg); }
+.pc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; }
+.pc-grid.pc-sm { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: .45rem; }
+/* จอกว้าง: ช่องตัวเลขเรียงแถวเดียว (การ์ดหลัก 6 ช่อง, รอบย่อย 5 ช่อง) จอแคบกลับไปตกบรรทัดอัตโนมัติ */
+@media (min-width: 1200px) {
+  .pc-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .pc-grid.pc-sm { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+.pc-tile { border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 10px; padding: .55rem .75rem; }
+.pc-lbl { font-size: .7rem; color: #64748b; font-weight: 600; }
+.pc-val { font-size: 1.08rem; font-weight: 700; color: #1e293b; line-height: 1.3; }
+.pc-sub { font-size: .74rem; color: #64748b; }
+.pc-sm .pc-tile { padding: .4rem .6rem; }
+.pc-sm .pc-val { font-size: .95rem; }
+.pc-tile.pc-rm { background: #f0fdf4; border-color: #bbf7d0; }
+.pc-tile.pc-rm .pc-lbl { color: #15803d; }
+.pc-tile.pc-pkg { background: #ecfeff; border-color: #a5f3fc; }
+.pc-tile.pc-pkg .pc-lbl { color: #0e7490; }
+.pc-tile.pc-oh { background: #fffbeb; border-color: #fde68a; }
+.pc-tile.pc-oh .pc-lbl { color: #b45309; }
+.pc-tile.pc-total { background: linear-gradient(135deg, #1e3a8a, #2563eb); border-color: #1e3a8a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.pc-tile.pc-total .pc-lbl, .pc-tile.pc-total .pc-sub { color: #dbeafe; }
+.pc-tile.pc-total .pc-val { color: #fff; font-size: 1.2rem; }
+.pc-sm .pc-tile.pc-total .pc-val { font-size: 1.05rem; }
+.pc-diff { font-weight: 600; }
+.pc-val .pc-diff { font-size: .76rem; margin-left: .35rem; white-space: nowrap; }
+.pc-diff.up { color: #dc2626; }
+.pc-diff.down { color: #16a34a; }
+.pc-runs { margin-top: 1rem; padding-top: .85rem; border-top: 1px dashed #cbd5e1; }
+.pc-runs-title { font-size: .78rem; font-weight: 700; color: #475569; margin-bottom: .55rem; }
+.pc-run { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: .65rem .8rem; margin-bottom: .55rem; }
+.pc-run-head { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; margin-bottom: .55rem; }
+.pc-run .pc-tile.pc-q { background: #fff; }
+
 /* ── แจ้งเตือนขาดการเชื่อมต่ออินเทอร์เน็ต (navigator.onLine) ── */
 /* sticky ไม่ fixed: อยู่บนสุดของ .main-content เสมอตอนเลื่อนหน้า แต่ไม่ทับ modal ที่เปิดอยู่ (z-index ต่ำกว่า) */
 .offline-banner { position: sticky; top: 0; z-index: 900; background: #dc2626; color: #fff; text-align: center;
@@ -700,8 +749,8 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('issue');return false;" id="navlink-issue"><i class="fa-solid fa-dolly me-2"></i>เบิกเข้าไลน์ผลิต</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('prodrecord');return false;" id="navlink-prodrecord"><i class="fa-solid fa-industry me-2"></i>บันทึกผลิต</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('packbox');return false;" id="navlink-packbox"><i class="fa-solid fa-box me-2"></i>บันทึกแพ็คกล่อง</a></li>
-      <!-- เฉพาะหัวหน้างานขึ้นไป (ซ่อน/แสดงใน _applyRolePermissions) — ข้อมูลต้นทุน/ราคาซื้อวัตถุดิบถือเป็น
-           ข้อมูลอ่อนไหว ไม่ให้ operator เห็น (ผู้ใช้ขอ 2026-10-11 ตอนออกแบบฟีเจอร์ต้นทุนจริงต่อรอบผลิต) -->
+      <!-- เฉพาะแอดมิน (ซ่อน/แสดงใน _applyRolePermissions) — ข้อมูลต้นทุน/ราคาซื้อวัตถุดิบถือเป็นข้อมูลอ่อนไหว
+           (ผู้ใช้เลือก "หัวหน้างานขึ้นไป" 2026-10-11 แล้วปรับเป็น "แอดมินเท่านั้น" 2026-10-12) -->
       <li class="nav-item" id="navlink-prodcost-wrap" style="display:none"><a class="nav-link" href="#" onclick="showPage('prodcost');return false;" id="navlink-prodcost"><i class="fa-solid fa-sack-dollar me-2"></i>ต้นทุนการผลิต</a></li>
     </ul>
 
@@ -1016,22 +1065,61 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
     </table></div></div></div>
   </div>
 
-  <!-- ═══════════════ PRODUCTION COST (เฉพาะหัวหน้างานขึ้นไป) ═══════════════ -->
+  <!-- ═══════════════ PRODUCTION COST (เฉพาะแอดมิน) ═══════════════ -->
   <div class="page-view" id="page-prodcost">
     <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-sack-dollar me-2"></i>ต้นทุนการผลิต</h4><div class="text-white-50 small">ต้นทุนจริงต่อรอบผลิต คำนวณจากล็อตวัตถุดิบที่ตัดจริงและราคาที่ซื้อมาจริง — ไม่ใช่ราคาเฉลี่ยปัจจุบัน</div></div>
     <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 align-items-center mb-2">
       <input type="date" class="form-control w-auto" id="pcFrom" onchange="prodCostLoad()" title="ตั้งแต่วันที่ผลิต">
       <span class="text-white-50 small">ถึง</span>
       <input type="date" class="form-control w-auto" id="pcTo" onchange="prodCostLoad()" title="ถึงวันที่ผลิต">
-      <div class="search-wrap"><input class="form-control search-input" id="pcSearch" placeholder="ค้นหา MO / สินค้า / Lot..." oninput="_prodCostRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('pcSearch').value='';_prodCostRenderTable()"></i></div>
+      <div class="search-wrap"><input class="form-control search-input" id="pcSearch" placeholder="ค้นหา MO / สินค้า / Lot..." oninput="_prodCostRenderCards()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('pcSearch').value='';_prodCostRenderCards()"></i></div>
+      <button class="btn btn-light ms-auto" onclick="ohOpen()" title="กรอกค่าแรง/ค่าน้ำ/ค่าไฟ/ค่าเช่าของแต่ละเดือน เพื่อรวมเข้าต้นทุน"><i class="fa-solid fa-bolt me-1"></i>ตั้งค่าโอเวอร์เฮด</button>
     </div></div>
     <div class="scroll-content">
       <div class="row g-2 mb-2" id="pcKpis"></div>
-      <div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
-        <thead><tr><th>MO</th><th>สินค้า</th><th>Lot</th><th class="text-end">ผลิตได้</th><th class="text-end">ต้นทุนรวม (จริง)</th><th class="text-end">ต้นทุน/หน่วย (จริง)</th><th class="text-end">ประมาณการ/หน่วย</th><th class="text-end">ส่วนต่าง</th><th>จัดการ</th></tr></thead>
-        <tbody id="pcTableBody"></tbody>
-      </table></div></div>
+      <!-- การ์ดต่อ Lot (Lot เดียวกันหลาย MO รวมเป็นการ์ดเดียว กดหัวการ์ดกางดูรอบย่อย) — ผู้ใช้ขอ 2026-10-12 -->
+      <div id="pcCards"></div>
       <div class="text-center small text-white-50 mt-2" id="pcFooter"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: ตั้งค่าโอเวอร์เฮดรายเดือน (แอดมิน) — ตาราง overhead_costs ═══════════════ -->
+  <div class="modal fade" id="ohModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header modal-header-brand">
+          <h5 class="modal-title"><i class="fa-solid fa-bolt me-2"></i>ตั้งค่าโอเวอร์เฮดรายเดือน</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">เดือน</label>
+            <input type="month" id="oh-month" class="form-control" onchange="ohLoadMonth()">
+          </div>
+          <div class="row g-2">
+            <div class="col-12 small fw-semibold text-muted mt-1">ค่าแรง — แยกตามประเภทพนักงาน</div>
+            <!-- แต่ละประเภท: ยอดค่าแรงรวม (บาท) + จำนวนพนักงานประเภทนั้นในเดือน (คน) — จำนวนคนตั้งต้นจากทะเบียนพนักงานที่ยังทำงานอยู่ แก้ได้ -->
+            <div class="col-4"><label class="form-label small mb-1">ประจำ (FT)</label><input type="number" min="0" step="any" id="oh-labor_ft" class="form-control" oninput="ohUpdateTotal()" placeholder="บาท">
+              <div class="input-group input-group-sm mt-1"><input type="number" min="0" step="1" id="oh-heads_ft" class="form-control" oninput="ohUpdateTotal()" placeholder="จำนวน"><span class="input-group-text">คน</span></div></div>
+            <div class="col-4"><label class="form-label small mb-1">พาร์ทไทม์ (PT)</label><input type="number" min="0" step="any" id="oh-labor_pt" class="form-control" oninput="ohUpdateTotal()" placeholder="บาท">
+              <div class="input-group input-group-sm mt-1"><input type="number" min="0" step="1" id="oh-heads_pt" class="form-control" oninput="ohUpdateTotal()" placeholder="จำนวน"><span class="input-group-text">คน</span></div></div>
+            <div class="col-4"><label class="form-label small mb-1">เอาท์ซอร์ส (OS)</label><input type="number" min="0" step="any" id="oh-labor_os" class="form-control" oninput="ohUpdateTotal()" placeholder="บาท">
+              <div class="input-group input-group-sm mt-1"><input type="number" min="0" step="1" id="oh-heads_os" class="form-control" oninput="ohUpdateTotal()" placeholder="จำนวน"><span class="input-group-text">คน</span></div></div>
+            <div class="col-12 small text-muted" id="oh-heads-hint"></div>
+            <div class="col-12 small fw-semibold text-muted mt-2">ค่าใช้จ่ายอื่นๆ</div>
+            <div class="col-6"><label class="form-label small mb-1">ค่าน้ำ (บาท)</label><input type="number" min="0" step="any" id="oh-water" class="form-control" oninput="ohUpdateTotal()"></div>
+            <div class="col-6"><label class="form-label small mb-1">ค่าไฟ (บาท)</label><input type="number" min="0" step="any" id="oh-electric" class="form-control" oninput="ohUpdateTotal()"></div>
+            <div class="col-6"><label class="form-label small mb-1">ค่าเช่า (บาท)</label><input type="number" min="0" step="any" id="oh-rent" class="form-control" oninput="ohUpdateTotal()"></div>
+            <div class="col-12"><label class="form-label small mb-1">อื่นๆ (บาท)</label><input type="number" min="0" step="any" id="oh-other" class="form-control" oninput="ohUpdateTotal()"></div>
+          </div>
+          <div class="alert alert-light border small mt-3 mb-0" id="oh-summary"></div>
+          <div class="invalid-feedback d-block" id="oh-err"></div>
+        </div>
+        <div class="modal-footer modal-footer-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-brand" onclick="ohSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2967,7 +3055,7 @@ async function _loadMyRole(user) {
 function _applyRolePermissions() {
   document.body.classList.toggle('role-operator', !_hasRole('supervisor'));
   document.getElementById('navgroup-admin').style.display = _hasRole('admin') ? '' : 'none';
-  document.getElementById('navlink-prodcost-wrap').style.display = _hasRole('supervisor') ? '' : 'none';
+  document.getElementById('navlink-prodcost-wrap').style.display = _hasRole('admin') ? '' : 'none';   // แอดมินเท่านั้น (ผู้ใช้ปรับ 2026-10-12 จากเดิมหัวหน้างานขึ้นไป)
   document.getElementById('currentUserEmail').textContent = _currentUser.name;
   document.getElementById('currentUserEmail').title = _currentUser.email;
   document.getElementById('currentUserRole').innerHTML = _currentUser.rolesReady ? _roleBadge(_currentUser.role) : '';
@@ -3149,6 +3237,7 @@ const _WRITE_ACTIONS = [
   'issueGenSave', 'issueLotEditSubmit', 'issueDeleteRequest', 'issueHistDeleteAllRequest', 'fgReceiveDeleteRequest', 'planCloseMo', 'planReopenMo', 'issueDateBulkEdit',
   'issueHistAddItemSave',
   'packboxModalSave', 'packboxCloseBox', 'packboxDelete', 'packboxBulkDelete', 'packboxEditSave',
+  'ohSave',
 ];
 let _singleFlightRunning = 0;
 function _singleFlight(names) {
@@ -3379,7 +3468,7 @@ const AUDIT_TABLE_LABEL = {
   fg_withdraw: 'เบิก FG', delivery: 'จัดส่ง', waste_log: 'Waste (ของเสีย)', employees: 'พนักงาน',
   user_roles: 'สิทธิ์การใช้งาน', signup_requests: 'คำขอสมัครใช้งาน', prep_orders: 'เตรียมวัตถุดิบ',
   rm_rc_numbers: 'ใบรายงานรับ (RC No)', rm_receive_edit_requests: 'คำขอแก้ไขใบรับ (เดิม)', edit_requests: 'คำขอแก้ไข',
-  rm_withdraw: 'เบิกวัตถุดิบ/แพ็คเกจจิ้ง (ไม่ผูก CO)',
+  rm_withdraw: 'เบิกวัตถุดิบ/แพ็คเกจจิ้ง (ไม่ผูก CO)', overhead_costs: 'โอเวอร์เฮดรายเดือน',
 };
 const AUDIT_ACTION = {
   INSERT: ['เพิ่ม', 'success'], UPDATE: ['แก้ไข', 'warning'], DELETE: ['ลบ', 'danger'],
@@ -8316,7 +8405,7 @@ function _prodHistRenderTable() {
 // ═══════════════════════════════════════════════════════════
 let _prodCostCache = [];
 async function prodCostLoad() {
-  if (!_hasRole('supervisor')) { document.getElementById('pcTableBody').innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">หน้านี้สำหรับหัวหน้างานขึ้นไปเท่านั้น</td></tr>'; return; }
+  if (!_hasRole('admin')) { document.getElementById('pcCards').innerHTML = '<div class="glass-card text-center text-muted py-4">หน้านี้สำหรับแอดมินเท่านั้น</div>'; document.getElementById('pcKpis').innerHTML = ''; return; }
   if (!_rmMasterCache.length) await rmMasterLoad();
   if (!_fgMasterCache.length) await fgMasterLoad();
   if (!_bomCache.length) await bomLoad();
@@ -8326,7 +8415,7 @@ async function prodCostLoad() {
   if (!toEl.value) toEl.value = todayStr();
   const prodRecs = await sbRun(_sb.from('production_records').select('*').gte('MfgDate', fromEl.value).lte('MfgDate', toEl.value)
     .order('MfgDate', { ascending: false }).limit(500), 'โหลดข้อมูลต้นทุนไม่สำเร็จ') || [];
-  if (!prodRecs.length) { _prodCostCache = []; _prodCostRenderTable(); return; }
+  if (!prodRecs.length) { _prodCostCache = []; _prodCostRenderCards(); return; }
   // ดึง issue_production ของทุก MO ที่เกี่ยวข้องทีเดียว (ไม่ยิงทีละแถว กัน N+1) แล้วไล่หาราคาของทุก Lot ที่ถูก
   // ตัดในรอบเดียวกันอีกที — Lot_ID ที่เคยถูกตัดจนหมดแล้ว (Qty=0) แถวยังอยู่ใน stock_rm_lot เสมอ (ไม่เคยลบ) จึง
   // หา Receive_ID ย้อนหลังได้แม้ Lot นั้นจะไม่เหลือของแล้วก็ตาม
@@ -8338,11 +8427,13 @@ async function prodCostLoad() {
   const issByMo = {};
   iss.forEach(r => { (issByMo[r.MO_ID] ||= []).push(r); });
   const bomGroups = _bomGroupByProduct();
-  _prodCostCache = prodRecs.map(p => {
+  const ohOf = await _prodCostOverheadAllocator(prodRecs);
+  // ขั้นที่ 1: ต้นทุนรายบรรทัดเบิกของแต่ละบันทึกผลิต
+  // ต้นทุนต่อแถวเบิก: ใช้ QtyIssued เป็นยอด "ใช้จริง" เสมอ (ตัวเลขทางการของรายการเบิกนี้) ส่วน LotAlloc
+  // ใช้หาราคาเท่านั้น — ถ้า LotAlloc ไม่ครบ/ไม่มี (เช่นแถวเก่าก่อนมีระบบนี้) ให้ติดธง incomplete แทนที่จะเงียบๆ
+  // นับเป็นต้นทุน 0 (ซึ่งจะเข้าใจผิดว่าของฟรี) — เก็บ pricedQty ไว้ให้ตอนรวมหลายรอบคิดราคาเฉลี่ยถ่วงน้ำหนักได้ถูก
+  const recs = prodRecs.map(p => {
     const rows = issByMo[p.MO_ID] || [];
-    // ต้นทุนต่อแถวเบิก: ใช้ QtyIssued เป็นยอด "ใช้จริง" เสมอ (ตัวเลขทางการของรายการเบิกนี้) ส่วน LotAlloc
-    // ใช้หาราคาเท่านั้น — ถ้า LotAlloc ไม่ครบ/ไม่มี (เช่นแถวเก่าก่อนมีระบบนี้) ให้ติดธง incomplete แทนที่จะเงียบๆ
-    // นับเป็นต้นทุน 0 (ซึ่งจะเข้าใจผิดว่าของฟรี)
     const lines = rows.map(r => {
       const rm = _rmMasterCache.find(x => x.RM_ID === r.RM_ID);
       const qty = parseFloat(r.QtyIssued) || 0;
@@ -8352,63 +8443,435 @@ async function prodCostLoad() {
         const price = recvId ? _rmPriceMap[recvId] : null;
         if (price != null) { cost += price * (parseFloat(a.qty) || 0); pricedQty += parseFloat(a.qty) || 0; }
       });
-      return { RM_ID: r.RM_ID, name: rm?.RM_Name || r.RM_ID, category: rm?.Category, unit: r.Unit, qty, cost, incomplete: pricedQty + 1e-6 < qty };
+      // orig = "พร้อมใช้ในสูตร" (เบิกเดิม ไม่เปลี่ยนตามการแก้เบิกตั้งต้น — _rmUseOrigQty/OrigQty) เทียบกับ qty = ใช้จริง
+      return { RM_ID: r.RM_ID, name: rm?.RM_Name || r.RM_ID, category: rm?.Category, unit: r.Unit, qty, cost, pricedQty, orig: _rmUseOrigQty(r) };
     });
-    const total = lines.reduce((s, l) => s + l.cost, 0);
-    // ไม่มีรายการเบิกให้เจอเลย (เช่น MO เก่าก่อนมีระบบนี้) ก็ถือว่า "ไม่ทราบต้นทุน" เหมือนกัน ไม่ใช่ต้นทุน 0 จริงๆ
-    const incomplete = !rows.length || lines.some(l => l.incomplete);
-    const qtyProduced = parseFloat(p.QtyProduced) || 0;
-    const costPerUnit = qtyProduced > 0 ? total / qtyProduced : null;
-    const fg = _fgMasterCache.find(f => f.FG_ID === p.FG_ID);
-    // เทียบกับ "ต้นทุนประมาณการ" ของหน้า BOM (ราคาเฉลี่ยปัจจุบัน × สูตร) ไว้ดูว่าของจริงเบี่ยงเบนจากที่ตั้งราคา
-    // ขายไว้แค่ไหน — ใช้ฟังก์ชันเดิม _bomUnitCost ตรงๆ ไม่คำนวณซ้ำเอง
-    const estUnit = _bomUnitCost(bomGroups.find(g => g.FG_ID === p.FG_ID) || { lines: [] });
-    return { ...p, fg, lines, total, incomplete, costPerUnit, estUnit };
+    return { p, rowCount: rows.length, lines, oh: ohOf(p) };
   });
-  _prodCostRenderTable();
+  // ขั้นที่ 2: รวมเป็นการ์ดต่อ (สินค้า, Lot) — Lot เดียวกันหลาย MO/หลายบันทึกผลิตรวมเป็นการ์ดเดียว (ผู้ใช้ขอ
+  // 2026-10-12) แต่ละการ์ดเก็บรอบย่อยรายบันทึกผลิตไว้ใน runs ให้กดกางดู/ดูรายละเอียดแยกได้
+  const byLot = new Map();
+  recs.forEach(r => {
+    const k = `${r.p.FG_ID}|${r.p.ProdLot}`;
+    if (!byLot.has(k)) byLot.set(k, []);
+    byLot.get(k).push(r);
+  });
+  _prodCostCache = [...byLot.entries()].map(([key, rs]) => {
+    const card = _prodCostBuild(key, rs, bomGroups);
+    card.runs = rs.map(r => _prodCostBuild(r.p.Prod_ID, [r], bomGroups));
+    return card;
+  }).sort((a, b) => String(b.mfgDate || '').localeCompare(String(a.mfgDate || '')) || String(b.ProdLot).localeCompare(String(a.ProdLot)));
+  _prodCostRenderCards();
 }
-function _prodCostRenderTable() {
+// รวมบันทึกผลิต 1 ใบขึ้นไป (rs) เป็นตัวเลขต้นทุนชุดเดียว — ใช้ทั้งการ์ดรวมต่อ Lot และรอบย่อยรายบันทึกผลิต
+// รายการวัตถุดิบเดียวกันข้ามบันทึกผลิตรวมยอดใช้/เดิม/ต้นทุน แล้วค่อยคิดราคาเฉลี่ย %Loss ต่อหน่วยใหม่จากยอดรวม
+// (ไม่เอา % ของแต่ละรอบมาเฉลี่ยกันตรงๆ) ราคาเฉลี่ย = ต้นทุน ÷ จำนวนที่ทราบราคา (คิดเฉพาะส่วนที่ทราบราคา)
+// ── โอเวอร์เฮดรายเดือน (ค่าแรง/น้ำ/ไฟ/เช่า/อื่นๆ — ตาราง overhead_costs, แอดมินเท่านั้น) ผู้ใช้ขอ 2026-10-12 ──
+// กระจายเข้าบันทึกผลิต: ยอดรวมของเดือน ÷ จำนวน "วันที่มีการผลิต" ในเดือนนั้น (นับทุกสินค้า ทุกบันทึกผลิต ไม่ใช่แค่
+// ที่อยู่ในช่วงวันที่ที่กำลังดู — จึงดึงทั้งเดือนมานับแยก) = โอเวอร์เฮดต่อวัน แล้ววันนั้นแบ่งให้แต่ละบันทึกผลิตตาม
+// สัดส่วนจำนวนที่ผลิตได้ของวันนั้น (ถ้าวันเดียวผลิตหลายรอบ) ผู้ใช้เลือกวิธีนี้ (ตัวเลือก "หารด้วยจำนวนวันที่มีการผลิต")
+// ค่าแรงแยกตามประเภทพนักงาน (FT/PT/OS — ตรงกับ EMP_TYPE_LABEL ของหน้าพนักงาน) ผู้ใช้ขอ 2026-10-12 "ค่าแรงแบ่งประเภท
+// ตามประเภทพนักงาน" — เดิมเป็นหมวดเดียว 'labor' (ปรับ constraint ใน migration_2026-10-12_overhead_labor_types.sql)
+const OH_CATS = [
+  { k: 'labor_ft', label: 'ค่าแรง ประจำ (FT)' }, { k: 'labor_pt', label: 'ค่าแรง พาร์ทไทม์ (PT)' }, { k: 'labor_os', label: 'ค่าแรง เอาท์ซอร์ส (OS)' },
+  { k: 'water', label: 'ค่าน้ำ' }, { k: 'electric', label: 'ค่าไฟ' },
+  { k: 'rent', label: 'ค่าเช่า' }, { k: 'other', label: 'อื่นๆ' },
+];
+// ต้นทุนโอเวอร์เฮดของ "เดือน M" ใช้ประมาณการจากเดือนก่อนหน้าที่มีข้อมูลล่าสุด (ผู้ใช้ขอ 2026-10-14: ค่าแรง/น้ำ/ไฟของเดือนปัจจุบัน
+// กรอกได้ตอนสิ้นเดือน จึงใช้ยอดเดือนก่อนเป็นฐานต้นทุนไปก่อน) — คิดเป็น "อัตราต่อวันผลิต" ของเดือนฐาน = ยอดเดือนฐาน ÷ วันผลิตจริงของ
+// เดือนฐาน (ไม่หารด้วยวันผลิตเดือนนี้ เพราะเดือนยังไม่จบ วันผลิตยังน้อย จะทำให้ต่อลูกสูงเกินจริง) ค่าแรง/น้ำ/ไฟ บวก OH_BUFFER_PCT% ค่าเช่า/อื่นๆ คงเดิม
+// เมื่อกรอกยอดจริงของเดือน M แล้ว "ไม่เปลี่ยนยอดที่ใช้คิดต้นทุน" (ผู้ใช้ขอ) แค่เก็บยอดจริงไว้เทียบส่วนต่าง (out.act)
+// ถ้าไม่มีเดือนก่อนหน้าให้อิงเลย (เดือนแรกสุดที่กรอก) ใช้ยอดจริงของเดือนนั้นเป็นต้นทุนตามปกติ
+const OH_BUFFER_PCT = 5;
+const OH_BUFFER_CATS = new Set(['labor_ft', 'labor_pt', 'labor_os', 'water', 'electric']);
+const _ohBuffered = (k, amt) => OH_BUFFER_CATS.has(k) ? amt * (1 + OH_BUFFER_PCT / 100) : amt;
+const _ohMonthTotal = a => a ? OH_CATS.reduce((s, c) => s + (a[c.k] || 0), 0) : 0;
+// เดือนฐานของ m = เดือนก่อนหน้าล่าสุดที่มียอดโอเวอร์เฮด (ohBy = {เดือน:{หมวด:ยอด}})
+const _ohBaseMonth = (m, ohBy) => Object.keys(ohBy).filter(x => x < m && _ohMonthTotal(ohBy[x]) > 0).sort().pop() || null;
+async function _prodCostOverheadAllocator(prodRecs) {
+  const zero = () => { const o = { total: 0, missing: true, unavailable: false }; OH_CATS.forEach(c => { o[c.k] = 0; }); return o; };
+  const months = [...new Set(prodRecs.map(p => String(p.MfgDate || '').slice(0, 7)).filter(Boolean))].sort();
+  if (!months.length) return () => zero();
+  const lastM = months[months.length - 1], [ly, lm] = lastM.split('-').map(Number);
+  // ดึงยอดโอเวอร์เฮดทุกเดือนถึงเดือนล่าสุดในช่วง (ตารางเล็ก ไม่กี่แถวต่อเดือน) เพื่อหาเดือนฐานของแต่ละเดือน
+  const ohRes = await _sb.from('overhead_costs').select('*').lte('Month', lastM);
+  // error (ยังไม่ได้รัน SQL / ไม่ใช่แอดมิน) = ไม่มีโอเวอร์เฮดให้คิด ไม่ขวางส่วนอื่นของหน้า — ติดธง unavailable ไว้ให้แสดงข้อความ
+  const ohErr = ohRes.error;
+  if (ohErr) console.error(ohErr);
+  const ohBy = {};
+  const headBy = {};   // จำนวนพนักงานต่อประเภทของแต่ละเดือน (เฉพาะแถวค่าแรงที่กรอกไว้) ไว้โชว์ในรายละเอียด
+  (ohRes.data || []).forEach(r => {
+    (ohBy[r.Month] ||= {})[r.Category] = parseFloat(r.Amount) || 0;
+    if (r.Headcount != null) (headBy[r.Month] ||= {})[r.Category] = r.Headcount;
+  });
+  const baseOf = {};
+  months.forEach(m => { const b = _ohBaseMonth(m, ohBy); if (b) baseOf[m] = b; });
+  const firstM = [months[0], ...Object.values(baseOf)].sort()[0];
+  // นับวันผลิตทั้งเดือน (ทุกสินค้า) ของเดือนที่ดูและเดือนฐาน — ไม่ใช่แค่ในช่วงวันที่ที่กำลังดู
+  const dayRows = await sbRun(_sb.from('production_records').select('MfgDate,QtyProduced').gte('MfgDate', `${firstM}-01`)
+    .lte('MfgDate', `${lastM}-${String(new Date(ly, lm, 0).getDate()).padStart(2, '0')}`).limit(5000), 'โหลดข้อมูลวันผลิตไม่สำเร็จ');
+  const dayUnits = {}, monthDays = {};
+  (Array.isArray(dayRows) ? dayRows : []).forEach(r => {
+    const d = r.MfgDate; if (!d) return;
+    dayUnits[d] = (dayUnits[d] || 0) + (parseFloat(r.QtyProduced) || 0);
+    (monthDays[d.slice(0, 7)] ||= new Set()).add(d);
+  });
+  return p => {
+    const out = zero();
+    out.unavailable = !!ohErr;
+    const d = p.MfgDate, m = String(d || '').slice(0, 7), actual = _ohMonthTotal(ohBy[m]) > 0 ? ohBy[m] : null;
+    out.month = m;
+    const days = monthDays[m]?.size || 0, du = dayUnits[d] || 0;
+    const share = du > 0 ? (parseFloat(p.QtyProduced) || 0) / du : 0;
+    const b = baseOf[m], dB = b ? (monthDays[b]?.size || 0) : 0;
+    if (b && dB) {
+      // ประมาณการจากเดือนฐาน — ยอดจริงของเดือนนี้ (ถ้ากรอกแล้ว) เก็บไว้เทียบส่วนต่างเท่านั้น ไม่เปลี่ยนยอดที่ใช้คิดต้นทุน
+      out.basis = 'est'; out.baseMonth = b; out.missing = false;
+      out.monthAmt = {}; out.heads = headBy[b] || {};
+      OH_CATS.forEach(c => { const a = _ohBuffered(c.k, ohBy[b][c.k] || 0); out.monthAmt[c.k] = a; out[c.k] = a / dB * share; out.total += out[c.k]; });
+      if (actual && days) {
+        out.act = { total: 0 };
+        OH_CATS.forEach(c => { out.act[c.k] = (actual[c.k] || 0) / days * share; out.act.total += out.act[c.k]; });
+      }
+      return out;
+    }
+    out.monthAmt = actual || {}; out.heads = headBy[m] || {};
+    if (!actual || !days) return out;   // ยังไม่ได้กรอกโอเวอร์เฮดของเดือนนี้และไม่มีเดือนก่อนให้อิง → missing
+    out.basis = 'actual'; out.missing = false;
+    OH_CATS.forEach(c => { out[c.k] = (actual[c.k] || 0) / days * share; out.total += out[c.k]; });
+    return out;
+  };
+}
+// ── ฟอร์มกรอกโอเวอร์เฮดรายเดือน (ปุ่ม "ตั้งค่าโอเวอร์เฮด" บนหน้า ต้นทุนการผลิต) ──
+// 1 เดือน = 5 ช่อง (ค่าแรง/ค่าน้ำ/ค่าไฟ/ค่าเช่า/อื่นๆ) เปลี่ยนเดือนแล้วโหลดค่าที่เคยกรอกไว้มาแก้ต่อได้ และบอกว่าเดือนนั้น
+// ผลิตกี่วัน (วันที่มีบันทึกผลิต) ตกวันละกี่บาท ให้ตรวจเลขก่อนบันทึก
+const OH_LABOR_TYPES = ['ft', 'pt', 'os'];
+let _ohDays = 0, _ohBase = null;
+async function ohOpen() {
+  if (!_hasRole('admin')) return;
+  document.getElementById('oh-month').value = todayStr().slice(0, 7);
+  document.getElementById('oh-err').textContent = '';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('ohModal')).show();
+  await ohLoadMonth();
+}
+async function ohLoadMonth() {
+  const m = document.getElementById('oh-month').value;
+  OH_CATS.forEach(c => { document.getElementById(`oh-${c.k}`).value = ''; });
+  OH_LABOR_TYPES.forEach(t => { document.getElementById(`oh-heads_${t}`).value = ''; });
+  document.getElementById('oh-heads-hint').textContent = '';
+  _ohDays = 0; _ohBase = null;
+  if (m) {
+    const [y, mo] = m.split('-').map(Number);
+    const [ohRes, days, emps, prevRes] = await Promise.all([
+      _sb.from('overhead_costs').select('*').eq('Month', m),
+      _sb.from('production_records').select('MfgDate').gte('MfgDate', `${m}-01`).lte('MfgDate', `${m}-${String(new Date(y, mo, 0).getDate()).padStart(2, '0')}`).limit(5000),
+      _sb.from('employees').select('EmployeeType,Status'),
+      _sb.from('overhead_costs').select('*').lt('Month', m),
+    ]);
+    if (ohRes.error) { document.getElementById('oh-err').textContent = /overhead_costs|schema cache|does not exist/i.test(ohRes.error.message || '') ? 'ยังไม่ได้รัน migration_2026-10-12_overhead_costs.sql ใน Supabase' : ohRes.error.message; }
+    const saved = new Set();
+    (ohRes.data || []).forEach(r => {
+      const el = document.getElementById(`oh-${r.Category}`); if (el && r.Amount) el.value = r.Amount;
+      if (r.Category.startsWith('labor_') && r.Headcount != null) { document.getElementById(`oh-heads_${r.Category.slice(6)}`).value = r.Headcount; saved.add(r.Category.slice(6)); }
+    });
+    // ประเภทไหนยังไม่เคยบันทึกจำนวนคนของเดือนนี้ → เสนอจำนวนจากทะเบียนพนักงานที่ยังทำงานอยู่ ณ ตอนนี้ให้ก่อน (แก้ได้)
+    // เดือนย้อนหลังจำนวนคนอาจไม่ตรงกับตอนนี้ ผู้ใช้ต้องตรวจเอง
+    const active = (emps.data || []).filter(e => e.Status !== 'ลาออก');
+    const suggested = [];
+    OH_LABOR_TYPES.forEach(t => {
+      if (saved.has(t)) return;
+      const n = active.filter(e => e.EmployeeType === t.toUpperCase()).length;
+      if (n > 0) { document.getElementById(`oh-heads_${t}`).value = n; suggested.push(t.toUpperCase()); }
+    });
+    if (suggested.length) document.getElementById('oh-heads-hint').textContent = `จำนวนคน (${suggested.join('/')}) ตั้งต้นจากทะเบียนพนักงานที่ยังทำงานอยู่ตอนนี้ — แก้ได้ถ้าเดือนนั้นไม่ตรง`;
+    _ohDays = new Set((days.data || []).map(r => r.MfgDate)).size;
+    // เดือนฐานที่ระบบใช้ประมาณการต้นทุนเดือนนี้ (เดือนก่อนหน้าล่าสุดที่มียอด) — ไว้เทียบกับยอดจริงที่กรอก
+    const prev = {};
+    (prevRes.data || []).forEach(r => { (prev[r.Month] ||= {})[r.Category] = parseFloat(r.Amount) || 0; });
+    const bm = _ohBaseMonth(m, prev);
+    if (bm) {
+      const [by, bmo] = bm.split('-').map(Number);
+      const bd = await _sb.from('production_records').select('MfgDate').gte('MfgDate', `${bm}-01`).lte('MfgDate', `${bm}-${String(new Date(by, bmo, 0).getDate()).padStart(2, '0')}`).limit(5000);
+      const dB = new Set((bd.data || []).map(r => r.MfgDate)).size;
+      if (dB > 0) _ohBase = { month: bm, dB, est: Object.fromEntries(OH_CATS.map(c => [c.k, _ohBuffered(c.k, prev[bm][c.k] || 0)])) };
+    }
+  }
+  ohUpdateTotal();
+}
+function ohUpdateTotal() {
+  const total = OH_CATS.reduce((s, c) => s + (parseFloat(document.getElementById(`oh-${c.k}`).value) || 0), 0);
+  // ค่าแรงเฉลี่ยต่อคนของแต่ละประเภท (ยอดค่าแรงประเภทนั้น ÷ จำนวนคน) ให้ตรวจว่าตัวเลขสมเหตุสมผล
+  const perHead = OH_LABOR_TYPES.map(t => {
+    const a = parseFloat(document.getElementById(`oh-labor_${t}`).value) || 0, n = parseInt(document.getElementById(`oh-heads_${t}`).value) || 0;
+    return (a > 0 && n > 0) ? `${t.toUpperCase()} ${_fmtBaht(a / n)} บาท/คน (${n} คน)` : '';
+  }).filter(Boolean);
+  document.getElementById('oh-summary').innerHTML = `รวมเดือนนี้ <b>${_fmtBaht(total)}</b> บาท · เดือนนี้มีการผลิต <b>${_ohDays}</b> วัน`
+    + (perHead.length ? `<div class="text-muted">ค่าแรงเฉลี่ย: ${perHead.join(' · ')}</div>` : '')
+    + (_ohDays > 0 && total > 0 ? ` → ตกวันละ <b>${_fmtBaht(total / _ohDays)}</b> บาท (แบ่งให้ Lot ที่ผลิตวันนั้นตามจำนวนที่ผลิตได้)` : '')
+    + (_ohDays === 0 ? '<div class="text-muted">ยังไม่มีบันทึกผลิตในเดือนนี้ — ยังไม่มี Lot ให้กระจายโอเวอร์เฮดเข้าไป</div>' : '')
+    + _ohCompareHtml();
+}
+// เทียบยอดที่กรอก (จริง) กับประมาณการที่ระบบใช้คิดต้นทุนเดือนนี้ (อิงเดือนก่อน +OH_BUFFER_PCT% ค่าแรง/น้ำ/ไฟ) — ประมาณการรายเดือน =
+// อัตราต่อวันผลิตของเดือนฐาน × วันผลิตของเดือนนี้ การบันทึกยอดจริง "ไม่เปลี่ยน" ต้นทุนที่คิดไว้ แค่แสดงส่วนต่างให้ดู
+function _ohCompareHtml() {
+  if (!_ohBase || !(_ohDays > 0)) return '';
+  const rows = OH_CATS.map(c => {
+    const est = _ohBase.est[c.k] / _ohBase.dB * _ohDays, act = parseFloat(document.getElementById(`oh-${c.k}`).value) || 0;
+    return { c, est, act };
+  }).filter(r => r.est > 0 || r.act > 0);
+  const estT = rows.reduce((s, r) => s + r.est, 0), actT = rows.reduce((s, r) => s + r.act, 0);
+  if (!(actT > 0)) return `<div class="text-muted mt-2">ต้นทุนเดือนนี้ใช้ประมาณการจากเดือน ${esc(_ohBase.month)} (ค่าแรง/น้ำ/ไฟ +${OH_BUFFER_PCT}%) ≈ ${_fmtBaht(estT)} บาท — กรอกยอดจริงเมื่อสิ้นเดือนเพื่อดูส่วนต่าง</div>`;
+  const fmtD = (est, act) => { const d = act - est; if (Math.abs(d) < 0.005) return '<span class="text-muted">ตรง</span>'; return `<span class="pc-diff ${d > 0 ? 'up' : 'down'}">${d > 0 ? '+' : '−'}${_fmtBaht(Math.abs(d))}${est > 0 ? ` (${Math.abs(d / est * 100).toFixed(1)}%)` : ''}</span>`; };
+  return `<div class="mt-2 pt-2 border-top"><div class="fw-semibold">เทียบกับประมาณการที่ใช้คิดต้นทุน <span class="fw-normal text-muted">(อิงเดือน ${esc(_ohBase.month)} +${OH_BUFFER_PCT}% · ไม่ได้เปลี่ยนยอดต้นทุน)</span></div>
+    <table class="table table-sm mb-0 mt-1"><thead><tr class="text-muted"><th>หมวด</th><th class="text-end">ประมาณการ</th><th class="text-end">ยอดจริง</th><th class="text-end">ส่วนต่าง</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${r.c.label}</td><td class="text-end">${_fmtBaht(r.est)}</td><td class="text-end">${_fmtBaht(r.act)}</td><td class="text-end">${fmtD(r.est, r.act)}</td></tr>`).join('')}
+    <tr class="fw-bold"><td>รวม</td><td class="text-end">${_fmtBaht(estT)}</td><td class="text-end">${_fmtBaht(actT)}</td><td class="text-end">${fmtD(estT, actT)}</td></tr></tbody></table></div>`;
+}
+async function ohSave() {
+  const m = document.getElementById('oh-month').value;
+  if (!m) { document.getElementById('oh-err').textContent = 'เลือกเดือน'; return; }
+  const rows = OH_CATS.map(c => {
+    // จำนวนคน เก็บเฉพาะแถวค่าแรง (labor_ft/pt/os) แถวอื่นเป็น null — ช่องว่าง = ไม่ระบุ (null) ไม่ใช่ 0 คน
+    const hv = c.k.startsWith('labor_') ? document.getElementById(`oh-heads_${c.k.slice(6)}`).value : '';
+    return {
+      Month: m, Category: c.k, Amount: Math.max(0, parseFloat(document.getElementById(`oh-${c.k}`).value) || 0),
+      Headcount: hv !== '' ? Math.max(0, parseInt(hv) || 0) : null,
+      UpdatedAt: new Date().toISOString(), UpdatedBy: _currentUser?.name || _currentUser?.email || null,
+    };
+  });
+  const ok = await sbRun(_sb.from('overhead_costs').upsert(rows, { onConflict: 'Month,Category' }), 'บันทึกโอเวอร์เฮดไม่สำเร็จ (ต้องรัน migration_2026-10-12_overhead_costs.sql / overhead_labor_types.sql / overhead_headcount.sql ก่อน)');
+  if (ok === null) return;
+  bootstrap.Modal.getInstance(document.getElementById('ohModal'))?.hide();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2200, title: `บันทึกโอเวอร์เฮดเดือน ${m} แล้ว` });
+  await prodCostLoad();
+}
+// ส่วนต่างโอเวอร์เฮด จริง − ประมาณการ (แดง ↑ = จริงสูงกว่าที่ประมาณ, เขียว ↓ = ต่ำกว่า) — ใช้ทั้งบนการ์ดและในรายละเอียด
+function _ohDiffHtml(g) {
+  if (!g.diff) return '';
+  const d = g.diff.act - g.diff.est, pct = g.diff.est > 0 ? d / g.diff.est * 100 : null;
+  if (Math.abs(d) < 0.005) return `<div>ยอดจริงตรงกับประมาณการ</div>`;
+  return `<div title="ยอดจริงของเดือนที่กรอกแล้ว เทียบกับประมาณการที่ใช้คิดต้นทุน (ไม่ได้เปลี่ยนยอดต้นทุน)">จริง ${_fmtBaht(g.diff.act)} ฿ <span class="pc-diff ${d > 0 ? 'up' : 'down'}"><i class="fa-solid fa-arrow-${d > 0 ? 'up' : 'down'}"></i> ${_fmtBaht(Math.abs(d))} ฿${pct != null ? ` (${Math.abs(pct).toFixed(1)}%)` : ''}</span></div>`;
+}
+function _prodCostBuild(key, rs, bomGroups) {
+  const first = rs[0].p;
+  const merged = new Map();
+  rs.forEach(r => r.lines.forEach(l => {
+    const m = merged.get(l.RM_ID) || { RM_ID: l.RM_ID, name: l.name, category: l.category, unit: l.unit, qty: 0, cost: 0, pricedQty: 0, orig: 0 };
+    m.qty += l.qty; m.cost += l.cost; m.pricedQty += l.pricedQty; m.orig += l.orig;
+    merged.set(l.RM_ID, m);
+  }));
+  const qtyProduced = rs.reduce((s, r) => s + (parseFloat(r.p.QtyProduced) || 0), 0);
+  const lines = [...merged.values()].map(l => ({
+    ...l,
+    // %Loss = ส่วนที่หายไประหว่างเตรียม = (เบิกตั้งต้น − พร้อมใช้ในสูตร) ÷ เบิกตั้งต้น × 100 — ตรวจที่มา 2026-10-12:
+    // OrigQty (= "พร้อมใช้ในสูตร") คือยอดที่เบิกครั้งแรกตามสูตร BOM (ยอดสุทธิพร้อมใช้ เช่น ผลรวมวัตถุดิบ 6 แบทตาม BOM
+    // ≈ 240 กก.) ส่วน QtyIssued หลังแก้ "เบิกตั้งต้น" ตอนบันทึกผลิตคือยอดดิบที่ใช้จริงก่อนสูญเสียจากการเตรียม (≈ 316
+    // กก. = 1.31 เท่า) สูตรเดิม (เดิม−ตั้งต้น)÷เดิม จึงติดลบทุกรอบ (−17…−41%) เพราะตัวหารเป็นยอดตามสูตรที่น้อยกว่า
+    lossPct: l.qty > 1e-9 ? (l.qty - l.orig) / l.qty * 100 : null,
+    avgPrice: l.pricedQty > 0 ? l.cost / l.pricedQty : null,
+    incomplete: l.pricedQty + 1e-6 < l.qty,
+    perUnit: qtyProduced > 0 ? l.cost / qtyProduced : null,
+  }));
+  // แยกต้นทุนวัตถุดิบ (สด/แห้ง/เคมี/พร้อมผลิต) ออกจากแพ็คเกจจิ้ง (ผู้ใช้ขอ 2026-10-12) — ไม่มี LotAlloc/ราคาก็ติดธง
+  // incomplete แยกกันสองกลุ่ม ไม่ให้ธงของกลุ่มหนึ่งไปทำให้อีกกลุ่มดูไม่น่าเชื่อถือไปด้วย
+  const grp = isPkg => {
+    const ls = lines.filter(l => (l.category === CAT_PKG) === isPkg)
+      .sort((a, b) => String(a.RM_ID).localeCompare(String(b.RM_ID), undefined, { numeric: true }));
+    const cost = ls.reduce((s, l) => s + l.cost, 0);
+    return { lines: ls, cost, perUnit: qtyProduced > 0 ? cost / qtyProduced : null, incomplete: ls.some(l => l.incomplete) };
+  };
+  const rmG = grp(false), pkgG = grp(true);
+  // %Loss รวมเฉพาะวัตถุดิบจริง (CAT_RAW_ALL) ไม่รวมแพ็คเกจจิ้ง — เหมือน _rmUseRecalc (แพ็คเกจไม่มีแนวคิด "หาย"
+  // จากการแปรรูป และรวมข้ามหน่วยชิ้น/กก.ไม่ได้)
+  const rawLines = lines.filter(l => CAT_RAW_ALL.includes(l.category || 'วัตถุดิบ'));
+  const sumOrig = rawLines.reduce((s, l) => s + l.orig, 0), sumUsed = rawLines.reduce((s, l) => s + l.qty, 0);
+  rmG.lossPct = sumUsed > 1e-9 ? (sumUsed - sumOrig) / sumUsed * 100 : null;
+  // %Scrap จากลูกเสีย = เสีย ÷ ได้ทั้งหมด × 100 (QtyDefect/QtyGross ของบันทึกผลิต) — ถ้าบันทึกผลิตใบใดใบหนึ่ง
+  // ไม่มี QtyGross (เก่า) ไม่มีตัวหารที่ครบ ให้ "-" แทนการคิดจากข้อมูลไม่ครบ
+  const grossOk = rs.every(r => parseFloat(r.p.QtyGross) > 0);
+  const gross = grossOk ? rs.reduce((s, r) => s + parseFloat(r.p.QtyGross), 0) : null;
+  const defect = rs.reduce((s, r) => s + (parseFloat(r.p.QtyDefect) || 0), 0);
+  const scrapPct = gross > 0 ? defect / gross * 100 : null;
+  // โอเวอร์เฮดที่กระจายมาแล้วต่อบันทึกผลิต (r.oh จาก _prodCostOverheadAllocator) รวมเป็นหมวดๆ — matTotal = เฉพาะ
+  // วัตถุดิบ+แพ็คเกจ ใช้เทียบกับ "ประมาณการ/หน่วย" (BOM คิดเฉพาะวัสดุ ไม่รวมโอเวอร์เฮด ไม่งั้นส่วนต่างจะสูงเกินจริง)
+  const ohG = { cost: 0, parts: {}, missing: rs.some(r => r.oh?.missing), unavailable: rs.some(r => r.oh?.unavailable) };
+  OH_CATS.forEach(c => { ohG.parts[c.k] = rs.reduce((s, r) => s + (r.oh?.[c.k] || 0), 0); ohG.cost += ohG.parts[c.k]; });
+  ohG.perUnit = qtyProduced > 0 ? ohG.cost / qtyProduced : null;
+  // จำนวนคน/ยอดรายเดือนโชว์ได้เฉพาะเมื่อทุกบันทึกผลิตในการ์ดอยู่เดือนเดียวกัน (ข้ามเดือน = หลายตัวเลข ไม่รวมกัน)
+  const ohMonths = new Set(rs.map(r => r.oh?.month).filter(Boolean));
+  ohG.single = ohMonths.size === 1 ? { month: [...ohMonths][0], heads: rs[0].oh.heads, monthAmt: rs[0].oh.monthAmt } : null;
+  // ประมาณการจากเดือนก่อน (ยอดเดือนนี้ยังไม่ได้กรอก/ไม่เปลี่ยนยอดที่ใช้) + ส่วนต่างเทียบยอดจริงของเดือน (เฉพาะบันทึกผลิตที่เดือนนั้น
+  // กรอกยอดจริงแล้ว: ส่วนต่าง = จริง − ประมาณการ บวก = จริงสูงกว่าที่ประมาณไว้)
+  ohG.est = rs.some(r => r.oh?.basis === 'est');
+  ohG.baseMonths = [...new Set(rs.map(r => r.oh?.baseMonth).filter(Boolean))].sort();
+  const ohAct = rs.filter(r => r.oh?.act);
+  ohG.diff = ohAct.length ? {
+    est: ohAct.reduce((s, r) => s + r.oh.total, 0), act: ohAct.reduce((s, r) => s + r.oh.act.total, 0),
+    partial: ohAct.length < rs.filter(r => r.oh?.basis === 'est').length,
+    parts: Object.fromEntries(OH_CATS.map(c => [c.k, { est: ohAct.reduce((s, r) => s + (r.oh[c.k] || 0), 0), act: ohAct.reduce((s, r) => s + (r.oh.act[c.k] || 0), 0) }])),
+  } : null;
+  const matTotal = rmG.cost + pkgG.cost;
+  const matPerUnit = qtyProduced > 0 ? matTotal / qtyProduced : null;
+  const total = matTotal + ohG.cost;
+  // ไม่มีรายการเบิกให้เจอเลย (เช่น MO เก่าก่อนมีระบบนี้) ก็ถือว่า "ไม่ทราบต้นทุน" เหมือนกัน ไม่ใช่ต้นทุน 0 จริงๆ
+  const incomplete = rs.some(r => !r.rowCount) || lines.some(l => l.incomplete);
+  const costPerUnit = qtyProduced > 0 ? total / qtyProduced : null;
+  const fg = _fgMasterCache.find(f => f.FG_ID === first.FG_ID);
+  // เทียบกับ "ต้นทุนประมาณการ" ของหน้า BOM (ราคาเฉลี่ยปัจจุบัน × สูตร) ไว้ดูว่าของจริงเบี่ยงเบนจากที่ตั้งราคา
+  // ขายไว้แค่ไหน — ใช้ฟังก์ชันเดิม _bomUnitCost ตรงๆ ไม่คำนวณซ้ำเอง
+  const estUnit = _bomUnitCost(bomGroups.find(g => g.FG_ID === first.FG_ID) || { lines: [] });
+  return {
+    key, FG_ID: first.FG_ID, ProdLot: first.ProdLot, fg,
+    moIds: [...new Set(rs.map(r => r.p.MO_ID).filter(Boolean))], mfgDate: rs.map(r => r.p.MfgDate).filter(Boolean).sort()[0],
+    QtyProduced: qtyProduced, QtyGross: gross, defect, scrapPct, lines, rmG, pkgG, ohG, matTotal, matPerUnit, total, incomplete, costPerUnit, estUnit,
+  };
+}
+// การ์ดต่อ Lot: หัวการ์ดโชว์สรุปทั้ง Lot กดหัวการ์ดเพื่อกางดูรอบย่อย (รายบันทึกผลิต/MO) และปุ่มรายละเอียดต้นทุน
+const _pcExpanded = new Set();
+function prodCostToggle(key) {
+  if (_pcExpanded.has(key)) _pcExpanded.delete(key); else _pcExpanded.add(key);
+  _prodCostRenderCards();
+}
+function _prodCostRenderCards() {
   const q = (document.getElementById('pcSearch')?.value || '').trim().toLowerCase();
-  const rows = _prodCostCache.filter(p => !q
-    || [p.Prod_ID, p.MO_ID, p.fg?.FG_Name, p.ProdLot].filter(Boolean).join(' ').toLowerCase().includes(q));
-  document.getElementById('pcTableBody').innerHTML = rows.map(p => {
-    const estCost = p.estUnit?.cost ?? null;
-    const diff = (p.costPerUnit != null && estCost != null) ? p.costPerUnit - estCost : null;
+  const cards = _prodCostCache.filter(c => !q
+    || [c.ProdLot, c.fg?.FG_Name, c.FG_ID, ...c.moIds].filter(Boolean).join(' ').toLowerCase().includes(q));
+  // ช่องตัวเลขในการ์ด (tile): ป้ายกำกับเล็กบน ตัวเลขหลักตัวหนาตรงกลาง บรรทัดรองจางๆ ล่าง — สีพื้นต่างกันตามชนิด
+  // (วัตถุดิบ=เขียวอ่อน แพ็คเกจ=ฟ้าอมเขียว รวม=ฟ้าเน้นเด่น คุณภาพ/ประมาณการ=เทา) ให้กวาดตาแล้วแยกกลุ่มได้ทันที
+  const tile = (cls, icon, label, main, sub = '') => `<div class="pc-tile ${cls}"><div class="pc-lbl"><i class="fa-solid ${icon} me-1"></i>${label}</div><div class="pc-val">${main}</div>${sub ? `<div class="pc-sub">${sub}</div>` : ''}</div>`;
+  const warn = '<i class="fa-solid fa-triangle-exclamation text-warning ms-1" title="มีบางรายการไม่ทราบราคา (ไม่เคยรับเข้าแบบใส่ราคา) — ต้นทุนจริงสูงกว่านี้"></i>';
+  // กำไร/ลูก = ราคาขาย FG (product_master.SellPrice ตั้งที่หน้า "สูตรแม่บท") − ต้นทุน/หน่วย (ผู้ใช้ขอ 2026-10-12)
+  // โชว์ทั้งตามต้นทุนจริงของ Lot นี้ และตามต้นทุนประมาณการ พร้อม margin % (กำไร ÷ ราคาขาย) — ต้นทุนจริงที่ราคาไม่ครบ
+  // (c.incomplete) กำไรจะสูงกว่าจริง ติดไอคอนเตือนไว้ ไม่ตั้งราคาขายไว้ก็บอกให้ไปตั้ง ไม่เดาเป็น 0
+  const profitLines = (c, estCost) => {
+    const sell = c.fg?.SellPrice != null ? parseFloat(c.fg.SellPrice) : null;
+    if (!(sell > 0)) return '<div class="text-muted">ยังไม่ตั้งราคาขาย FG</div>';
+    const u = esc(c.fg?.Unit || 'หน่วย');
+    const fmtP = p => `<span class="pc-diff ${p >= 0 ? 'down' : 'up'}">${p >= 0 ? '+' : '−'}${_fmtBaht(Math.abs(p))} ฿</span>`;
+    const real = c.costPerUnit != null ? sell - c.costPerUnit : null;
+    // แสดงเฉพาะกำไรตามต้นทุนจริง (ผู้ใช้ขอ 2026-10-12 "มีแค่กำไรต่อลูกจริงพอ") ไม่มีกำไรตามประมาณการ/บรรทัดราคาขายแล้ว
+    return `<div class="mt-1">กำไร/${u} (จริง) ${real != null ? `${fmtP(real)} <span class="text-muted">(${(real / sell * 100).toFixed(1)}%)</span>${(c.incomplete || c.ohG.missing) ? '<i class="fa-solid fa-triangle-exclamation text-warning ms-1" title="ต้นทุนบางส่วนยังไม่ครบ (ราคาวัตถุดิบหรือโอเวอร์เฮดยังไม่ได้กรอก) — กำไรจริงต่ำกว่านี้"></i>' : ''}` : '-'}</div>`;
+  };
+  const tiles = (c, withEst) => {
+    const u = esc(c.fg?.Unit || 'หน่วย');
+    const per = v => v != null ? `${_fmtBaht(v)} ฿/${u}` : '-';
+    const estCost = c.estUnit?.cost ?? null;
+    // ส่วนต่างเทียบประมาณการใช้ต้นทุนวัสดุจริง (วัตถุดิบ+แพ็คเกจ) ไม่รวมโอเวอร์เฮด เพราะประมาณการจาก BOM มีแต่วัสดุ
+    const diff = (c.matPerUnit != null && estCost != null) ? c.matPerUnit - estCost : null;
     const diffPct = (diff != null && estCost > 0) ? (diff / estCost * 100) : null;
-    return `<tr>
-      <td>${esc(p.MO_ID || '-')}</td><td>${esc(p.fg?.FG_Name || p.FG_ID)}</td><td>${esc(p.ProdLot)}</td>
-      <td class="text-end">${_bomFmtQty(p.QtyProduced)} ${esc(p.fg?.Unit || '')}</td>
-      <td class="text-end">${_fmtBaht(p.total)} ฿${p.incomplete ? ' <i class="fa-solid fa-triangle-exclamation text-warning" title="มีบางรายการไม่ทราบราคา (ไม่เคยรับเข้าแบบใส่ราคา) — ต้นทุนจริงสูงกว่านี้"></i>' : ''}</td>
-      <td class="text-end">${p.costPerUnit != null ? `${_fmtBaht(p.costPerUnit)} ฿` : '-'}</td>
-      <td class="text-end">${estCost != null ? `${_fmtBaht(estCost)} ฿` : '<span class="text-muted">—</span>'}</td>
-      <td class="text-end">${diff != null ? `<span class="${diff > 0 ? 'text-danger' : 'text-success'}">${diff > 0 ? '+' : ''}${_fmtBaht(diff)} ฿${diffPct != null ? ` (${diff > 0 ? '+' : ''}${diffPct.toFixed(1)}%)` : ''}</span>` : '<span class="text-muted">—</span>'}</td>
-      <td><button class="btn btn-sm btn-outline-primary" onclick="prodCostDetail('${esc(p.Prod_ID)}')" title="ดูรายละเอียดต้นทุนแยกตามวัตถุดิบ"><i class="fa-solid fa-list"></i></button></td>
-    </tr>`;
-  }).join('') || `<tr><td colspan="9" class="text-center text-muted py-3">${q ? 'ไม่พบรายการที่ค้นหา' : 'ไม่มีข้อมูลในช่วงที่เลือก'}</td></tr>`;
-  const totalAll = rows.reduce((s, p) => s + p.total, 0);
+    const ohWarn = c.ohG.unavailable ? '<i class="fa-solid fa-triangle-exclamation text-warning ms-1" title="ยังไม่ได้รัน SQL โอเวอร์เฮด (migration_2026-10-12_overhead_costs.sql)"></i>'
+      : c.ohG.missing ? '<i class="fa-solid fa-triangle-exclamation text-warning ms-1" title="ยังไม่ได้กรอกโอเวอร์เฮดของเดือนที่ผลิต — ต้นทุนจริงสูงกว่านี้ (กดปุ่ม ตั้งค่าโอเวอร์เฮด)"></i>' : '';
+    return tile('pc-q', 'fa-circle-xmark', '%Scrap ลูกเสีย', c.scrapPct != null ? `${c.scrapPct.toFixed(2)}%` : '-', `เสีย ${_bomFmtQty(c.defect)} ${u}`)
+      + tile('pc-q', 'fa-scale-unbalanced', '%Loss ตั้งต้น→พร้อมใช้', c.rmG.lossPct != null ? `${c.rmG.lossPct.toFixed(2)}%` : '-', 'เฉพาะวัตถุดิบ')
+      + tile('pc-rm', 'fa-leaf', 'ต้นทุนวัตถุดิบ', `${_fmtBaht(c.rmG.cost)} ฿${c.rmG.incomplete ? warn : ''}`, per(c.rmG.perUnit))
+      + tile('pc-pkg', 'fa-box', 'ต้นทุนแพ็คเกจ', `${_fmtBaht(c.pkgG.cost)} ฿${c.pkgG.incomplete ? warn : ''}`, per(c.pkgG.perUnit))
+      + tile('pc-oh', 'fa-bolt', `โอเวอร์เฮด${c.ohG.est ? ' (ประมาณการ)' : ''}`, `${_fmtBaht(c.ohG.cost)} ฿${ohWarn}`, per(c.ohG.perUnit) + _ohDiffHtml(c.ohG))
+      + tile('pc-total', 'fa-sack-dollar', 'ต้นทุนรวม (จริง)', `${_fmtBaht(c.total)} ฿${c.incomplete ? warn : ''}`, per(c.costPerUnit))
+      // ส่วนต่างจากประมาณการ (ลูกศรสีแดง/เขียว) อยู่บรรทัดเดียวกับตัวเลขประมาณการ (ผู้ใช้ขอ 2026-10-12)
+      + (withEst ? tile('pc-q', 'fa-bullseye', 'ประมาณการ/หน่วย',
+          `${estCost != null ? `${_fmtBaht(estCost)} ฿` : '—'}${diff != null ? ` <span class="pc-diff ${diff > 0 ? 'up' : 'down'}"><i class="fa-solid fa-arrow-${diff > 0 ? 'up' : 'down'}"></i> ${_fmtBaht(Math.abs(diff))} ฿${diffPct != null ? ` (${Math.abs(diffPct).toFixed(1)}%)` : ''}</span>` : ''}`,
+          profitLines(c, estCost)) : '');
+  };
+  document.getElementById('pcCards').innerHTML = cards.map(c => {
+    const open = _pcExpanded.has(c.key);
+    const u = esc(c.fg?.Unit || '');
+    const runsHtml = !open ? '' : `<div class="pc-runs">
+      <div class="pc-runs-title"><i class="fa-solid fa-layer-group me-1"></i>รอบย่อยในล็อตนี้ (${c.runs.length} บันทึกผลิต)</div>
+      ${c.runs.map(r => `<div class="pc-run">
+        <div class="pc-run-head">
+          <span class="badge text-bg-primary">${esc(r.moIds.join(', ') || '-')}</span>
+          <span class="pc-chip"><i class="fa-regular fa-calendar"></i>${fmtDate(r.mfgDate)}</span>
+          <span class="pc-chip"><i class="fa-solid fa-boxes-stacked"></i>${_bomFmtQty(r.QtyProduced)} ${u}</span>
+          <button class="btn btn-sm btn-outline-primary ms-auto" onclick="prodCostDetail('${esc(r.key)}')" title="ดูรายละเอียดต้นทุนของ MO นี้"><i class="fa-solid fa-list me-1"></i>รายละเอียด</button>
+        </div>
+        <div class="pc-grid pc-sm">${tiles(r, false)}</div>
+      </div>`).join('')}</div>`;
+    return `<div class="glass-card pc-card ${open ? 'open' : ''}">
+      <div class="pc-head" onclick="prodCostToggle('${esc(c.key)}')">
+        <div class="pc-head-main">
+          <div class="pc-title"><span class="pc-lot"><i class="fa-solid fa-tag"></i>${esc(c.ProdLot)}</span><span class="pc-name">${esc(c.fg?.FG_Name || c.FG_ID)}</span></div>
+          <div class="pc-meta">
+            <span class="pc-chip"><i class="fa-solid fa-clipboard-list"></i>${c.moIds.length} MO</span>
+            <span class="pc-chip"><i class="fa-regular fa-calendar"></i>ผลิต ${fmtDate(c.mfgDate)}</span>
+            <span class="pc-chip strong"><i class="fa-solid fa-boxes-stacked"></i>${_bomFmtQty(c.QtyProduced)} ${u}</span>
+            <span class="pc-mo-list">${esc(c.moIds.join(' · '))}</span>
+          </div>
+        </div>
+        <div class="pc-actions">
+          <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation();prodCostDetail('${esc(c.key)}')" title="ดูรายละเอียดต้นทุนแยกตามวัตถุดิบ (รวมทั้ง Lot)"><i class="fa-solid fa-list me-1"></i>รายละเอียด</button>
+          <span class="pc-chevron" title="${open ? 'ย่อ' : 'ดูรอบย่อยแต่ละ MO'}"><i class="fa-solid fa-chevron-down"></i></span>
+        </div>
+      </div>
+      <div class="pc-grid">${tiles(c, true)}</div>
+      ${runsHtml}
+    </div>`;
+  }).join('') || `<div class="glass-card text-center text-muted py-3">${q ? 'ไม่พบรายการที่ค้นหา' : 'ไม่มีข้อมูลในช่วงที่เลือก'}</div>`;
+  // สรุปรวม + เฉลี่ยต่อหน่วย (ถ่วงน้ำหนักด้วยจำนวนที่ผลิตได้ = ต้นทุนรวมทุก Lot ÷ จำนวนที่ผลิตได้รวม) — รวมข้ามสินค้า
+  // ได้ก็ต่อเมื่อหน่วยตรงกัน จึงโชว์เฉลี่ยต่อหน่วยเฉพาะตอนผลลัพธ์ที่กรองอยู่เป็นสินค้า/หน่วยเดียวกันทั้งหมด
+  const sum = f => cards.reduce((s, c) => s + f(c), 0);
+  const rmAll = sum(c => c.rmG.cost), pkgAll = sum(c => c.pkgG.cost), ohAll = sum(c => c.ohG.cost), totalAll = rmAll + pkgAll + ohAll, qtyAll = sum(c => c.QtyProduced);
+  const units = new Set(cards.map(c => c.fg?.Unit || ''));
+  const avg = v => (units.size === 1 && qtyAll > 0) ? `<div class="small fw-normal text-muted">เฉลี่ย ${_fmtBaht(v / qtyAll)} ฿/${esc([...units][0] || 'หน่วย')}</div>` : '';
+  const moCount = sum(c => c.moIds.length);
   document.getElementById('pcKpis').innerHTML = [
-    { n: rows.length, l: 'รอบผลิตในช่วงนี้' },
-    { n: `${_fmtBaht(totalAll)} ฿`, l: 'ต้นทุนรวมวัตถุดิบ+แพ็คเกจจิ้ง' },
-  ].map(k => `<div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-num">${k.n}</div><div class="kpi-label">${k.l}</div></div></div>`).join('');
-  document.getElementById('pcFooter').textContent = _prodCostCache.length >= 500 ? 'แสดง 500 รอบผลิตล่าสุด — เลือกช่วงวันที่ให้แคบลงเพื่อดูรายการที่เก่ากว่านี้' : '';
+    { n: `${cards.length} Lot${`<div class="small fw-normal text-muted">${moCount} MO</div>`}`, l: 'ที่ผลิตในช่วงนี้' },
+    { n: `${_fmtBaht(rmAll)} ฿${avg(rmAll)}`, l: 'ต้นทุนวัตถุดิบรวม' },
+    { n: `${_fmtBaht(pkgAll)} ฿${avg(pkgAll)}`, l: 'ต้นทุนแพ็คเกจจิ้งรวม' },
+    { n: `${_fmtBaht(ohAll)} ฿${avg(ohAll)}`, l: 'โอเวอร์เฮดรวม (ค่าแรง/น้ำ/ไฟ/เช่า)' },
+    { n: `${_fmtBaht(totalAll)} ฿${avg(totalAll)}`, l: 'ต้นทุนรวมทั้งหมด' },
+  ].map(k => `<div class="col-6 col-md"><div class="kpi-card"><div class="kpi-num">${k.n}</div><div class="kpi-label">${k.l}</div></div></div>`).join('');
+  document.getElementById('pcFooter').textContent = _prodCostCache.reduce((s, c) => s + c.runs.length, 0) >= 500 ? 'แสดง 500 บันทึกผลิตล่าสุด — เลือกช่วงวันที่ให้แคบลงเพื่อดูรายการที่เก่ากว่านี้' : '';
 }
-// รายละเอียดต้นทุนแยกตามวัตถุดิบของรอบผลิตนี้ — โชว์เป็น Swal (ไม่ต้องมี modal แยกต่างหาก เพราะเป็นแค่ดูอย่างเดียว)
-// ใช้ Prod_ID หา (ไม่ใช้ index ของแถวที่กำลังแสดง เพราะถ้ามีค้นหา/กรองอยู่ ตำแหน่งแถวจะไม่ตรงกับ _prodCostCache)
-function prodCostDetail(prodId) {
-  const p = _prodCostCache.find(x => x.Prod_ID === prodId);
+// รายละเอียดต้นทุนแยกตามวัตถุดิบ — โชว์เป็น Swal (ไม่ต้องมี modal แยกต่างหาก เพราะเป็นแค่ดูอย่างเดียว)
+// key = การ์ดต่อ Lot (FG_ID|ProdLot) หรือ Prod_ID ของรอบย่อย — ค้นด้วย key ไม่ใช้ index ของแถวที่กำลังแสดง เพราะ
+// ถ้ามีค้นหา/กรองอยู่ ตำแหน่งจะไม่ตรงกับ _prodCostCache
+function prodCostDetail(key) {
+  const p = _prodCostCache.find(x => x.key === key) || _prodCostCache.flatMap(c => c.runs).find(r => r.key === key);
   if (!p) return;
-  const rowsHtml = p.lines.map(l => `<tr>
-    <td>${esc(l.name)}</td>
-    <td class="text-end">${_qtyFmtByCat(l.qty, l.category)} ${esc(l.unit || '')}</td>
-    <td class="text-end">${l.incomplete ? '<span class="text-muted">ไม่ทราบราคาบางส่วน</span>' : `${_fmtBaht(l.cost)} ฿`}</td>
-  </tr>`).join('');
+  const u = esc(p.fg?.Unit || 'หน่วย');
+  // แบ่งสองส่วน วัตถุดิบ / แพ็คเกจจิ้ง แต่ละบรรทัดโชว์ เบิกเดิม · ใช้จริง · %Loss · ราคาเฉลี่ย/หน่วยที่ซื้อมา · ต้นทุน ·
+  // ต่อสินค้า 1 หน่วย แล้วปิดท้ายด้วยแถวรวมของส่วนนั้น (ผู้ใช้ขอ 2026-10-12)
+  const section = (title, g) => {
+    if (!g.lines.length) return '';
+    const body = g.lines.map(l => `<tr>
+      <td>${esc(l.name)}</td>
+      <td class="text-end">${_qtyFmtByCat(l.qty, l.category)} ${esc(l.unit || '')}</td>
+      <td class="text-end text-muted">${_qtyFmtByCat(l.orig, l.category)}</td>
+      <td class="text-end">${l.lossPct != null ? `${l.lossPct.toFixed(1)}%` : '-'}</td>
+      <td class="text-end">${l.avgPrice != null ? `${_fmtBaht(l.avgPrice)} ฿` : '<span class="text-muted">—</span>'}</td>
+      <td class="text-end">${l.incomplete ? `<span class="text-muted" title="ไม่ทราบราคาบางส่วน">${_fmtBaht(l.cost)}+ ฿</span>` : `${_fmtBaht(l.cost)} ฿`}</td>
+      <td class="text-end text-muted">${l.perUnit != null ? `${_fmtBaht(l.perUnit)} ฿` : '-'}</td>
+    </tr>`).join('');
+    return `<tr class="table-light"><td colspan="7" class="fw-bold">${title}</td></tr>${body}
+      <tr class="fw-bold"><td colspan="5" class="text-end">รวม${title}${g.lossPct != null ? ` · %Loss ${g.lossPct.toFixed(1)}%` : ''}</td><td class="text-end">${_fmtBaht(g.cost)} ฿</td><td class="text-end">${g.perUnit != null ? `${_fmtBaht(g.perUnit)} ฿` : '-'}</td></tr>`;
+  };
+  // โอเวอร์เฮดที่กระจายเข้ามา (แยกตามหมวด) — บรรทัดละหมวด ไม่มีคอลัมน์ใช้/ราคา จึงใช้ colspan เติมช่องให้ตรงตาราง
+  const ohSection = !p.ohG.cost ? '' : `<tr class="table-light"><td colspan="7" class="fw-bold">โอเวอร์เฮด <span class="small fw-normal text-muted">${p.ohG.est
+      ? `(ประมาณการจากเดือน ${esc(p.ohG.baseMonths.join(', '))} · อัตราต่อวันผลิต · ค่าแรง/น้ำ/ไฟ +${OH_BUFFER_PCT}% ค่าเช่า/อื่นๆ คงเดิม)`
+      : '(ยอดรายเดือน ÷ วันที่มีการผลิต แบ่งตามจำนวนที่ผลิตได้)'}</span></td></tr>
+    ${OH_CATS.filter(c => p.ohG.parts[c.k] > 0).map(c => {
+      // ประเภทค่าแรง: ต่อท้ายจำนวนพนักงานของเดือนนั้น + ค่าแรงเฉลี่ยต่อคนต่อเดือน (ยอดทั้งเดือน ÷ จำนวนคน) ถ้ามีข้อมูล
+      const n = p.ohG.single?.heads?.[c.k], mAmt = p.ohG.single?.monthAmt?.[c.k];
+      const headTxt = (n > 0) ? ` <span class="small text-muted">· ${n} คน${mAmt > 0 ? ` · เฉลี่ย ${_fmtBaht(mAmt / n)} ฿/คน/เดือน` : ''}</span>` : '';
+      // ส่วนต่างยอดจริง − ประมาณการของหมวดนี้ (เมื่อเดือนนั้นกรอกยอดจริงแล้ว)
+      const pd = p.ohG.diff?.parts?.[c.k], dd = pd ? pd.act - pd.est : 0;
+      const diffTxt = (pd && Math.abs(dd) >= 0.005) ? ` <span class="small pc-diff ${dd > 0 ? 'up' : 'down'}" title="ยอดจริง ${_fmtBaht(pd.act)} ฿ เทียบประมาณการ ${_fmtBaht(pd.est)} ฿"><i class="fa-solid fa-arrow-${dd > 0 ? 'up' : 'down'}"></i> จริง ${_fmtBaht(pd.act)} ฿ (${dd > 0 ? '+' : '−'}${_fmtBaht(Math.abs(dd))})</span>` : '';
+      return `<tr><td colspan="5">${c.label}${headTxt}${diffTxt}</td><td class="text-end">${_fmtBaht(p.ohG.parts[c.k])} ฿</td><td class="text-end text-muted">${p.QtyProduced > 0 ? `${_fmtBaht(p.ohG.parts[c.k] / p.QtyProduced)} ฿` : '-'}</td></tr>`;
+    }).join('')}
+    <tr class="fw-bold"><td colspan="5" class="text-end">รวมโอเวอร์เฮด</td><td class="text-end">${_fmtBaht(p.ohG.cost)} ฿</td><td class="text-end">${p.ohG.perUnit != null ? `${_fmtBaht(p.ohG.perUnit)} ฿` : '-'}</td></tr>
+    ${p.ohG.diff ? `<tr><td colspan="7" class="small text-end text-muted">เทียบยอดจริงของเดือน: ${_ohDiffHtml(p.ohG)}${p.ohG.diff.partial ? '<div>(บางบันทึกผลิตในการ์ดนี้อยู่ในเดือนที่ยังไม่ได้กรอกยอดจริง — เทียบเฉพาะที่กรอกแล้ว)</div>' : ''}</td></tr>` : ''}`;
+  const rowsHtml = section('วัตถุดิบ', p.rmG) + section('แพ็คเกจจิ้ง', p.pkgG) + ohSection;
+  const multi = p.moIds.length > 1 && p.key.includes('|');
   Swal.fire({
-    title: `ต้นทุนจริง — ${esc(p.MO_ID || p.Prod_ID)}`, width: 560,
-    html: `<div class="text-start small mb-2">${esc(p.fg?.FG_Name || p.FG_ID)} · Lot ${esc(p.ProdLot)} · ผลิตได้ ${_bomFmtQty(p.QtyProduced)} ${esc(p.fg?.Unit || '')}</div>
-      <div class="table-responsive"><table class="table table-sm"><thead><tr><th>วัตถุดิบ</th><th class="text-end">ใช้</th><th class="text-end">ต้นทุน</th></tr></thead>
-      <tbody>${rowsHtml || '<tr><td colspan="3" class="text-center text-muted">ไม่มีรายการเบิก</td></tr>'}</tbody></table></div>
-      <div class="text-end fw-bold mt-1">รวม ${_fmtBaht(p.total)} ฿ ${p.costPerUnit != null ? `(${_fmtBaht(p.costPerUnit)} ฿/${esc(p.fg?.Unit || 'หน่วย')})` : ''}</div>
-      ${p.incomplete ? '<div class="small text-warning mt-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>มีวัตถุดิบบางรายการไม่เคยรับเข้าแบบใส่ราคา — ต้นทุนจริงสูงกว่าที่แสดง</div>' : ''}`,
+    title: `ต้นทุนจริง — ${esc(p.key.includes('|') ? `Lot ${p.ProdLot}` : (p.moIds[0] || p.key))}`, width: 900,
+    html: `<div class="text-start small mb-2">${esc(p.fg?.FG_Name || p.FG_ID)} · Lot ${esc(p.ProdLot)}${multi ? ` · รวม ${p.moIds.length} MO (${esc(p.moIds.join(', '))})` : ''} · ผลิตได้ ${_bomFmtQty(p.QtyProduced)} ${u}
+        ${p.scrapPct != null ? ` · %Scrap ลูกเสีย <b>${p.scrapPct.toFixed(2)}%</b> (เสีย ${_bomFmtQty(p.defect)} จากได้ทั้งหมด ${_bomFmtQty(p.QtyGross)})` : ''}</div>
+      <div class="table-responsive"><table class="table table-sm text-start"><thead><tr><th>รายการ</th><th class="text-end">เบิกตั้งต้น<div class="small fw-normal text-muted">ใช้จริง</div></th><th class="text-end">พร้อมใช้ในสูตร<div class="small fw-normal text-muted">เบิกครั้งแรก</div></th><th class="text-end" title="(เบิกตั้งต้น − พร้อมใช้ในสูตร) ÷ เบิกตั้งต้น × 100">%Loss</th><th class="text-end">ราคาเฉลี่ย/หน่วย</th><th class="text-end">ต้นทุน</th><th class="text-end">ต่อ 1 ${u}</th></tr></thead>
+      <tbody>${rowsHtml || '<tr><td colspan="7" class="text-center text-muted">ไม่มีรายการเบิก</td></tr>'}</tbody></table></div>
+      <div class="text-end fw-bold mt-1">รวมทั้งหมด ${_fmtBaht(p.total)} ฿ ${p.costPerUnit != null ? `(${_fmtBaht(p.costPerUnit)} ฿/${u})` : ''}</div>
+      ${p.incomplete ? '<div class="small text-warning mt-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>มีรายการบางตัวไม่เคยรับเข้าแบบใส่ราคา — ต้นทุนจริงสูงกว่าที่แสดง (ตัวเลขที่มี "+" คือเฉพาะส่วนที่ทราบราคา)</div>' : ''}
+      ${p.ohG.unavailable ? '<div class="small text-warning mt-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่ได้รัน SQL โอเวอร์เฮด (migration_2026-10-12_overhead_costs.sql) — ยังไม่รวมโอเวอร์เฮด</div>'
+        : p.ohG.missing ? '<div class="small text-warning mt-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่ได้กรอกโอเวอร์เฮดของเดือนที่ผลิต (ปุ่ม "ตั้งค่าโอเวอร์เฮด") — ต้นทุนจริงสูงกว่าที่แสดง</div>' : ''}`,
     confirmButtonText: 'ปิด',
   });
 }
@@ -8656,25 +9119,27 @@ async function _rmUseLoadRows(prefix, moId) {
     : '<tr><td colspan="7" class="text-center text-muted py-2">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>';
   _rmUseRecalc(prefix);
 }
-// % หายรวม = (เบิกเดิม − ใช้จริง) ÷ เบิกเดิม × 100 (ยืนยันสูตรกับผู้ใช้ 2026-10-04) — นับเฉพาะหมวดวัตถุดิบจริง
-// (CAT_RAW_ALL: สด/แห้ง/เคมี/พร้อมผลิต) ไม่รวมแพ็คเกจจิ้ง เพราะกล่อง/ถุง/เชือกไม่มีแนวคิด "หาย" จากการแปรรูป
-// แบบวัตถุดิบ รวมข้ามหน่วย (กก./ชิ้น) ไม่ได้อยู่แล้วถ้าปนแพ็คเกจจิ้งเข้าไปด้วย
+// % หาย / ของเสีย (สูตรปรับ 2026-10-12 ให้ตรงกับหน้า "ต้นทุนการผลิต" หลังตรวจที่มา — ผู้ใช้ขอ "ปรับสูตรหน้าบันทึก
+// ผลิตด้วย"): "พร้อมใช้ในสูตร" = ยอดที่เบิกครั้งแรกตามสูตร BOM (OrigQty, ไม่เปลี่ยน) ส่วน "เบิกตั้งต้น" = ยอดดิบที่ใช้จริง
+// ที่แก้ในฟอร์มนี้ ซึ่งมากกว่าเพราะสูญเสียระหว่างเตรียม → ของเสีย = เบิกตั้งต้น − พร้อมใช้ในสูตร (บวก = หายไประหว่าง
+// เตรียม) และ % หาย = (เบิกตั้งต้น − พร้อมใช้ในสูตร) ÷ เบิกตั้งต้น × 100 (เดิมกลับด้าน: (เดิม − ตั้งต้น) ÷ เดิม สูตรที่
+// ยืนยันไว้ 2026-10-04/05 ตอนยังเป็นกรณีเบิกเกินแล้วลดลง ทำให้ข้อมูลจริงขึ้นติดลบ/"ใช้เกินที่เบิก" ทุกรอบ) — นับ % หายรวม
+// เฉพาะหมวดวัตถุดิบจริง (CAT_RAW_ALL: สด/แห้ง/เคมี/พร้อมผลิต) ไม่รวมแพ็คเกจจิ้ง เพราะกล่อง/ถุง/เชือกไม่มีแนวคิด "หาย"
+// จากการแปรรูป รวมข้ามหน่วย (กก./ชิ้น) ไม่ได้อยู่แล้วถ้าปนแพ็คเกจจิ้งเข้าไปด้วย
 function _rmUseRecalc(prefix) {
   let sumOrig = 0, sumActual = 0;
   document.querySelectorAll(`#${prefix}-rm-rows tr[data-issue]`).forEach(tr => {
     // % หายรายตัว — โชว์ทุกแถว (รวมแพ็คเกจจิ้งด้วย เพื่อให้เห็นครบ) แยกจาก % หายรวมด้านบนที่นับเฉพาะวัตถุดิบจริง
     const orig = parseFloat(tr.dataset.original) || 0;
     const actual = parseFloat(tr.querySelector(`.${prefix}-rm-qty`).value) || 0;
-    // "ของเสีย" = พร้อมใช้ในสูตร (เบิกไปเดิม) − เบิกตั้งต้น (ที่แก้) เป็นจำนวนจริง ไม่ใช่ % — ผู้ใช้ขอ 2026-10-05
-    // ใช้ข้อมูลเดิมที่มีอยู่แล้ว (data-original/เบิกตั้งต้น) ไม่เพิ่มคอลัมน์/ช่องกรอกใหม่ซ้ำกับ "พร้อมใช้ในสูตร"
     const wasteCell = tr.querySelector(`.${prefix}-rm-waste`);
-    const waste = Math.round((orig - actual) * 10000) / 10000;
+    const waste = Math.round((actual - orig) * 10000) / 10000;
     wasteCell.textContent = _rmFmtQty(waste);
     wasteCell.className = `text-end small ${prefix}-rm-waste ` + (Math.abs(waste) < 1e-9 ? 'text-success' : waste > 0 ? 'text-danger' : 'text-warning');
     const pctCell = tr.querySelector(`.${prefix}-rm-pct`);
-    if (orig > 0) {
-      const rowPct = (orig - actual) / orig * 100;
-      pctCell.textContent = rowPct >= 0 ? `${rowPct.toFixed(2)}%` : `+${Math.abs(rowPct).toFixed(2)}%`;
+    if (actual > 0) {
+      const rowPct = (actual - orig) / actual * 100;
+      pctCell.textContent = `${rowPct.toFixed(2)}%`;
       pctCell.className = `text-end small ${prefix}-rm-pct ` + (Math.abs(rowPct) < 0.01 ? 'text-success' : rowPct > 0 ? 'text-danger' : 'text-warning');
     } else {
       pctCell.textContent = '-';
@@ -8685,9 +9150,9 @@ function _rmUseRecalc(prefix) {
     sumActual += actual;
   });
   const el = document.getElementById(`${prefix}-rm-loss`);
-  if (!sumOrig) { el.textContent = ''; return; }
-  const pct = (sumOrig - sumActual) / sumOrig * 100;
-  el.textContent = pct >= 0 ? `% หายรวม: ${pct.toFixed(2)}%` : `% ใช้เกินที่เบิก: ${Math.abs(pct).toFixed(2)}%`;
+  if (!sumActual) { el.textContent = ''; return; }
+  const pct = (sumActual - sumOrig) / sumActual * 100;
+  el.textContent = pct >= 0 ? `% หายรวม: ${pct.toFixed(2)}%` : `% ต่ำกว่าที่เบิกตามสูตร: ${Math.abs(pct).toFixed(2)}%`;
   el.className = 'small fw-semibold ' + (Math.abs(pct) < 0.01 ? 'text-success' : pct > 0 ? 'text-danger' : 'text-warning');
 }
 function _rmUseReadCorrections(prefix) {
