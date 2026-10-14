@@ -1592,7 +1592,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
             </div>
             <div class="col-md-6">
               <label class="form-label">ประเภทพนักงาน<span class="text-danger">*</span></label>
-              <select id="empm-type" class="form-select"><option value="FT">พนักงานประจำ (FT)</option><option value="PT">พาร์ทไทม์ (PT)</option><option value="OS">เอาท์ซอร์ส (OS)</option></select>
+              <select id="empm-type" class="form-select" onchange="employeeTypeChanged()"><option value="FT">พนักงานประจำ (FT)</option><option value="PT">พาร์ทไทม์ (PT)</option><option value="OS">เอาท์ซอร์ส (OS)</option></select>
             </div>
             <div class="col-md-6">
               <label class="form-label">ชื่อจริง<span class="text-danger">*</span></label>
@@ -1610,10 +1610,14 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
             <div class="col-md-4"><label class="form-label">วันที่เริ่มงาน</label><input id="empm-start" type="date" class="form-control"></div>
             <div class="col-md-4"><label class="form-label">เบอร์โทร</label><input id="empm-phone" class="form-control"></div>
             <div class="col-md-4"><label class="form-label">สถานะ</label><select id="empm-status" class="form-select"><option value="ทำงานอยู่">ทำงานอยู่</option><option value="ลาออก">ลาออก</option></select></div>
+            <!-- เฉพาะประเภทเอาท์ซอร์ส (OS): ซัพ/ต้นสังกัด (ทุกคนที่แก้พนักงานได้เห็น) + ค่าจ้างต่อเดือน (แอดมินเท่านั้น — เก็บตาราง employee_wages แยก) -->
+            <div class="col-md-6 d-none" id="empm-agency-wrap"><label class="form-label">ซัพ / ต้นสังกัด (เอาท์ซอร์ส)</label><input id="empm-agency" class="form-control" list="empAgencyList" placeholder="เช่น ชื่อบริษัท/ซัพที่ส่งพนักงานมา"></div>
+            <div class="col-md-6 d-none" id="empm-wage-wrap"><label class="form-label">ค่าจ้าง (บาท/เดือน) <span class="badge text-bg-warning fw-normal"><i class="fa-solid fa-lock me-1"></i>เห็นเฉพาะแอดมิน</span></label><input id="empm-wage" type="number" min="0" step="any" class="form-control" placeholder="รวมเป็นต้นทุนค่าแรง OS ของแต่ละเดือน">
+              <div class="invalid-feedback" id="empm-wage-err"></div></div>
             <div class="col-12"><label class="form-label">หมายเหตุ</label><input id="empm-note" class="form-control"></div>
           </div></div>
         </div>
-        <datalist id="empPositionList"></datalist><datalist id="empDeptList"></datalist>
+        <datalist id="empPositionList"></datalist><datalist id="empDeptList"></datalist><datalist id="empAgencyList"></datalist>
       </div>
       <div class="modal-footer modal-footer-light">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
@@ -3285,6 +3289,7 @@ const EMP_PHOTO_BUCKET = 'employee-photos';
 const EMP_TYPE_LABEL = { FT: 'ประจำ (FT)', PT: 'พาร์ทไทม์ (PT)', OS: 'เอาท์ซอร์ส (OS)' };
 const EMP_TYPE_COLOR = { FT: '#0d6efd', PT: '#198754', OS: '#8b5cf6' };
 let _employeeCache = [];
+let _employeeWages = {}, _employeeWagesOk = false;   // {_row_id: ค่าจ้าง/เดือน} เฉพาะแอดมินเห็น (OS)
 let _employeePhotoUrls = {};   // PhotoPath → signed URL
 let _empEditId = null;         // _row_id ที่กำลังแก้ (null = เพิ่มใหม่)
 let _empPhotoBlob = null;      // รูปใหม่ที่เลือก (ย่อแล้ว) รออัปโหลดตอนกดบันทึก
@@ -3299,6 +3304,14 @@ async function employeeLoad() {
     return;
   }
   _employeeCache = data || [];
+  // ค่าจ้าง OS (แอดมินเท่านั้น — RLS ของ employee_wages) error = ยังไม่ได้รัน migration_2026-10-14_employee_agency_wage.sql → ฟอร์มแจ้งตอนบันทึก
+  _employeeWages = {};
+  _employeeWagesOk = false;
+  if (_hasRole('admin')) {
+    const w = await _sb.from('employee_wages').select('EmployeeID,Wage');
+    if (!w.error) { _employeeWagesOk = true; (w.data || []).forEach(r => { _employeeWages[r.EmployeeID] = parseFloat(r.Wage) || 0; }); }
+    else console.error(w.error);
+  }
   const paths = _employeeCache.map(e => e.PhotoPath).filter(Boolean);
   _employeePhotoUrls = {};
   if (paths.length) {
@@ -3327,13 +3340,13 @@ function employeeRender() {
   const rows = _employeeCache.filter(e => {
     if (type && e.EmployeeType !== type) return false;
     if (status && e.Status !== status) return false;
-    return !q || [e.EmployeeCode, e.FirstName, e.LastName, e.NickName, e.Position, e.Department].join(' ').toLowerCase().includes(q);
+    return !q || [e.EmployeeCode, e.FirstName, e.LastName, e.NickName, e.Position, e.Department, e.Agency].join(' ').toLowerCase().includes(q);
   });
   document.getElementById('employeeTableBody').innerHTML = rows.map(e => `<tr>
     <td>${_empAvatar(e)}</td>
     <td><span class="badge text-bg-secondary">${esc(e.EmployeeCode)}</span></td>
     <td>${esc(e.FirstName)} ${esc(e.LastName)}${e.NickName ? ` <small class="text-muted">(${esc(e.NickName)})</small>` : ''}</td>
-    <td><span class="badge emp-type-badge" style="background:${EMP_TYPE_COLOR[e.EmployeeType] || '#94a3b8'}">${esc(EMP_TYPE_LABEL[e.EmployeeType] || e.EmployeeType || '—')}</span></td>
+    <td><span class="badge emp-type-badge" style="background:${EMP_TYPE_COLOR[e.EmployeeType] || '#94a3b8'}">${esc(EMP_TYPE_LABEL[e.EmployeeType] || e.EmployeeType || '—')}</span>${e.EmployeeType === 'OS' && e.Agency ? `<div class="small text-muted">${esc(e.Agency)}</div>` : ''}</td>
     <td>${esc(e.Position || '—')}</td>
     <td>${esc(e.Department || '—')}</td>
     <td>${badge(e.Status || 'ทำงานอยู่', e.Status === 'ลาออก' ? 'secondary' : 'success')}</td>
@@ -3352,6 +3365,12 @@ function _empSetPreview(url, fallback) {
   document.getElementById('empm-photo-preview').innerHTML = url ? `<img src="${esc(url)}" alt="">` : (fallback || '<i class="fa-solid fa-user"></i>');
   document.getElementById('empm-photo-remove').style.display = url ? '' : 'none';
 }
+// ช่องซัพ/ต้นสังกัดโชว์เฉพาะประเภทเอาท์ซอร์ส (OS); ช่องค่าจ้างโชว์เฉพาะ OS และเฉพาะแอดมิน
+function employeeTypeChanged() {
+  const os = document.getElementById('empm-type').value === 'OS';
+  document.getElementById('empm-agency-wrap').classList.toggle('d-none', !os);
+  document.getElementById('empm-wage-wrap').classList.toggle('d-none', !(os && _hasRole('admin')));
+}
 function employeeOpenModal(rowId = null) {
   const e = rowId ? _employeeCache.find(x => x._row_id === rowId) : null;
   _empEditId = e ? e._row_id : null;
@@ -3367,6 +3386,10 @@ function employeeOpenModal(rowId = null) {
   set('empm-first', e?.FirstName); set('empm-last', e?.LastName); set('empm-nick', e?.NickName);
   set('empm-position', e?.Position); set('empm-dept', e?.Department); set('empm-start', e?.StartDate);
   set('empm-phone', e?.Phone); set('empm-status', e?.Status || 'ทำงานอยู่'); set('empm-note', e?.Note);
+  set('empm-agency', e?.Agency); set('empm-wage', e && _employeeWages[e._row_id] ? _employeeWages[e._row_id] : '');
+  _modalClearErrors(['empm-wage']);
+  document.getElementById('empAgencyList').innerHTML = [...new Set(_employeeCache.map(x => x.Agency).filter(Boolean))].map(v => `<option value="${esc(v)}">`).join('');
+  employeeTypeChanged();
   // ตัวเลือกตำแหน่ง/แผนกจากที่เคยกรอกไว้ — พิมพ์ใหม่ได้เสมอ
   const opts = key => [...new Set(_employeeCache.map(x => x[key]).filter(Boolean))].map(v => `<option value="${esc(v)}">`).join('');
   document.getElementById('empPositionList').innerHTML = opts('Position');
@@ -3419,7 +3442,11 @@ async function employeeSave() {
     NickName: val('empm-nick') || null, Position: val('empm-position') || null, Department: val('empm-dept') || null,
     StartDate: val('empm-start') || null, Phone: val('empm-phone') || null, Status: val('empm-status') || 'ทำงานอยู่',
     Note: val('empm-note') || null,
+    Agency: val('empm-type') === 'OS' ? (val('empm-agency') || null) : null,
   };
+  // ค่าจ้าง: เฉพาะแอดมิน + ประเภท OS (ถ้าเปลี่ยนเป็นประเภทอื่น ลบแถวค่าจ้างเดิมทิ้ง ไม่ให้ค้างไปรวมผิดที่)
+  const wageRaw = val('empm-wage');
+  if (_hasRole('admin') && val('empm-type') === 'OS' && wageRaw !== '' && !(parseFloat(wageRaw) >= 0)) { _modalShowError('empm-wage', 'กรอกค่าจ้างเป็นตัวเลข'); return; }
   const btn = document.getElementById('empm-save-btn');
   const btnHtml = btn.innerHTML;
   btn.disabled = true;
@@ -3430,9 +3457,21 @@ async function employeeSave() {
       ? _sb.from('employees').update(payload).eq('_row_id', _empEditId).select()
       : _sb.from('employees').insert(payload).select();
     const { data, error } = await q;
-    if (error) { Swal.fire('บันทึกไม่สำเร็จ', error.code === '23505' ? `รหัส "${esc(code)}" ถูกใช้แล้ว` : error.message, 'error'); return; }
+    if (error) { Swal.fire('บันทึกไม่สำเร็จ', error.code === '23505' ? `รหัส "${esc(code)}" ถูกใช้แล้ว` : (/Agency/.test(error.message || '') ? 'ยังไม่ได้รัน migration_2026-10-14_employee_agency_wage.sql ใน Supabase' : error.message), 'error'); return; }
     const saved = data[0];
     if (!_empEditId) _empEditId = saved._row_id;   // ถ้าอัปโหลดรูปพลาด กดบันทึกซ้ำจะไม่สร้างคนซ้ำ
+    // 1.5) ค่าจ้างรายเดือน (แอดมิน) — ตารางแยก employee_wages ช่องว่าง/ไม่ใช่ OS = ลบแถวทิ้ง
+    if (_hasRole('admin')) {
+      const isOs = payload.EmployeeType === 'OS';
+      const hadWage = _employeeWages[saved._row_id] != null;
+      let wr = null;
+      if (isOs && wageRaw !== '') {
+        wr = await sbRun(_sb.from('employee_wages').upsert({ EmployeeID: saved._row_id, Wage: Math.max(0, parseFloat(wageRaw) || 0), UpdatedAt: new Date().toISOString(), UpdatedBy: _currentUser?.name || _currentUser?.email || null }, { onConflict: 'EmployeeID' }),
+          'บันทึกข้อมูลพนักงานแล้ว แต่บันทึกค่าจ้างไม่สำเร็จ (ต้องรัน migration_2026-10-14_employee_agency_wage.sql ก่อน)');
+      } else if (hadWage) {
+        wr = await sbRun(_sb.from('employee_wages').delete().eq('EmployeeID', saved._row_id), 'ลบค่าจ้างเดิมไม่สำเร็จ');
+      }
+    }
     const oldPath = saved.PhotoPath;
     // 2) รูป: อัปโหลดรูปใหม่ / เอารูปออก แล้วค่อยลบไฟล์เก่า (ลบทีหลังสุด — ถ้าขั้นก่อนหน้าพลาด รูปเดิมยังอยู่)
     let newPath = oldPath;
@@ -8562,11 +8601,12 @@ async function ohLoadMonth() {
   _ohDays = 0; _ohBase = null;
   if (m) {
     const [y, mo] = m.split('-').map(Number);
-    const [ohRes, days, emps, prevRes] = await Promise.all([
+    const [ohRes, days, emps, prevRes, wageRes] = await Promise.all([
       _sb.from('overhead_costs').select('*').eq('Month', m),
       _sb.from('production_records').select('MfgDate').gte('MfgDate', `${m}-01`).lte('MfgDate', `${m}-${String(new Date(y, mo, 0).getDate()).padStart(2, '0')}`).limit(5000),
-      _sb.from('employees').select('EmployeeType,Status'),
+      _sb.from('employees').select('*'),   // * ไม่ระบุ Agency ตรงๆ — ฟอร์มนี้ยังใช้ได้แม้ยังไม่ได้รัน migration พนักงาน OS
       _sb.from('overhead_costs').select('*').lt('Month', m),
+      _sb.from('employee_wages').select('EmployeeID,Wage'),
     ]);
     if (ohRes.error) { document.getElementById('oh-err').textContent = /overhead_costs|schema cache|does not exist/i.test(ohRes.error.message || '') ? 'ยังไม่ได้รัน migration_2026-10-12_overhead_costs.sql ใน Supabase' : ohRes.error.message; }
     const saved = new Set();
@@ -8583,7 +8623,21 @@ async function ohLoadMonth() {
       const n = active.filter(e => e.EmployeeType === t.toUpperCase()).length;
       if (n > 0) { document.getElementById(`oh-heads_${t}`).value = n; suggested.push(t.toUpperCase()); }
     });
-    if (suggested.length) document.getElementById('oh-heads-hint').textContent = `จำนวนคน (${suggested.join('/')}) ตั้งต้นจากทะเบียนพนักงานที่ยังทำงานอยู่ตอนนี้ — แก้ได้ถ้าเดือนนั้นไม่ตรง`;
+    const hints = [];
+    if (suggested.length) hints.push(`จำนวนคน (${suggested.join('/')}) ตั้งต้นจากทะเบียนพนักงานที่ยังทำงานอยู่ตอนนี้ — แก้ได้ถ้าเดือนนั้นไม่ตรง`);
+    // ค่าแรง OS ตั้งต้น = ผลรวมค่าจ้างต่อเดือนของพนักงาน OS ที่ยังทำงานอยู่ (ตั้งที่หน้าพนักงาน แอดมินเท่านั้น) — ใส่ให้เฉพาะเมื่อเดือนนี้
+    // ยังไม่เคยบันทึกยอด OS (ช่องว่าง) ไม่ทับยอดที่กรอกไว้แล้ว แก้ได้
+    if (!wageRes.error) {
+      const wages = {}; (wageRes.data || []).forEach(r => { wages[r.EmployeeID] = parseFloat(r.Wage) || 0; });
+      const osAct = active.filter(e => e.EmployeeType === 'OS' && wages[e._row_id] > 0);
+      const osSum = osAct.reduce((s, e) => s + wages[e._row_id], 0);
+      if (osSum > 0 && !document.getElementById('oh-labor_os').value) {
+        document.getElementById('oh-labor_os').value = osSum;
+        const byAg = {}; osAct.forEach(e => { const k = (e.Agency || '').trim() || 'ไม่ระบุซัพ'; (byAg[k] ||= { n: 0, s: 0 }); byAg[k].n++; byAg[k].s += wages[e._row_id]; });
+        hints.push(`ค่าแรง OS ตั้งต้นจากค่าจ้างรายคนที่ตั้งไว้ (${osAct.length} คน): ${Object.entries(byAg).map(([k, v]) => `${k} ${v.n} คน ${_fmtBaht(v.s)} บาท`).join(' · ')} — แก้ได้ถ้าเดือนนั้นไม่ตรง`);
+      }
+    }
+    document.getElementById('oh-heads-hint').innerHTML = hints.map(h => esc(h)).join('<br>');
     _ohDays = new Set((days.data || []).map(r => r.MfgDate)).size;
     // เดือนฐานที่ระบบใช้ประมาณการต้นทุนเดือนนี้ (เดือนก่อนหน้าล่าสุดที่มียอด) — ไว้เทียบกับยอดจริงที่กรอก
     const prev = {};
