@@ -365,8 +365,29 @@ table.rrpt-table tr.rrpt-total td { background: var(--primary-blue); color: #fff
      buffer ชั้นนี้เหมือนกัน, ผู้ใช้ยืนยัน 2026-09-30) */
   /* ขอบบนเพิ่มเป็น 22mm แยกจากขอบอื่น (2026-09-30, ผู้ใช้ขอ "ขอบบนชิดไป") — ซ้าย/ขวา/ล่างยังคง 15mm เดิม
      ที่ใช้ได้ผลแล้ว ไม่แตะจุดที่โอเคอยู่แล้ว */
-  @page rcvreport { size: A4 landscape; margin: 15mm; margin-top: 22mm; }
-  #rrpt-print-root .rrpt-page { page: rcvreport; box-shadow: none; margin: 0; padding: 0 6mm; width: auto; min-height: 173mm; }
+  /* 2026-10-15 ผู้ใช้ขอ "ขอบบางกว่านี้อีกหน่อย": บน 22→14mm, ซ้าย/ขวา/ล่าง 15→10mm (ยังเหลือกันเครื่องพิมพ์ตัดขอบ — ส่วนใหญ่ไม่พิมพ์
+     ใน ~4-6mm ขอบนอก) พื้นที่พิมพ์สูงเป็น 186mm (เดิม 173) → รับได้ ~6 รายการ/แผ่น (วัดแล้ว 6 รายการ ≈175mm) */
+  @page rcvreport { size: A4 landscape; margin: 10mm; margin-top: 14mm; }
+  /* พิมพ์แล้วล้น 1 แผ่นจนลายเซ็นไปอยู่หน้า 2 (2026-10-15 ผู้ใช้ "สั่งปริ้น มันเกิน 1 กระดาษ A4 … แก้หลายรอบแล้ว") สาเหตุจริง 2 อย่าง:
+     (1) เนื้อหา 5 รายการ + สรุป + ช่องเซ็น สูงรวม ~180mm เกินพื้นที่พิมพ์ 173mm (210 − ขอบบน 22 − ขอบล่าง 15) — เดิมกันล้นด้วยการตั้ง
+     min-height: 173mm พอดีเป๊ะ ซึ่งไม่ได้ลดความสูงเนื้อหาเลย และ flex + margin-top:auto ของช่องเซ็นแตกหน้าไม่เสถียรใน Chrome
+     (ช่องเซ็นหลุดไปหน้า 2 ทั้งที่หน้า 1 ยังว่าง) → เลิกบังคับความสูงขั้นต่ำ/เลิก flex ตอนพิมพ์ ให้ช่องเซ็นต่อท้ายเนื้อหา (ห่าง 6mm)
+     (2) ลดช่องไฟแนวตั้งเฉพาะตอนพิมพ์ (แถว 5→3px, หัวตาราง, หัวกระดาษ, ช่องเซ็น) รวมประหยัด ~22mm → เนื้อหา ~158mm เหลือที่เผื่อ ~15mm
+     รายการเยอะจนเกิน 1 หน้าก็ไหลต่อหน้าถัดไปตามปกติ (แถวไม่ถูกตัดกลาง, ช่องเซ็นไม่ถูกแยกครึ่ง) */
+  /* ช่องเซ็นชิดขอบล่างเสมอ (2026-10-15 ผู้ใช้ขอ): ใช้ flex column + margin-top:auto ของ .rrpt-foot โดยตั้ง min-height = 183mm ต่ำกว่าพื้นที่
+     พิมพ์จริง 186mm (210 − บน 14 − ล่าง 10) อยู่ 3mm — รอบก่อนล้นเพราะ min-height เท่าพื้นที่พิมพ์พอดี (173mm) ทั้งที่เนื้อหาเองก็สูงเกิน
+     จึงโดนดันข้ามหน้า ตอนนี้เนื้อหาต่ำกว่า min-height มาก (5 รายการ ≈162mm) กล่องจึงสูง 183mm พอดี ช่องเซ็นอยู่ล่างสุดและไม่ล้น
+     ถ้ารายการเยอะจนเกิน 183mm กล่องโตตามเนื้อหา ช่องเซ็นต่อท้ายรายการ (padding-top 6mm กันชิดตาราง) แล้วไหลหน้าถัดไปตามปกติ */
+  #rrpt-print-root .rrpt-page { page: rcvreport; box-shadow: none; margin: 0; padding: 0 6mm; width: auto; min-height: 183mm; display: flex; flex-direction: column; }
+  #rrpt-print-root table.rrpt-table td { padding: 3px 7px; }
+  #rrpt-print-root table.rrpt-table th { padding: 4px 7px; }
+  #rrpt-print-root table.rrpt-table.sum td { padding: 2px 7px; }
+  #rrpt-print-root .rrpt-head img { height: 46px; }
+  #rrpt-print-root .rrpt-head { padding-bottom: 6px; margin-bottom: 8px; }
+  #rrpt-print-root .rrpt-filters { margin-bottom: 6px; }
+  #rrpt-print-root .rrpt-sum-title { margin: 6px 0 3px; }
+  #rrpt-print-root .rrpt-foot { margin-top: auto; padding-top: 6mm; break-inside: avoid; page-break-inside: avoid; }
+  #rrpt-print-root .rrpt-sign .line { margin-top: 14px; }
   table.rrpt-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 /* ใบเตรียมวัตถุดิบ (prtp) — กระดาษงานให้พนักงานถือไปชั่งจริง แบ่งเป็นวันๆ ตาม "ทำวันละกี่ชุด" ที่กรอก
@@ -738,6 +759,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('received');return false;" id="navlink-received"><i class="fa-solid fa-inbox me-2"></i>Received</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('fgreceive');return false;" id="navlink-fgreceive"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('reqorder');return false;" id="navlink-reqorder"><i class="fa-solid fa-file-signature me-2"></i>ใบขอเบิก</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('miscout');return false;" id="navlink-miscout"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>เบ็ดเตล็ด / โอนย้าย</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockmove');return false;" id="navlink-stockmove"><i class="fa-solid fa-right-left me-2"></i>Stock Movement</a></li>
     </ul>
 
@@ -863,6 +885,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
       <div class="d-flex gap-2 flex-wrap">
         <button class="btn btn-light" onclick="rcvReportOpen()"><i class="fa-solid fa-print me-1"></i>ออกใบรายงานรับ</button>
         <button class="btn btn-light" onclick="receivedExportCsv()" title="ส่งออกรายการที่กรองอยู่เป็น CSV"><i class="fa-solid fa-file-csv me-1"></i>Export CSV</button>
+        <button class="btn btn-light" onclick="trfOpen()" title="รับของที่โอนมาจากคลังใหญ่ หลายรายการในใบเดียว"><i class="fa-solid fa-truck-ramp-box me-1"></i>รับจากโอนย้ายคลังใหญ่</button>
         <button class="btn btn-success" onclick="receivedOpenForm()"><i class="fa-solid fa-plus me-1"></i>รับเข้าคลัง</button>
       </div>
     </div>
@@ -1198,7 +1221,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
   <div class="page-view" id="page-fgout">
     <div class="page-header d-flex justify-content-between align-items-start">
       <div><h4 class="mb-0 text-white"><i class="fa-solid fa-truck me-2"></i>เบิก FG / จัดส่ง</h4><div class="text-white-50 small">เบิกสินค้าตาม CO (FEFO ตามวันหมดอายุจริง) และติดตามสถานะจัดส่ง</div></div>
-      <button class="btn btn-success" onclick="genwdOpenForm()"><i class="fa-solid fa-plus me-1"></i>เบิกอื่น (ไม่ผูก CO)</button>
+      <button class="btn btn-light" onclick="showPage('miscout')" title="เบิกอื่น (ไม่ผูก CO) ย้ายไปหน้า เบิกเบ็ดเตล็ด / โอนย้าย แล้ว"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>เบิกเบ็ดเตล็ด / โอนย้าย</button>
     </div>
     <div class="scroll-content">
       <div class="glass-card"><h6 class="mb-3">คำสั่งซื้อที่ยังค้างส่ง</h6><div class="table-responsive"><table class="table table-hover mb-0">
@@ -1209,56 +1232,70 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
         <thead><tr><th>เลขที่จัดส่ง</th><th>CO</th><th>สินค้า/Lot</th><th>จำนวน</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
         <tbody id="deliveryTableBody"></tbody>
       </table></div></div>
-      <div class="glass-card"><h6 class="mb-3">ประวัติการเบิกอื่น (ไม่ผูกกับ CO)</h6><div class="table-responsive"><table class="table table-hover mb-0">
-        <thead><tr><th>เลขที่เบิก</th><th>ประเภท</th><th>รายการ</th><th class="text-end">จำนวน</th><th>วัตถุประสงค์</th><th>วันที่</th><th class="text-center">จัดการ</th></tr></thead>
-        <tbody id="genwdHistTableBody"></tbody>
-      </table></div></div>
     </div>
   </div>
 
-  <!-- ═══════════════ MODAL: เพิ่มรายการเบิก (วัตถุดิบ/แพ็คเกจจิ้ง/FG — ไม่ผูกกับ CO) ═══════════════ -->
-  <div class="modal fade" id="genwdModal" tabindex="-1">
-    <div class="modal-dialog">
+  <!-- ═══════════════ เบิกเบ็ดเตล็ด / โอนย้าย (2026-10-15) — ย้ายมาจาก "เบิกอื่น (ไม่ผูก CO)" ของหน้า FG-Out ═══════════════ -->
+  <div class="page-view" id="page-miscout">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>เบิกเบ็ดเตล็ด / โอนย้าย</h4><div class="text-white-50 small">เบิกใช้งานอื่น (ไม่ผูก CO) หรือโอนย้ายไปคลัง/ปลายทางอื่น — วัตถุดิบ แพ็คเกจจิ้ง และ FG ใบละหลายรายการ</div></div>
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-light" onclick="miscOutOpen('โอนย้าย')"><i class="fa-solid fa-truck-arrow-right me-1"></i>โอนย้าย</button>
+        <button class="btn btn-success" onclick="miscOutOpen('เบิกเบ็ดเตล็ด')"><i class="fa-solid fa-plus me-1"></i>เบิกเบ็ดเตล็ด</button>
+      </div>
+    </div>
+    <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+      <select class="form-select w-auto" id="moType" onchange="miscOutRender()">
+        <option value="">ทุกประเภท</option><option value="เบิกเบ็ดเตล็ด">เบิกเบ็ดเตล็ด</option><option value="โอนย้าย">โอนย้าย</option>
+      </select>
+      <input type="date" class="form-control w-auto" id="moFrom" onchange="miscOutLoad()" title="ตั้งแต่วันที่">
+      <span class="text-white-50 small">ถึง</span>
+      <input type="date" class="form-control w-auto" id="moTo" onchange="miscOutLoad()" title="ถึงวันที่">
+      <div class="search-wrap" style="width:260px;max-width:100%"><input class="form-control search-input" id="moSearch" placeholder="ค้นหา เลขที่ใบ / รายการ / ปลายทาง..." oninput="miscOutRender()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('moSearch').value='';miscOutRender()"></i></div>
+    </div></div>
+    <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+      <thead><tr><th>เลขที่ใบ</th><th>ประเภท</th><th>วันที่</th><th>ปลายทาง / วัตถุประสงค์</th><th>รายการ</th><th class="text-center">จัดการ</th></tr></thead>
+      <tbody id="miscOutBody"></tbody>
+    </table></div><div class="small text-muted mt-2" id="miscOutFooter"></div></div></div>
+  </div>
+
+  <!-- ═══════════════ MODAL: ใบเบิกเบ็ดเตล็ด / โอนย้าย (หลายรายการ) — migration_2026-10-15_misc_out.sql ═══════════════ -->
+  <div class="modal fade" id="miscOutModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header modal-header-brand">
-          <h5 class="modal-title"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>เบิกอื่น (ไม่ผูก CO)</h5>
+          <h5 class="modal-title"><i class="fa-solid fa-arrow-right-from-bracket me-2" id="mo-icon"></i><span id="mo-title">เบิกเบ็ดเตล็ด</span></h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label">รายการ<span class="text-danger">*</span></label>
-              <select id="genwd-item" class="form-select" onchange="genwdItemChanged()"></select>
-            </div>
-            <div class="col-12">
-              <label class="form-label">ล็อต<span class="text-danger">*</span></label>
-              <select id="genwd-lot" class="form-select"></select>
-              <div class="invalid-feedback d-block" id="genwd-lot-err"></div>
-            </div>
-            <div class="col-6">
-              <label class="form-label">จำนวน<span class="text-danger">*</span></label>
-              <div class="input-group"><input id="genwd-qty" type="number" min="0" step="any" class="form-control"><span class="input-group-text" id="genwd-unit">-</span></div>
-              <div class="invalid-feedback d-block" id="genwd-qty-err"></div>
-            </div>
-            <div class="col-6">
-              <label class="form-label">วันที่เบิก</label>
-              <input id="genwd-date" type="date" class="form-control">
-            </div>
-            <div class="col-12">
-              <label class="form-label">วัตถุประสงค์<span class="text-danger">*</span></label>
-              <input id="genwd-note" class="form-control" placeholder="เช่น ใช้ภายใน, ตัวอย่าง, โอนสาขา ฯลฯ">
-              <div class="invalid-feedback d-block" id="genwd-note-err"></div>
-            </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-3"><label class="form-label small mb-1">วันที่<span class="text-danger">*</span></label><input id="mo-date" type="date" class="form-control form-control-sm"></div>
+            <div class="col-md-4 d-none" id="mo-dest-wrap"><label class="form-label small mb-1">ปลายทาง<span class="text-danger">*</span></label><input id="mo-dest" class="form-control form-control-sm" list="moDestList" placeholder="เช่น คลังใหญ่ / คลังสาขา / ชื่อโรงงาน">
+              <div class="invalid-feedback" id="mo-dest-err"></div></div>
+            <div class="col" id="mo-note-wrap"><label class="form-label small mb-1"><span id="mo-note-lbl">วัตถุประสงค์</span><span class="text-danger" id="mo-note-req">*</span></label><input id="mo-note" class="form-control form-control-sm" placeholder="เช่น ใช้ภายใน, ตัวอย่าง, ทดลอง ฯลฯ">
+              <div class="invalid-feedback" id="mo-note-err"></div></div>
           </div>
+          <datalist id="moDestList"></datalist><datalist id="moItemList"></datalist>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-1">
+              <thead><tr class="small text-muted"><th>รายการ<span class="text-danger">*</span></th><th>ล็อต<span class="text-danger">*</span></th><th>จำนวน<span class="text-danger">*</span></th><th></th></tr></thead>
+              <tbody id="mo-rows"></tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="miscOutAddRow()"><i class="fa-solid fa-plus me-1"></i>เพิ่มรายการ</button>
+            <div class="small text-muted" id="mo-summary"></div>
+          </div>
+          <div class="form-text mt-2" style="font-size:.74rem"><i class="fa-solid fa-circle-info me-1"></i>เลือกล็อตที่จะตัด (เรียง FEFO ใกล้หมดอายุก่อน) · อยากเอาจากหลายล็อตให้เพิ่มแถวรายการเดิมอีกแถว · ทั้งใบบันทึกพร้อมกัน ผิดรายการเดียวจะไม่ตัดสต็อกเลย</div>
+          <div class="invalid-feedback d-block" id="mo-err"></div>
         </div>
         <div class="modal-footer modal-footer-light">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-          <button type="button" class="btn btn-brand" onclick="genwdModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+          <button type="button" class="btn btn-brand" id="mo-save-btn" onclick="miscOutSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึกใบ</button>
         </div>
       </div>
     </div>
   </div>
-
   <!-- ═══════════════ STOCK CARD ═══════════════ -->
   <div class="page-view" id="page-stockcard">
     <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-clipboard-list me-2"></i>Stock Card</h4><div class="text-white-50 small">ประวัติการเคลื่อนไหวรายการ (รับ/เบิก) แบบไล่ยอดคงเหลือ</div></div>
@@ -2084,6 +2121,44 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
   </div>
 </div>
 
+<!-- รับจากโอนย้ายคลังใหญ่ (หลายรายการในใบโอนเดียว) — migration_2026-10-15_receive_transfer.sql -->
+<div class="modal fade" id="transferModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-truck-ramp-box me-2"></i>รับจากโอนย้ายคลังใหญ่</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 mb-3">
+          <div class="col-md-3"><label class="form-label small mb-1">เลขที่ใบโอน<span class="text-danger">*</span></label><input id="trf-no" class="form-control form-control-sm" placeholder="เลขที่ใบโอนจากคลังใหญ่">
+            <div class="invalid-feedback" id="trf-no-err"></div></div>
+          <div class="col-md-3"><label class="form-label small mb-1">วันที่รับ<span class="text-danger">*</span></label><input id="trf-date" type="date" class="form-control form-control-sm" onchange="trfCalc(); trfRefreshLots()"></div>
+          <div class="col-md-3"><label class="form-label small mb-1">ต้นทาง / ซัพพลายเออร์</label><input id="trf-supplier" class="form-control form-control-sm" value="คลังใหญ่"></div>
+          <div class="col-md-3"><label class="form-label small mb-1">หมายเหตุ (ใส่ทุกรายการ)</label><input id="trf-note" class="form-control form-control-sm" placeholder="เช่น ผู้ส่ง / ใบขอโอน"></div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-1" id="trf-table">
+            <thead><tr class="small text-muted"><th>รายการ<span class="text-danger">*</span></th><th>จำนวน<span class="text-danger">*</span></th><th>ราคา/หน่วย (จากใบโอน)</th><th class="text-end">มูลค่า</th><th>Lot</th><th>Lot จากผู้ผลิต</th><th>วันที่ผลิต</th><th>วันหมดอายุ</th><th></th></tr></thead>
+            <tbody id="trf-rows"></tbody>
+          </table>
+        </div>
+        <datalist id="trfRmList"></datalist>
+        <div class="d-flex justify-content-between align-items-center">
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="trfAddRow()"><i class="fa-solid fa-plus me-1"></i>เพิ่มรายการ</button>
+          <div class="small" id="trf-summary"></div>
+        </div>
+        <div class="form-text mt-2" style="font-size:.74rem"><i class="fa-solid fa-circle-info me-1"></i>ช่อง Lot ออกอัตโนมัติ (ปีเดือนวัน-ครั้งที่ ต่อรายการ เหมือนการรับปกติ) แก้เองได้ · "Lot จากผู้ผลิต" คือเลข Lot ที่ต้นทางติดมา · ทั้งใบบันทึกพร้อมกัน ผิดรายการเดียวจะไม่เข้าสต็อกเลยทั้งใบ · เข้าสต็อก/ต้นทุน/ใบรายงานรับ (RC No) เหมือนของที่ซื้อมา</div>
+        <div class="invalid-feedback d-block" id="trf-err"></div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" id="trf-save-btn" onclick="trfSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึกรับโอน</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ฟอร์มขอแก้ไขกลาง (เบิกเข้าไลน์ผลิต / บันทึกผลิต / รับ FG / ของเสีย) — ช่องสร้างจาก EDIT_TYPES[type].form -->
 <div class="modal fade" id="editReqModal" tabindex="-1">
   <div class="modal-dialog modal-lg" id="erq-dialog">
@@ -2137,6 +2212,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
           <div class="rrpt-row">
             <div><label>วันที่รับ</label><input type="date" id="rrpt-date" class="form-control form-control-sm" onchange="rcvReportScopeChanged()"></div>
             <div><label>ซัพพลายเออร์</label><select id="rrpt-supplier" class="form-select form-select-sm" onchange="rcvReportScopeChanged()"></select></div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="rrpt-refresh-btn" onclick="rcvReportRefresh()" title="โหลดรายการรับและเลข RC ล่าสุดจากฐานข้อมูลใหม่ (เช่น เพิ่งแก้ไข/เพิ่มรายการรับ)"><i class="fa-solid fa-rotate me-1"></i>ดึงข้อมูลใหม่</button>
           </div>
           <div class="text-muted mt-2" style="font-size:.72rem">รายการที่เคยออกรายงานไปแล้วจะไม่ถูกดึงมารวมซ้ำ — รับเพิ่มทีหลังในวันเดียวกันจะออกเป็นใบใหม่เฉพาะรายการใหม่</div>
         </div>
@@ -2146,6 +2222,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
             <div><label>เลขที่ (แก้ได้ก่อนยืนยัน)</label><input type="text" id="rrpt-rcno" class="form-control form-control-sm rrpt-rcno"></div>
             <button type="button" class="btn btn-brand btn-sm" id="rrpt-confirm-btn" onclick="rcvReportConfirm()"><i class="fa-solid fa-check me-1"></i>ยืนยัน RC No</button>
             <span class="rrpt-pill wait" id="rrpt-status">● ยังไม่ยืนยัน</span>
+            <button type="button" class="btn btn-outline-danger btn-sm d-none" id="rrpt-cancel-btn" onclick="rcvReportCancel(_rrpt.rcNo)" title="ปลดเลข RC No ออกจากใบนี้ แล้วออกใบใหม่ด้วยข้อมูลล่าสุด (หัวหน้างานขึ้นไป)"><i class="fa-solid fa-ban me-1"></i>ยกเลิกใบนี้</button>
           </div>
           <div class="rrpt-msg err" id="rrpt-error" style="display:none"></div>
           <div class="rrpt-msg warn" id="rrpt-warn" style="display:none"></div>
@@ -3095,7 +3172,7 @@ const PAGE_LOADERS = {
   fgreceive: fgReceiveLoad, stockfg: stockFgLoad, stockcard: stockCardLoad,
   co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
   rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad, employee: employeeLoad, auditlog: auditLoad, prep: prepLoad,
-  rcvedit: rcvEditLoad, reqorder: reqOrderLoad, packbox: packboxLoad, stockmove: stockMoveLoad,
+  rcvedit: rcvEditLoad, reqorder: reqOrderLoad, packbox: packboxLoad, stockmove: stockMoveLoad, miscout: miscOutLoad,
 };
 let _currentPage = 'dashboard';
 async function showPage(name) {
@@ -3230,11 +3307,11 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 const _WRITE_ACTIONS = [
   'rmMasterModalSave', 'fgMasterModalSave', 'bomLineSubmit', 'receivedModalSave', 'coModalSave', 'planModalSave',
   'issueModalSave', 'prodRecordModalSave', 'fgReceiveModalSave', 'fgoutModalSave', 'deliveryAdvance', 'planRequestDelete',
-  'wasteModalNext', 'wasteLotModalSave', 'employeeSave', 'genwdModalSave', 'genwdDelete',
+  'wasteModalNext', 'wasteLotModalSave', 'employeeSave', 'miscOutSave', 'miscOutDelete',
   'rmMasterDelete', 'bomDeleteLine', 'bomDeleteProduct', 'receivedDelete', 'coDelete', 'planDelete', 'prodRecordDelete', 'wasteDelete',
   'signupreqApprove', 'signupreqReject', 'userrolesUpdateRole', 'userrolesUpdateName',
   'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete', 'prepPlanBulkIssue', 'prepHistRequestDelete', 'prepHistDelete',
-  'rcvReportConfirm', 'rcvReportRename',
+  'rcvReportConfirm', 'rcvReportRename', 'rcvReportCancel', 'trfSave',
   'rcvEditApprove', 'rcvEditReject', 'rcvEditCancel', 'rcvEditSignup', 'editReqSubmit',
   'rcvEditBulkApprove', 'rcvEditBulkReject',
   'reqOrderSave', 'reqOrderDelete', 'reqOrderApprove', 'reqOrderReject', 'reqOrderCancel', 'reqOrderPrintConfirm',
@@ -3525,7 +3602,7 @@ const AUDIT_FIELD_LABEL = {
   LotAlloc: 'ล็อตที่ใช้', ForQty: 'สำหรับผลิต', SourceRM_ID: 'ทำจาก', TargetRM_ID: 'เตรียมเป็น', QtyOut: 'เบิกไป',
   QtyBack: 'ได้กลับ', ActualLossPct: '%สูญเสียจริง', StdLossPct: '%มาตรฐาน', Steps: 'น้ำหนักแต่ละขั้น', SourceAlloc: 'ล็อตสดที่ใช้',
   PrepSteps: 'ขั้นตอนเตรียม', PrepDate: 'วันที่เตรียม', ScrapPct: '%Scrap', QtyDelivered: 'จำนวนส่ง', ReviewNote: 'หมายเหตุแอดมิน',
-  RC_No: 'RC No', ItemCount: 'จำนวนรายการ', CreatedBy: 'ออกโดย',
+  RC_No: 'RC No', ItemCount: 'จำนวนรายการ', CreatedBy: 'ออกโดย', OutType: 'ประเภทใบ', Destination: 'ปลายทาง', DocNo: 'เลขที่ใบ',
   Type: 'ประเภท', RecordID: 'รายการ', Changes: 'ขอแก้', Reason: 'เหตุผล', RequestedBy: 'ผู้ขอ', ReviewedBy: 'ผู้ตรวจ', UnitPrice: 'ราคา/หน่วย', SellPrice: 'ราคาขาย',
 };
 // ฟิลด์ที่แสดงเป็นสรุปสั้นตอน "เพิ่ม" / "ลบ" (เรียงตามลำดับความสำคัญ เอาเฉพาะที่มีค่า)
@@ -4414,6 +4491,9 @@ function _bomUnitCost(g) {
   return { cost, incomplete };
 }
 function _bomCatBadge(cat) { return catBadge(cat); }
+// ปริมาณวัตถุดิบ "ใช้ต่อ 1 หน่วย" ในตารางสูตร (BOM) แสดงทศนิยม 5 ตำแหน่งคงที่ (ผู้ใช้ขอ 2026-10-14) — ปริมาณต่อลูกเล็กมาก (เช่น
+// 0.002 กก.) 3 ตำแหน่งแยกความต่างไม่ได้ แพ็คเกจจิ้งยังใช้รูปแบบเดิม ไม่เกี่ยวกับการปัดเศษตอนเบิกจริง (_rmFmtQty)
+function _bomRawQty5(n) { return (parseFloat(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 5, maximumFractionDigits: 5 }); }
 function _bomFmtQty(n) { return (parseFloat(n) || 0).toLocaleString(undefined, { maximumFractionDigits: 4 }); }
 // จำนวนของหมวดวัตถุดิบ (สด/แห้ง/เคมี/พร้อมผลิต — ชั่งเป็นน้ำหนัก) ต้องขึ้นทศนิยม "3 ตำแหน่งเสมอ" ไม่ใช่แค่สูงสุด 4
 // แบบ _bomFmtQty เดิม (ผู้ใช้ขอ 2026-09-28) ต่างจากแพ็คเกจจิ้ง/FG ที่นับเป็นชิ้น/หน่วย ยังคงใช้ _bomFmtQty แบบผันแปรตามเดิม
@@ -4486,7 +4566,7 @@ function bomRenderCards() {
         <td>${l.rm ? esc(l.rm.RM_Name) : '<span class="text-danger">(ไม่พบใน Master)</span>'}
           ${prepAlt ? `<div class="small text-warning-emphasis"><i class="fa-solid fa-triangle-exclamation me-1"></i>มีตัวพร้อมผลิต "${esc(prepAlt.RM_Name)}" — ควรเปลี่ยนมาใช้ตัวนั้น</div>` : ''}
           ${l.Note ? `<div class="text-muted small">${esc(l.Note)}</div>` : ''}</td>
-        <td class="text-end fw-semibold">${_qtyFmtByCat(l.QtyPerUnit, l.rm?.Category)}</td>
+        <td class="text-end fw-semibold">${CAT_RAW_ALL.includes(l.rm?.Category) ? _bomRawQty5(l.QtyPerUnit) : _qtyFmtByCat(l.QtyPerUnit, l.rm?.Category)}</td>
         <td>${esc(l.Unit)}${unitMismatch ? ` <i class="fa-solid fa-triangle-exclamation text-warning" title="หน่วยในสูตร (${esc(l.Unit)}) ไม่ตรงกับหน่วยใน Master (${esc(l.rm.Unit)}) — ตอนเบิกวัตถุดิบระบบไม่แปลงหน่วยให้ ควรแก้ให้ตรงกัน"></i>` : ''}</td>
         <td>${_bomCatBadge(l.rm?.Category)}</td>
         <td class="text-center">
@@ -4940,7 +5020,7 @@ function receivedRenderTable() {
     // ค้นหาแบบไฮบริด: พิมพ์อะไรก็ได้ที่อยู่ใน "ชื่อรายการ" (ไม่ใช่แค่รหัส) ซัพพลายเออร์ Lot (ทั้งของเราและ
     // ของผู้ผลิต) หรือหมายเหตุ — เดิมค้นแค่ JSON.stringify(r) ซึ่งเป็นแถวดิบไม่มีชื่อรายการ (มีแค่ RM_ID)
     // เลยพิมพ์ชื่อแล้วไม่เจอ (ผู้ใช้ขอ 2026-09-28)
-    const hay = [r.RM_ID, rmMap[r.RM_ID]?.RM_Name, r.Supplier, r.Lot, r.MfgLot, r.Note].filter(Boolean).join(' ').toLowerCase();
+    const hay = [r.RM_ID, rmMap[r.RM_ID]?.RM_Name, r.Supplier, r.Lot, r.MfgLot, r.Note, r.TransferNo].filter(Boolean).join(' ').toLowerCase();
     return catMatches(cat, catFilter) && (!q || hay.includes(q));
   });
   _receivedSort(rows, rmMap);
@@ -4972,7 +5052,7 @@ function receivedRenderTable() {
     const groupRow = _rcvMonthGroupRow(r.ReceiveDate, sortMode);
     return `${groupRow}<tr><td class="text-nowrap" title="รับ ${esc(fmtDateLong(r.ReceiveDate))} · บันทึกเมื่อ ${esc(created ? _toLocalDate(created).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }) : '-')}">${fmtDayMonth(r.ReceiveDate)}${rcTag}${pendTag}</td><td>${catBadge(cat)}</td><td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}${r.Note ? `<div class="small text-muted" style="white-space:normal;max-width:260px"><i class="fa-regular fa-note-sticky me-1"></i>${esc(r.Note)}</div>` : ''}</td>
     <td class="text-end text-nowrap rcv-qty-cell"><span class="num">${_qtyFmtByCat(r.Qty, cat)}</span> <span class="unit">${esc(r.Unit)}</span></td>
-    <td>${esc(r.Supplier||'-')}</td><td>${esc(r.Lot||'-')}${r.MfgLot ? `<div class="small text-muted">ผู้ผลิต: ${esc(r.MfgLot)}</div>` : ''}</td>
+    <td>${esc(r.Supplier||'-')}${r.SourceType ? `<div class="small"><span class="badge text-bg-info">โอน</span> <span class="text-muted">${esc(r.TransferNo || '')}</span></div>` : ''}</td><td>${esc(r.Lot||'-')}${r.MfgLot ? `<div class="small text-muted">ผู้ผลิต: ${esc(r.MfgLot)}</div>` : ''}</td>
     <td class="text-end text-nowrap" ${r.HarvestDate ? `title="วันที่ผลิต ${esc(fmtDateLong(r.HarvestDate))}"` : ''}>${r.UnitPrice != null
       ? `${_fmtBaht(r.UnitPrice)} ฿<div class="small text-muted">รวม ${_fmtBaht(r.UnitPrice * r.Qty)} ฿</div>` : '<span class="text-muted">—</span>'}</td>
     <td class="text-nowrap">${lot && lot.Qty > 0 ? _expBadge(r.ExpDate) : (r.ExpDate ? fmtDate(r.ExpDate) : '<span class="text-muted">—</span>')}</td>
@@ -5233,6 +5313,174 @@ async function receivedModalSave() {
   }
   bootstrap.Modal.getInstance(document.getElementById('receivedModal')).hide();
   await Promise.all([receivedLoad(), stockRmLoad()]);
+}
+
+// ═══════════════════════════════════════════════════════════
+// รับจากโอนย้ายคลังใหญ่ (2026-10-15) — migration_2026-10-15_receive_transfer.sql
+// ฟอร์มรับหลายรายการในใบโอนเดียว (ผู้ใช้เลือก "ปุ่มแยก + ฟอร์มรับหลายรายการ", ราคา/หน่วย "กรอกเองจากใบโอน")
+// • แต่ละรายการเป็นใบรับปกติ (rm_receive + ล็อต + สต็อก) ผ่าน rm_receive_transfer_post ที่เรียก rm_receive_post เดิมต่อรายการ ทั้งใบ
+//   อยู่ใน transaction เดียว (ผิดรายการเดียว = ไม่เข้าเลย) · ซัพพลายเออร์ = 'คลังใหญ่' + SourceType 'โอนคลังใหญ่' + TransferNo = เลขที่ใบโอน
+// • Lot ของเรา: ออกอัตโนมัติตอนกดบันทึก (ปีเดือนวัน-ครั้งที่ ต่อรายการ เหมือนฟอร์มรับปกติ) โดยนับ Lot ที่เพิ่งแจกในใบเดียวกันด้วย
+//   (รายการเดียวกันซ้ำสองแถวได้ -01, -02) · ช่อง "Lot จากต้นทาง" = MfgLot
+// ═══════════════════════════════════════════════════════════
+let _trfSeq = 0;
+const _trfRmLabel = r => `${r.RM_ID} · ${r.RM_Name}`;
+function trfOpen() {
+  if (!_rmMasterCache.length) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบ/แพ็คเกจจิ้งใน "วัตถุดิบ / แพ็คเกจจิ้ง (Master)" ก่อน', 'info'); return; }
+  const g = id => document.getElementById(id);
+  _modalClearErrors(['trf-no']);
+  g('trf-err').textContent = '';
+  g('trf-no').value = ''; g('trf-date').value = todayStr(); g('trf-supplier').value = 'คลังใหญ่'; g('trf-note').value = '';
+  g('trfRmList').innerHTML = _rmMasterCache.slice().sort((a, b) => String(a.RM_ID).localeCompare(String(b.RM_ID)))
+    .map(r => `<option value="${esc(_trfRmLabel(r))}">`).join('');
+  g('trf-rows').innerHTML = '';
+  trfAddRow(true);
+  const el = g('transferModal');
+  el.addEventListener('shown.bs.modal', () => g('trf-no').focus(), { once: true });
+  bootstrap.Modal.getOrCreateInstance(el).show();
+}
+function trfAddRow(noFocus) {
+  const seq = ++_trfSeq;
+  document.getElementById('trf-rows').insertAdjacentHTML('beforeend', `<tr data-seq="${seq}" data-rm="">
+    <td style="min-width:250px"><input class="form-control form-control-sm trf-rm" list="trfRmList" placeholder="พิมพ์ชื่อหรือรหัส แล้วเลือก" autocomplete="off" onchange="trfRowRm(${seq})"><div class="small trf-rminfo"></div></td>
+    <td style="width:140px"><div class="input-group input-group-sm"><input type="number" step="any" min="0" class="form-control trf-qty" oninput="trfCalc()"><span class="input-group-text trf-unit">—</span></div></td>
+    <td style="width:120px"><input type="number" step="0.01" min="0" class="form-control form-control-sm trf-price" placeholder="0.00" oninput="trfCalc()"></td>
+    <td class="text-end text-nowrap small trf-amt" style="width:110px"></td>
+    <td style="width:125px"><input class="form-control form-control-sm trf-lot" data-auto="1" placeholder="อัตโนมัติ" oninput="this.dataset.auto = this.value.trim() ? '' : '1'" onchange="trfRefreshLots()" title="Lot ของเรา ออกอัตโนมัติ (ปีเดือนวัน-ครั้งที่) แก้เองได้ — ลบออกให้เป็นอัตโนมัติอีกครั้ง"></td>
+    <td style="width:125px"><input class="form-control form-control-sm trf-mfglot" placeholder="(ถ้ามี)"></td>
+    <td style="width:135px"><input type="date" class="form-control form-control-sm trf-harvest"></td>
+    <td style="width:135px"><input type="date" class="form-control form-control-sm trf-exp"></td>
+    <td style="width:40px"><button type="button" class="btn btn-sm btn-outline-danger" onclick="trfRemoveRow(${seq})" title="ลบแถว"><i class="fa-solid fa-xmark"></i></button></td></tr>`);
+  if (!noFocus) document.querySelector(`#trf-rows tr[data-seq="${seq}"] .trf-rm`).focus();
+  trfCalc();
+}
+function trfRemoveRow(seq) {
+  document.querySelector(`#trf-rows tr[data-seq="${seq}"]`)?.remove();
+  if (!document.querySelector('#trf-rows tr')) trfAddRow(true);
+  trfCalc();
+  trfRefreshLots();
+}
+// Lot ของเรา (ช่อง "Lot") ใช้กติกาเดียวกับฟอร์มรับปกติ: ออกอัตโนมัติ ปีเดือนวัน-ครั้งที่ ต่อรายการ (นับจาก Lot ของวันนั้นใน DB) แก้เองได้
+// (แถวที่แก้เอง dataset.auto='' ไม่ถูกทับ — ลบข้อความออกให้กลับเป็นอัตโนมัติ) และนับ Lot ที่แจกในใบเดียวกันด้วย
+// รายการเดียวกันหลายแถวจึงได้ -01, -02 ไม่ชนกัน · ticket กันผลจากการเรียกเก่าที่ตามมาทีหลังทับของใหม่
+let _trfLotTicket = 0;
+async function trfRefreshLots() {
+  const ticket = ++_trfLotTicket;
+  const date = document.getElementById('trf-date').value || todayStr();
+  const trs = [...document.querySelectorAll('#trf-rows tr')];
+  const dbLots = {};
+  for (const tr of trs) { const id = tr.dataset.rm; if (id && !dbLots[id]) dbLots[id] = await _rcvFetchLotsOfDay(date, id); }
+  if (ticket !== _trfLotTicket) return;
+  const taken = {};
+  trs.forEach(tr => {   // Lot ที่พิมพ์เองก่อน เพื่อให้แถวอัตโนมัติเลี่ยง
+    const inp = tr.querySelector('.trf-lot'), id = tr.dataset.rm;
+    if (id && inp.dataset.auto !== '1' && inp.value.trim()) (taken[id] ||= []).push(inp.value.trim());
+  });
+  trs.forEach(tr => {
+    const inp = tr.querySelector('.trf-lot'), id = tr.dataset.rm;
+    if (inp.dataset.auto !== '1') return;
+    if (!id) { inp.value = ''; return; }
+    const used = (taken[id] ||= []);
+    const lot = _rcvNextLot(date, [...dbLots[id], ...used]);
+    inp.value = lot; used.push(lot);
+  });
+}
+// "CODE · ชื่อ" จาก datalist → รายการ Master (รับรหัสล้วน/ชื่อที่ไม่ซ้ำได้ด้วย)
+function _trfResolve(val) {
+  val = (val || '').trim();
+  if (!val) return null;
+  const byLabel = _rmMasterCache.find(x => _trfRmLabel(x) === val) || _rmMasterCache.find(x => x.RM_ID === val);
+  if (byLabel) return byLabel;
+  const byName = _rmMasterCache.filter(x => x.RM_Name === val);
+  return byName.length === 1 ? byName[0] : null;
+}
+function trfRowRm(seq) {
+  const tr = document.querySelector(`#trf-rows tr[data-seq="${seq}"]`);
+  if (!tr) return;
+  const inp = tr.querySelector('.trf-rm'), r = _trfResolve(inp.value);
+  tr.dataset.rm = r ? r.RM_ID : '';
+  tr.querySelector('.trf-unit').textContent = r?.Unit || '—';
+  tr.querySelector('.trf-rminfo').innerHTML = r ? catBadge(r.Category) : (inp.value.trim() ? '<span class="text-danger">เลือกจากรายการแนะนำ</span>' : '');
+  inp.classList.toggle('is-invalid', !r && !!inp.value.trim());
+  if (r) { inp.value = _trfRmLabel(r); tr.querySelector('.trf-qty').focus(); }
+  trfCalc();
+  trfRefreshLots();
+}
+function trfCalc() {
+  let total = 0, n = 0;
+  document.querySelectorAll('#trf-rows tr').forEach(tr => {
+    const qty = parseFloat(tr.querySelector('.trf-qty').value), p = parseFloat(tr.querySelector('.trf-price').value);
+    const amt = qty > 0 && p >= 0 ? qty * p : null;
+    tr.querySelector('.trf-amt').textContent = amt != null ? `${_fmtBaht(amt)} ฿` : '';
+    if (amt != null) total += amt;
+    if (tr.dataset.rm) n++;
+  });
+  const sum = document.getElementById('trf-summary');
+  if (sum) sum.innerHTML = `${n} รายการ · มูลค่ารวม <b>${_fmtBaht(total)}</b> ฿`;
+}
+async function trfSave() {
+  const g = id => document.getElementById(id);
+  _modalClearErrors(['trf-no']);
+  const fail = (msg, el) => { g('trf-err').innerHTML = msg; el?.focus(); };
+  g('trf-err').textContent = '';
+  const no = g('trf-no').value.trim();
+  if (!no) { _modalShowError('trf-no', 'กรอกเลขที่ใบโอน'); return; }
+  const date = g('trf-date').value || todayStr();
+  const trs = [...document.querySelectorAll('#trf-rows tr')].filter(tr => tr.querySelector('.trf-rm').value.trim() || tr.querySelector('.trf-qty').value);
+  if (!trs.length) { fail('เพิ่มรายการอย่างน้อย 1 รายการ'); return; }
+  const items = []; let noPrice = 0, noExp = 0;
+  for (const tr of trs) {
+    const rm = _rmMasterCache.find(r => r.RM_ID === tr.dataset.rm);
+    const rmInp = tr.querySelector('.trf-rm');
+    if (!rm) { fail(`เลือกรายการให้ถูกต้องจากรายการแนะนำ: "${esc(rmInp.value.trim() || '(ว่าง)')}"`, rmInp); return; }
+    const qty = parseFloat(tr.querySelector('.trf-qty').value);
+    if (!(qty > 0)) { fail(`${esc(rm.RM_Name)}: กรอกจำนวนให้ถูกต้อง`, tr.querySelector('.trf-qty')); return; }
+    const pRaw = tr.querySelector('.trf-price').value.trim();
+    const price = pRaw === '' ? null : Math.round(parseFloat(pRaw) * 100) / 100;
+    if (price !== null && !(price >= 0)) { fail(`${esc(rm.RM_Name)}: กรอกราคาให้ถูกต้อง`, tr.querySelector('.trf-price')); return; }
+    const exp = tr.querySelector('.trf-exp').value || null;
+    if (exp && exp < date) { fail(`${esc(rm.RM_Name)}: วันหมดอายุต้องไม่ก่อนวันที่รับเข้า`, tr.querySelector('.trf-exp')); return; }
+    if (price === null) noPrice++;
+    if (!exp && CAT_RAW_GROUP.includes(rm.Category || 'วัตถุดิบ')) noExp++;
+    items.push({ tr, rm, qty, price, exp, harvest: tr.querySelector('.trf-harvest').value || null, mfglot: tr.querySelector('.trf-mfglot').value.trim() || null });
+  }
+  if (noPrice || noExp) {
+    const c = await Swal.fire({ icon: 'question', title: 'ข้อมูลยังไม่ครบ — บันทึกต่อ?',
+      html: `<div class="text-start small">${noPrice ? `• <b>${noPrice}</b> รายการไม่ได้ใส่ราคา — ต้นทุนผลิตที่ใช้ของล็อตนี้จะไม่ครบ<br>` : ''}${noExp ? `• <b>${noExp}</b> รายการวัตถุดิบไม่ระบุวันหมดอายุ — ล็อตจะถูกใช้ทีหลังสุด และไม่ขึ้นเตือนใกล้หมดอายุ` : ''}</div>`,
+      showCancelButton: true, confirmButtonText: 'บันทึกต่อ', cancelButtonText: 'กลับไปแก้' });
+    if (!c.isConfirmed) return;
+  }
+  // เลขที่ใบโอนซ้ำ (เคยรับไปแล้ว) = ถามก่อน — รับโอนเพิ่มต่อจากใบเดิมได้ แต่กันกดบันทึกซ้ำโดยไม่ตั้งใจ (คอลัมน์ยังไม่มี = ข้ามการเช็ค)
+  const dup = await _sb.from('rm_receive').select('Receive_ID', { count: 'exact', head: true }).eq('TransferNo', no);
+  if (!dup.error && dup.count > 0) {
+    const c = await Swal.fire({ icon: 'warning', title: `เลขที่ใบโอน "${esc(no)}" เคยรับแล้ว`, text: `มีรายการรับจากใบโอนนี้อยู่แล้ว ${dup.count} รายการ — รับเพิ่มต่อหรือไม่?`,
+      showCancelButton: true, confirmButtonText: 'รับเพิ่ม', cancelButtonText: 'กลับไปตรวจ' });
+    if (!c.isConfirmed) return;
+  }
+  // Lot ของเรา: เหมือนฟอร์มรับปกติ — แถวอัตโนมัติคำนวณใหม่จาก DB ตอนกดบันทึก (ระหว่างกรอกอาจมีคนรับของวันเดียวกันไปก่อน) แถวที่พิมพ์เอง
+  // ใช้ตามที่พิมพ์ · รายการเดียวกันหลายแถวในใบเดียวไม่ชนกัน (trfRefreshLots นับ Lot ในใบเดียวกันด้วย)
+  await trfRefreshLots();
+  const used = new Set();
+  for (const it of items) {
+    it.lot = it.tr.querySelector('.trf-lot').value.trim() || null;
+    let id; do { id = genId(it.rm.Category === 'แพ็คเกจจิ้ง' ? 'PC' : 'RC'); } while (used.has(id));
+    used.add(id); it.id = id;
+  }
+  const note = g('trf-note').value.trim();
+  const { error } = await _sb.rpc('rm_receive_transfer_post', {
+    p_transfer_no: no, p_receive_date: date, p_supplier: g('trf-supplier').value.trim() || null,
+    p_items: items.map(it => ({ receive_id: it.id, rm_id: it.rm.RM_ID, qty: it.qty, unit: it.rm.Unit || null, lot: it.lot, mfglot: it.mfglot,
+      harvest: it.harvest, exp: it.exp, unit_price: it.price, note: note || null })),
+  });
+  if (error) {
+    if (error.code === 'PGRST202' && /rm_receive_transfer_post/.test(error.message || '')) {
+      Swal.fire('ยังไม่ได้ตั้งค่า', 'แอดมินต้องรัน <code>migration_2026-10-15_receive_transfer.sql</code> ใน Supabase ก่อน', 'error'); return;
+    }
+    _rmLotRpcErr(error, 'บันทึกรับโอนไม่สำเร็จ (ไม่มีรายการใดเข้าสต็อก)'); return;
+  }
+  bootstrap.Modal.getInstance(g('transferModal')).hide();
+  await Promise.all([receivedLoad(), stockRmLoad()]);
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: `รับโอน ${items.length} รายการ (ใบโอน ${no}) แล้ว` });
 }
 // ═══════════════════════════════════════════════════════════
 // คำขอแก้ไข (รวมทุกประเภท) → แอดมินอนุมัติที่หน้าเดียว — migration_2026-09-26_edit_requests_all.sql
@@ -6013,6 +6261,7 @@ function _rrptApplyState() {
   document.getElementById('rrpt-rcno').disabled = _rrpt.confirmed || !has;
   document.getElementById('rrpt-confirm-btn').disabled = _rrpt.confirmed || !has;
   document.getElementById('rrpt-print-btn').disabled = !(_rrpt.confirmed && has);
+  document.getElementById('rrpt-cancel-btn').classList.toggle('d-none', !(_rrpt.confirmed && _rrpt.rcNo && _hasRole('supervisor')));
   const hint = document.getElementById('rrpt-print-hint');
   hint.style.display = _rrpt.confirmed ? 'none' : '';
   hint.textContent = has ? 'ต้องยืนยันเลข RC No ก่อนพิมพ์' : 'ไม่มีรายการในวันที่ / ซัพพลายเออร์ที่เลือก';
@@ -6060,8 +6309,58 @@ async function rcvReportRenderHistory() {
     <td class="fw-bold">${esc(h.RC_No)}</td><td>${fmtDate(h.ReceiveDate)}</td><td>${esc(h.Supplier || 'ทั้งหมด')}</td>
     <td class="text-end">${h.ItemCount ?? '-'}</td><td class="text-muted">${esc(h.CreatedBy || '-')}</td>
     <td class="text-nowrap"><button type="button" data-rc="${esc(h.RC_No)}" onclick="rcvReportShowRc(this.dataset.rc)"><i class="fa-solid fa-print me-1"></i>พิมพ์ซ้ำ</button>
-      ${canEdit ? `<button type="button" data-rc="${esc(h.RC_No)}" onclick="rcvReportRename(this.dataset.rc)"><i class="fa-solid fa-pen me-1"></i>แก้เลข</button>` : ''}</td>
+      ${canEdit ? `<button type="button" data-rc="${esc(h.RC_No)}" onclick="rcvReportRename(this.dataset.rc)"><i class="fa-solid fa-pen me-1"></i>แก้เลข</button>
+      <button type="button" style="color:#dc2626" data-rc="${esc(h.RC_No)}" onclick="rcvReportCancel(this.dataset.rc)"><i class="fa-solid fa-ban me-1"></i>ยกเลิกใบ</button>` : ''}</td>
   </tr>`).join('') || '<tr><td colspan="6" class="text-muted">ยังไม่มีเลข RC No</td></tr>';
+}
+
+// ดึงข้อมูลใหม่ — โหลดรายการรับ + ทะเบียนเลข RC จากฐานข้อมูลอีกครั้ง แล้วคำนวณสโคป (วันที่/ซัพพลายเออร์) ใหม่ ใช้เมื่อมีการแก้/เพิ่มรายการรับ
+// หรือมีคนออก/ยกเลิกเลขจากเครื่องอื่นหลังเปิดหน้าต่างนี้ (ข้อมูลในหน้านี้เป็น cache ที่โหลดตอนเปิด)
+async function rcvReportRefresh() {
+  const btn = document.getElementById('rrpt-refresh-btn');
+  const html = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>กำลังดึง...';
+  try {
+    await receivedLoad();
+    await rcvReportRenderHistory();
+    await rcvReportScopeChanged();
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ดึงข้อมูลล่าสุดแล้ว', showConfirmButton: false, timer: 1500 });
+  } finally { btn.disabled = false; btn.innerHTML = html; }
+}
+
+// ยกเลิกใบ — rm_report_cancel: ปลดเลขจากทุกรายการในใบ + ลบเลขจากทะเบียน (transaction เดียว) รายการกลับเป็น "ยังไม่ออกรายงาน"
+// แล้วออกใบใหม่ด้วยข้อมูลล่าสุดได้ (ใบที่พิมพ์ไปแล้วถือเป็นโมฆะ) หัวหน้างานขึ้นไป — migration_2026-10-15_rm_report_cancel.sql
+async function rcvReportCancel(rcNo) {
+  if (!rcNo || !_hasRole('supervisor')) return;
+  const rec = _rrptHistory.find(h => h.RC_No === rcNo) || (await _sb.from('rm_rc_numbers').select('*').eq('RC_No', rcNo).maybeSingle()).data;
+  const n = _receivedCache.filter(r => r.RC_No === rcNo).length;
+  const ok = await Swal.fire({
+    icon: 'warning', title: `ยกเลิกใบ ${esc(rcNo)} ?`,
+    html: `<div class="text-start small">รายการรับ <b>${n || (rec?.ItemCount ?? '-')}</b> รายการในใบนี้จะกลับเป็น <b>"ยังไม่ออกรายงาน"</b> และเลข <b>${esc(rcNo)}</b> จะถูกลบออกจากทะเบียน<br>
+      จากนั้นออกใบใหม่ด้วยข้อมูลล่าสุดได้ — <span class="text-danger">ใบที่พิมพ์ไปแล้วให้ถือเป็นโมฆะ</span> (ประวัติการยกเลิกอยู่ใน Log การใช้งาน)</div>`,
+    showCancelButton: true, confirmButtonText: 'ยกเลิกใบ', cancelButtonText: 'ไม่ยกเลิก', confirmButtonColor: '#dc3545',
+  });
+  if (!ok.isConfirmed) return;
+  const { error } = await _sb.rpc('rm_report_cancel', { p_rc_no: rcNo });
+  if (error) {
+    console.error(error);
+    const missing = error.code === 'PGRST202' || /rm_report_cancel/.test(error.message || '') && /not find|schema cache/i.test(error.message || '');
+    Swal.fire('ยกเลิกใบไม่สำเร็จ', missing ? 'ยังไม่ได้รัน <code>migration_2026-10-15_rm_report_cancel.sql</code> ใน Supabase' : esc(error.message), 'error');
+    if (/ดึงข้อมูลใหม่/.test(error.message || '')) await rcvReportRefresh();
+    return;
+  }
+  // รีเซ็ตสโคปเป็นวันที่/ซัพพลายเออร์ของใบที่เพิ่งยกเลิก — รายการกลับมารอออกเลขใหม่ (เสนอเลขถัดไปให้)
+  await receivedLoad();
+  await rcvReportRenderHistory();
+  if (rec) {
+    document.getElementById('rrpt-date').value = rec.ReceiveDate;
+    _rrptFillSuppliers(_receivedCache.filter(r => r.ReceiveDate === rec.ReceiveDate));
+    const sel = document.getElementById('rrpt-supplier');
+    sel.value = [...sel.options].some(o => o.value === (rec.Supplier || '')) ? (rec.Supplier || '') : '';
+  }
+  await rcvReportScopeChanged();
+  receivedRenderTable();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `ยกเลิกใบ ${rcNo} แล้ว — ออกใบใหม่ได้เลย`, showConfirmButton: false, timer: 2500 });
 }
 
 async function rcvReportRename(oldNo) {
@@ -6111,7 +6410,7 @@ function _rrptPageHtml(copyLabel) {
     <td class="ord">${i + 1}</td><td>${esc(r.RM_ID)}</td>
     <td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td><td>${esc(_rrptCat(catOf(r)))}</td>
     ${showSup ? `<td>${esc(r.Supplier || '-')}</td>` : ''}
-    <td>${esc(r.Lot || '-')}</td><td>${_fmtDateEn(r.HarvestDate)}</td><td>${_fmtDateEn(r.ExpDate)}</td>
+    <td>${esc(r.Lot || '-')}</td><td>${_fmtDateEn(r.ExpDate)}</td>
     <td class="num qty">${_qtyFmtByCat(r.Qty, catOf(r))}</td><td>${esc(_rrptUnit(r.Unit))}</td>
     <td class="num">${r.UnitPrice != null ? _fmtBaht(r.UnitPrice) : '-'}</td>
     <td>${esc(r.Note || '')}</td>
@@ -6152,8 +6451,8 @@ function _rrptPageHtml(copyLabel) {
     </div>
     ${rows.length ? `
     <table class="rrpt-table">
-      <thead><tr><th style="width:3%">No.</th><th style="width:6%">Code</th><th style="width:23%">Description</th><th style="width:7%">Category</th>
-        ${showSup ? '<th style="width:8%">Supplier</th>' : ''}<th style="width:8%">Lot No.</th><th style="width:8%">Mfg. Date</th><th style="width:8%">Exp. Date</th>
+      <thead><tr><th style="width:3%">No.</th><th style="width:6%">Code</th><th style="width:20%">Description</th><th style="width:7%">Category</th>
+        ${showSup ? '<th style="width:8%">Supplier</th>' : ''}<th style="width:8%">Lot No.</th><th style="width:8%">Exp. Date</th>
         <th class="num" style="width:9%">Qty</th><th style="width:4%">Unit</th><th class="num" style="width:7%">Unit Price</th><th>Remarks</th></tr></thead>
       <tbody>${trs}</tbody>
     </table>
@@ -9595,37 +9894,239 @@ async function fgoutLoad() {
     return `<tr><td>${esc(d.Delivery_ID)}</td><td>${esc(d.Order_ID||'-')}</td><td>${label}</td><td>${_bomFmtQty(d.QtyDelivered)}</td><td>${badge(d.Status, DELIVERY_STATUS_BADGE[d.Status])}</td><td>${nextBtn}</td></tr>`;
   }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีรายการจัดส่ง</td></tr>';
 
-  // "เพิ่มรายการเบิก" (ไม่ผูก CO) — รวมฝั่งวัตถุดิบ/แพ็คเกจจิ้ง (rm_withdraw) กับฝั่ง FG (fg_withdraw ที่ Order_ID
-  // เป็น null คือไม่ได้มาจากการเบิกส่งลูกค้าตามปกติ) มาแสดงเป็นประวัติเดียวกัน เรียงตามวันที่เบิกล่าสุดก่อน
-  // ตารางนี้แสดงได้แม้ยังไม่รัน migration ของฝั่งวัตถุดิบ (fg_withdraw ที่ Order_ID เป็น null มีอยู่แล้วเดิม) —
-  // ถ้า rm_withdraw ยังไม่มี ให้ข้ามเฉพาะฝั่งวัตถุดิบไปเฉยๆ พร้อมข้อความแจ้งต่อท้ายตาราง ไม่บังการแสดงฝั่ง FG
-  const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
-  const rmWdRes = await _sb.from('rm_withdraw').select('*');
-  const rmWd = rmWdRes.error ? [] : rmWdRes.data;
-  const adhocFg = withdraws.filter(w => !w.Order_ID);
-  const merged = [
-    ...rmWd.map(w => ({ kind: 'M', id: w.Withdraw_ID, name: rmMap[w.RM_ID]?.RM_Name || w.RM_ID, type: catLabel(rmMap[w.RM_ID]?.Category), cat: rmMap[w.RM_ID]?.Category, qty: w.Qty, unit: w.Unit, lot: w.Lot, note: w.Note, date: w.WithdrawDate, docNo: w.DocNo })),
-    ...adhocFg.map(w => ({ kind: 'F', id: w.WD_ID, name: fgMap[w.FG_ID]?.FG_Name || w.FG_ID, type: 'สินค้าสำเร็จรูป', qty: w.Qty, unit: fgMap[w.FG_ID]?.Unit, lot: w.Lot, note: w.Note, date: w.WithdrawDate, docNo: w.DocNo })),
-  ].sort((a, b) => new Date(b.date) - new Date(a.date));
-  _genwdHistCache = merged;
-  document.getElementById('genwdHistTableBody').innerHTML = (merged.map(w => `
-    <tr><td><code>${esc(w.id)}</code></td><td>${w.kind === 'F' ? badge(w.type, 'primary') : catBadge(w.type)}</td><td>${esc(w.name)}</td>
-    <td class="text-end">${_qtyFmtByCat(w.qty, w.cat)} ${esc(w.unit||'')}</td><td>${esc(w.note||'-')}</td><td>${fmtDate(w.date)}</td>
-    <td class="text-center"><button class="btn btn-sm btn-outline-secondary" onclick="genwdPrint('${w.kind}','${esc(w.id)}')" title="พิมพ์ใบเบิก"><i class="fa-solid fa-print"></i></button>
-    <button class="btn btn-sm btn-outline-danger" onclick="genwdDelete('${w.kind}','${esc(w.id)}')" title="ลบ"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
-    || '<tr><td colspan="7" class="text-center text-muted py-3">ยังไม่มีรายการเบิก</td></tr>')
-    + (rmWdRes.error ? `<tr><td colspan="7" class="text-center py-2 small text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>เบิกวัตถุดิบ/แพ็คเกจจิ้งยังใช้ไม่ได้ — รัน <code>migration_2026-09-28_rm_withdraw.sql</code> ก่อน</td></tr>` : '');
+  // ประวัติ "เบิกอื่น (ไม่ผูก CO)" ย้ายไปหน้า เบิกเบ็ดเตล็ด / โอนย้าย (miscOutLoad) แล้ว 2026-10-15
 }
-// ใบเบิก (เบิกอื่น ไม่ผูก CO) — 1 รายการต่อใบ เหมือน issueHistPrint แต่ไม่ query เพิ่ม เพราะข้อมูลที่ต้องโชว์
-// ทั้งหมดอยู่ใน _genwdHistCache (ที่ fgoutLoad คำนวณไว้แล้ว) ครบอยู่แล้ว ไม่ต้องยิง DB ซ้ำตอนกดพิมพ์ — พิมพ์ตรง
-// ทันทีไม่มีตัวอย่างก่อนเหมือน ihist เพราะเป็นแค่สรุปรายการที่เบิกไปแล้วจริง ไม่ใช่แบบฟอร์มขออนุมัติ
-let _genwdHistCache = [];
-// เลขที่เอกสาร "ใบส่งเบิกเบ็ดเตล็ด" รันแยกจากรหัสระบบภายใน (Withdraw_ID/WD_ID) ตามที่ผู้ใช้ขอ 2026-10-06 —
-// รูปแบบ MI-YYYYMM-### รีเซ็ตทุกเดือน ใช้เลขชุดเดียวกันทั้งฝั่งวัตถุดิบ (rm_withdraw) และฝั่ง FG ที่ไม่ผูก CO
-// (fg_withdraw.Order_ID เป็น null) เพราะโชว์รวมเป็นประวัติเดียวกันอยู่แล้ว ต้องรัน
-// migration_2026-10-06_genwd_docno.sql ก่อนคอลัมน์ DocNo ถึงจะมีจริง
-// จองเลขแบบ atomic ฝั่ง DB ผ่าน next_genwd_docno() ก่อน (migration_2026-10-11_atomic_id_seq_part2.sql) ถ้ายัง
-// ไม่รัน SQL ค่อย fallback เป็นวิธีเดิม
+// ═══════════════════════════════════════════════════════════
+// เบิกเบ็ดเตล็ด / โอนย้าย (2026-10-15) — migration_2026-10-15_misc_out.sql
+// ย้ายมาจาก "เบิกอื่น (ไม่ผูก CO)" ของหน้า FG-Out (ผู้ใช้เลือก "ย้ายมารวมที่หน้าใหม่") · 1 ใบ = หลายรายการ (ผู้ใช้เลือก) ·
+// ประเภท: เบิกเบ็ดเตล็ด (ต้องมีวัตถุประสงค์) / โอนย้าย (ต้องมีปลายทาง พิมพ์ชื่อเอง ใช้ได้ทั้งวัตถุดิบ/แพ็คเกจจิ้ง/FG)
+// • แต่ละบรรทัดของใบยังเป็นแถว rm_withdraw / fg_withdraw (Order_ID null) เหมือนเดิม "ใบ" = แถวที่มี DocNo เดียวกัน (MI-… เบิก / TF-… โอนย้าย)
+//   แถวเก่าที่ยังไม่เคยพิมพ์ (DocNo ว่าง) = ใบ 1 รายการ ออกเลขตอนพิมพ์ครั้งแรกเหมือนเดิม (lazy)
+// • บันทึก/ลบทั้งใบ = RPC เดียว (misc_out_post / misc_out_delete) ใน transaction เดียว — ผิดรายการเดียวไม่ตัดสต็อกเลย
+// ═══════════════════════════════════════════════════════════
+let _moSlips = [], _moType = 'เบิกเบ็ดเตล็ด', _moSeq = 0;
+const MO_LIMIT = 2000;
+const _moLabel = (id, name) => `${id} · ${name}`;
+async function miscOutLoad() {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  if (!_fgMasterCache.length) await fgMasterLoad();
+  const fromEl = document.getElementById('moFrom'), toEl = document.getElementById('moTo');
+  if (!fromEl.value) fromEl.value = addDays(todayStr(), -89);   // ค่าเริ่มต้น 90 วันล่าสุด (กันโหลดทั้งตาราง)
+  if (!toEl.value) toEl.value = todayStr();
+  const from = fromEl.value, to = toEl.value;
+  const [rmRes, fgRes] = await Promise.all([
+    _sb.from('rm_withdraw').select('*').gte('WithdrawDate', from).lte('WithdrawDate', to).order('WithdrawDate', { ascending: false }).limit(MO_LIMIT),
+    _sb.from('fg_withdraw').select('*').is('Order_ID', null).gte('WithdrawDate', from).lte('WithdrawDate', to).order('WithdrawDate', { ascending: false }).limit(MO_LIMIT),
+  ]);
+  const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const lines = [
+    ...(rmRes.data || []).map(w => ({ kind: 'M', id: w.Withdraw_ID, docNo: w.DocNo, type: w.OutType || 'เบิกเบ็ดเตล็ด', dest: w.Destination, note: w.Note, date: w.WithdrawDate,
+      name: rmMap[w.RM_ID]?.RM_Name || w.RM_ID, cat: rmMap[w.RM_ID]?.Category, qty: w.Qty, unit: w.Unit, lot: w.Lot })),
+    ...(fgRes.data || []).map(w => ({ kind: 'F', id: w.WD_ID, docNo: w.DocNo, type: w.OutType || 'เบิกเบ็ดเตล็ด', dest: w.Destination, note: w.Note, date: w.WithdrawDate,
+      name: fgMap[w.FG_ID]?.FG_Name || w.FG_ID, cat: null, qty: w.Qty, unit: fgMap[w.FG_ID]?.Unit, lot: w.Lot })),
+  ];
+  const slips = {};
+  lines.forEach(l => {
+    const key = l.docNo || `${l.kind}:${l.id}`;
+    const s = (slips[key] ||= { key, docNo: l.docNo || null, type: l.type, date: l.date, dest: l.dest, note: l.note, lines: [] });
+    s.lines.push(l);
+  });
+  _moSlips = Object.values(slips);
+  _moSlips.forEach(s => {
+    s.lines.sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    // โอนย้าย: Note ที่เก็บในแถวขึ้นต้นด้วย "โอนย้ายไป <ปลายทาง>" ตัดส่วนนั้นออกเหลือหมายเหตุที่ผู้ใช้พิมพ์
+    s.extra = s.type === 'โอนย้าย' && s.dest && String(s.note || '').startsWith(`โอนย้ายไป ${s.dest}`)
+      ? String(s.note).slice(`โอนย้ายไป ${s.dest}`.length).replace(/^\s*—\s*/, '') : (s.type === 'โอนย้าย' ? (s.note || '') : s.note);
+  });
+  _moSlips.sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.docNo || b.key).localeCompare(String(a.docNo || a.key)));
+  document.getElementById('miscOutFooter').innerHTML =
+    (rmRes.error ? `<span class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>โหลดฝั่งวัตถุดิบ/แพ็คเกจจิ้งไม่ได้ — รัน <code>migration_2026-09-28_rm_withdraw.sql</code> ก่อน</span> ` : '')
+    + (((rmRes.data || []).length >= MO_LIMIT || (fgRes.data || []).length >= MO_LIMIT) ? `แสดง ${MO_LIMIT} บรรทัดล่าสุดในช่วงวันที่ที่เลือก — เลือกช่วงให้แคบลงเพื่อดูรายการที่เก่ากว่านี้` : '');
+  miscOutRender();
+}
+function miscOutRender() {
+  const type = document.getElementById('moType').value;
+  const q = (document.getElementById('moSearch').value || '').trim().toLowerCase();
+  const rows = _moSlips.filter(s => (!type || s.type === type)
+    && (!q || [s.docNo, s.dest, s.note, ...s.lines.flatMap(l => [l.name, l.lot])].filter(Boolean).join(' ').toLowerCase().includes(q)));
+  const canDel = _hasRole('supervisor');
+  document.getElementById('miscOutBody').innerHTML = rows.map(s => {
+    const k = esc(s.key);
+    const lineHtml = s.lines.map(l => `<li>${l.kind === 'F' ? badge('FG', 'primary') : catBadge(l.cat)} ${esc(l.name)} <span class="text-muted">· Lot ${esc(l.lot || '-')}</span> · <b>${_qtyFmtByCat(l.qty, l.cat)}</b> ${esc(l.unit || '')}</li>`).join('');
+    const purpose = s.type === 'โอนย้าย'
+      ? `<b>${esc(s.dest || '-')}</b>${s.extra ? `<div class="small text-muted">${esc(s.extra)}</div>` : ''}`
+      : esc(s.note || '-');
+    return `<tr><td class="text-nowrap">${s.docNo ? `<code>${esc(s.docNo)}</code>` : '<span class="text-muted small">ยังไม่ออกเลข</span>'}</td>
+      <td>${badge(s.type, s.type === 'โอนย้าย' ? 'info' : 'secondary')}</td><td class="text-nowrap">${fmtDate(s.date)}</td><td>${purpose}</td>
+      <td><ul class="list-unstyled mb-0 small">${lineHtml}</ul></td>
+      <td class="text-center text-nowrap"><button class="btn btn-sm btn-outline-secondary" data-k="${k}" onclick="miscOutPrint(this.dataset.k)" title="พิมพ์ใบ"><i class="fa-solid fa-print"></i></button>
+        ${canDel ? `<button class="btn btn-sm btn-outline-danger" data-k="${k}" onclick="miscOutDelete(this.dataset.k)" title="ลบทั้งใบ (คืนสต็อก)"><i class="fa-solid fa-trash"></i></button>` : ''}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีใบในช่วงวันที่ที่เลือก</td></tr>';
+}
+
+// ── ฟอร์มสร้างใบ ──
+async function miscOutOpen(type) {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  if (!_fgMasterCache.length) await fgMasterLoad();
+  if (!_rmMasterCache.length && !_fgMasterCache.length) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบหรือสินค้าก่อน', 'info'); return; }
+  await Promise.all([rmLotLoad(), stockFgLoad()]);   // สต็อกล่าสุดทุกครั้งที่เปิดฟอร์ม
+  _moType = type;
+  const g = id => document.getElementById(id), tf = type === 'โอนย้าย';
+  _modalClearErrors(['mo-dest', 'mo-note']);
+  g('mo-err').textContent = '';
+  g('mo-title').textContent = tf ? 'โอนย้าย' : 'เบิกเบ็ดเตล็ด';
+  g('mo-icon').className = tf ? 'fa-solid fa-truck-arrow-right me-2' : 'fa-solid fa-arrow-right-from-bracket me-2';
+  g('mo-dest-wrap').classList.toggle('d-none', !tf);
+  g('mo-note-lbl').textContent = tf ? 'หมายเหตุ' : 'วัตถุประสงค์';
+  g('mo-note-req').classList.toggle('d-none', tf);
+  g('mo-note').placeholder = tf ? 'เช่น เลขที่ใบขอโอน / ผู้รับ (ไม่บังคับ)' : 'เช่น ใช้ภายใน, ตัวอย่าง, ทดลอง ฯลฯ';
+  g('mo-date').value = todayStr(); g('mo-dest').value = ''; g('mo-note').value = '';
+  g('moDestList').innerHTML = [...new Set(['คลังใหญ่', ..._moSlips.map(s => s.dest).filter(Boolean)])].map(v => `<option value="${esc(v)}">`).join('');
+  g('moItemList').innerHTML = [
+    ..._rmMasterCache.map(r => ({ id: r.RM_ID, label: _moLabel(r.RM_ID, r.RM_Name) })),
+    ..._fgMasterCache.map(f => ({ id: f.FG_ID, label: _moLabel(f.FG_ID, f.FG_Name) })),
+  ].sort((a, b) => String(a.id).localeCompare(String(b.id))).map(o => `<option value="${esc(o.label)}">`).join('');
+  g('mo-rows').innerHTML = '';
+  miscOutAddRow(true);
+  const el = g('miscOutModal');
+  el.addEventListener('shown.bs.modal', () => (tf ? g('mo-dest') : g('mo-note')).focus(), { once: true });
+  bootstrap.Modal.getOrCreateInstance(el).show();
+}
+function miscOutAddRow(noFocus) {
+  const seq = ++_moSeq;
+  document.getElementById('mo-rows').insertAdjacentHTML('beforeend', `<tr data-seq="${seq}" data-kind="" data-id="" data-cat="">
+    <td style="min-width:280px"><input class="form-control form-control-sm mo-item" list="moItemList" placeholder="พิมพ์ชื่อหรือรหัส แล้วเลือก" autocomplete="off" onchange="miscOutRowItem(${seq})"><div class="small mo-info"></div></td>
+    <td style="min-width:260px"><select class="form-select form-select-sm mo-lot" onchange="miscOutCalc()"><option value="">— เลือกรายการก่อน —</option></select></td>
+    <td style="width:190px"><div class="input-group input-group-sm"><input type="number" min="0" step="any" class="form-control mo-qty" oninput="miscOutCalc()"><span class="input-group-text mo-unit">—</span></div><div class="small text-muted mo-remain"></div></td>
+    <td style="width:40px"><button type="button" class="btn btn-sm btn-outline-danger" onclick="miscOutRemoveRow(${seq})" title="ลบแถว"><i class="fa-solid fa-xmark"></i></button></td></tr>`);
+  if (!noFocus) document.querySelector(`#mo-rows tr[data-seq="${seq}"] .mo-item`).focus();
+  miscOutCalc();
+}
+function miscOutRemoveRow(seq) {
+  document.querySelector(`#mo-rows tr[data-seq="${seq}"]`)?.remove();
+  if (!document.querySelector('#mo-rows tr')) miscOutAddRow(true);
+  miscOutCalc();
+}
+// "CODE · ชื่อ" จาก datalist → วัตถุดิบ/แพ็คเกจจิ้ง (M) หรือ FG (F) · รับรหัสล้วน/ชื่อที่ไม่ซ้ำได้ด้วย
+function _moResolve(val) {
+  val = (val || '').trim();
+  if (!val) return null;
+  const rmOf = r => ({ kind: 'M', id: r.RM_ID, name: r.RM_Name, cat: r.Category, unit: r.Unit });
+  const fgOf = f => ({ kind: 'F', id: f.FG_ID, name: f.FG_Name, cat: '', unit: f.Unit });
+  const rm = _rmMasterCache.find(r => _moLabel(r.RM_ID, r.RM_Name) === val) || _rmMasterCache.find(r => r.RM_ID === val);
+  if (rm) return rmOf(rm);
+  const fg = _fgMasterCache.find(f => _moLabel(f.FG_ID, f.FG_Name) === val) || _fgMasterCache.find(f => f.FG_ID === val);
+  if (fg) return fgOf(fg);
+  const byName = [..._rmMasterCache.filter(r => r.RM_Name === val).map(rmOf), ..._fgMasterCache.filter(f => f.FG_Name === val).map(fgOf)];
+  return byName.length === 1 ? byName[0] : null;
+}
+function miscOutRowItem(seq) {
+  const tr = document.querySelector(`#mo-rows tr[data-seq="${seq}"]`);
+  if (!tr) return;
+  const inp = tr.querySelector('.mo-item'), it = _moResolve(inp.value), sel = tr.querySelector('.mo-lot');
+  tr.dataset.kind = it?.kind || ''; tr.dataset.id = it?.id || ''; tr.dataset.cat = it?.cat || '';
+  tr.querySelector('.mo-unit').textContent = it?.unit || '—';
+  tr.querySelector('.mo-info').innerHTML = it ? (it.kind === 'F' ? badge('สินค้าสำเร็จรูป', 'primary') : catBadge(it.cat)) : (inp.value.trim() ? '<span class="text-danger">เลือกจากรายการแนะนำ</span>' : '');
+  inp.classList.toggle('is-invalid', !it && !!inp.value.trim());
+  if (!it) { sel.innerHTML = '<option value="">— เลือกรายการก่อน —</option>'; miscOutCalc(); return; }
+  inp.value = _moLabel(it.id, it.name);
+  let lots;   // [{ v, label, qty, exp }] เรียง FEFO (ใกล้หมดอายุก่อน ไม่มีวันหมดอายุไว้ท้าย)
+  if (it.kind === 'M') {
+    lots = _lotsFefo(it.id).map(l => ({ v: l.Lot_ID, label: _lotLabel(l), qty: l.Qty, exp: l.ExpDate }));
+  } else {
+    lots = _stockFgCache.filter(s => s.FG_ID === it.id && s.Qty > 0).sort((a, b) => (a.ExpDate ? 0 : 1) - (b.ExpDate ? 0 : 1) || String(a.ExpDate).localeCompare(String(b.ExpDate)))
+      .map(s => ({ v: s.Lot, label: s.Lot, qty: s.Qty, exp: s.ExpDate }));
+  }
+  sel.innerHTML = lots.length
+    ? lots.map(l => `<option value="${esc(l.v)}" data-qty="${l.qty}">${esc(l.label)} — คงเหลือ ${_qtyFmtByCat(l.qty, it.cat)} ${esc(it.unit || '')}${l.exp ? ` · หมดอายุ ${fmtDate(l.exp)}` : ''}</option>`).join('')
+    : '<option value="">— ไม่มีสต็อกคงเหลือ —</option>';
+  tr.querySelector('.mo-qty').focus();
+  miscOutCalc();
+}
+// สรุป + เตือนเกินคงเหลือ (รวมทุกแถวที่เลือกล็อตเดียวกัน — ฝั่ง DB ตรวจซ้ำตามลำดับอยู่แล้ว)
+function miscOutCalc() {
+  const trs = [...document.querySelectorAll('#mo-rows tr')], used = {};
+  const keyOf = tr => `${tr.dataset.kind}|${tr.dataset.id}|${tr.querySelector('.mo-lot').value}`;
+  let n = 0;
+  trs.forEach(tr => { if (!tr.dataset.id) return; n++; used[keyOf(tr)] = (used[keyOf(tr)] || 0) + (parseFloat(tr.querySelector('.mo-qty').value) || 0); });
+  trs.forEach(tr => {
+    const out = tr.querySelector('.mo-remain'), opt = tr.querySelector('.mo-lot').selectedOptions[0];
+    if (!tr.dataset.id || !opt || !opt.value) { out.textContent = ''; return; }
+    const avail = parseFloat(opt.dataset.qty) || 0, sum = used[keyOf(tr)] || 0;
+    out.className = 'small mo-remain ' + (sum > avail + 1e-9 ? 'text-danger fw-semibold' : 'text-muted');
+    out.textContent = sum > avail + 1e-9 ? `เกินคงเหลือของล็อต (เหลือ ${_qtyFmtByCat(avail, tr.dataset.cat)})` : `คงเหลือ ${_qtyFmtByCat(avail, tr.dataset.cat)}`;
+  });
+  const sum = document.getElementById('mo-summary');
+  if (sum) sum.textContent = `${n} รายการในใบ`;
+}
+async function miscOutSave() {
+  const g = id => document.getElementById(id), tf = _moType === 'โอนย้าย';
+  _modalClearErrors(['mo-dest', 'mo-note']);
+  g('mo-err').textContent = '';
+  const fail = (msg, el) => { g('mo-err').innerHTML = msg; el?.focus(); };
+  const dest = g('mo-dest').value.trim(), note = g('mo-note').value.trim(), date = g('mo-date').value || todayStr();
+  if (tf && !dest) { _modalShowError('mo-dest', 'ระบุปลายทางที่โอนย้ายไป'); return; }
+  if (!tf && !note) { _modalShowError('mo-note', 'กรอกวัตถุประสงค์'); return; }
+  const trs = [...document.querySelectorAll('#mo-rows tr')].filter(tr => tr.querySelector('.mo-item').value.trim() || tr.querySelector('.mo-qty').value);
+  if (!trs.length) { fail('เพิ่มรายการอย่างน้อย 1 รายการ'); return; }
+  const items = [], used = {};
+  for (const tr of trs) {
+    const itemEl = tr.querySelector('.mo-item');
+    if (!tr.dataset.id) { fail(`เลือกรายการให้ถูกต้องจากรายการแนะนำ: "${esc(itemEl.value.trim() || '(ว่าง)')}"`, itemEl); return; }
+    const name = itemEl.value.trim(), sel = tr.querySelector('.mo-lot'), opt = sel.selectedOptions[0];
+    if (!sel.value || !opt) { fail(`${esc(name)}: ไม่มีล็อตให้เลือก (ไม่มีสต็อกคงเหลือ)`, sel); return; }
+    const qty = parseFloat(tr.querySelector('.mo-qty').value);
+    if (!(qty > 0)) { fail(`${esc(name)}: กรอกจำนวนให้ถูกต้อง`, tr.querySelector('.mo-qty')); return; }
+    const key = `${tr.dataset.kind}|${tr.dataset.id}|${sel.value}`;
+    used[key] = (used[key] || 0) + qty;
+    if (used[key] > (parseFloat(opt.dataset.qty) || 0) + 1e-9) { fail(`${esc(name)}: จำนวนเกินคงเหลือของล็อตนี้ (เหลือ ${_qtyFmtByCat(parseFloat(opt.dataset.qty) || 0, tr.dataset.cat)})`, tr.querySelector('.mo-qty')); return; }
+    items.push(tr.dataset.kind === 'M' ? { kind: 'M', lot_id: sel.value, qty } : { kind: 'F', fg_id: tr.dataset.id, lot: sel.value, qty });
+  }
+  const { data, error } = await _sb.rpc('misc_out_post', { p_type: _moType, p_date: date, p_dest: tf ? dest : null, p_note: note || null, p_items: items });
+  if (error) {
+    if (error.code === 'PGRST202' && /misc_out_post/.test(error.message || '')) {
+      Swal.fire('ยังไม่ได้ตั้งค่า', 'แอดมินต้องรัน <code>migration_2026-10-15_misc_out.sql</code> ใน Supabase ก่อน', 'error'); return;
+    }
+    _rmLotRpcErr(error, 'บันทึกใบไม่สำเร็จ (ไม่ได้ตัดสต็อกเลย)'); return;
+  }
+  bootstrap.Modal.getInstance(g('miscOutModal')).hide();
+  await Promise.all([stockRmLoad(), stockFgLoad(), miscOutLoad()]);
+  const r = await Swal.fire({ icon: 'success', title: `บันทึกใบ ${esc(data)} แล้ว`, text: `${items.length} รายการ — ตัดสต็อกเรียบร้อย`,
+    showCancelButton: true, confirmButtonText: 'พิมพ์ใบ', cancelButtonText: 'ปิด' });
+  if (r.isConfirmed) miscOutPrint(data);
+}
+async function miscOutDelete(key) {
+  const s = _moSlips.find(x => x.key === key);
+  if (!s) return;
+  const c = await Swal.fire({ title: `ลบ${s.docNo ? `ใบ ${esc(s.docNo)}` : 'รายการเบิกนี้'}?`, text: `สต็อกของทั้ง ${s.lines.length} รายการจะถูกคืนกลับล็อตเดิม`, icon: 'warning',
+    showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบทั้งใบ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  if (s.docNo) {
+    const { error } = await _sb.rpc('misc_out_delete', { p_doc: s.docNo });
+    if (error) {
+      if (error.code === 'PGRST202' && /misc_out_delete/.test(error.message || '')) { Swal.fire('ยังไม่ได้ตั้งค่า', 'แอดมินต้องรัน <code>migration_2026-10-15_misc_out.sql</code> ใน Supabase ก่อน', 'error'); return; }
+      _rmLotRpcErr(error, 'ลบใบไม่สำเร็จ'); return;
+    }
+  } else {   // แถวเก่าที่ยังไม่เคยออกเลข = 1 บรรทัดต่อใบ ใช้วิธีเดิม
+    const l = s.lines[0];
+    if (l.kind === 'M') {
+      const { error } = await _sb.rpc('rm_withdraw_delete', { p_withdraw_id: l.id });
+      if (error) { _rmLotRpcErr(error, 'ลบไม่สำเร็จ'); return; }
+    } else {
+      const { data: wd } = await _sb.from('fg_withdraw').select('*').eq('WD_ID', l.id);
+      const w = wd?.[0];
+      if (!w) return;
+      if (!(await sbDelete('fg_withdraw', 'WD_ID', l.id))) return;
+      await adjustStockFG(w.FG_ID, w.Lot, w.Qty);
+    }
+  }
+  await Promise.all([stockRmLoad(), stockFgLoad(), miscOutLoad()]);
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ลบแล้ว คืนสต็อกเรียบร้อย', showConfirmButton: false, timer: 1800 });
+}
+
+// ── พิมพ์ใบ (ต้นฉบับ + สำเนา) — หน้าตาเดิมของใบส่งเบิกเบ็ดเตล็ด (.genwd-*) แต่หลายรายการ + ใบโอนย้ายมีปลายทาง/ลายเซ็นของผู้ส่ง-ผู้รับ ──
+// เลขที่เอกสาร MI-/TF- ออกตอนบันทึกใบแล้ว · แถวเก่าที่ยังไม่มีเลข (บรรทัดเดียว) ออกเลขตอนพิมพ์ครั้งแรกเหมือนเดิม
 async function _nextGenwdDocNo() {
   const { data: rpcData, error: rpcErr } = await _sb.rpc('next_genwd_docno');
   if (!rpcErr) return rpcData;
@@ -9639,26 +10140,18 @@ async function _nextGenwdDocNo() {
   const re = new RegExp(`^${prefix}-(\\d+)$`);
   const nums = [...(rm.data || []), ...(fg.data || [])]
     .map(r => (r.DocNo && r.DocNo.match(re)) ? r.DocNo.match(re)[1] : null).filter(Boolean).map(Number);
-  const max = nums.length ? Math.max(...nums) : 0;
-  return `${prefix}-${String(max + 1).padStart(3, '0')}`;
+  return `${prefix}-${String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3, '0')}`;
 }
-// ออกเลขที่เอกสารแบบ lazy ตอนพิมพ์ครั้งแรกเท่านั้น (ไม่ใช่ตอนบันทึกเบิก) กันรายการที่ไม่เคยพิมพ์มากินเลขเปล่าๆ
-// — พิมพ์ซ้ำครั้งต่อไปใช้เลขเดิมที่เคยออกไว้เสมอ (เขียนกลับ _genwdHistCache โดยตรง ไม่ต้องรอ fgoutLoad รีโหลด)
-async function genwdPrint(kind, id) {
-  const w = _genwdHistCache.find(x => x.kind === kind && String(x.id) === String(id));
-  if (!w) return;
-  if (!w.docNo) {
-    const docNo = await _nextGenwdDocNo();
-    const table = kind === 'M' ? 'rm_withdraw' : 'fg_withdraw';
-    const idCol = kind === 'M' ? 'Withdraw_ID' : 'WD_ID';
-    const { error } = await _sb.from(table).update({ DocNo: docNo }).eq(idCol, id);
-    if (error) {
-      Swal.fire('ออกเลขที่เอกสารไม่สำเร็จ', `${esc(error.message)} — รัน migration_2026-10-06_genwd_docno.sql ก่อน (จะพิมพ์ต่อโดยใช้เลขที่ระบบแทนไปก่อน)`, 'warning');
-    } else {
-      w.docNo = docNo;
-    }
+async function miscOutPrint(keyOrDoc) {
+  const s = _moSlips.find(x => x.key === keyOrDoc || x.docNo === keyOrDoc);
+  if (!s) return;
+  if (!s.docNo) {
+    const l = s.lines[0], docNo = await _nextGenwdDocNo();
+    const { error } = await _sb.from(l.kind === 'M' ? 'rm_withdraw' : 'fg_withdraw').update({ DocNo: docNo }).eq(l.kind === 'M' ? 'Withdraw_ID' : 'WD_ID', l.id);
+    if (error) Swal.fire('ออกเลขที่เอกสารไม่สำเร็จ', `${esc(error.message)} — จะพิมพ์ต่อโดยใช้เลขที่ระบบแทนไปก่อน`, 'warning');
+    else { s.docNo = docNo; miscOutRender(); }
   }
-  document.getElementById('genwd-print-root').innerHTML = _genwdPrintHTML(w);
+  document.getElementById('genwd-print-root').innerHTML = _moPageHTML(s, 'ต้นฉบับ') + _moPageHTML(s, 'สำเนา');
   document.body.classList.add('print-genwd');
   const done = () => {
     document.body.classList.remove('print-genwd');
@@ -9668,11 +10161,13 @@ async function genwdPrint(kind, id) {
   window.addEventListener('afterprint', done);
   window.print();
 }
-// หน้าตาพอร์ตตรงจาก ProFlow's .dlvbill-page (miscSlipRenderPreview) — header บริษัท/meta ชิดขวา, แถบหัวเรื่อง
-// พื้นสี, กล่องข้อมูลแบบ cust-box (ใช้แทนด้วยประเภท/วัตถุประสงค์เพราะ genwd ไม่มีลูกค้าจริง), ตารางรายการ,
-// หมายเหตุ, ท้ายกระดาษ 3 ช่องเซ็น — ไม่ใส่รหัสฟอร์ม/ที่อยู่/เลขภาษีเหมือนต้นฉบับเพราะเป็นข้อมูล QMS ของ Wise
-// Novation โดยเฉพาะ ไม่มีจริงฝั่ง Blooming (ดูคอมเมนต์ที่ CSS block ด้านบน)
-function _genwdPageHTML(w, copyLabel) {
+function _moPageHTML(s, copyLabel) {
+  const tf = s.type === 'โอนย้าย';
+  const info = tf
+    ? `<div class="genwd-infobox-row"><span class="lbl">ปลายทาง (Destination)</span><span><b>${esc(s.dest || '-')}</b></span></div>
+       <div class="genwd-infobox-row"><span class="lbl">หมายเหตุ (Remarks)</span><span>${esc(s.extra || '-')}</span></div>`
+    : `<div class="genwd-infobox-row"><span class="lbl">วัตถุประสงค์ (Purpose)</span><span>${esc(s.note || '-')}</span></div>`;
+  const trs = s.lines.map((l, i) => `<tr><td class="num">${i + 1}</td><td>${esc(l.name)}</td><td>${esc(l.lot || '-')}</td><td class="qty">${_qtyFmtByCat(l.qty, l.cat)}</td><td>${esc(l.unit || '')}</td></tr>`).join('');
   return `<div class="genwd-page">
     <div class="genwd-head">
       <div class="genwd-brand"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
@@ -9682,115 +10177,29 @@ function _genwdPageHTML(w, copyLabel) {
           TAX ID: 0105535064032 ติดต่อ: 086-355-0358, 02-056-1692-4</div></div>
       <div class="genwd-meta">
         <div class="genwd-copytag">${esc(copyLabel)}</div>
-        <div>เลขที่เอกสาร (Document No.): <b>${esc(w.docNo || w.id)}</b></div>
-        <div>วันที่ (Date): <b>${fmtDateLong(w.date)}</b></div>
+        <div>เลขที่เอกสาร (Document No.): <b>${esc(s.docNo || s.key)}</b></div>
+        <div>วันที่ (Date): <b>${fmtDateLong(s.date)}</b></div>
       </div>
     </div>
-    <div class="genwd-title">ใบส่งเบิกเบ็ดเตล็ด / Miscellaneous Issue Note</div>
+    <div class="genwd-title">${tf ? 'ใบโอนย้ายสินค้า / Stock Transfer Note' : 'ใบส่งเบิกเบ็ดเตล็ด / Miscellaneous Issue Note'}</div>
     <div class="genwd-infobox">
-      <div class="genwd-infobox-row"><span class="lbl">ประเภท (Type)</span><span>${esc(w.kind === 'F' ? 'สินค้าสำเร็จรูป' : w.type)}</span></div>
-      <div class="genwd-infobox-row"><span class="lbl">วัตถุประสงค์ (Purpose)</span><span>${esc(w.note || '-')}</span></div>
+      <div class="genwd-infobox-row"><span class="lbl">ประเภท (Type)</span><span>${tf ? 'โอนย้าย (Transfer)' : 'เบิกเบ็ดเตล็ด (Miscellaneous Issue)'}</span></div>
+      ${info}
     </div>
     <table class="genwd-table">
       <thead><tr><th style="width:6%">ลำดับ<br>(No.)</th><th style="width:48%">รายละเอียดสินค้า<br>(Description)</th>
         <th style="width:18%">Lot</th><th style="width:16%">จำนวน<br>(Quantity)</th><th style="width:12%">หน่วย<br>(Unit)</th></tr></thead>
-      <tbody><tr><td class="num">1</td><td>${esc(w.name)}</td><td>${esc(w.lot || '-')}</td><td class="qty">${_qtyFmtByCat(w.qty, w.cat)}</td><td>${esc(w.unit||'')}</td></tr></tbody>
+      <tbody>${trs}</tbody>
     </table>
     <div class="genwd-notes">
       <div>หมายเหตุ: กรุณาตรวจสอบรายการและจำนวนให้ถูกต้องก่อนรับของ</div>
     </div>
     <div class="genwd-footer">
-      <div class="genwd-sign"><div class="line">ผู้เบิก</div><div class="date">วันที่ ...../...../.....</div></div>
-      <div class="genwd-sign"><div class="line">ผู้จ่ายของ</div><div class="date">วันที่ ...../...../.....</div></div>
+      <div class="genwd-sign"><div class="line">${tf ? 'ผู้ส่งของ' : 'ผู้เบิก'}</div><div class="date">วันที่ ...../...../.....</div></div>
+      <div class="genwd-sign"><div class="line">${tf ? 'ผู้รับของ (ปลายทาง)' : 'ผู้จ่ายของ'}</div><div class="date">วันที่ ...../...../.....</div></div>
       <div class="genwd-sign"><div class="line">ผู้อนุมัติ</div><div class="date">วันที่ ...../...../.....</div></div>
     </div>
   </div>`;
-}
-function _genwdPrintHTML(w) {
-  return _genwdPageHTML(w, 'ต้นฉบับ') + _genwdPageHTML(w, 'สำเนา');
-}
-// ── เพิ่มรายการเบิก (วัตถุดิบ/แพ็คเกจจิ้ง/FG ไม่ผูกกับ CO) ──
-function genwdOpenForm() {
-  const matOpts = _rmMasterCache.map(r => `<option value="M:${esc(r.RM_ID)}">[${esc(catLabel(r.Category))}] ${esc(r.RM_Name)}</option>`).join('');
-  const fgOpts = _fgMasterCache.map(f => `<option value="F:${esc(f.FG_ID)}">[สินค้าสำเร็จรูป] ${esc(f.FG_Name)}</option>`).join('');
-  if (!matOpts && !fgOpts) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบหรือสินค้าก่อน', 'info'); return; }
-  _modalClearErrors(['genwd-lot', 'genwd-qty', 'genwd-note']);
-  document.getElementById('genwd-item').innerHTML = matOpts + fgOpts;
-  document.getElementById('genwd-qty').value = '';
-  document.getElementById('genwd-date').value = todayStr();
-  document.getElementById('genwd-note').value = '';
-  genwdItemChanged();
-  new bootstrap.Modal(document.getElementById('genwdModal')).show();
-}
-let _genwdLots = [];
-async function genwdItemChanged() {
-  const [kind, itemId] = document.getElementById('genwd-item').value.split(':');
-  const lotSel = document.getElementById('genwd-lot');
-  if (kind === 'M') {
-    await rmLotLoad();
-    const rm = _rmMasterCache.find(r => r.RM_ID === itemId);
-    const lots = _lotsFefo(itemId);
-    _genwdLots = lots.map(l => ({ id: l.Lot_ID, label: _lotLabel(l), qty: l.Qty, unit: l.Unit || rm?.Unit, exp: l.ExpDate, cat: rm?.Category }));
-    document.getElementById('genwd-unit').textContent = rm?.Unit || '';
-  } else {
-    if (!_stockFgCache.length) await stockFgLoad();
-    const fg = _fgMasterCache.find(f => f.FG_ID === itemId);
-    const lots = _stockFgCache.filter(s => s.FG_ID === itemId && s.Qty > 0).sort((a,b) => new Date(a.ExpDate) - new Date(b.ExpDate));
-    _genwdLots = lots.map(l => ({ id: l.Lot, label: l.Lot, qty: l.Qty, unit: fg?.Unit, exp: l.ExpDate }));
-    document.getElementById('genwd-unit').textContent = fg?.Unit || '';
-  }
-  document.getElementById('genwd-lot').innerHTML = _genwdLots.length
-    ? _genwdLots.map(l => `<option value="${esc(l.id)}">${esc(l.label)} — คงเหลือ ${_qtyFmtByCat(l.qty, l.cat)} ${esc(l.unit||'')}${l.exp ? ` · หมดอายุ ${fmtDate(l.exp)}` : ''}</option>`).join('')
-    : '<option value="">— ไม่มีสต็อกคงเหลือ —</option>';
-  document.getElementById('genwd-qty').value = '';
-}
-async function genwdModalSave() {
-  _modalClearErrors(['genwd-lot', 'genwd-qty', 'genwd-note']);
-  const [kind, itemId] = document.getElementById('genwd-item').value.split(':');
-  const lotId = document.getElementById('genwd-lot').value;
-  const lotRow = _genwdLots.find(l => l.id === lotId);
-  const qty = parseFloat(document.getElementById('genwd-qty').value);
-  const note = document.getElementById('genwd-note').value.trim();
-  const date = document.getElementById('genwd-date').value || todayStr();
-  if (!lotRow) { _modalShowError('genwd-lot', 'ไม่มีล็อตให้เลือก'); return; }
-  if (!qty || qty <= 0) { _modalShowError('genwd-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
-  if (qty > lotRow.qty) { _modalShowError('genwd-qty', `จำนวนเกินคงเหลือของล็อตนี้ (เหลือ ${_qtyFmtByCat(lotRow.qty, lotRow.cat)})`); return; }
-  if (!note) { _modalShowError('genwd-note', 'กรอกวัตถุประสงค์'); return; }
-
-  if (kind === 'M') {
-    const { error } = await _sb.rpc('rm_withdraw_post', { p_withdraw_id: genId('GWD'), p_lot_id: lotId, p_qty: qty, p_note: note, p_date: date });
-    if (error) { _rmLotRpcErr(error, 'บันทึกการเบิกไม่สำเร็จ'); return; }
-    bootstrap.Modal.getInstance(document.getElementById('genwdModal')).hide();
-    await stockRmLoad();
-    fgoutLoad();
-    return;
-  }
-  const ok = await sbRun(_sb.from('fg_withdraw').insert({ WD_ID: genId('WD'), Order_ID: null, FG_ID: itemId, Lot: lotId, Qty: qty, WithdrawDate: date, Note: note }), 'บันทึกการเบิกไม่สำเร็จ');
-  if (ok === null) return;
-  await adjustStockFG(itemId, lotId, -qty);
-  bootstrap.Modal.getInstance(document.getElementById('genwdModal')).hide();
-  await stockFgLoad();
-  fgoutLoad();
-}
-async function genwdDelete(kind, id) {
-  const c = await Swal.fire({ title: 'ลบรายการเบิกนี้?', text: 'สต็อกจะถูกคืนกลับเข้าล็อตเดิมตามจำนวนนี้', icon: 'warning',
-    showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
-  if (!c.isConfirmed) return;
-  if (kind === 'M') {
-    const { error } = await _sb.rpc('rm_withdraw_delete', { p_withdraw_id: id });
-    if (error) { _rmLotRpcErr(error, 'ลบไม่สำเร็จ'); return; }
-    await stockRmLoad();
-    fgoutLoad();
-    return;
-  }
-  const { data: withdraws } = await _sb.from('fg_withdraw').select('*').eq('WD_ID', id);
-  const w = withdraws?.[0];
-  if (!w) return;
-  if (await sbDelete('fg_withdraw', 'WD_ID', id)) {
-    await adjustStockFG(w.FG_ID, w.Lot, w.Qty);
-    await stockFgLoad();
-    fgoutLoad();
-  }
 }
 let _fgoutOrderId = null;
 let _fgoutLots = [];
