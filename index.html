@@ -205,10 +205,10 @@ img.emp-avatar { cursor: zoom-in; }
 }
 .pc-tile { border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 10px; padding: .55rem .75rem; }
 .pc-lbl { font-size: .7rem; color: #64748b; font-weight: 600; }
-.pc-val { font-size: 1.08rem; font-weight: 700; color: #1e293b; line-height: 1.3; }
-.pc-sub { font-size: .74rem; color: #64748b; }
+.pc-val { font-size: .92rem; font-weight: 700; color: #1e293b; line-height: 1.3; }
+.pc-sub { font-size: .7rem; color: #64748b; }
 .pc-sm .pc-tile { padding: .4rem .6rem; }
-.pc-sm .pc-val { font-size: .95rem; }
+.pc-sm .pc-val { font-size: .84rem; }
 .pc-tile.pc-rm { background: #f0fdf4; border-color: #bbf7d0; }
 .pc-tile.pc-rm .pc-lbl { color: #15803d; }
 .pc-tile.pc-pkg { background: #ecfeff; border-color: #a5f3fc; }
@@ -217,12 +217,16 @@ img.emp-avatar { cursor: zoom-in; }
 .pc-tile.pc-oh .pc-lbl { color: #b45309; }
 .pc-tile.pc-total { background: linear-gradient(135deg, #1e3a8a, #2563eb); border-color: #1e3a8a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .pc-tile.pc-total .pc-lbl, .pc-tile.pc-total .pc-sub { color: #dbeafe; }
-.pc-tile.pc-total .pc-val { color: #fff; font-size: 1.2rem; }
-.pc-sm .pc-tile.pc-total .pc-val { font-size: 1.05rem; }
+.pc-tile.pc-total .pc-val { color: #fff; font-size: 1.02rem; }
+.pc-sm .pc-tile.pc-total .pc-val { font-size: .92rem; }
 .pc-diff { font-weight: 600; }
-.pc-val .pc-diff { font-size: .76rem; margin-left: .35rem; white-space: nowrap; }
+.pc-val .pc-diff { font-size: .68rem; margin-left: .35rem; white-space: nowrap; }
 .pc-diff.up { color: #dc2626; }
 .pc-diff.down { color: #16a34a; }
+/* แถว KPI รวมด้านบนของหน้า ต้นทุนการผลิต: ลดขนาดตัวเลข (ผู้ใช้ขอ 2026-10-15 "ลดขนาดตัวเลขลงหน่อย ลายตา") — เดิมใช้ขนาดมาตรฐานของ .kpi-card 1.6rem และบรรทัด "เฉลี่ย …/ลูก" ก็โตตามไปด้วย */
+#pcKpis .kpi-num { font-size: 1.25rem; line-height: 1.25; }
+#pcKpis .kpi-num .small { font-size: .76rem; }
+#pcKpis .kpi-label { font-size: .72rem; }
 .pc-runs { margin-top: 1rem; padding-top: .85rem; border-top: 1px dashed #cbd5e1; }
 .pc-runs-title { font-size: .78rem; font-weight: 700; color: #475569; margin-bottom: .55rem; }
 .pc-run { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: .65rem .8rem; margin-bottom: .55rem; }
