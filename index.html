@@ -2127,7 +2127,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
 
 <!-- รับจากโอนย้ายคลังใหญ่ (หลายรายการในใบโอนเดียว) — migration_2026-10-15_receive_transfer.sql -->
 <div class="modal fade" id="transferModal" tabindex="-1">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:min(1400px,96vw)">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
         <h5 class="modal-title"><i class="fa-solid fa-truck-ramp-box me-2"></i>รับจากโอนย้ายคลังใหญ่</h5>
@@ -2143,7 +2143,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
         </div>
         <div class="table-responsive">
           <table class="table table-sm align-middle mb-1" id="trf-table">
-            <thead><tr class="small text-muted"><th>รายการ<span class="text-danger">*</span></th><th>จำนวน<span class="text-danger">*</span></th><th>ราคา/หน่วย (จากใบโอน)</th><th class="text-end">มูลค่า</th><th>Lot</th><th>Lot จากผู้ผลิต</th><th>วันที่ผลิต</th><th>วันหมดอายุ</th><th></th></tr></thead>
+            <thead><tr class="small text-muted"><th>รายการ<span class="text-danger">*</span></th><th>จำนวน<span class="text-danger">*</span></th><th>ราคา/หน่วย (จากใบโอน)</th><th class="text-end">มูลค่า</th><th>Lot</th><th>Lot จากผู้ผลิต</th><th>วันที่ผลิต</th><th>วันหมดอายุ</th><th>หมายเหตุ</th><th></th></tr></thead>
             <tbody id="trf-rows"></tbody>
           </table>
         </div>
@@ -5347,14 +5347,15 @@ function trfOpen() {
 function trfAddRow(noFocus) {
   const seq = ++_trfSeq;
   document.getElementById('trf-rows').insertAdjacentHTML('beforeend', `<tr data-seq="${seq}" data-rm="">
-    <td style="min-width:250px"><input class="form-control form-control-sm trf-rm" list="trfRmList" placeholder="พิมพ์ชื่อหรือรหัส แล้วเลือก" autocomplete="off" onchange="trfRowRm(${seq})"><div class="small trf-rminfo"></div></td>
-    <td style="width:140px"><div class="input-group input-group-sm"><input type="number" step="any" min="0" class="form-control trf-qty" oninput="trfCalc()"><span class="input-group-text trf-unit">—</span></div></td>
-    <td style="width:120px"><input type="number" step="0.01" min="0" class="form-control form-control-sm trf-price" placeholder="0.00" oninput="trfCalc()"></td>
-    <td class="text-end text-nowrap small trf-amt" style="width:110px"></td>
+    <td style="min-width:210px"><input class="form-control form-control-sm trf-rm" list="trfRmList" placeholder="พิมพ์ชื่อหรือรหัส แล้วเลือก" autocomplete="off" onchange="trfRowRm(${seq})"><div class="small trf-rminfo"></div></td>
+    <td style="width:200px"><div class="input-group input-group-sm"><input type="number" step="any" min="0" class="form-control trf-qty" oninput="trfCalc()"><span class="input-group-text trf-unit">—</span></div></td>
+    <td style="width:105px"><input type="number" step="0.01" min="0" class="form-control form-control-sm trf-price" placeholder="0.00" oninput="trfCalc()"></td>
+    <td class="text-end text-nowrap small trf-amt" style="width:95px"></td>
     <td style="width:125px"><input class="form-control form-control-sm trf-lot" data-auto="1" placeholder="อัตโนมัติ" oninput="this.dataset.auto = this.value.trim() ? '' : '1'" onchange="trfRefreshLots()" title="Lot ของเรา ออกอัตโนมัติ (ปีเดือนวัน-ครั้งที่) แก้เองได้ — ลบออกให้เป็นอัตโนมัติอีกครั้ง"></td>
     <td style="width:125px"><input class="form-control form-control-sm trf-mfglot" placeholder="(ถ้ามี)"></td>
     <td style="width:135px"><input type="date" class="form-control form-control-sm trf-harvest"></td>
     <td style="width:135px"><input type="date" class="form-control form-control-sm trf-exp"></td>
+    <td style="min-width:170px"><input class="form-control form-control-sm trf-rnote" placeholder="หมายเหตุรายการนี้" maxlength="200"></td>
     <td style="width:40px"><button type="button" class="btn btn-sm btn-outline-danger" onclick="trfRemoveRow(${seq})" title="ลบแถว"><i class="fa-solid fa-xmark"></i></button></td></tr>`);
   if (!noFocus) document.querySelector(`#trf-rows tr[data-seq="${seq}"] .trf-rm`).focus();
   trfCalc();
@@ -5447,7 +5448,7 @@ async function trfSave() {
     if (exp && exp < date) { fail(`${esc(rm.RM_Name)}: วันหมดอายุต้องไม่ก่อนวันที่รับเข้า`, tr.querySelector('.trf-exp')); return; }
     if (price === null) noPrice++;
     if (!exp && CAT_RAW_GROUP.includes(rm.Category || 'วัตถุดิบ')) noExp++;
-    items.push({ tr, rm, qty, price, exp, harvest: tr.querySelector('.trf-harvest').value || null, mfglot: tr.querySelector('.trf-mfglot').value.trim() || null });
+    items.push({ tr, rm, qty, price, exp, harvest: tr.querySelector('.trf-harvest').value || null, mfglot: tr.querySelector('.trf-mfglot').value.trim() || null, rnote: tr.querySelector('.trf-rnote').value.trim() });
   }
   if (noPrice || noExp) {
     const c = await Swal.fire({ icon: 'question', title: 'ข้อมูลยังไม่ครบ — บันทึกต่อ?',
@@ -5475,7 +5476,7 @@ async function trfSave() {
   const { error } = await _sb.rpc('rm_receive_transfer_post', {
     p_transfer_no: no, p_receive_date: date, p_supplier: g('trf-supplier').value.trim() || null,
     p_items: items.map(it => ({ receive_id: it.id, rm_id: it.rm.RM_ID, qty: it.qty, unit: it.rm.Unit || null, lot: it.lot, mfglot: it.mfglot,
-      harvest: it.harvest, exp: it.exp, unit_price: it.price, note: note || null })),
+      harvest: it.harvest, exp: it.exp, unit_price: it.price, note: [note, it.rnote].filter(Boolean).join(' · ') || null })),
   });
   if (error) {
     if (error.code === 'PGRST202' && /rm_receive_transfer_post/.test(error.message || '')) {
@@ -6435,6 +6436,9 @@ function _rrptPageHtml(copyLabel) {
     || String(rmMap[a.RM_ID]?.RM_Name || a.RM_ID).localeCompare(String(rmMap[b.RM_ID]?.RM_Name || b.RM_ID), 'th')
     || String(a.Receive_ID).localeCompare(String(b.Receive_ID)));
   const showSup = !_rrpt.supplier;   // ใบรวมทุกซัพพลายเออร์ → แสดงคอลัมน์ซัพพลายเออร์ด้วย
+  // เลขที่ใบโอน (rm_receive.TransferNo ที่กรอกตอนรับโอน) แสดงบนใบ TF — ผู้ใช้ 2026-10-16 "ไม่เห็นเลขที่ใบโอนที่กรอกไปเลย":
+  // อยู่ในแถบหัวใบ (ถ้าใบรวมหลายใบโอน แสดงทุกเลข + ใส่เลขของแต่ละแถวในช่องหมายเหตุให้รู้ว่ามาจากใบโอนไหน)
+  const tfNos = [...new Set(rows.map(r => r.TransferNo).filter(Boolean))].sort();
   const isTf = rows.length > 0 && rows.every(r => r.SourceType);   // ใบรับโอนย้ายจากคลังใหญ่ (เลข TF…) ใช้หัวเรื่อง/ป้ายเลขต่างจากใบรับปกติ
   const date = rows[0]?.ReceiveDate || document.getElementById('rrpt-date').value;
   const trs = rows.map((r, i) => `<tr>
@@ -6444,7 +6448,7 @@ function _rrptPageHtml(copyLabel) {
     <td>${esc(r.Lot || '-')}</td><td>${_fmtDateEn(r.ExpDate)}</td>
     <td class="num qty">${_qtyFmtByCat(r.Qty, catOf(r))}</td><td>${esc(_rrptUnit(r.Unit))}</td>
     <td class="num">${r.UnitPrice != null ? _fmtBaht(r.UnitPrice) : '-'}</td>
-    <td>${esc(r.Note || '')}</td>
+    <td>${tfNos.length > 1 && r.TransferNo ? `<div class="small"><b>Doc: ${esc(r.TransferNo)}</b></div>` : ''}${esc(r.Note || '')}</td>
   </tr>`).join('');
   // สรุปตามรายการ + หน่วย (หน่วยต่างกันบวกกันไม่ได้) · มูลค่ารวมนับเฉพาะรายการที่มีราคา
   const sum = {};
@@ -6478,6 +6482,7 @@ function _rrptPageHtml(copyLabel) {
       <div><span class="lbl">Receiving Date</span><span class="val">${_fmtDateEn(date)}</span></div>
       <div><span class="lbl">Supplier</span><span class="val">${esc(!_rrpt.supplier ? 'All' : _rrpt.supplier === RRPT_NO_SUPPLIER ? 'Not specified' : _rrpt.supplier)}</span></div>
       <div><span class="lbl">Warehouse</span><span class="val">${esc(WAREHOUSE_LABEL)}</span></div>
+      ${isTf && tfNos.length ? `<div><span class="lbl">Transfer Doc No.</span><span class="val">${esc(tfNos.join(', '))}</span></div>` : ''}
       <span class="minor">Items: <b>${rows.length}</b></span>
     </div>
     ${rows.length ? `
