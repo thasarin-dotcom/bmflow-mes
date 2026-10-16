@@ -2214,6 +2214,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
         <div class="rrpt-step">
           <div class="rrpt-step-title"><span class="n">1</span>เลือกข้อมูลที่จะพิมพ์</div>
           <div class="rrpt-row">
+            <div><label>ประเภทการรับ</label><select id="rrpt-source" class="form-select form-select-sm" onchange="rcvReportScopeChanged()" title="รับปกติออกเลข RC… · รับโอนย้ายจากคลังใหญ่ออกเลข TF… แยกใบกัน"><option value="RC">รับปกติ (RC)</option><option value="TF">รับโอนย้ายจากคลังใหญ่ (TF)</option></select></div>
             <div><label>วันที่รับ</label><input type="date" id="rrpt-date" class="form-control form-control-sm" onchange="rcvReportScopeChanged()"></div>
             <div><label>ซัพพลายเออร์</label><select id="rrpt-supplier" class="form-select form-select-sm" onchange="rcvReportScopeChanged()"></select></div>
             <button type="button" class="btn btn-outline-secondary btn-sm" id="rrpt-refresh-btn" onclick="rcvReportRefresh()" title="โหลดรายการรับและเลข RC ล่าสุดจากฐานข้อมูลใหม่ (เช่น เพิ่งแก้ไข/เพิ่มรายการรับ)"><i class="fa-solid fa-rotate me-1"></i>ดึงข้อมูลใหม่</button>
@@ -6175,7 +6176,11 @@ async function rcvReportOpen() {
   // วันเริ่มต้น: วันนี้ถ้ามีรายการรับ ไม่งั้นวันล่าสุดที่ยังมีรายการรอออกรายงาน
   const today = todayStr();
   const pendingDate = _receivedCache.filter(r => !r.RC_No).map(r => r.ReceiveDate).sort().pop();
-  document.getElementById('rrpt-date').value = _receivedCache.some(r => r.ReceiveDate === today) ? today : (pendingDate || today);
+  const dateEl = document.getElementById('rrpt-date');
+  dateEl.value = _receivedCache.some(r => r.ReceiveDate === today) ? today : (pendingDate || today);
+  // ประเภทเริ่มต้น: รับปกติ (RC) — ยกเว้นวันนั้นไม่มีรายการรับปกติที่รอออกเลขแต่มีรายการรับโอนรออยู่ → เปิดที่ TF ให้เลย
+  const pend = _receivedCache.filter(r => r.ReceiveDate === dateEl.value && !r.RC_No);
+  document.getElementById('rrpt-source').value = !pend.some(r => !r.SourceType) && pend.some(r => r.SourceType) ? 'TF' : 'RC';
   document.getElementById('rrpt-supplier').innerHTML = '';
   document.getElementById('rrpt-history-wrap').open = false;
   // focus:false — ไม่งั้น focus trap ของ Bootstrap จะแย่งโฟกัสจากช่องกรอกของกล่อง "แก้เลข RC No" (Swal) ที่เปิดซ้อน
@@ -6184,6 +6189,20 @@ async function rcvReportOpen() {
   await rcvReportScopeChanged();
 }
 
+// เลขรายงานแยกตามประเภทการรับ (ผู้ใช้ขอ 2026-10-16): รับปกติ = RC<ปี>/<เดือน><ครั้งที่> เช่น RC2026/10001 · รับโอนย้ายจากคลังใหญ่ =
+// TF<ปี>/<เดือน><ครั้งที่> เช่น TF2026/10001 (ตัวนับแยกกัน) รายการที่รับโอน (rm_receive.SourceType) ออกใบแยกจากรายการรับปกติเสมอ
+// เลขเก่าที่ไม่มีคำนำหน้า (2026/10001) ยังใช้ได้ตามเดิม และนับเป็นส่วนหนึ่งของชุด RC ตอนหาเลขถัดไป (ลำดับไม่ตกหล่น/ไม่ซ้ำ)
+function _rrptSource() { return document.getElementById('rrpt-source').value === 'TF' ? 'TF' : 'RC'; }
+function _rrptDayRows(date, source) {
+  source = source || _rrptSource();
+  return _receivedCache.filter(r => r.ReceiveDate === date && (source === 'TF' ? !!r.SourceType : !r.SourceType));
+}
+// ใบที่ออกเลขแล้วเป็นของประเภทไหน: ดูจากรายการในใบ (ใบเก่าก่อนมีคำนำหน้ารวมรายการรับโอนไว้ได้) ไม่งั้นดูจากคำนำหน้าเลข
+function _rrptSourceOfRc(rcNo) {
+  const rows = _receivedCache.filter(r => r.RC_No === rcNo);
+  if (rows.length && rows.every(r => r.SourceType)) return 'TF';
+  return /^TF/i.test(String(rcNo || '')) ? 'TF' : 'RC';
+}
 function _rrptFillSuppliers(dayRows) {
   const sel = document.getElementById('rrpt-supplier');
   const prev = sel.value;
@@ -6197,7 +6216,7 @@ function _rrptFillSuppliers(dayRows) {
 
 async function rcvReportScopeChanged() {
   const date = document.getElementById('rrpt-date').value;
-  const dayRows = _receivedCache.filter(r => r.ReceiveDate === date);
+  const dayRows = _rrptDayRows(date);
   _rrptFillSuppliers(dayRows);
   const sup = document.getElementById('rrpt-supplier').value;
   const scope = dayRows.filter(r => !sup || _rrptSupplier(r) === sup);
@@ -6216,7 +6235,7 @@ async function rcvReportScopeChanged() {
   rcInput.value = '';
   _rrptApplyState();
   if (pending.length) {
-    const suggested = await _rrptSuggestNo(date);
+    const suggested = await _rrptSuggestNo(date, _rrptSource());
     // ผู้ใช้อาจเปลี่ยนวันที่/ยืนยันไปแล้วระหว่างรอ — ใส่เลขเสนอเฉพาะเมื่อยังอยู่สโคปเดิมและยังไม่ได้พิมพ์เลขเอง
     if (!_rrpt.confirmed && _rrpt.rows === pending && !rcInput.value) rcInput.value = suggested;
   }
@@ -6224,14 +6243,19 @@ async function rcvReportScopeChanged() {
 
 // เลขถัดไป = เลขลำดับสูงสุดของ "ปี/เดือน" ของวันที่รับ + 1 (อ่านจาก DB ทุกครั้ง กันชนกันข้ามเครื่อง)
 // ใช้ค่าสูงสุด ไม่ใช่นับจำนวนแบบ ProFlow — แก้เลขกลางเดือนแล้วการนับจะเสนอเลขที่ใช้ไปแล้ว
-async function _rrptSuggestNo(date) {
+// รูปแบบเลข: <RC|TF><ปี>/<เดือน><ครั้งที่ 3 หลัก> เช่น RC2026/10001, TF2026/10001 — ชุด RC นับเลขเก่าที่ไม่มีคำนำหน้า (2026/10003) รวมด้วย
+// ชุด TF นับเฉพาะ TF… (เริ่ม 001 ทุกเดือน)
+async function _rrptSuggestNo(date, source) {
   if (!date) return '';
-  const prefix = date.slice(0, 7).replace('-', '/');   // 2026-09-26 → 2026/09
-  const { data, error } = await _sb.from('rm_rc_numbers').select('RC_No').like('RC_No', `${prefix}%`);
-  if (error) return `${prefix}001`;
-  const re = new RegExp(`^${prefix.replace('/', '\\/')}(\\d+)$`);
+  source = source || 'RC';
+  const ym = date.slice(0, 7).replace('-', '/');   // 2026-09-26 → 2026/09
+  const full = `${source}${ym}`;
+  // like '%2026/10%' ครอบทั้ง 2026/10…, RC2026/10…, TF2026/10… แล้วกรองชุดที่ต้องการด้วย regex ฝั่งเว็บ
+  const { data, error } = await _sb.from('rm_rc_numbers').select('RC_No').like('RC_No', `%${ym}%`);
+  if (error) return `${full}001`;
+  const re = new RegExp(`^${source === 'RC' ? '(?:RC)?' : 'TF'}${ym.replace('/', '\\/')}(\\d+)$`);
   const max = Math.max(0, ...(data || []).map(r => (r.RC_No.match(re) || [])[1]).filter(Boolean).map(Number));
-  return `${prefix}${String(max + 1).padStart(3, '0')}`;
+  return `${full}${String(max + 1).padStart(3, '0')}`;
 }
 
 // พิมพ์ซ้ำจากเลขเดิม (กดจากประวัติ / ลิงก์เตือน / สโคปที่ออกเลขครบแล้ว)
@@ -6240,7 +6264,8 @@ async function rcvReportShowRc(rcNo, keepScope) {
   if (!rec) rec = (await _sb.from('rm_rc_numbers').select('*').eq('RC_No', rcNo).maybeSingle()).data;
   if (!keepScope && rec) {
     document.getElementById('rrpt-date').value = rec.ReceiveDate;
-    _rrptFillSuppliers(_receivedCache.filter(r => r.ReceiveDate === rec.ReceiveDate));
+    document.getElementById('rrpt-source').value = _rrptSourceOfRc(rcNo);   // ใบ TF → สลับไปมุมมองรับโอน
+    _rrptFillSuppliers(_rrptDayRows(rec.ReceiveDate));
     const sel = document.getElementById('rrpt-supplier');
     sel.value = [...sel.options].some(o => o.value === (rec.Supplier || '')) ? (rec.Supplier || '') : '';
     _rrptMsg('warn', '');
@@ -6358,7 +6383,8 @@ async function rcvReportCancel(rcNo) {
   await rcvReportRenderHistory();
   if (rec) {
     document.getElementById('rrpt-date').value = rec.ReceiveDate;
-    _rrptFillSuppliers(_receivedCache.filter(r => r.ReceiveDate === rec.ReceiveDate));
+    document.getElementById('rrpt-source').value = /^TF/i.test(rcNo) ? 'TF' : _rrptSourceOfRc(rcNo);   // ใบที่ยกเลิกไปแล้วไม่มีรายการเหลือผูกเลข → ดูจากคำนำหน้า
+    _rrptFillSuppliers(_rrptDayRows(rec.ReceiveDate));
     const sel = document.getElementById('rrpt-supplier');
     sel.value = [...sel.options].some(o => o.value === (rec.Supplier || '')) ? (rec.Supplier || '') : '';
   }
@@ -6409,6 +6435,7 @@ function _rrptPageHtml(copyLabel) {
     || String(rmMap[a.RM_ID]?.RM_Name || a.RM_ID).localeCompare(String(rmMap[b.RM_ID]?.RM_Name || b.RM_ID), 'th')
     || String(a.Receive_ID).localeCompare(String(b.Receive_ID)));
   const showSup = !_rrpt.supplier;   // ใบรวมทุกซัพพลายเออร์ → แสดงคอลัมน์ซัพพลายเออร์ด้วย
+  const isTf = rows.length > 0 && rows.every(r => r.SourceType);   // ใบรับโอนย้ายจากคลังใหญ่ (เลข TF…) ใช้หัวเรื่อง/ป้ายเลขต่างจากใบรับปกติ
   const date = rows[0]?.ReceiveDate || document.getElementById('rrpt-date').value;
   const trs = rows.map((r, i) => `<tr>
     <td class="ord">${i + 1}</td><td>${esc(r.RM_ID)}</td>
@@ -6442,8 +6469,8 @@ function _rrptPageHtml(copyLabel) {
       </div>
       <div>
         <div class="rrpt-title">GOODS RECEIVING REPORT<span class="rrpt-copytag">${esc(copyLabel)}</span></div>
-        <div class="rrpt-title-th">รายงานรับวัตถุดิบ / แพ็คเกจจิ้ง</div>
-        <div class="rrpt-no">RC No: ${_rrpt.confirmed ? esc(_rrpt.rcNo) : '(Not confirmed)'}</div>
+        <div class="rrpt-title-th">${isTf ? 'รายงานรับโอนย้ายจากคลังใหญ่ / วัตถุดิบ แพ็คเกจจิ้ง' : 'รายงานรับวัตถุดิบ / แพ็คเกจจิ้ง'}</div>
+        <div class="rrpt-no">${isTf ? 'TF' : 'RC'} No: ${_rrpt.confirmed ? esc(_rrpt.rcNo) : '(Not confirmed)'}</div>
         <div class="rrpt-meta">Printed ${_fmtDateEn(todayStr())} ${now.toTimeString().slice(0, 5)} · by ${esc(_currentUser?.name || _currentUser?.email || '-')}</div>
       </div>
     </div>
