@@ -216,18 +216,20 @@ const q = p => p.then(r => { if (r.error) throw r.error; return r.data || []; })
 const qs = p => p.then(r => r.error ? [] : (r.data || []));   // ตารางที่อาจยังไม่มี (ข้ามเงียบๆ)
 
 // ── ข้อมูล (cache) ──
-const D = { rm: [], fg: [], bal: {}, rmLots: [], fgLots: [], fgLoc: [], bom: [], mos: [], cos: [], wd: {}, dlv: [], me: null };
+const D = { rm: [], fg: [], bal: {}, rmLots: [], fgLots: [], fgLoc: [], bom: [], mos: [], cos: [], wd: {}, dlv: [], reqs: [], me: null };
 let _loadedAt = 0;
 async function loadData(force) {
-  const [rm, fg, bal, rmLots, fgLots, bom, mos, cos, wd, dlv, fgLoc] = await Promise.all([
+  const [rm, fg, bal, rmLots, fgLots, bom, mos, cos, wd, dlv, fgLoc, reqs] = await Promise.all([
     q(_sb.from('rm_master').select('*').order('RM_ID')), q(_sb.from('product_master').select('*').order('FG_ID')),
     q(_sb.from('stock_balance').select('*')), q(_sb.from('stock_rm_lot').select('*').gt('Qty', 0)), q(_sb.from('stock_fg').select('*').gt('Qty', 0)),
     q(_sb.from('bom').select('*')), q(_sb.from('manufacturing_orders').select('*').eq('Status', 'วางแผน').order('PlanDate')),
     q(_sb.from('customer_orders').select('*').neq('Status', 'ส่งสำเร็จ').order('OrderDate', { ascending: false })),
     qs(_sb.from('fg_withdraw').select('Order_ID,Qty').not('Order_ID', 'is', null)), qs(_sb.from('delivery').select('*').neq('Status', 'ส่งถึงแล้ว').order('CreatedAt', { ascending: false })),
     qs(_sb.from('stock_fg_loc').select('*').gt('Qty', 0)),   // ยอด FG แยกตามสถานที่เก็บ (ถ้ายังไม่รัน SQL = ว่าง ไม่แสดง)
+    // คำขอแก้ไขที่รออนุมัติ — โหลดเฉพาะแอดมิน (เห็นเลขบนปุ่มหน้าแรก + ใช้ในหน้า "คำขอแก้ไข")
+    D.me?.role === 'admin' ? qs(_sb.from('edit_requests').select('*').eq('Status', 'รออนุมัติ').order('RequestedAt', { ascending: false }).limit(200)) : Promise.resolve([]),
   ]);
-  Object.assign(D, { rm, fg, rmLots, fgLots, bom, mos, cos, dlv, fgLoc });
+  Object.assign(D, { rm, fg, rmLots, fgLots, bom, mos, cos, dlv, fgLoc, reqs });
   D.bal = Object.fromEntries(bal.map(b => [b.RM_ID, num(b.Qty)]));
   D.wd = {}; wd.forEach(w => { D.wd[w.Order_ID] = (D.wd[w.Order_ID] || 0) + num(w.Qty); });
   _loadedAt = Date.now();
@@ -392,6 +394,7 @@ SCREENS.home = {
         <div class="grow" style="flex:1"><div class="bold">${esc(D.me?.name || '')}</div><div class="muted small">${esc({ operator: 'พนักงาน', supervisor: 'หัวหน้างาน', admin: 'แอดมิน' }[D.me?.role] || '')}</div></div>
         <button class="btn btn-ghost btn-sm" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> ออก</button></div>
       <div class="tiles">
+        ${D.me?.role === 'admin' ? `<button class="tile" style="grid-column:1/-1;min-height:92px;${D.reqs.length ? 'background:#fff7ed;border:2px solid #fb923c' : ''}" onclick="go('approvals')"><i class="fa-solid fa-clipboard-check"></i>คำขอแก้ไข (อนุมัติ)${D.reqs.length ? `<span class="badge">${D.reqs.length} รออนุมัติ</span>` : '<small>ไม่มีคำขอค้างอยู่</small>'}</button>` : ''}
         <button class="tile" onclick="go('stock')"><i class="fa-solid fa-magnifying-glass-chart"></i>ตรวจสต็อก<small>ค้นหา / สแกน ดูรายล็อต</small></button>
         <button class="tile" onclick="go('receive')"><i class="fa-solid fa-inbox"></i>รับเข้าคลัง<small>รับปกติ / รับโอนย้าย</small></button>
         <button class="tile" onclick="go('issue')"><i class="fa-solid fa-dolly"></i>เบิกเข้าไลน์ผลิต${planned ? `<span class="badge">${planned} MO รอเบิก</span>` : '<small>เลือก MO แล้วเบิกตามสูตร</small>'}</button>
@@ -919,6 +922,107 @@ async function saveFg() {
   if (error) { rpcErr(error, 'บันทึกการเบิกไม่สำเร็จ (ไม่ได้ตัดสต็อกเลย)', 'migration_2026-10-17_fg_withdraw_multilot.sql'); return; }
   vib(100); await loadData(); stack.pop(); render();
   toast(`เบิก ${fq(total)} จาก ${items.length} ล็อตแล้ว — ไปแท็บ "จัดส่ง" เพื่อยืนยันส่งออก`, 'ok');
+}
+
+// ═══════════════ คำขอแก้ไข (อนุมัติ) — เฉพาะแอดมิน ═══════════════
+// เหมือนหน้า "คำขอแก้ไข" บนคอมพิวเตอร์: อ่านจาก edit_requests (รออนุมัติ) แล้วอนุมัติ/ไม่อนุมัติผ่าน RPC เดียวกัน (edit_request_approve /
+// edit_request_reject) — การตรวจสต็อก/ล็อต/ข้อมูลเปลี่ยนไปแล้วหลังส่งคำขอ ฯลฯ ทำฝั่ง DB ตามเดิมทั้งหมด (ข้อความ error แสดงตามที่ DB ตอบ)
+const REQ_TYPE = { rm_receive: 'ใบรับเข้าคลัง', issue_production: 'เบิกเข้าไลน์ผลิต', production_records: 'บันทึกผลิต', fg_receive: 'รับ FG เข้าคลัง', fg_receive_delete: 'รับ FG เข้าคลัง (ลบ)',
+  waste_log: 'ของเสีย', manufacturing_orders: 'แผนผลิต (MO) — ขอลบ', prep_orders: 'ใบเตรียมวัตถุดิบ', prep_orders_delete: 'ใบเตรียมวัตถุดิบ (ลบ)', mo_lot: 'Lot ของ MO', mo_edit: 'MO (ฉุกเฉิน)',
+  issue_lot: 'ล็อตที่เบิก', issue_production_delete: 'เบิกเข้าไลน์ผลิต (ลบ)', issue_date_bulk: 'วันที่เบิก (ทั้ง MO)', issue_qty_correct: 'เบิกตั้งต้น (ใช้จริง)' };
+const REQ_TABLE = { rm_receive: ['rm_receive', 'Receive_ID'], issue_production: ['issue_production', 'Issue_ID'], issue_qty_correct: ['issue_production', 'Issue_ID'], issue_lot: ['issue_production', 'Issue_ID'],
+  issue_production_delete: ['issue_production', 'Issue_ID'], production_records: ['production_records', 'Prod_ID'], fg_receive: ['fg_receive', 'FGReceive_ID'], fg_receive_delete: ['fg_receive', 'FGReceive_ID'],
+  waste_log: ['waste_log', 'Waste_ID'], manufacturing_orders: ['manufacturing_orders', 'MO_ID'], mo_lot: ['manufacturing_orders', 'MO_ID'], mo_edit: ['manufacturing_orders', 'MO_ID'],
+  issue_date_bulk: ['manufacturing_orders', 'MO_ID'], prep_orders: ['prep_orders', 'Prep_ID'], prep_orders_delete: ['prep_orders', 'Prep_ID'] };
+const REQ_FIELD = { RM_ID: 'รายการ', Qty: 'จำนวน', UnitPrice: 'ราคา/หน่วย', Supplier: 'ซัพพลายเออร์', Lot: 'Lot', MfgLot: 'Lot จากผู้ผลิต', HarvestDate: 'วันที่ผลิต', ExpDate: 'วันหมดอายุ', ReceiveDate: 'วันที่รับ',
+  Note: 'หมายเหตุ', QtyIssued: 'จำนวนเบิก', IssueDate: 'วันที่เบิก', QtyProduced: 'จำนวนผลิตได้', QtyGross: 'ได้ทั้งหมด', QtyDefect: 'เสีย (Scrap)', ProdLot: 'Lot ผลิต', MfgDate: 'วันผลิต', ProducedBy: 'ผู้ผลิต',
+  Reason: 'สาเหตุ', WasteDate: 'วันที่', PlanQty: 'จำนวนแผน', PlanDate: 'วันที่ผลิต', PlanEndDate: 'วันที่ผลิตถึง', Order_ID: 'อ้างอิง CO', QtyBack: 'ได้กลับ', Location: 'สถานที่เก็บ' };
+const REQ_DATE_FIELDS = ['HarvestDate', 'ExpDate', 'ReceiveDate', 'IssueDate', 'MfgDate', 'WasteDate', 'PlanDate', 'PlanEndDate'];
+const REQ_NUM_FIELDS = ['Qty', 'QtyIssued', 'QtyProduced', 'QtyGross', 'QtyDefect', 'UnitPrice', 'QtyBack', 'PlanQty'];
+let RQ = { recs: {}, loading: false };
+function reqVal(f, v) {
+  if (v == null || v === '') return '<span class="muted">(ว่าง)</span>';
+  if (f === 'RM_ID') return esc(rmOf(v)?.RM_Name || v);
+  if (REQ_DATE_FIELDS.includes(f)) return esc(fmtDate(v));
+  if (REQ_NUM_FIELDS.includes(f)) return esc(num(v).toLocaleString(undefined, { maximumFractionDigits: 4 }));
+  return esc(v);
+}
+// ชื่อรายการที่คนอ่านเข้าใจ [หัวข้อ, รายละเอียด] — เหมือน _editRecLabel ของ desktop (ย่อ)
+function reqRecLabel(type, rec) {
+  if (!rec) return ['(รายการถูกลบแล้ว)', ''];
+  const rm = id => rmOf(id)?.RM_Name || id, fg = id => fgOf(id)?.FG_Name || id, q = (v, id) => fq(v, rmOf(id)?.Category);
+  switch (type) {
+    case 'rm_receive': return [rm(rec.RM_ID), `รับ ${fmtDate(rec.ReceiveDate)} · ${q(rec.Qty, rec.RM_ID)} ${rec.Unit || ''} · ${rec.Lot || '-'}`];
+    case 'issue_production': case 'issue_qty_correct': case 'issue_lot': case 'issue_production_delete':
+      return [rm(rec.RM_ID), `${rec.MO_ID} · เบิก ${q(rec.QtyIssued, rec.RM_ID)} ${rec.Unit || ''} · ${fmtDate(rec.IssueDate)}`];
+    case 'production_records': return [fg(rec.FG_ID), `${rec.ProdLot} · ${fq(rec.QtyProduced)} · ผลิต ${fmtDate(rec.MfgDate)}`];
+    case 'fg_receive': case 'fg_receive_delete': return [fg(rec.FG_ID), `${rec.Lot} · ${fq(rec.Qty)} · รับ ${fmtDate(rec.ReceiveDate)}${rec.Location ? ' · ' + rec.Location : ''}`];
+    case 'waste_log': return [rec.ItemType === 'FG' ? fg(rec.FG_ID) : rm(rec.RM_ID), `${rec.ItemType === 'FG' ? fq(rec.Qty) : q(rec.Qty, rec.RM_ID)} ${rec.Unit || ''} · ${rec.Reason || ''} · ${fmtDate(rec.WasteDate)}`];
+    case 'manufacturing_orders': case 'mo_edit': case 'mo_lot': case 'issue_date_bulk': return [`${rec.MO_ID} · ${fg(rec.FG_ID)}`, `แผน ${fq(rec.PlanQty)} · ${fmtDate(rec.PlanDate)}${rec.Lot ? ' · Lot ' + rec.Lot : ''}`];
+    case 'prep_orders': case 'prep_orders_delete': return [rm(rec.TargetRM_ID), `${rm(rec.SourceRM_ID)} → ${rm(rec.TargetRM_ID)} · ได้กลับ ${fq(rec.QtyBack, rec.TargetRM_ID)} ${rec.Unit || ''} · ${fmtDate(rec.PrepDate)}`];
+  }
+  return ['', ''];
+}
+// สิ่งที่ขอเปลี่ยน (จาก → เป็น) — ประเภทพิเศษ (ลบ/ล็อต/วันที่เบิก) โชว์เป็นข้อความ
+function reqDiff(r) {
+  const c = r.Changes || {}, t = r.Type;
+  const del = txt => `<div class="small" style="color:var(--bad)"><i class="fa-solid fa-trash"></i> <b>${txt}</b></div>`;
+  if (t === 'manufacturing_orders') return del('ขอลบ MO ทั้งใบ (คืนวัตถุดิบที่เบิกไปแล้ว)');
+  if (t === 'prep_orders_delete') return del('ขอลบใบเตรียมทั้งใบ');
+  if (t === 'issue_production_delete') return del('ขอลบรายการเบิกนี้ (คืนวัตถุดิบเข้าล็อต)');
+  if (t === 'fg_receive_delete') return del('ขอลบรายการรับ FG นี้ (ตัดสต็อก FG)');
+  if (t === 'issue_lot') return `<div class="small"><i class="fa-solid fa-boxes-stacked"></i> ขอเปลี่ยนล็อตที่เบิก: ${Array.isArray(c.NewAlloc?.[1]) ? c.NewAlloc[1].map(a => `${esc(a.lot_id || '-')} (${fq(a.qty)})`).join(', ') : '-'}</div>`;
+  if (t === 'issue_date_bulk') return `<div class="small"><i class="fa-solid fa-calendar-days"></i> เปลี่ยนวันที่เบิกทั้ง MO เป็น <b>${esc(fmtDate(c.NewIssueDate?.[1]))}</b></div>`;
+  if (t === 'issue_qty_correct') return `<div class="small"><i class="fa-solid fa-sliders"></i> แก้ "เบิกตั้งต้น" เป็น <b>${fq(c.QtyIssued?.[1])}</b> <span class="muted">(เดิม ${fq(c.QtyIssued?.[0])})</span></div>`;
+  return Object.entries(c).map(([f, [from, to]]) => `<div class="small" style="margin-top:2px"><b>${esc(REQ_FIELD[f] || f)}:</b> <span style="color:var(--bad);text-decoration:line-through">${reqVal(f, from)}</span>
+    <i class="fa-solid fa-arrow-right muted"></i> <span style="color:var(--ok);font-weight:700">${reqVal(f, to)}</span></div>`).join('');
+}
+SCREENS.approvals = {
+  title: 'คำขอแก้ไข', refreshable: true,
+  async render(_, v) {
+    if (D.me?.role !== 'admin') { v.innerHTML = '<div class="empty">เฉพาะแอดมินเท่านั้น</div>'; return; }
+    const reqs = D.reqs;
+    v.innerHTML = `<div class="muted small" style="margin-bottom:10px">คำขอแก้ไข/ลบที่ส่งมาจากพนักงานและหัวหน้างาน — อนุมัติแล้วระบบปรับข้อมูลและสต็อกให้ทันที (กฎเดียวกับบนคอมพิวเตอร์)</div><div id="rqList">${reqs.length ? '<div class="empty"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดรายละเอียด…</div>' : ''}</div>`;
+    if (!reqs.length) { $('#rqList', v).innerHTML = '<div class="empty"><i class="fa-regular fa-circle-check" style="font-size:2rem"></i><br>ไม่มีคำขอรออนุมัติ</div>'; return; }
+    // ดึงแถวจริงของรายการที่ถูกขอ (ไว้โชว์ชื่อ/จำนวนล่าสุด) ทีละตาราง
+    const byTable = {};
+    reqs.forEach(r => { const t = REQ_TABLE[r.Type]; if (t) ((byTable[t[0]] ||= { pk: t[1], ids: new Set() }).ids.add(r.RecordID)); });
+    RQ.recs = {};
+    await Promise.all(Object.entries(byTable).map(async ([table, o]) => {
+      const rows = await qs(_sb.from(table).select('*').in(o.pk, [...o.ids]));
+      rows.forEach(row => { RQ.recs[`${table}:${row[o.pk]}`] = row; });
+    }));
+    const list = $('#rqList', v); if (!list) return;
+    list.innerHTML = reqs.map(r => {
+      const tb = REQ_TABLE[r.Type], rec = tb ? RQ.recs[`${tb[0]}:${r.RecordID}`] : null, [title, detail] = reqRecLabel(r.Type, rec);
+      return `<div class="card" data-id="${r.Req_ID}"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span class="pill info">${esc(REQ_TYPE[r.Type] || r.Type)}</span>
+          <span class="muted small">${esc(new Date(r.RequestedAt).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }))} · ${esc(r.RequestedBy || '-')}</span></div>
+        <div class="bold">${esc(title || r.RecordID)}</div><div class="muted small">${esc(detail)}</div>
+        <div style="margin:8px 0;padding:8px 10px;background:#f8fafc;border-radius:10px">${reqDiff(r)}</div>
+        ${r.Reason ? `<div class="small"><span class="muted">เหตุผล:</span> ${esc(r.Reason)}</div>` : ''}
+        <div class="grid2" style="margin-top:10px"><button class="btn btn-danger" onclick="reqReject(${r.Req_ID})"><i class="fa-solid fa-xmark"></i> ไม่อนุมัติ</button>
+          <button class="btn btn-ok" style="flex:none" onclick="reqApprove(${r.Req_ID})"><i class="fa-solid fa-check"></i> อนุมัติ</button></div></div>`;
+    }).join('');
+  },
+};
+async function reqApprove(id) {
+  const r = D.reqs.find(x => x.Req_ID === id); if (!r) return;
+  const tb = REQ_TABLE[r.Type], [title] = reqRecLabel(r.Type, tb ? RQ.recs[`${tb[0]}:${r.RecordID}`] : null);
+  const c = await Swal.fire({ title: 'อนุมัติการแก้ไขนี้?', icon: 'question', footer: esc(`${REQ_TYPE[r.Type] || r.Type} · ${title}`),
+    html: `<div style="text-align:left;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;margin-bottom:6px">${reqDiff(r)}</div><div class="small muted" style="text-align:left">ข้อมูลและยอดสต็อกที่เกี่ยวข้องจะถูกปรับทันที</div>`,
+    input: 'text', inputPlaceholder: 'หมายเหตุถึงผู้ขอ (ไม่บังคับ)', showCancelButton: true, confirmButtonText: 'อนุมัติ', confirmButtonColor: '#16a34a', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  const { error } = await _sb.rpc('edit_request_approve', { p_req_id: id, p_note: c.value || null });
+  if (error) { Swal.fire('อนุมัติไม่สำเร็จ', esc(error.message), 'error'); return; }
+  vib(80); await loadData(); render(); toast('อนุมัติแล้ว — ปรับข้อมูลและสต็อกแล้ว', 'ok');
+}
+async function reqReject(id) {
+  const c = await Swal.fire({ title: 'ไม่อนุมัติคำขอนี้?', input: 'text', inputPlaceholder: 'เหตุผล (แจ้งผู้ขอ)', icon: 'warning', showCancelButton: true, confirmButtonText: 'ไม่อนุมัติ', confirmButtonColor: '#dc2626', cancelButtonText: 'ยกเลิก',
+    inputValidator: v => !v?.trim() ? 'กรุณาระบุเหตุผลให้ผู้ขอ' : undefined });
+  if (!c.isConfirmed) return;
+  const { error } = await _sb.rpc('edit_request_reject', { p_req_id: id, p_note: c.value.trim() });
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  vib(60); await loadData(); render(); toast('บันทึกการไม่อนุมัติแล้ว', 'ok');
 }
 
 // ── เริ่มต้น ──
