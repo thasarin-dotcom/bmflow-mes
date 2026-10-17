@@ -216,17 +216,18 @@ const q = p => p.then(r => { if (r.error) throw r.error; return r.data || []; })
 const qs = p => p.then(r => r.error ? [] : (r.data || []));   // ตารางที่อาจยังไม่มี (ข้ามเงียบๆ)
 
 // ── ข้อมูล (cache) ──
-const D = { rm: [], fg: [], bal: {}, rmLots: [], fgLots: [], bom: [], mos: [], cos: [], wd: {}, dlv: [], me: null };
+const D = { rm: [], fg: [], bal: {}, rmLots: [], fgLots: [], fgLoc: [], bom: [], mos: [], cos: [], wd: {}, dlv: [], me: null };
 let _loadedAt = 0;
 async function loadData(force) {
-  const [rm, fg, bal, rmLots, fgLots, bom, mos, cos, wd, dlv] = await Promise.all([
+  const [rm, fg, bal, rmLots, fgLots, bom, mos, cos, wd, dlv, fgLoc] = await Promise.all([
     q(_sb.from('rm_master').select('*').order('RM_ID')), q(_sb.from('product_master').select('*').order('FG_ID')),
     q(_sb.from('stock_balance').select('*')), q(_sb.from('stock_rm_lot').select('*').gt('Qty', 0)), q(_sb.from('stock_fg').select('*').gt('Qty', 0)),
     q(_sb.from('bom').select('*')), q(_sb.from('manufacturing_orders').select('*').eq('Status', 'วางแผน').order('PlanDate')),
     q(_sb.from('customer_orders').select('*').neq('Status', 'ส่งสำเร็จ').order('OrderDate', { ascending: false })),
     qs(_sb.from('fg_withdraw').select('Order_ID,Qty').not('Order_ID', 'is', null)), qs(_sb.from('delivery').select('*').neq('Status', 'ส่งถึงแล้ว').order('CreatedAt', { ascending: false })),
+    qs(_sb.from('stock_fg_loc').select('*').gt('Qty', 0)),   // ยอด FG แยกตามสถานที่เก็บ (ถ้ายังไม่รัน SQL = ว่าง ไม่แสดง)
   ]);
-  Object.assign(D, { rm, fg, rmLots, fgLots, bom, mos, cos, dlv });
+  Object.assign(D, { rm, fg, rmLots, fgLots, bom, mos, cos, dlv, fgLoc });
   D.bal = Object.fromEntries(bal.map(b => [b.RM_ID, num(b.Qty)]));
   D.wd = {}; wd.forEach(w => { D.wd[w.Order_ID] = (D.wd[w.Order_ID] || 0) + num(w.Qty); });
   _loadedAt = Date.now();
@@ -459,7 +460,8 @@ SCREENS.stock = {
 function stockDetailHtml(kind, id) {
   const i = itemInfo(kind, id); if (!i) return '<div class="empty">ไม่พบรายการ</div>';
   const lots = kind === 'F'
-    ? fgLotsOf(id).sort((a, b) => expT(a.ExpDate) - expT(b.ExpDate)).map(l => ({ label: l.Lot, qty: l.Qty, exp: l.ExpDate, sub: l.MfgDate ? 'ผลิต ' + fmtDate(l.MfgDate) : '' }))
+    ? fgLotsOf(id).sort((a, b) => expT(a.ExpDate) - expT(b.ExpDate)).map(l => ({ label: l.Lot, qty: l.Qty, exp: l.ExpDate, sub: l.MfgDate ? 'ผลิต ' + fmtDate(l.MfgDate) : '',
+      locs: D.fgLoc.filter(x => x.FG_ID === id && x.Lot === l.Lot).sort((a, b) => num(b.Qty) - num(a.Qty)) }))
     : lotsOf(id).map(l => ({ label: lotLabel(l), qty: l.Qty, exp: l.ExpDate, sub: l.ReceiveDate ? 'รับ ' + fmtDate(l.ReceiveDate) : '' }));
   const sum = lots.reduce((s, l) => s + num(l.qty), 0);
   return `<div style="margin-bottom:10px"><div class="bold" style="font-size:1.15rem">${esc(i.name)}</div><div class="muted small">${esc(i.id)}${i.supplier ? ' · ' + esc(i.supplier) : ''} · ${kind === 'F' ? 'สินค้าสำเร็จรูป' : esc(catName(i.cat))}</div></div>
@@ -467,7 +469,8 @@ function stockDetailHtml(kind, id) {
     ${i.min != null && i.stock < num(i.min) ? `<div class="err"><i class="fa-solid fa-triangle-exclamation"></i> ต่ำกว่าขั้นต่ำ (${fq(i.min, i.cat)})</div>` : ''}
     <h3 style="margin:12px 0 4px;color:var(--blue)">รายล็อต (${lots.length})${kind === 'F' ? '' : ' — เรียงตามวันหมดอายุ (FEFO)'}</h3>
     ${lots.map(l => { const d = daysLeft(l.exp); return `<div class="lotrow"><div class="grow"><div class="bold">${esc(l.label)}</div><div class="muted small">${esc(l.sub)}${l.exp ? ` · หมดอายุ ${fmtDate(l.exp)}` : ''}</div>
-      ${d != null ? `<span class="pill ${d < 0 ? 'bad' : d <= 7 ? 'warn' : 'ok'}">${d < 0 ? `หมดอายุแล้ว ${-d} วัน` : d === 0 ? 'หมดอายุวันนี้' : `อีก ${d} วัน`}</span>` : '<span class="pill">ไม่ระบุวันหมดอายุ</span>'}</div>
+      ${d != null ? `<span class="pill ${d < 0 ? 'bad' : d <= 7 ? 'warn' : 'ok'}">${d < 0 ? `หมดอายุแล้ว ${-d} วัน` : d === 0 ? 'หมดอายุวันนี้' : `อีก ${d} วัน`}</span>` : '<span class="pill">ไม่ระบุวันหมดอายุ</span>'}
+      ${(l.locs || []).length ? `<div style="margin-top:4px">${l.locs.map(x => `<span class="pill ${x.Location === 'ไม่ระบุ' ? '' : 'info'}"><i class="fa-solid fa-location-dot"></i> ${esc(x.Location)} ${fq(x.Qty)}</span>`).join('')}</div>` : ''}</div>
       <div class="qty-big">${fq(l.qty, i.cat)}<small>${esc(i.unit)}</small></div></div>`; }).join('') || '<div class="empty">ไม่มีสต็อกคงเหลือ</div>'}
     ${lots.length > 1 ? `<div class="right muted small" style="margin-top:6px">รวมจากล็อต ${fq(sum, i.cat)} ${esc(i.unit)}</div>` : ''}
     <div class="grid2" style="margin-top:14px">

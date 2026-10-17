@@ -2661,6 +2661,12 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
             <label class="form-label">วันที่รับเข้าคลัง</label>
             <input id="fgr-date" type="date" class="form-control">
           </div>
+          <div class="col-12">
+            <label class="form-label">สถานที่เก็บ<span class="text-danger">*</span></label>
+            <select id="fgr-loc" class="form-select"></select>
+            <div class="invalid-feedback" id="fgr-loc-err"></div>
+            <div class="form-text">ล็อตเดียวเก็บหลายที่ได้ — รับเข้าแยกทีละที่ (ครั้งละ 1 ที่เก็บ ใส่จำนวนที่เก็บที่นั่น) · ย้ายที่เก็บภายหลังได้ที่หน้า Stock FG</div>
+          </div>
           <div class="col-12 d-none" id="fgr-general-note-wrap">
             <label class="form-label">หมายเหตุ</label>
             <textarea id="fgr-note" class="form-control" rows="2"></textarea>
@@ -5581,8 +5587,9 @@ const EDIT_TYPES = {
     // editReqOpen ท้ายบล็อก erq-fields.innerHTML ที่ผูก oninput ไว้เฉพาะ type นี้ ไม่เรียกตอนเปิดฟอร์มครั้งแรก)
     info: 'ถ้ารับเข้าคลัง FG แล้ว เปลี่ยน Lot ไม่ได้ · วันผลิต/หมดอายุจะเปลี่ยนตามในสต็อก FG ด้วย · จำนวนผลิตได้ (สุทธิ) คำนวณอัตโนมัติจากได้ทั้งหมด − เสีย' },
   fg_receive: { label: 'รับ FG เข้าคลัง', icon: 'fa-box-open', table: 'fg_receive', pk: 'FGReceive_ID',
-    fields: { Qty: 'จำนวนรับ', ExpDate: 'วันหมดอายุ', ReceiveDate: 'วันที่รับ', Note: 'หมายเหตุ' },
-    form: [{ k: 'Qty', type: 'number', req: true }, { k: 'ExpDate', type: 'date' }, { k: 'ReceiveDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
+    fields: { Qty: 'จำนวนรับ', ExpDate: 'วันหมดอายุ', ReceiveDate: 'วันที่รับ', Note: 'หมายเหตุ', Location: 'สถานที่เก็บ' },
+    // Location = สถานที่เก็บ (2026-10-18) — เปลี่ยนที่เก็บ = ย้ายยอดของใบรับนี้ไปที่เก็บใหม่ตอนอนุมัติ (migration_2026-10-18_fg_locations.sql)
+    form: [{ k: 'Qty', type: 'number', req: true }, { k: 'ExpDate', type: 'date' }, { k: 'ReceiveDate', type: 'date', req: true }, { k: 'Location', type: 'select' }, { k: 'Note', type: 'textarea' }],
     info: 'สต็อก FG ล็อตนี้ปรับตามส่วนต่างตอนแอดมินอนุมัติ (ลดได้ไม่เกินที่ยังเหลือในคลัง) — แก้วันหมดอายุจะปรับล็อตในสต็อก FG (คีย์เดียวกับ Lot นี้) ตามไปด้วย' },
   // ขอลบรายการรับ FG ทั้งแถว (ไม่ใช่แก้ทีละช่อง) — เหตุผลเดียวกับ issue_production_delete/prep_orders_delete
   // (ผู้ใช้ขอ 2026-10-05 ให้สอดคล้องกับที่ prodRecordDelete บล็อกการลบถ้ารับ FG ไปแล้ว — ต้องมีทางลบรับ FG
@@ -5823,6 +5830,7 @@ async function rcvEditSubmit() {
 let _editForm = null;   // {type, id, row}
 async function editReqOpen(type, id) {
   const t = EDIT_TYPES[type];
+  if (type === 'fg_receive') await fgLocLoad();   // รายชื่อสถานที่เก็บให้ช่อง Location
   const { data: row, error } = await _sb.from(t.table).select('*').eq(t.pk, id).maybeSingle();
   if (error || !row) { Swal.fire('โหลดรายการไม่ได้', esc(error?.message || 'ไม่พบรายการ'), 'error'); return; }
   let lockLot = false;
@@ -5846,7 +5854,9 @@ async function editReqOpen(type, id) {
     const lbl = `${esc(t.fields[f.k])}${f.req ? '<span class="text-danger">*</span>' : ''}`;
     const dis = f.k === 'ProdLot' && lockLot ? 'disabled title="รับเข้าคลัง FG แล้ว — เปลี่ยน Lot ไม่ได้"'
       : (type === 'production_records' && f.k === 'QtyProduced') ? 'readonly style="background:#f1f5f9" title="คำนวณอัตโนมัติจากได้ทั้งหมด − เสีย"' : '';
-    const input = f.type === 'textarea'
+    const input = f.type === 'select'
+      ? `<select id="erq-f-${f.k}" class="form-select"><option value="">— ไม่ระบุ —</option>${[..._fgLocList, ...(v && !_fgLocList.includes(v) ? [v] : [])].map(o => `<option value="${esc(o)}"${o === v ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`
+      : f.type === 'textarea'
       ? `<textarea id="erq-f-${f.k}" class="form-control" rows="2">${esc(v)}</textarea>`
       : f.unit ? `<div class="input-group has-validation"><input id="erq-f-${f.k}" type="${f.type}" step="any" class="form-control" value="${esc(v)}" ${dis}>
           <span class="input-group-text">${esc(f.unit(row) || '')}</span><div class="invalid-feedback" id="erq-f-${f.k}-err"></div></div>`
@@ -9972,6 +9982,7 @@ function fgReceiveOpenForm(prodId) {
   document.getElementById('fgr-title').textContent = `รับ FG เข้าคลัง (${prodId})` + (p._received > 0 ? ` — รับไปแล้ว ${_bomFmtQty(p._received)}, เหลือ ${_bomFmtQty(p._remaining)}` : '');
   document.getElementById('fgr-qty').value = p._remaining ?? p.QtyProduced;
   document.getElementById('fgr-date').value = todayStr();
+  _fgrLocFill();
   new bootstrap.Modal(document.getElementById('fgReceiveModal')).show();
 }
 function fgReceiveOpenGeneral() {
@@ -9989,7 +10000,26 @@ function fgReceiveOpenGeneral() {
   document.getElementById('fgr-note').value = '';
   document.getElementById('fgr-qty').value = '';
   document.getElementById('fgr-date').value = todayStr();
+  _fgrLocFill();
   new bootstrap.Modal(document.getElementById('fgReceiveModal')).show();
+}
+// ช่องสถานที่เก็บของฟอร์มรับ FG — จำที่เลือกครั้งล่าสุดไว้ในเครื่องเป็นค่าเริ่มต้น (รับหลายใบติดกันที่เดียวกันไม่ต้องเลือกซ้ำ) ต้องเลือกเสมอ
+const FGR_LOC_KEY = 'bmflow.fgrLastLoc';
+function _fgrLocFill() {
+  const sel = document.getElementById('fgr-loc');
+  const draw = () => {
+    const keep = sel.value; let last = ''; try { last = localStorage.getItem(FGR_LOC_KEY) || ''; } catch (e) {}
+    sel.innerHTML = '<option value="">-- เลือกสถานที่เก็บ --</option>' + _fgLocList.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+    sel.value = _fgLocList.includes(keep) ? keep : (_fgLocList.includes(last) ? last : '');
+  };
+  _modalClearErrors(['fgr-loc']);
+  draw(); fgLocLoad().then(draw).catch(() => {});   // รายชื่อจากตารางอาจต่างจากค่าตั้งต้น — โหลดแล้ววาดซ้ำ คงค่าที่เลือกไว้
+}
+function _fgrLocRead() {
+  const v = document.getElementById('fgr-loc').value;
+  if (!v) { _modalShowError('fgr-loc', 'เลือกสถานที่เก็บ'); return null; }
+  try { localStorage.setItem(FGR_LOC_KEY, v); } catch (e) {}
+  return v;
 }
 // เลขที่รับ FG ถัดไป = ปีเดือน+ครั้งที่ ต่อกันไม่มีขีดคั่น รีเซ็ตทุกเดือน เช่น FGR-260901 = รับครั้งที่ 1
 // ของเดือน 09 ปี 2569 (ผู้ใช้ขอ 2026-09-28) — คนละแบบกับ MO_ID ที่รีเซ็ตทุกปีและมีขีดคั่นก่อนเลขครั้ง
@@ -10012,6 +10042,7 @@ async function fgReceiveModalSave() {
   _modalClearErrors(['fgr-qty']);
   const qty = parseFloat(document.getElementById('fgr-qty').value);
   if (!qty || qty <= 0) { _modalShowError('fgr-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
+  const loc = _fgrLocRead(); if (!loc) return;
   const ready = _fgReadyMap[_fgReceiveProdId];
   // กันรับเข้าคลังเกินยอดที่เหลือจากการผลิตจริง (เผื่อผลิตล็อตเดียวแต่รับสะสมหลายวัน 2026-10-05)
   if (ready && qty > ready._remaining + 1e-6) { _modalShowError('fgr-qty', `เกินยอดที่เหลือ (${_bomFmtQty(ready._remaining)})`); return; }
@@ -10026,9 +10057,9 @@ async function fgReceiveModalSave() {
   const { error } = await _sb.rpc('fg_receive_post', {
     p_fgreceive_id: await _nextFgReceiveId(), p_prod_id: _fgReceiveProdId, p_fg_id: p.FG_ID, p_lot: p.ProdLot, p_qty: qty,
     p_mfg: p.MfgDate, p_exp: p.ExpDate, p_receive_date: document.getElementById('fgr-date').value || todayStr(),
-    p_note: null, p_mo_id: p.MO_ID || null, p_fully_received: remainingAfter <= 1e-6,
+    p_note: null, p_mo_id: p.MO_ID || null, p_fully_received: remainingAfter <= 1e-6, p_loc: loc,
   });
-  if (error) { _rpcErr(error, 'รับ FG เข้าคลังไม่สำเร็จ', 'migration_2026-10-11_atomic_prod_fg_rpc.sql'); return; }
+  if (error) { _rpcErr(error, 'รับ FG เข้าคลังไม่สำเร็จ', 'migration_2026-10-18_fg_locations.sql (และ migration_2026-10-11_atomic_prod_fg_rpc.sql ถ้ายังไม่ได้รัน)'); return; }
   if (remainingAfter <= 1e-6 && p.MO_ID) _planCache = [];
   bootstrap.Modal.getInstance(document.getElementById('fgReceiveModal')).hide();
   fgReceiveLoad();
@@ -10045,14 +10076,15 @@ async function fgReceiveGeneralSave() {
   if (!qty || qty <= 0) { _modalShowError('fgr-qty', 'กรอกจำนวนให้ถูกต้อง'); return; }
   const mfgDate = document.getElementById('fgr-mfgdate').value || null;
   const expDate = document.getElementById('fgr-exp').value || null;
+  const loc = _fgrLocRead(); if (!loc) return;
   const { error } = await _sb.rpc('fg_receive_post', {
     p_fgreceive_id: await _nextFgReceiveId(), p_prod_id: null, p_fg_id: fgId, p_lot: lot, p_qty: qty,
     p_mfg: mfgDate, p_exp: expDate, p_receive_date: document.getElementById('fgr-date').value || todayStr(),
-    p_note: document.getElementById('fgr-note').value.trim() || null, p_mo_id: null, p_fully_received: false,
+    p_note: document.getElementById('fgr-note').value.trim() || null, p_mo_id: null, p_fully_received: false, p_loc: loc,
   });
   if (error) {
     if (error.code === '23502') { Swal.fire('รับเข้าคลังแบบทั่วไปยังใช้ไม่ได้', 'แอดมินต้องรัน <code>migration_2026-09-28_fg_receive_general.sql</code> ใน Supabase ก่อน', 'error'); return; }
-    _rpcErr(error, 'รับ FG เข้าคลังไม่สำเร็จ', 'migration_2026-10-11_atomic_prod_fg_rpc.sql'); return;
+    _rpcErr(error, 'รับ FG เข้าคลังไม่สำเร็จ', 'migration_2026-10-18_fg_locations.sql (และ migration_2026-10-11_atomic_prod_fg_rpc.sql ถ้ายังไม่ได้รัน)'); return;
   }
   bootstrap.Modal.getInstance(document.getElementById('fgReceiveModal')).hide();
   fgReceiveLoad();
@@ -10062,9 +10094,20 @@ async function fgReceiveGeneralSave() {
 // STOCK FG
 // ═══════════════════════════════════════════════════════════
 let _stockFgCache = [];
+// สถานที่เก็บ FG (2026-10-18 ผู้ใช้ขอ คลังชั้น 3 / คลังชั้น 6 / โกดังเก็บของ) — รายชื่ออ่านจากตาราง storage_locations ถ้ายังไม่รัน SQL ใช้ 3 ที่ตั้งต้นนี้
+// _stockFgLocCache = ยอดต่อ (สินค้า, ล็อต, ที่เก็บ) จาก stock_fg_loc ('ไม่ระบุ' = ล็อตเก่าที่ยังไม่เคยกำหนดที่เก็บ) — migration_2026-10-18_fg_locations.sql
+const FG_LOC_DEFAULT = ['คลังชั้น 3', 'คลังชั้น 6', 'โกดังเก็บของ'], FG_LOC_NONE = 'ไม่ระบุ';
+let _fgLocList = FG_LOC_DEFAULT.slice(), _stockFgLocCache = [];
+async function fgLocLoad() {
+  const [locs, rows] = await Promise.all([_sb.from('storage_locations').select('Name').eq('Active', true).order('SortOrder'), _sb.from('stock_fg_loc').select('*')]);
+  if (!locs.error && locs.data?.length) _fgLocList = locs.data.map(l => l.Name);
+  _stockFgLocCache = rows.error ? [] : (rows.data || []);
+}
+const fgLotLocs = (fgId, lot) => _stockFgLocCache.filter(r => r.FG_ID === fgId && r.Lot === lot && (parseFloat(r.Qty) || 0) > 0);
 async function stockFgLoad() {
   if (!_fgMasterCache.length) await fgMasterLoad();
-  _stockFgCache = await sbRun(_sb.from('stock_fg').select('*').order('ExpDate'), 'โหลดสต็อก FG') || [];
+  [_stockFgCache] = await Promise.all([sbRun(_sb.from('stock_fg').select('*').order('ExpDate'), 'โหลดสต็อก FG'), fgLocLoad()]);
+  _stockFgCache = _stockFgCache || [];
   stockFgRenderTable();
 }
 let _stockFgLotExpanded = new Set();   // FG_ID ที่กางดูล็อตอยู่
@@ -10097,8 +10140,11 @@ function stockFgRenderTable() {
     else if (d !== null && d < 0) { statusHtml = badge('หมดอายุแล้ว', 'danger'); cardCls = ' stock-card-low'; }
     else if (d !== null && d <= EXPIRING_SOON_DAYS) { statusHtml = badge(`ใกล้หมดอายุ (${d} วัน)`, 'warning'); cardCls = ' stock-card-warn'; }
     const lotDetail = !lots.length ? '' : `<div class="stock-lot-detail" style="${expanded ? '' : 'display:none'}"><div class="table-responsive"><table class="table table-sm mb-0">
-      <thead><tr><th>Lot</th><th class="text-end">คงเหลือ</th><th>วันผลิต</th><th>วันหมดอายุ</th></tr></thead><tbody>
-      ${lots.map(l => `<tr><td>${esc(l.Lot)}</td><td class="text-end">${_bomFmtQty(l.Qty)}</td><td>${fmtDate(l.MfgDate)}</td><td class="text-nowrap">${_expBadge(l.ExpDate)}</td></tr>`).join('')}
+      <thead><tr><th>Lot</th><th class="text-end">คงเหลือ</th><th>สถานที่เก็บ</th><th>วันผลิต</th><th>วันหมดอายุ</th></tr></thead><tbody>
+      ${lots.map(l => { const lc = fgLotLocs(id, l.Lot); return `<tr><td>${esc(l.Lot)}</td><td class="text-end">${_bomFmtQty(l.Qty)}</td>
+        <td>${lc.length ? lc.map(x => `<span class="badge ${x.Location === FG_LOC_NONE ? 'text-bg-light border text-muted' : 'text-bg-info'} me-1">${esc(x.Location)}: ${_bomFmtQty(x.Qty)}</span>`).join('') : '<span class="text-muted">—</span>'}
+          <button class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.72rem" data-fg="${esc(id)}" data-lot="${esc(l.Lot)}" onclick="fgLocMoveOpen(this.dataset.fg,this.dataset.lot)" title="ย้ายที่เก็บของล็อตนี้"><i class="fa-solid fa-right-left"></i> ย้าย</button></td>
+        <td>${fmtDate(l.MfgDate)}</td><td class="text-nowrap">${_expBadge(l.ExpDate)}</td></tr>`; }).join('')}
       </tbody></table></div></div>`;
     return `<div class="glass-card stock-card${cardCls}">
       <div class="stock-card-head${expanded ? ' expanded' : ''}" ${lots.length ? `onclick="stockFgToggleLots('${esc(id)}')" title="กดเพื่อดูรายล็อต"` : ''}>
@@ -10113,6 +10159,39 @@ function stockFgRenderTable() {
       ${lotDetail}
     </div>`;
   }).join('') || '<div class="glass-card text-center text-muted py-4">ยังไม่มีสต็อก</div>';
+}
+
+// ย้ายที่เก็บของล็อต FG (ภายในล็อตเดียวกัน) — fg_loc_move ฝั่ง DB ตรวจยอดต้นทางให้ (2026-10-18)
+async function fgLocMoveOpen(fgId, lot) {
+  await fgLocLoad();
+  const rows = fgLotLocs(fgId, lot);
+  if (!rows.length) { Swal.fire('ไม่มียอดให้ย้าย', 'ล็อตนี้ยังไม่มียอดคงเหลือที่ระบุที่เก็บ', 'info'); return; }
+  const fg = _fgMasterCache.find(f => f.FG_ID === fgId), unit = fg?.Unit || '';
+  const fromOpts = rows.map(r => `<option value="${esc(r.Location)}" data-q="${r.Qty}">${esc(r.Location)} (เหลือ ${_bomFmtQty(r.Qty)})</option>`).join('');
+  const toOpts = _fgLocList.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  const res = await Swal.fire({
+    title: 'ย้ายที่เก็บ', width: 480, showCancelButton: true, confirmButtonText: 'ย้าย', cancelButtonText: 'ยกเลิก',
+    html: `<div class="text-start small"><div class="mb-2 text-muted">${esc(fg?.FG_Name || fgId)} · Lot ${esc(lot)}</div>
+      <label class="form-label mb-1">ย้ายจาก</label><select id="lm-from" class="form-select mb-2">${fromOpts}</select>
+      <label class="form-label mb-1">ไปที่</label><select id="lm-to" class="form-select mb-2">${toOpts}</select>
+      <label class="form-label mb-1">จำนวนที่ย้าย (${esc(unit)})</label><input id="lm-qty" type="number" step="any" min="0" class="form-control"></div>`,
+    didOpen: () => {
+      const from = document.getElementById('lm-from'), to = document.getElementById('lm-to'), qty = document.getElementById('lm-qty');
+      const sync = () => { qty.value = from.selectedOptions[0]?.dataset.q || ''; const first = [...to.options].find(o => o.value !== from.value); if (to.value === from.value && first) to.value = first.value; };
+      from.onchange = sync; sync();
+    },
+    preConfirm: () => {
+      const from = document.getElementById('lm-from').value, to = document.getElementById('lm-to').value, q = parseFloat(document.getElementById('lm-qty').value);
+      if (!(q > 0)) { Swal.showValidationMessage('กรอกจำนวนที่ย้าย'); return false; }
+      if (from === to) { Swal.showValidationMessage('เลือกที่เก็บปลายทางให้ต่างจากต้นทาง'); return false; }
+      return { from, to, q };
+    },
+  });
+  if (!res.isConfirmed) return;
+  const { error } = await _sb.rpc('fg_loc_move', { p_fg_id: fgId, p_lot: lot, p_from: res.value.from, p_to: res.value.to, p_qty: res.value.q });
+  if (error) { _rpcErr(error, 'ย้ายที่เก็บไม่สำเร็จ', 'migration_2026-10-18_fg_locations.sql'); return; }
+  await stockFgLoad();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2000, title: `ย้าย ${_bomFmtQty(res.value.q)} ไป ${res.value.to} แล้ว` });
 }
 
 // ═══════════════════════════════════════════════════════════
