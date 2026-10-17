@@ -4,7 +4,7 @@
 // • หน้า m.html: network-first (ได้เวอร์ชันล่าสุดเสมอเมื่อออนไลน์) แล้วสำรองจาก cache
 // • ไลบรารี/ฟอนต์/ไอคอนจาก CDN + ไฟล์ static ของเรา: stale-while-revalidate
 // • Supabase (*.supabase.co) และ method ที่ไม่ใช่ GET: ไม่แตะเลย (ผ่านตรง)
-const CACHE = 'bmflow-m-v1';
+const CACHE = 'bmflow-m-v2';   // v2: ไอคอนเปลี่ยนเป็นโลโก้ Blooming (2026-10-17) — เปลี่ยนเลขเวอร์ชันเพื่อให้เครื่องที่เคยติดตั้งดึงไฟล์ใหม่
 const SHELL = ['m.html', 'manifest.json', 'assets/icons/icon-192.png', 'assets/icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
