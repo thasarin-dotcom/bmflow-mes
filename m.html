@@ -33,7 +33,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* ── โครง ── */
 #app { display: flex; flex-direction: column; height: 100%; }
 .topbar { flex: none; display: flex; align-items: center; gap: 8px; padding: calc(8px + var(--safe-t)) 12px 8px; background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; }
-.topbar h1 { flex: 1; margin: 0; font-size: 1.15rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar h1 { flex: 1; min-width: 0; margin: 0; font-size: 1.1rem; font-weight: 700; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }   /* ชื่อหน้ายาว (เช่น "รับจากโอนย้ายคลังใหญ่") ขึ้นได้ 2 บรรทัดเมื่อมีโลโก้ในเฮดเดอร์ */
+/* โลโก้ Blooming ในเฮดเดอร์ทุกหน้า (ผู้ใช้ขอ 2026-10-17) — วางในชิปขาวเพราะโลโก้เป็นตัวหนังสือสีเข้ม อ่านไม่ออกบนพื้นน้ำเงินของเฮดเดอร์; แตะ = กลับหน้าแรก */
+.logo-chip { flex: none; display: inline-flex; align-items: center; height: 44px; padding: 4px 9px; background: #fff; border-radius: 12px; cursor: pointer; }
+.logo-chip img { height: 34px; width: auto; display: block; }
 .icon-btn { width: 46px; height: 46px; border: 0; border-radius: 12px; background: rgba(255,255,255,.16); color: #fff; font-size: 1.15rem; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .icon-btn:active { background: rgba(255,255,255,.3); }
 .offline { flex: none; background: var(--bad); color: #fff; text-align: center; padding: 6px 10px; font-weight: 600; font-size: .9rem; }
@@ -121,6 +124,8 @@ input.in.bad { border-color: var(--bad); background: #fff5f5; }
 /* ── เข้าสู่ระบบ ── */
 #login { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(160deg, #1e3a8a, #2563eb 60%, #60a5fa); }
 #login .box { width: 100%; max-width: 420px; background: #fff; border-radius: 24px; padding: 26px 22px; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+#login .box { text-align: center; } #login .fld { text-align: left; } #login .err { text-align: left; }
+#login .logo { display: block; margin: 0 auto 14px; height: 76px; width: auto; max-width: 70%; object-fit: contain; }   /* โลโก้ Blooming (ไฟล์เดียวกับหน้า desktop) */
 #login h1 { margin: 0 0 4px; color: var(--blue); font-size: 1.6rem; } #login p { margin: 0 0 18px; color: var(--mute); }
 /* ── แท็บเล็ต / จอกว้าง ── */
 @media (min-width: 700px) {
@@ -142,6 +147,7 @@ input.in.bad { border-color: var(--bad); background: #fff5f5; }
 <!-- ═══ เข้าสู่ระบบ ═══ -->
 <div id="login" hidden>
   <div class="box">
+    <img class="logo" src="assets/logo-blooming.webp" alt="Blooming Company Limited" onerror="this.style.display='none'">
     <h1><i class="fa-solid fa-leaf"></i> BM Flow</h1>
     <p>หน้างาน — คลัง / ผลิต / จัดส่ง</p>
     <div class="fld"><label>Username หรืออีเมล</label><input class="in" id="lgUser" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
@@ -155,6 +161,7 @@ input.in.bad { border-color: var(--bad); background: #fff5f5; }
 <div id="app" hidden>
   <header class="topbar">
     <button class="icon-btn" id="btnBack" onclick="goBack()" hidden aria-label="ย้อนกลับ"><i class="fa-solid fa-chevron-left"></i></button>
+    <span class="logo-chip" onclick="stack=[stack[0]];render()" title="หน้าแรก"><img src="assets/logo-blooming.webp" alt="Blooming" onerror="this.parentNode.style.display='none'"></span>
     <h1 id="title">BM Flow</h1>
     <button class="icon-btn" onclick="refreshAll()" aria-label="รีเฟรชข้อมูล" title="รีเฟรชข้อมูล"><i class="fa-solid fa-rotate"></i></button>
   </header>
