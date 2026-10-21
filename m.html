@@ -191,6 +191,8 @@ const _sb = window.supabase.createClient(SB_URL, SB_KEY);
 // ── ค่าคงที่/ตัวช่วย (ตรงกับ index.html) ──
 const C_FRESH = 'วัตถุดิบ', C_DRY = 'วัตถุดิบแห้ง', C_CHEM = 'วัตถุดิบเคมี', C_PREP = 'วัตถุดิบพร้อมผลิต', C_PKG = 'แพ็คเกจจิ้ง';
 const RAW_ALL = [C_FRESH, C_DRY, C_CHEM, C_PREP], RAW_GROUP = [C_FRESH, C_DRY, C_CHEM];
+// FG ทั้งหมดอยู่คลัง 13 (ผู้ใช้ 2026-10-21) — วัตถุดิบ/แพ็คเกจจิ้งคลัง 10
+const FG_WH = 'คลัง 13';
 const catName = c => ({ [C_FRESH]: 'วัตถุดิบสด' }[c] || c || 'วัตถุดิบสด');
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -336,7 +338,7 @@ function pickItem(opts = {}) {
       if (t) list = list.filter(i => [i.id, i.name, i.supplier].join(' ').toLowerCase().includes(t))
         .sort((a, b) => (String(a.id).toLowerCase() === t ? -1 : 0) - (String(b.id).toLowerCase() === t ? -1 : 0));
       $('#pkList', sh).innerHTML = list.slice(0, 60).map(i => `<div class="row-item" data-k="${i.kind}" data-id="${esc(i.id)}">
-        <div class="grow"><div class="t">${esc(i.name)}</div><div class="s">${esc(i.id)}${i.supplier ? ' · ' + esc(i.supplier) : ''} · ${i.kind === 'F' ? 'สินค้าสำเร็จรูป' : esc(catName(i.cat))}</div></div>
+        <div class="grow"><div class="t">${esc(i.name)}</div><div class="s">${esc(i.id)}${i.supplier ? ' · ' + esc(i.supplier) : ''} · ${i.kind === 'F' ? ('สินค้าสำเร็จรูป · ' + FG_WH) : esc(catName(i.cat))}</div></div>
         <div class="qty-big">${fq(i.stock, i.cat)}<small>${esc(i.unit)}</small></div></div>`).join('') + (list.length > 60 ? `<div class="empty small">แสดง 60 รายการแรก — พิมพ์ค้นหาให้แคบลง</div>` : '') || '<div class="empty">ไม่พบรายการ</div>';
     };
     const pick = (kind, id) => { const r = _pickResolve; _pickResolve = null; closeSheet(); r && r(itemInfo(kind, id)); };
@@ -399,7 +401,7 @@ SCREENS.home = {
         <button class="tile" onclick="go('receive')"><i class="fa-solid fa-inbox"></i>รับเข้าคลัง<small>รับปกติ / รับโอนย้าย</small></button>
         <button class="tile" onclick="go('issue')"><i class="fa-solid fa-dolly"></i>เบิกเข้าไลน์ผลิต${planned ? `<span class="badge">${planned} MO รอเบิก</span>` : '<small>เลือก MO แล้วเบิกตามสูตร</small>'}</button>
         <button class="tile" onclick="go('misc')"><i class="fa-solid fa-arrow-right-from-bracket"></i>เบ็ดเตล็ด / โอนย้าย<small>เบิกใช้งานอื่น · โอนไปปลายทาง</small></button>
-        <button class="tile" onclick="go('fgout')"><i class="fa-solid fa-truck"></i>เบิก FG / จัดส่ง${openCo ? `<span class="badge">${openCo} CO ค้างส่ง</span>` : '<small>ตาม CO หลายล็อต FIFO</small>'}</button>
+        <button class="tile" onclick="go('fgout')"><i class="fa-solid fa-truck"></i>เบิก FG / จัดส่ง (${FG_WH})${openCo ? `<span class="badge">${openCo} CO ค้างส่ง</span>` : '<small>ตาม CO หลายล็อต FIFO</small>'}</button>
         <button class="tile" onclick="installApp()"><i class="fa-solid fa-mobile-screen-button"></i>ติดตั้งลงหน้าจอ<small>เปิดเร็วเหมือนแอพ</small></button>
       </div>
       <div class="muted small right" style="margin-top:14px">ข้อมูลอัปเดต ${new Date(_loadedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} · กดปุ่ม ⟳ ด้านบนเพื่อรีเฟรช</div>`;
@@ -467,7 +469,7 @@ function stockDetailHtml(kind, id) {
       locs: D.fgLoc.filter(x => x.FG_ID === id && x.Lot === l.Lot).sort((a, b) => num(b.Qty) - num(a.Qty)) }))
     : lotsOf(id).map(l => ({ label: lotLabel(l), qty: l.Qty, exp: l.ExpDate, sub: l.ReceiveDate ? 'รับ ' + fmtDate(l.ReceiveDate) : '' }));
   const sum = lots.reduce((s, l) => s + num(l.qty), 0);
-  return `<div style="margin-bottom:10px"><div class="bold" style="font-size:1.15rem">${esc(i.name)}</div><div class="muted small">${esc(i.id)}${i.supplier ? ' · ' + esc(i.supplier) : ''} · ${kind === 'F' ? 'สินค้าสำเร็จรูป' : esc(catName(i.cat))}</div></div>
+  return `<div style="margin-bottom:10px"><div class="bold" style="font-size:1.15rem">${esc(i.name)}</div><div class="muted small">${esc(i.id)}${i.supplier ? ' · ' + esc(i.supplier) : ''} · ${kind === 'F' ? ('สินค้าสำเร็จรูป · ' + FG_WH) : esc(catName(i.cat))}</div></div>
     <div class="card" style="background:#eff6ff;display:flex;align-items:baseline;justify-content:space-between"><span class="muted">คงเหลือรวม</span><span class="bold" style="font-size:1.9rem;color:var(--blue)">${fq(i.stock, i.cat)} <small style="font-size:1rem">${esc(i.unit)}</small></span></div>
     ${i.min != null && i.stock < num(i.min) ? `<div class="err"><i class="fa-solid fa-triangle-exclamation"></i> ต่ำกว่าขั้นต่ำ (${fq(i.min, i.cat)})</div>` : ''}
     <h3 style="margin:12px 0 4px;color:var(--blue)">รายล็อต (${lots.length})${kind === 'F' ? '' : ' — เรียงตามวันหมดอายุ (FEFO)'}</h3>
@@ -775,7 +777,7 @@ async function msAdd(seed) {
 }
 function msPaint() {
   $('#msCount').textContent = MS.lines.length ? `(${MS.lines.length})` : '';
-  $('#msLines').innerHTML = MS.lines.map((l, k) => `<div class="line" data-k="${k}"><div class="head"><div class="grow"><div class="bold">${esc(l.item.name)}</div><div class="muted small">${esc(l.item.id)} · ${l.item.kind === 'F' ? 'FG' : esc(catName(l.item.cat))}</div></div>
+  $('#msLines').innerHTML = MS.lines.map((l, k) => `<div class="line" data-k="${k}"><div class="head"><div class="grow"><div class="bold">${esc(l.item.name)}</div><div class="muted small">${esc(l.item.id)} · ${l.item.kind === 'F' ? ('FG · ' + FG_WH) : esc(catName(l.item.cat))}</div></div>
       <button class="btn btn-danger btn-sm" onclick="msDel(${k})" aria-label="ลบรายการ"><i class="fa-solid fa-trash"></i></button></div>
     <div class="fld"><label>ล็อต (ใกล้หมดอายุก่อน)</label><select class="in" onchange="MS.lines[${k}].lot=this.value;msCalc()">${l.lots.length ? l.lots.map(o => `<option value="${esc(o.v)}"${o.v === l.lot ? ' selected' : ''}>${esc(o.label)} — เหลือ ${fq(o.qty, l.item.cat)}${o.exp ? ' · หมดอายุ ' + fmtDate(o.exp) : ''}</option>`).join('') : '<option value="">— ไม่มีสต็อกคงเหลือ —</option>'}</select></div>
     <div class="fld" style="margin-bottom:4px"><label>จำนวน <span class="req">*</span></label><div class="in-group"><input class="in f-qty" type="number" inputmode="decimal" step="any" min="0" value="${esc(l.qty)}" oninput="MS.lines[${k}].qty=this.value;msCalc()"><span class="unit">${esc(l.item.unit)}</span></div></div>
@@ -818,7 +820,7 @@ async function saveMisc() {
 // ═══════════════ เบิก FG ตาม CO / จัดส่ง ═══════════════
 let FO = { tab: 'co', q: '' };
 SCREENS.fgout = {
-  title: 'เบิก FG / จัดส่ง', refreshable: true,
+  title: 'เบิก FG / จัดส่ง (คลัง 13)', refreshable: true,
   render(_, v) {
     const dl = D.dlv.length;
     v.innerHTML = `<div class="seg"><button class="${FO.tab === 'co' ? 'on' : ''}" data-t="co">เบิกตาม CO</button><button class="${FO.tab === 'dl' ? 'on' : ''}" data-t="dl">จัดส่ง${dl ? ` (${dl})` : ''}</button></div><div id="foBody"></div>`;

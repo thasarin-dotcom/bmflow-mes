@@ -1189,7 +1189,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
   <!-- ═══════════════ FG RECEIVE ═══════════════ -->
   <div class="page-view" id="page-fgreceive">
     <div class="page-header d-flex justify-content-between align-items-start">
-      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง</h4><div class="text-white-50 small">รับสินค้าที่บันทึกผลิตแล้วเข้าคลังสินค้าสำเร็จรูป</div></div>
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง (คลัง 13)</h4><div class="text-white-50 small">รับสินค้าที่บันทึกผลิตแล้วเข้าคลังสินค้าสำเร็จรูป</div></div>
       <button class="btn btn-success" onclick="fgReceiveOpenGeneral()"><i class="fa-solid fa-plus me-1"></i>รับทั่วไป</button>
     </div>
     <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
@@ -1207,7 +1207,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
 
   <!-- ═══════════════ STOCK FG ═══════════════ -->
   <div class="page-view" id="page-stockfg">
-    <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-warehouse me-2"></i>Finished Goods</h4><div class="text-white-50 small">สต็อกสินค้าสำเร็จรูป — ยอดคงเหลือแยกตาม Lot / วันหมดอายุ</div></div>
+    <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-warehouse me-2"></i>Finished Goods (คลัง 13)</h4><div class="text-white-50 small">สต็อกสินค้าสำเร็จรูป — ยอดคงเหลือแยกตาม Lot / วันหมดอายุ</div></div>
     <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 mb-2">
       <div class="search-wrap"><input class="form-control search-input" id="stockFgSearch" placeholder="ค้นหา..." oninput="stockFgRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('stockFgSearch').value='';stockFgRenderTable()"></i></div>
       <select class="form-select w-auto" id="stockFgSort" onchange="stockFgRenderTable()" title="เรียงลำดับ">
@@ -1238,7 +1238,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
     <div class="scroll-content">
       <div class="row g-2 mb-3" id="coKpis"></div>
       <div class="glass-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-        <thead><tr><th>เลขที่ CO</th><th>ลูกค้า / PO</th><th>สินค้า</th><th class="text-end">สั่งซื้อ</th><th class="text-end">เบิกแล้ว</th><th class="text-end">คงค้าง</th><th class="text-end">FG ในสต็อก (พร้อมส่ง)</th><th>วันที่สั่ง</th><th>กำหนดส่ง</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
+        <thead><tr><th>เลขที่ CO</th><th>ลูกค้า / PO</th><th>สินค้า</th><th class="text-end">สั่งซื้อ</th><th class="text-end">เบิกแล้ว</th><th class="text-end">คงค้าง</th><th class="text-end">FG ในสต็อก คลัง 13 (พร้อมส่ง)</th><th>วันที่สั่ง</th><th>กำหนดส่ง</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
         <tbody id="coTableBody"></tbody>
       </table></div></div>
     </div>
@@ -1247,7 +1247,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
   <!-- ═══════════════ FG WITHDRAW / DELIVERY ═══════════════ -->
   <div class="page-view" id="page-fgout">
     <div class="page-header d-flex justify-content-between align-items-start">
-      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-truck me-2"></i>เบิก FG / จัดส่ง</h4><div class="text-white-50 small">เบิกสินค้าตาม CO (FIFO ผลิตก่อนเบิกก่อน เลือกได้หลายล็อต) และติดตามสถานะจัดส่ง</div></div>
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-truck me-2"></i>เบิก FG / จัดส่ง (คลัง 13)</h4><div class="text-white-50 small">เบิกสินค้าตาม CO (FIFO ผลิตก่อนเบิกก่อน เลือกได้หลายล็อต) และติดตามสถานะจัดส่ง</div></div>
       <button class="btn btn-light" onclick="showPage('miscout')" title="เบิกอื่น (ไม่ผูก CO) ย้ายไปหน้า เบิกเบ็ดเตล็ด / โอนย้าย แล้ว"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>เบิกเบ็ดเตล็ด / โอนย้าย</button>
     </div>
     <div class="scroll-content">
@@ -2622,7 +2622,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
-        <h5 class="modal-title"><i class="fa-solid fa-box-open me-2"></i><span id="fgr-title">รับ FG เข้าคลัง</span></h5>
+        <h5 class="modal-title"><i class="fa-solid fa-box-open me-2"></i><span id="fgr-title">รับ FG เข้าคลัง (คลัง 13)</span></h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -3006,6 +3006,8 @@ function badge(text, cls) { return `<span class="badge text-bg-${cls||'secondary
 // ซ้ำกัน 3 จุดในใบพิมพ์ (ใบรับเข้า/Stock Card) ถ้าวันหน้ามีคลังที่ 2 ต้องแก้โค้ดทีละจุด — รวมไว้ที่เดียวก่อน
 // (รีวิวระบบ 2026-10-11) ยังไม่ใช่ตารางข้อมูลจริงจัง แค่ลดจุดที่ต้องแก้ถ้าเปลี่ยนชื่อ/เพิ่มคลังในอนาคต
 const WAREHOUSE_LABEL = 'คลัง 10 (คลังผลิตชั้น 3)';
+// สินค้าสำเร็จรูป (FG) ทั้งหมดอยู่ที่ คลัง 13 (ผู้ใช้สั่ง 2026-10-21) — วัตถุดิบ/แพ็คเกจจิ้งใช้ WAREHOUSE_LABEL ด้านบน
+const FG_WAREHOUSE_LABEL = 'คลัง 13';
 // หมวดหมู่ rm_master: วัตถุดิบ (สด) / แพ็คเกจจิ้ง / วัตถุดิบพร้อมผลิต (ผ่านการคัด-ล้าง-อบ-บด-ย่อยแล้ว, migration_2026-09-25_prep.sql)
 const CAT_PREP = 'วัตถุดิบพร้อมผลิต';
 // อายุมาตรฐานของ "วัตถุดิบพร้อมผลิต" (ของสดหั่น/พร้อมใช้เลย) เมื่อยังไม่ได้ตั้ง ShelfLifeDays ต่อรายการไว้ —
@@ -9979,7 +9981,7 @@ function fgReceiveOpenForm(prodId) {
   // ผลิตล็อตเดียวแต่รับเข้าคลังได้หลายครั้งสะสม (2026-10-05) — ตั้งค่าเริ่มต้นเป็น "เหลือที่ยังไม่รับ" ไม่ใช่
   // ยอดผลิตเต็มจำนวน เผื่อเคยรับไปแล้วบางส่วนก่อนหน้า (p._remaining ไม่มีถ้าเรียกจากที่อื่นที่ยังไม่เคยคำนวณ —
   // fallback เป็น QtyProduced เต็มจำนวนเหมือนเดิม)
-  document.getElementById('fgr-title').textContent = `รับ FG เข้าคลัง (${prodId})` + (p._received > 0 ? ` — รับไปแล้ว ${_bomFmtQty(p._received)}, เหลือ ${_bomFmtQty(p._remaining)}` : '');
+  document.getElementById('fgr-title').textContent = `รับ FG เข้าคลัง (${FG_WAREHOUSE_LABEL}) — ${prodId}` + (p._received > 0 ? ` — รับไปแล้ว ${_bomFmtQty(p._received)}, เหลือ ${_bomFmtQty(p._remaining)}` : '');
   document.getElementById('fgr-qty').value = p._remaining ?? p.QtyProduced;
   document.getElementById('fgr-date').value = todayStr();
   _fgrLocFill();
@@ -9989,7 +9991,7 @@ function fgReceiveOpenGeneral() {
   _fgReceiveProdId = null;
   _fgReceiveMode = 'general';
   _modalClearErrors(['fgr-qty', 'fgr-fg', 'fgr-lot']);
-  document.getElementById('fgr-title').textContent = 'รับ FG เข้าคลัง (ทั่วไป)';
+  document.getElementById('fgr-title').textContent = `รับ FG เข้าคลัง (${FG_WAREHOUSE_LABEL} · ทั่วไป)`;
   document.getElementById('fgr-general-fields').classList.remove('d-none');
   document.getElementById('fgr-general-note-wrap').classList.remove('d-none');
   document.getElementById('fgr-fg').innerHTML = '<option value="">-- เลือกสินค้า --</option>' +
@@ -10489,6 +10491,9 @@ async function miscOutPrint(keyOrDoc) {
 }
 function _moPageHTML(s, copyLabel) {
   const tf = s.type === 'โอนย้าย';
+  // คลังตามชนิดรายการในใบ: FG = คลัง 13 · วัตถุดิบ/แพ็คเกจจิ้ง = คลัง 10 · ปนกัน = ระบุทั้งสอง (2026-10-21)
+  const hasF = s.lines.some(l => l.kind === 'F'), hasM = s.lines.some(l => l.kind === 'M');
+  const whText = hasF && hasM ? `${WAREHOUSE_LABEL} (วัตถุดิบ/แพ็คเกจจิ้ง) · ${FG_WAREHOUSE_LABEL} (FG)` : (hasF ? FG_WAREHOUSE_LABEL : WAREHOUSE_LABEL);
   const info = tf
     ? `<div class="genwd-infobox-row"><span class="lbl">ปลายทาง (Destination)</span><span><b>${esc(s.dest || '-')}</b></span></div>
        <div class="genwd-infobox-row"><span class="lbl">หมายเหตุ (Remarks)</span><span>${esc(s.extra || '-')}</span></div>`
@@ -10510,6 +10515,7 @@ function _moPageHTML(s, copyLabel) {
     <div class="genwd-title">${tf ? 'ใบโอนย้ายสินค้า / Stock Transfer Note' : 'ใบส่งเบิกเบ็ดเตล็ด / Miscellaneous Issue Note'}</div>
     <div class="genwd-infobox">
       <div class="genwd-infobox-row"><span class="lbl">ประเภท (Type)</span><span>${tf ? 'โอนย้าย (Transfer)' : 'เบิกเบ็ดเตล็ด (Miscellaneous Issue)'}</span></div>
+      <div class="genwd-infobox-row"><span class="lbl">คลัง (Warehouse)</span><span>${esc(whText)}</span></div>
       ${info}
     </div>
     <table class="genwd-table">
@@ -10546,7 +10552,7 @@ function fgoutOpenForm(orderId) {
   _fgoutLots = lots;
   const unit = _fgMasterCache.find(f => f.FG_ID === co.FG_ID)?.Unit || 'หน่วย';
   _modalClearErrors(['fgo-qty']);
-  document.getElementById('fgo-title').textContent = `เบิกสินค้าสำหรับ ${orderId}`;
+  document.getElementById('fgo-title').textContent = `เบิกสินค้าสำหรับ ${orderId} (${FG_WAREHOUSE_LABEL})`;
   document.getElementById('fgo-hint').textContent = `ค้างส่ง ${_bomFmtQty(remain)} ${unit} — สต็อกพร้อมส่งรวม ${_bomFmtQty(lots.filter(l => !_fgoutIsExpired(l)).reduce((s, l) => s + l.Qty, 0))} ${unit}`;
   document.getElementById('fgo-unit').textContent = unit;
   document.getElementById('fgo-lots').innerHTML = lots.map((l, i) => {
@@ -11273,7 +11279,7 @@ function _scPrintHtml(fromMonth, toMonth) {
     <div class="scp-filters">
       <div><span class="lbl">รายการ</span><span class="val">${esc(_scLastLabel)}</span></div>
       <div><span class="lbl">ช่วงเวลา</span><span class="val">${esc(_scMonthLabel(fromMonth))} – ${esc(_scMonthLabel(toMonth))}</span></div>
-      <div><span class="lbl">คลัง</span><span class="val">${esc(WAREHOUSE_LABEL)}</span></div>
+      <div><span class="lbl">คลัง</span><span class="val">${esc(_scRawType === 'fg' ? FG_WAREHOUSE_LABEL : WAREHOUSE_LABEL)}</span></div>
     </div>
     <table class="scp-table">
       <thead><tr><th>วันที่</th><th>ประเภท</th><th>Lot</th><th class="num">รับเข้า</th><th class="num">จ่ายออก</th><th class="num">คงเหลือสะสม</th><th>UOM</th><th>อ้างอิง/ที่มา</th></tr></thead>
