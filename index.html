@@ -8533,8 +8533,9 @@ async function prepOpenSteps(id) {
   const t = _rmMasterCache.find(r => r.RM_ID === p.TargetRM_ID);
   document.getElementById('preps-title').textContent = `บันทึกขั้นตอนเตรียม — ${p.Prep_ID}`;
   document.getElementById('preps-info').innerHTML =
-    `${esc(_rmName(p.SourceRM_ID))} → <b>${esc(_rmName(p.TargetRM_ID))}</b> · เบิกไป <b>${_bomFmtQty(p.QtyOut)} ${esc(p.Unit || '')}</b> (${fmtDate(p.PrepDate)})
-     · มาตรฐานสูญเสียรวม ${_bomFmtQty(p.StdLossPct || 0)}%<br><span class="text-muted">ล็อตสด: ${_lotAllocText(p.SourceAlloc)}</span>`;
+    `${esc(_rmName(p.SourceRM_ID))} <code>${esc(p.SourceRM_ID)}</code> → <b>${esc(_rmName(p.TargetRM_ID))}</b> <code>${esc(p.TargetRM_ID)}</code> · เบิกไป <b>${_bomFmtQty(p.QtyOut)} ${esc(p.Unit || '')}</b> (${fmtDate(p.PrepDate)})
+     · มาตรฐานสูญเสียรวม ${_bomFmtQty(p.StdLossPct || 0)}%<br><span class="text-muted">ล็อตสด: ${_lotAllocText(p.SourceAlloc)}</span>
+     <br><i class="fa-solid fa-box-archive me-1 text-success"></i>รับกลับเข้าสต็อกเป็น <b>รหัส ${esc(p.TargetRM_ID)}</b> · ${esc(_rmName(p.TargetRM_ID))} (${esc(catLabel(t?.Category))})`;
   const steps = Array.isArray(p.Steps) && p.Steps.length ? p.Steps : PREP_DEFAULT_STEPS.map(s => ({ step: s, weight: null }));
   document.getElementById('preps-rows').innerHTML = steps.map(s => _prepStepRowHTML(s.step, s.weight)).join('');
   document.getElementById('preps-unit').textContent = t?.Unit || p.Unit || '';
@@ -8545,7 +8546,11 @@ async function prepOpenSteps(id) {
   // (ผู้ใช้ขอ 2026-09-28)
   const shelfDays = t?.ShelfLifeDays ?? (t?.Category === CAT_PREP ? PREP_DEFAULT_SHELF_DAYS : null);
   document.getElementById('preps-exp').value = shelfDays != null ? addDays(p.PrepDate, shelfDays) : '';
-  document.getElementById('preps-note').value = p.Note || '';
+  // หมายเหตุตั้งต้น = "เตรียมจากของสด <ชื่อ> (<รหัส>) ล็อต <ล็อตสดที่ตัด>" (ผู้ใช้ขอ 2026-10-22 ให้หมายเหตุรับเข้าบอกว่าเตรียมจากของสด) แก้ได้ · ถ้าหมายเหตุเดิมขึ้นต้นแบบนี้อยู่แล้ว (บันทึกความคืบหน้าไว้) ไม่ใส่ซ้ำ
+  const srcM = _rmMasterCache.find(r => r.RM_ID === p.SourceRM_ID);
+  const srcLots = [...new Set((p.SourceAlloc || []).map(a => a.lot).filter(Boolean))].join(', ');
+  const autoNote = `${p.SourceRM_ID === p.TargetRM_ID ? 'เตรียมซ้ำจาก' : `เตรียมจาก${(srcM?.Category || 'วัตถุดิบ') === 'วัตถุดิบ' ? 'ของสด' : 'วัตถุดิบ'}`} ${_rmName(p.SourceRM_ID)} (${p.SourceRM_ID})${srcLots ? ` ล็อต ${srcLots}` : ''}`;
+  document.getElementById('preps-note').value = (p.Note || '').startsWith('เตรียม') ? p.Note : (p.Note ? `${autoNote} · ${p.Note}` : autoNote);
   document.getElementById('preps-back').value = '';
   document.getElementById('preps-back-err').textContent = '';
   _prepBackTouched = false;
@@ -11758,7 +11763,7 @@ async function stockCardRender() {
         return { date: r.WasteDate, ts: r.CreatedAt, label: 'ของเสีย', ref: r.Waste_ID, lot, in: 0, out: r.Qty };
       }),
       ...prepOut.map(r => ({ date: r.PrepDate, ts: r.CreatedAt, label: 'เบิกไปเตรียม', ref: r.Prep_ID, lot: _scAllocLots(r.SourceAlloc), alloc: r.SourceAlloc, in: 0, out: r.QtyOut })),
-      ...prepIn.map(r => ({ date: r.ReceivedAt ? new Date(r.ReceivedAt).toLocaleDateString('sv-SE') : r.PrepDate, ts: r.ReceivedAt, label: 'รับกลับจากการเตรียม', ref: r.Prep_ID, lot: _lotLabel(_rmLotCache.find(l => l.Lot_ID === r.BackLotID) || { Lot_ID: r.BackLotID }), in: r.QtyBack, out: 0 })),
+      ...prepIn.map(r => ({ date: r.ReceivedAt ? new Date(r.ReceivedAt).toLocaleDateString('sv-SE') : r.PrepDate, ts: r.ReceivedAt, label: `รับกลับจากการเตรียม ← ${_rmName(r.SourceRM_ID)} (${r.SourceRM_ID})`, ref: r.Prep_ID, lot: _lotLabel(_rmLotCache.find(l => l.Lot_ID === r.BackLotID) || { Lot_ID: r.BackLotID }), in: r.QtyBack, out: 0 })),
     ];
   }
   // เรียงตามวันที่ → วันเดียวกัน "รับเข้าก่อนจ่ายออก" เสมอ → แล้วจึงตามเวลาบันทึกจริง (2026-10-22 ผู้ใช้ขอ: รับเข้า/จ่ายออกวันเดียวกัน
