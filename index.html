@@ -1720,7 +1720,8 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
             <label class="form-label">จะเตรียมจาก (วัตถุดิบต้นทาง)<span class="text-danger">*</span></label>
             <select id="prepi-source" class="form-select" onchange="prepIssueSourceChanged()"></select>
             <div class="invalid-feedback d-block" id="prepi-source-err"></div>
-            <div class="form-text" style="font-size:.72rem">ค่าเริ่มต้นดึงจากที่ตั้งไว้ใน Master แต่เลือกเปลี่ยนได้อิสระ</div>
+            <div class="form-text" style="font-size:.72rem"><span id="prepi-src-note">ค่าเริ่มต้นดึงจากที่ตั้งไว้ใน Master แต่เลือกเปลี่ยนได้อิสระ</span>
+              <label class="ms-2 text-nowrap" style="cursor:pointer"><input type="checkbox" id="prepi-src-all" class="form-check-input me-1" onchange="prepIssueTargetChanged(true)">แสดงต้นทางทั้งหมด</label></div>
           </div>
           <div class="col-12"><div class="alert alert-light border py-2 mb-0 small" id="prepi-info"></div></div>
           <div class="col-md-4">
@@ -8222,9 +8223,24 @@ function prepOpenIssue(targetId, moId, wantQty) {
   if (wantQty) { document.getElementById('prepi-want').value = wantQty; prepIssueCalc('want'); }
   bootstrap.Modal.getOrCreateInstance(document.getElementById('prepIssueModal')).show();
 }
+// คงเหลือรวมของวัตถุดิบ 1 รหัส = ผลรวมล็อต (ถ้ายังไม่ได้โหลดล็อต ใช้ยอดรวม stock_balance แทน)
+function _rmStockOf(id) {
+  const lots = _rmLotCache.filter(l => l.RM_ID === id);
+  const q = lots.length ? lots.reduce((s, l) => s + (+l.Qty || 0), 0) : (parseFloat(_stockRmCache.find(s => s.RM_ID === id)?.Qty) || 0);
+  return Math.round(q * 10000) / 10000;
+}
 function _prepSelTarget() { return _rmMasterCache.find(r => r.RM_ID === document.getElementById('prepi-target').value); }
 function _prepSelSource() { return _rmMasterCache.find(r => r.RM_ID === document.getElementById('prepi-source').value); }
-function prepIssueTargetChanged() {
+// "คำหลัก" ของชื่อวัตถุดิบ = ตัดคำทั่วไปของขั้นตอน/สถานะทิ้ง (สด/แห้ง/อบ/หั่น/พร้อมใช้ ฯลฯ) เช่น "ไพลอบแห้ง" → "ไพล", "ไพลสด" → "ไพล",
+// "ผิวมะกรูดหั่นพร้อมใช้" → "ผิวมะกรูด" — ใช้กรองรายการต้นทางให้ตรงกับปลายทาง (ผู้ใช้ขอ 2026-10-22: เตรียมเป็นไพลแห้ง ต้นทางต้องเป็นไพล/สดที่เกี่ยวกับไพลเท่านั้น)
+const _PREP_GENERIC_WORDS = ['อบแห้ง', 'พร้อมใช้', 'พร้อมผลิต', 'หั่น', 'บด', 'ย่อย', 'ล้าง', 'คัด', 'ตาก', 'อบ', 'แห้ง', 'สด', 'เคมี'];
+function _prepKey(name) {
+  let s = String(name || '').replace(/\(.*?\)/g, '');
+  _PREP_GENERIC_WORDS.forEach(w => { s = s.split(w).join(''); });
+  return s.replace(/[\s\-–—_\d.]+/g, '').trim();
+}
+const _prepKeyMatch = (a, b) => { const x = _prepKey(a), y = _prepKey(b); return !!x && !!y && (x.includes(y) || y.includes(x)); };
+function prepIssueTargetChanged(keepAll) {
   const t = _prepSelTarget();
   const srcSel = document.getElementById('prepi-source');
   if (!t) {
@@ -8234,13 +8250,35 @@ function prepIssueTargetChanged() {
     document.getElementById('prepi-plan').innerHTML = '';
     return;
   }
-  const candidates = _prepSourceCandidates(t);
+  // รายการต้นทางโชว์ ชื่อ + รหัส + ซัพพลายเออร์ + คงเหลือ (ผู้ใช้ขอ 2026-10-22 "ให้เห็นรายชื่อ ซัพ ด้วย") — ชื่อเดียวกันมีหลายรหัส/ซัพ
+  // (เช่น ไพลสด SPF001 ไม่มีของ กับ SPF007 มีของ) ถ้าโชว์แค่ชื่อแยกไม่ออก เลือกผิดตัวได้ · ชื่อเดียวกันเรียงตัวที่มีของมากสุดขึ้นก่อน
+  // แสดงเฉพาะรายการที่มีของคงเหลือ > 0 (ผู้ใช้ขอ 2026-10-22 "ให้แสดงแค่รายการที่ไม่เป็น 0") — ตัวที่เป็น 0 ซ่อนไว้ เลือกไปเบิกก็เตรียมไม่ได้อยู่แล้ว
+  const withStock = _prepSourceCandidates(t).map(r => ({ ...r, _stk: _rmStockOf(r.RM_ID) })).filter(r => r._stk > 0.0005)
+    .sort((a, b) => ((_BOM_CAT_ORDER[a.Category] ?? 9) - (_BOM_CAT_ORDER[b.Category] ?? 9)) || (a.RM_Name || '').localeCompare(b.RM_Name || '') || (b._stk - a._stk));
+  // กรองตามชื่อปลายทาง: ต้นทางต้องมี "คำหลัก" เดียวกับปลายทาง (ไพลแห้ง → ไพลสด/ไพล…) — ติ๊ก "แสดงต้นทางทั้งหมด" เพื่อข้ามการกรอง (เช่น ทำจากของชื่อไม่เหมือนกัน)
+  const allChk = document.getElementById('prepi-src-all'), key = _prepKey(t.RM_Name);
+  if (!keepAll) allChk.checked = false;
+  const candidates = allChk.checked || !key ? withStock : withStock.filter(r => _prepKeyMatch(t.RM_Name, r.RM_Name));
+  document.getElementById('prepi-src-note').textContent = allChk.checked || !key ? 'แสดงต้นทางทั้งหมดที่มีของ'
+    : `แสดงเฉพาะต้นทางที่ชื่อมีคำว่า “${key}” และมีของคงเหลือ`;
+  if (!candidates.length) {
+    srcSel.innerHTML = `<option value="">${withStock.length ? `— ไม่มีต้นทางชื่อ “${esc(key)}” ที่มีของ (ติ๊ก "แสดงต้นทางทั้งหมด" เพื่อเลือกตัวอื่น) —` : '— ไม่มีวัตถุดิบต้นทางที่มีของคงเหลือ —'}</option>`;
+    srcSel.value = '';
+    prepIssueSourceChanged();
+    return;
+  }
   srcSel.innerHTML = candidates.map(r =>
-    `<option value="${esc(r.RM_ID)}">${esc(r.RM_Name)}${r.RM_ID === t.RM_ID ? ' (ตัวเดิม — เตรียมซ้ำ)' : ''} · ${esc(catLabel(r.Category))} (${esc(r.Unit)})</option>`).join('');
+    `<option value="${esc(r.RM_ID)}">${esc(r.RM_Name)}${r.RM_ID === t.RM_ID ? ' (ตัวเดิม — เตรียมซ้ำ)' : ''} · ${esc(r.RM_ID)} · ${esc(r.Supplier || 'ไม่ระบุซัพ')} · เหลือ ${_rmFmtQty(r._stk)} ${esc(r.Unit)} · ${esc(catLabel(r.Category))}</option>`).join('');
   // ตั้งต้นตามที่ Master ผูกไว้ (SourceRM_ID) ถ้ามีและยังเป็นตัวเลือกที่ถูกต้อง — ไม่งั้นถ้าปลายทางเป็น
   // วัตถุดิบแห้งที่ไม่มี SourceRM_ID (เตรียมซ้ำคงรหัสเดิม, 2026-09-29) ตั้งต้นเป็นตัวมันเองไปเลย — ไม่งั้นปล่อยว่างให้ผู้ใช้เลือกเอง
   srcSel.value = t.SourceRM_ID && candidates.some(c => c.RM_ID === t.SourceRM_ID) ? t.SourceRM_ID
     : (t.Category === CAT_DRY && candidates.some(c => c.RM_ID === t.RM_ID) ? t.RM_ID : '');
+  // ตัวที่ Master ผูกไว้ไม่มีของ (ถูกซ่อนจากรายการ) แต่มีรหัส/ซัพอื่น "ชื่อเดียวกัน" ที่มีของ → ตั้งต้นเป็นตัวที่มีของมากสุดแทน (เหมือนหน้าเบิกเข้าไลน์ที่เลือกตัวสต็อกเยอะสุดให้) — ผู้ใช้ยังเปลี่ยนเองได้
+  if (!srcSel.value && t.SourceRM_ID) {
+    const wantName = _rmMasterCache.find(r => r.RM_ID === t.SourceRM_ID)?.RM_Name;
+    const alt = wantName ? candidates.filter(c => c.RM_Name === wantName).sort((a, b) => b._stk - a._stk)[0] : null;
+    if (alt) srcSel.value = alt.RM_ID;
+  }
   prepIssueSourceChanged();
 }
 // เลือกวัตถุดิบต้นทางเอง (2026-09-29) — อิสระจาก SourceRM_ID ที่ตั้งไว้ใน Master, ใช้แค่เป็นค่าเริ่มต้น
@@ -8262,7 +8300,7 @@ function prepIssueSourceChanged() {
       </tbody></table></div>`;
   document.getElementById('prepi-info').innerHTML =
     (src.RM_ID === t.RM_ID ? '<div class="text-primary fw-semibold mb-1"><i class="fa-solid fa-rotate me-1"></i>เตรียมซ้ำ — รับกลับเป็นรหัสเดิม แค่ได้ Lot ใหม่</div>' : '') +
-    `วัตถุดิบต้นทาง (${esc(catLabel(src?.Category))}): <b>${esc(src?.RM_Name)}</b> · คงเหลือ <b>${_rmFmtQty(stock)} ${esc(src?.Unit || '')}</b> ในล็อตที่มีของ ${lots.length} ล็อต<br>
+    `วัตถุดิบต้นทาง (${esc(catLabel(src?.Category))}): <b>${esc(src?.RM_Name)}</b> <code>${esc(src?.RM_ID)}</code> · ซัพ ${esc(src?.Supplier || 'ไม่ระบุ')} · คงเหลือ <b>${_rmFmtQty(stock)} ${esc(src?.Unit || '')}</b> ในล็อตที่มีของ ${lots.length} ล็อต<br>
      ขั้นตอนมาตรฐาน: ${(t.PrepSteps || []).length ? t.PrepSteps.map(s => `${esc(s.step)} ${_bomFmtQty(s.pct)}%`).join(' → ') : '<span class="text-muted">ยังไม่ได้ตั้ง — เพิ่มขั้นตอนเองได้ตอนบันทึก/รับกลับ</span>'}
      · สูญเสียรวม <b>${_bomFmtQty(std)}%</b>${t.ShelfLifeDays != null ? ` · อายุหลังเตรียม ${t.ShelfLifeDays} วัน` : ''}
      ${lotsHtml}`;
