@@ -1234,11 +1234,14 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
       <input type="date" class="form-control w-auto" id="coFrom" onchange="coRenderTable()" title="วันที่สั่งตั้งแต่">
       <span class="text-white-50 small">ถึง</span>
       <input type="date" class="form-control w-auto" id="coTo" onchange="coRenderTable()" title="วันที่สั่งถึง">
+      <button class="btn btn-warning" id="coDnBtn" disabled onclick="coDnOpen()" title="ติ๊กเลือกแถวของลูกค้าเดียวกัน แล้วออกใบส่งสินค้า"><i class="fa-solid fa-truck-ramp-box me-1"></i>ออกใบส่งสินค้า (<span id="coDnCnt">0</span>)</button>
+      <button class="btn btn-success" id="coMiscBtn" disabled onclick="coSendToMisc()" title="ติ๊กเลือกแถวของลูกค้าเดียวกัน แล้วส่งไปออกใบเบิกเบ็ดเตล็ด (ขายลูกค้า)"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>เบิกเบ็ดเตล็ด (<span id="coMiscCnt">0</span>)</button>
+      <button class="btn btn-outline-light" onclick="coDnHistory()"><i class="fa-solid fa-clock-rotate-left me-1"></i>ใบส่งที่ออกแล้ว</button>
     </div></div>
     <div class="scroll-content">
       <div class="row g-2 mb-3" id="coKpis"></div>
       <div class="glass-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
-        <thead><tr><th>เลขที่ CO</th><th>ลูกค้า / PO</th><th>สินค้า</th><th class="text-end">สั่งซื้อ</th><th class="text-end">เบิกแล้ว</th><th class="text-end">คงค้าง</th><th class="text-end">FG ในสต็อก คลัง 13 (พร้อมส่ง)</th><th>วันที่สั่ง</th><th>กำหนดส่ง</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
+        <thead><tr><th style="width:30px"><input type="checkbox" class="form-check-input" id="coSelAll" onchange="coSelAll(this.checked)" title="เลือกทั้งหมดที่แสดง (เพื่อออกใบส่งสินค้า)"></th><th>เลขที่ CO</th><th>ลูกค้า / PO</th><th>สินค้า</th><th class="text-end">สั่งซื้อ</th><th class="text-end">เบิกแล้ว</th><th class="text-end">คงค้าง</th><th class="text-end">สต็อกพร้อมส่ง (FG คลัง 13 / Material คลัง 10)</th><th>วันที่สั่ง</th><th>กำหนดส่ง</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
         <tbody id="coTableBody"></tbody>
       </table></div></div>
     </div>
@@ -1247,7 +1250,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
   <!-- ═══════════════ FG WITHDRAW / DELIVERY ═══════════════ -->
   <div class="page-view" id="page-fgout">
     <div class="page-header d-flex justify-content-between align-items-start">
-      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-truck me-2"></i>เบิก FG / จัดส่ง (คลัง 13)</h4><div class="text-white-50 small">เบิกสินค้าตาม CO (FIFO ผลิตก่อนเบิกก่อน เลือกได้หลายล็อต) และติดตามสถานะจัดส่ง</div></div>
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-truck me-2"></i>เบิก FG / จัดส่ง (คลัง 13)</h4><div class="text-white-50 small">เบิกสินค้าตาม CO (FIFO ผลิตก่อนเบิกก่อน เลือกได้หลายล็อต) และติดตามสถานะจัดส่ง · CO แบบ Material เบิกจากคลัง 10</div></div>
       <button class="btn btn-light" onclick="showPage('miscout')" title="เบิกอื่น (ไม่ผูก CO) ย้ายไปหน้า เบิกเบ็ดเตล็ด / โอนย้าย แล้ว"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>เบิกเบ็ดเตล็ด / โอนย้าย</button>
     </div>
     <div class="scroll-content">
@@ -1273,7 +1276,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
     </div>
     <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 align-items-center mb-2">
       <select class="form-select w-auto" id="moType" onchange="miscOutRender()">
-        <option value="">ทุกประเภท</option><option value="เบิกเบ็ดเตล็ด">เบิกเบ็ดเตล็ด</option><option value="โอนย้าย">โอนย้าย</option>
+        <option value="">ทุกประเภท</option><option value="เบิกเบ็ดเตล็ด">เบิกเบ็ดเตล็ด</option><option value="โอนย้าย">โอนย้าย</option><option value="ขายลูกค้า">ขายลูกค้า</option>
       </select>
       <input type="date" class="form-control w-auto" id="moFrom" onchange="miscOutLoad()" title="ตั้งแต่วันที่">
       <span class="text-white-50 small">ถึง</span>
@@ -1310,7 +1313,10 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
             </table>
           </div>
           <div class="d-flex justify-content-between align-items-center">
-            <button type="button" class="btn btn-outline-primary btn-sm" onclick="miscOutAddRow()"><i class="fa-solid fa-plus me-1"></i>เพิ่มรายการ</button>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-primary btn-sm" onclick="miscOutAddRow()"><i class="fa-solid fa-plus me-1"></i>เพิ่มรายการ</button>
+              <button type="button" class="btn btn-outline-success btn-sm" id="mo-co-btn" onclick="miscOutPickCo()" title="ดึงรายการค้างส่งจากหน้าคำสั่งซื้อลูกค้า มาออกใบเบิกขายลูกค้า"><i class="fa-solid fa-file-invoice me-1"></i>ดึงจากคำสั่งซื้อลูกค้า</button>
+            </div>
             <div class="small text-muted" id="mo-summary"></div>
           </div>
           <div class="form-text mt-2" style="font-size:.74rem"><i class="fa-solid fa-circle-info me-1"></i>เลือกล็อตที่จะตัด (เรียง FEFO ใกล้หมดอายุก่อน) · อยากเอาจากหลายล็อตให้เพิ่มแถวรายการเดิมอีกแถว · ทั้งใบบันทึกพร้อมกัน ผิดรายการเดียวจะไม่ตัดสต็อกเลย</div>
@@ -2337,7 +2343,6 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
             <label class="form-label">หมายเหตุ (เฉพาะรายการนี้)</label>
             <input id="com-edit-note" class="form-control" placeholder="หมายเหตุ">
           </div>
-          <datalist id="comFgList"></datalist>
         </div>
       </div>
       <div class="modal-footer modal-footer-light">
@@ -2690,6 +2695,14 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label mb-1">รูปแบบการเบิก</label>
+          <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="fgo-mode" id="fgo-mode-co" value="co" checked onchange="fgoutModeHint()"><label class="btn btn-outline-primary" for="fgo-mode-co">เบิกตาม CO (ปกติ)</label>
+            <input type="radio" class="btn-check" name="fgo-mode" id="fgo-mode-misc" value="misc" onchange="fgoutModeHint()"><label class="btn btn-outline-primary" for="fgo-mode-misc">เบิกเบ็ดเตล็ด (ขายลูกค้า)</label>
+          </div>
+          <div class="form-text" id="fgo-mode-hint"></div>
+        </div>
         <div class="small text-muted mb-2" id="fgo-hint"></div>
         <div class="row g-2 align-items-end mb-3">
           <div class="col-md-5">
@@ -2701,7 +2714,7 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
         </div>
         <div class="table-responsive">
           <table class="table table-sm align-middle mb-1">
-            <thead><tr class="small text-muted"><th>Lot</th><th>วันที่ผลิต</th><th>หมดอายุ</th><th class="text-end">คงเหลือ</th><th style="width:170px">จำนวนที่เบิกจากล็อตนี้</th></tr></thead>
+            <thead><tr class="small text-muted"><th>Lot</th><th id="fgo-th-date">วันที่ผลิต</th><th>หมดอายุ</th><th class="text-end">คงเหลือ</th><th style="width:170px">จำนวนที่เบิกจากล็อตนี้</th></tr></thead>
             <tbody id="fgo-lots"></tbody>
           </table>
         </div>
@@ -3383,7 +3396,7 @@ const _WRITE_ACTIONS = [
   'rmMasterModalSave', 'fgMasterModalSave', 'bomLineSubmit', 'receivedModalSave', 'coModalSave', 'planModalSave',
   'issueModalSave', 'prodRecordModalSave', 'fgReceiveModalSave', 'fgoutModalSave', 'deliveryAdvance', 'planRequestDelete',
   'wasteModalNext', 'wasteLotModalSave', 'employeeSave', 'miscOutSave', 'miscOutDelete',
-  'rmMasterDelete', 'bomDeleteLine', 'bomDeleteProduct', 'receivedDelete', 'coDelete', 'planDelete', 'prodRecordDelete', 'wasteDelete',
+  'rmMasterDelete', 'bomDeleteLine', 'bomDeleteProduct', 'receivedDelete', 'coDelete', 'coStatusChange', 'planDelete', 'prodRecordDelete', 'wasteDelete',
   'signupreqApprove', 'signupreqReject', 'userrolesUpdateRole', 'userrolesUpdateName',
   'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete', 'prepPlanBulkIssue', 'prepHistRequestDelete', 'prepHistDelete',
   'rcvReportConfirm', 'rcvReportRename', 'rcvReportCancel', 'trfSave',
@@ -7041,21 +7054,32 @@ async function stockPkgLoad() { await stockRmLoad(); }
 let _coCache = [];
 async function coLoad() {
   if (!_fgMasterCache.length) await fgMasterLoad();
-  const [orders, withdraws, stockFg] = await Promise.all([
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  const [orders, withdraws, stockFg, rmWd] = await Promise.all([
     sbRun(_sb.from('customer_orders').select('*').order('OrderDate', { ascending: false }), 'โหลดคำสั่งซื้อ'),
     sbRun(_sb.from('fg_withdraw').select('*'), 'โหลดการเบิก'),
     sbRun(_sb.from('stock_fg').select('*'), 'โหลดสต็อก FG'),   // สต็อก FG ที่พร้อมส่ง ไว้โชว์คู่กับยอดคงค้างของแต่ละ CO (2026-10-17)
+    // เบิก Material ตาม CO = rm_withdraw ที่มี Order_ID (2026-10-21) — ยังไม่รัน migration_2026-10-21_co_material.sql = ไม่มีคอลัมน์ → ถือว่าว่าง ไม่แจ้งเตือน
+    _sb.from('rm_withdraw').select('Withdraw_ID,Order_ID,Qty,Lot,DocNo').not('Order_ID', 'is', null).then(r => r.error ? [] : (r.data || [])),
+    rmLotLoad(),   // สต็อกล็อตวัตถุดิบ ไว้โชว์ "พร้อมส่ง" ของ CO แบบ Material
   ]);
   _stockFgCache = stockFg || _stockFgCache;
   _coCache = orders || [];
   window._fgWithdrawCache = withdraws || [];
+  window._rmCoWdCache = rmWd || [];
   coRenderTable();
 }
-function coWithdrawnQty(orderId) { return (window._fgWithdrawCache||[]).filter(w => w.Order_ID === orderId).reduce((s,w) => s + Number(w.Qty), 0); }
+function coWithdrawnQty(orderId) {
+  return [...(window._fgWithdrawCache || []), ...(window._rmCoWdCache || [])].filter(w => w.Order_ID === orderId).reduce((s, w) => s + Number(w.Qty), 0);
+}
 // ── หน้าคำสั่งซื้อลูกค้า (2026-10-17 ผู้ใช้ขอ "ใส่รายละเอียดได้ครบเหมือนของระบบ ProFlow") — migration_2026-10-17_co_details.sql ──
 // โมเดลเหมือน ProFlow: 1 รายการสินค้า = 1 แถว customer_orders (Order_ID ของตัวเอง) หัวคำสั่ง (ลูกค้า/PO/ที่อยู่/ผู้ติดต่อ/เบอร์/วันที่/กำหนดส่ง)
 // ซ้ำในทุกแถวของคำสั่งเดียวกัน · หมายเหตุต่อรายการ = คอลัมน์ Note เดิม · สถานะเริ่มต้น 'สั่งผลิตแล้ว' (flow สถานะเดิมของ BM Flow ไม่เปลี่ยน)
+// 2026-10-21 ผู้ใช้ขอ "เลือกได้ก่อนว่าจะสั่ง FG หรือ Material แล้วค่อยเลือกตามหมวด" — ต่อรายการเลือกประเภท FG / Material (วัตถุดิบ/แพ็คเกจจิ้ง กรองตามหมวด)
+// ItemType 'FG' (ค่าเดิม ใช้ FG_ID) / 'M' (ใช้ RM_ID) · Material ส่งของโดยเบิกจากคลัง 10 ตาม CO (rm_withdraw_for_co) ไม่ผ่านขั้นจัดส่ง/delivery
+// — migration_2026-10-21_co_material.sql
 const CO_STATUSES = ['สั่งผลิตแล้ว', 'กำลังเบิก', 'ส่งบางส่วน', 'ส่งสำเร็จ'];
+const _coIsM = c => c.ItemType === 'M';
 // สต็อก FG ที่พร้อมส่งของสินค้านี้ = ผลรวมทุกล็อตที่ยังไม่หมดอายุ (ล็อตหมดอายุแล้วแยกโชว์ ไม่นับว่าพร้อมส่ง) — รวมต่อสินค้า ไม่จองให้ CO ใดโดยเฉพาะ
 // (หลาย CO สั่งสินค้าเดียวกันจะเห็นยอดสต็อกก้อนเดียวกัน) ผู้ใช้ขอ 2026-10-17 "แสดงของในสต็อกที่พร้อมให้เห็นด้วย"
 function _coFgStock(fgId) {
@@ -7066,8 +7090,26 @@ function _coFgStock(fgId) {
   });
   return { ready, expired };
 }
+function _coRmStock(rmId) {
+  const today = todayStr();
+  let ready = 0, expired = 0;
+  _rmLotCache.filter(l => l.RM_ID === rmId && (parseFloat(l.Qty) || 0) > 0).forEach(l => {
+    if (l.ExpDate && String(l.ExpDate) < today) expired += parseFloat(l.Qty); else ready += parseFloat(l.Qty);
+  });
+  return { ready, expired };
+}
+// ข้อมูลสินค้าของ CO หนึ่งแถว (FG หรือ Material) ให้ตาราง/รายละเอียด/หน้าเบิกใช้ร่วมกัน
+function _coItem(c) {
+  if (_coIsM(c)) {
+    const r = _rmMasterCache.find(x => x.RM_ID === c.RM_ID);
+    return { kind: 'M', id: c.RM_ID, name: r?.RM_Name || c.RM_ID, unit: r?.Unit || '', cat: r?.Category || 'วัตถุดิบ', stock: _coRmStock(c.RM_ID), wh: WAREHOUSE_LABEL };
+  }
+  const f = _fgMasterCache.find(x => x.FG_ID === c.FG_ID);
+  return { kind: 'F', id: c.FG_ID, name: f?.FG_Name || c.FG_ID, unit: f?.Unit || '', cat: null, stock: _coFgStock(c.FG_ID), wh: FG_WAREHOUSE_LABEL };
+}
+const _coQty = (it, n) => it.kind === 'M' ? _qtyFmtByCat(n, it.cat) : _bomFmtQty(n);
+const _coKindBadge = it => it.kind === 'M' ? catBadge(it.cat) : '';
 function coRenderTable() {
-  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const q = (document.getElementById('coSearch').value || '').trim().toLowerCase();
   const st = document.getElementById('coStatus').value, from = document.getElementById('coFrom').value, to = document.getElementById('coTo').value;
   // KPI = นับทุกคำสั่ง (ไม่ขึ้นกับตัวกรอง) ไว้ดูภาพรวมสถานะ
@@ -7080,32 +7122,34 @@ function coRenderTable() {
     if (st && c.Status !== st) return false;
     if (from && String(c.OrderDate || '') < from) return false;
     if (to && String(c.OrderDate || '') > to) return false;
-    return !q || [c.Order_ID, c.CustomerName, c.PO_No, c.ContactPerson, c.ContactTel, c.CustomerAddress, c.Note, c.FG_ID, fgMap[c.FG_ID]?.FG_Name].filter(Boolean).join(' ').toLowerCase().includes(q);
+    const it = _coItem(c);
+    return !q || [c.Order_ID, c.CustomerName, c.PO_No, c.ContactPerson, c.ContactTel, c.CustomerAddress, c.Note, it.id, it.name].filter(Boolean).join(' ').toLowerCase().includes(q);
   });
   const canEdit = _hasRole('supervisor');
   document.getElementById('coTableBody').innerHTML = rows.map(c => {
-    const fg = fgMap[c.FG_ID], sent = coWithdrawnQty(c.Order_ID), remain = (Number(c.OrderQty) || 0) - sent, id = esc(c.Order_ID);
-    const stk = _coFgStock(c.FG_ID);
+    const it = _coItem(c), sent = coWithdrawnQty(c.Order_ID), remain = (Number(c.OrderQty) || 0) - sent, id = esc(c.Order_ID);
+    const stk = it.stock;
     // ยังต้องส่งอีก (remain>0): สต็อกพอ → "พร้อมส่งครบ" เขียว · ไม่พอ → "ขาด N" ส้ม (ต้องผลิตเพิ่ม) · ไม่มีเลย → "ไม่มีสต็อก" แดง
     const stkBadge = remain <= 0 ? '' : (stk.ready >= remain ? badge('พร้อมส่งครบ', 'success')
-      : (stk.ready > 0 ? badge(`ขาด ${_bomFmtQty(remain - stk.ready)}`, 'warning') : badge('ไม่มีสต็อก', 'danger')));
-    const stkHtml = `<b>${_bomFmtQty(stk.ready)}</b> <span class="small text-muted">${esc(fg?.Unit || '')}</span>${stkBadge ? `<div>${stkBadge}</div>` : ''}${stk.expired > 0 ? `<div class="small text-muted" title="ล็อตที่หมดอายุแล้ว ไม่นับเป็นพร้อมส่ง">หมดอายุ ${_bomFmtQty(stk.expired)}</div>` : ''}`;
-    return `<tr><td class="text-nowrap"><code>${id}</code></td>
+      : (stk.ready > 0 ? badge(`ขาด ${_coQty(it, remain - stk.ready)}`, 'warning') : badge('ไม่มีสต็อก', 'danger')));
+    const stkHtml = `<b>${_coQty(it, stk.ready)}</b> <span class="small text-muted">${esc(it.unit)}</span>${stkBadge ? `<div>${stkBadge}</div>` : ''}${stk.expired > 0 ? `<div class="small text-muted" title="ล็อตที่หมดอายุแล้ว ไม่นับเป็นพร้อมส่ง">หมดอายุ ${_coQty(it, stk.expired)}</div>` : ''}`;
+    return `<tr><td><input type="checkbox" class="form-check-input co-sel" value="${id}"${_coSel.has(c.Order_ID) ? ' checked' : ''} onchange="coSelToggle(this.value, this.checked)"></td><td class="text-nowrap"><code>${id}</code></td>
       <td><b>${esc(c.CustomerName)}</b>${c.PO_No && String(c.PO_No).trim() !== '-' ? `<div class="small"><span class="badge bg-info-subtle text-info-emphasis border border-info-subtle"><i class="fa-solid fa-file-invoice me-1"></i>PO ${esc(c.PO_No)}</span></div>` : ''}${c.ContactPerson || c.ContactTel ? `<div class="small text-muted">${esc([c.ContactPerson, c.ContactTel].filter(Boolean).join(' · '))}</div>` : ''}</td>
-      <td>${esc(fg?.FG_Name || c.FG_ID)}${c.Note ? `<div class="small text-muted"><i class="fa-regular fa-note-sticky me-1"></i>${esc(c.Note)}</div>` : ''}</td>
-      <td class="text-end">${_bomFmtQty(c.OrderQty)} <span class="small text-muted">${esc(fg?.Unit || '')}</span></td><td class="text-end">${_bomFmtQty(sent)}</td>
-      <td class="text-end ${remain > 0 ? 'text-danger' : 'text-success'} fw-semibold">${_bomFmtQty(Math.max(0, remain))}</td><td class="text-end">${stkHtml}</td>
-      <td class="text-nowrap">${fmtDate(c.OrderDate)}</td><td class="text-nowrap">${fmtDate(c.NeedDate)}</td><td>${badge(c.Status, CO_STATUS_BADGE[c.Status])}</td>
+      <td>${_coKindBadge(it)} ${esc(it.name)}${c.Note ? `<div class="small text-muted"><i class="fa-regular fa-note-sticky me-1"></i>${esc(c.Note)}</div>` : ''}</td>
+      <td class="text-end">${_coQty(it, c.OrderQty)} <span class="small text-muted">${esc(it.unit)}</span></td><td class="text-end">${_coQty(it, sent)}</td>
+      <td class="text-end ${remain > 0 ? 'text-danger' : 'text-success'} fw-semibold">${_coQty(it, Math.max(0, remain))}</td><td class="text-end">${stkHtml}</td>
+      <td class="text-nowrap">${fmtDate(c.OrderDate)}</td><td class="text-nowrap">${fmtDate(c.NeedDate)}</td><td>${canEdit ? `<span role="button" class="text-nowrap" style="cursor:pointer" data-id="${id}" onclick="coStatusChange(this.dataset.id)" title="คลิกเพื่อเปลี่ยนสถานะ">${badge(c.Status, CO_STATUS_BADGE[c.Status])} <i class="fa-solid fa-caret-down small text-muted"></i></span>` : badge(c.Status, CO_STATUS_BADGE[c.Status])}</td>
       <td class="text-center text-nowrap"><button class="btn btn-sm btn-outline-secondary" data-id="${id}" onclick="coDetail(this.dataset.id)" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>
         ${canEdit ? `<button class="btn btn-sm btn-outline-primary" data-id="${id}" onclick="coOpenForm(this.dataset.id)" title="แก้ไขรายละเอียด"><i class="fa-solid fa-pen"></i></button>` : ''}
         <button class="btn btn-sm btn-outline-danger" data-id="${id}" onclick="coDelete(this.dataset.id)" title="ลบ"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-  }).join('') || '<tr><td colspan="11" class="text-center text-muted py-3">ยังไม่มีคำสั่งซื้อ</td></tr>';
+  }).join('') || '<tr><td colspan="12" class="text-center text-muted py-3">ยังไม่มีคำสั่งซื้อ</td></tr>';
+  coSelUpdate();
 }
 // ดูรายละเอียดทั้งหมดของ CO (หัวคำสั่ง + ยอดสั่ง/ส่ง/คงค้าง + หมายเหตุ)
 function coDetail(orderId) {
   const c = _coCache.find(x => x.Order_ID === orderId);
   if (!c) return;
-  const fg = _fgMasterCache.find(f => f.FG_ID === c.FG_ID), sent = coWithdrawnQty(c.Order_ID), remain = Math.max(0, (Number(c.OrderQty) || 0) - sent);
+  const it = _coItem(c), sent = coWithdrawnQty(c.Order_ID), remain = Math.max(0, (Number(c.OrderQty) || 0) - sent);
   const row = (l, v) => `<div class="col-md-6"><div class="small text-muted">${l}</div><div>${v || '<span class="text-muted">—</span>'}</div></div>`;
   Swal.fire({ title: `CO ${esc(c.Order_ID)}`, width: 720, confirmButtonText: 'ปิด',
     html: `<div class="row g-2 text-start">
@@ -7113,8 +7157,8 @@ function coDetail(orderId) {
       <div class="col-12"><div class="small text-muted">ที่อยู่ลูกค้า</div><div>${c.CustomerAddress ? esc(c.CustomerAddress) : '<span class="text-muted">—</span>'}</div></div>
       ${row('ผู้ติดต่อ', esc(c.ContactPerson || ''))}${row('เบอร์โทร', esc(c.ContactTel || ''))}
       ${row('วันที่สั่ง', fmtDate(c.OrderDate))}${row('กำหนดส่ง', c.NeedDate ? fmtDate(c.NeedDate) : '')}
-      ${row('สินค้า', `${esc(fg?.FG_Name || c.FG_ID)} <span class="badge bg-light text-dark border">${esc(c.FG_ID)}</span>`)}${row('สถานะ', badge(c.Status, CO_STATUS_BADGE[c.Status]))}
-      ${row('สั่งซื้อ', `<b>${_bomFmtQty(c.OrderQty)}</b> ${esc(fg?.Unit || '')}`)}${row('FG ในสต็อก (พร้อมส่ง)', `<b>${_bomFmtQty(_coFgStock(c.FG_ID).ready)}</b> ${esc(fg?.Unit || '')}`)}${row('เบิกส่งแล้ว / คงค้าง', `${_bomFmtQty(sent)} / <b class="${remain > 0 ? 'text-danger' : 'text-success'}">${_bomFmtQty(remain)}</b> ${esc(fg?.Unit || '')}`)}
+      ${row(it.kind === 'M' ? 'สินค้า (Material)' : 'สินค้า (FG)', `${esc(it.name)} <span class="badge bg-light text-dark border">${esc(it.id)}</span>${it.kind === 'M' ? ' ' + catBadge(it.cat) : ''}`)}${row('สถานะ', badge(c.Status, CO_STATUS_BADGE[c.Status]))}
+      ${row('สั่งซื้อ', `<b>${_coQty(it, c.OrderQty)}</b> ${esc(it.unit)}`)}${row(`สต็อกพร้อมส่ง (${esc(it.wh)})`, `<b>${_coQty(it, it.stock.ready)}</b> ${esc(it.unit)}`)}${row('เบิกส่งแล้ว / คงค้าง', `${_coQty(it, sent)} / <b class="${remain > 0 ? 'text-danger' : 'text-success'}">${_coQty(it, remain)}</b> ${esc(it.unit)}`)}
       <div class="col-12"><div class="small text-muted">หมายเหตุ</div><div>${c.Note ? esc(c.Note) : '<span class="text-muted">—</span>'}</div></div>
     </div>` });
 }
@@ -7122,11 +7166,14 @@ function coDetail(orderId) {
 // ── ฟอร์ม: เพิ่มใหม่ (หลายรายการ) / แก้ไขรายละเอียด (supervisor ขึ้นไป — สินค้า/จำนวนแก้ไม่ได้) ──
 let _coEditId = null, _coLineSeq = 0;
 const _coFgLabel = f => `${f.FG_ID} · ${f.FG_Name}`;
+const _coRmLabel = r => `${r.RM_ID} · ${r.RM_Name}`;
+// หมวด Material ในตัวเลือกของฟอร์ม CO — วัตถุดิบ (สด/แห้ง/เคมี/พร้อมผลิต) + แพ็คเกจจิ้ง
+const _CO_RM_CATS = [...CAT_RAW_ALL, CAT_PKG];
 function coOpenForm(editId) {
   const edit = typeof editId === 'string' ? _coCache.find(c => c.Order_ID === editId) : null;
   if (editId && !edit) return;
   if (edit && !_hasRole('supervisor')) { Swal.fire('ไม่มีสิทธิ์', 'แก้ไขรายละเอียดคำสั่งซื้อได้เฉพาะหัวหน้างานขึ้นไป', 'info'); return; }
-  if (!_fgMasterCache.length) { Swal.fire('ยังไม่มีสินค้า', 'กรุณาเพิ่มสินค้าใน "สูตรแม่บท (BOM Master)" ก่อน', 'info'); return; }
+  if (!_fgMasterCache.length && !_rmMasterCache.length) { Swal.fire('ยังไม่มีสินค้า', 'กรุณาเพิ่มสินค้าใน "สูตรแม่บท (BOM Master)" หรือวัตถุดิบก่อน', 'info'); return; }
   _coEditId = edit ? edit.Order_ID : null;
   const g = id => document.getElementById(id);
   _modalClearErrors(['com-cust']);
@@ -7141,49 +7188,91 @@ function coOpenForm(editId) {
   g('com-lines-wrap').classList.toggle('d-none', !!edit);
   g('com-edit-item-wrap').classList.toggle('d-none', !edit); g('com-edit-note-wrap').classList.toggle('d-none', !edit);
   if (edit) {
-    const fg = _fgMasterCache.find(f => f.FG_ID === edit.FG_ID);
-    g('com-edit-item').textContent = `${fg ? _coFgLabel(fg) : edit.FG_ID} — ${_bomFmtQty(edit.OrderQty)} ${fg?.Unit || ''}`;
+    const it = _coItem(edit);
+    g('com-edit-item').textContent = `${it.kind === 'M' ? 'Material' : 'FG'} · ${it.id} · ${it.name} — ${_coQty(it, edit.OrderQty)} ${it.unit}`;
     g('com-edit-note').value = edit.Note || '';
   }
-  g('comFgList').innerHTML = _fgMasterCache.map(f => `<option value="${esc(_coFgLabel(f))}">`).join('');
   g('com-lines').innerHTML = '';
   if (!edit) coAddLine(true);
   g('com-save-btn').innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>บันทึก';
   bootstrap.Modal.getOrCreateInstance(g('coModal')).show();
 }
+const _coLineEl = seq => document.querySelector(`#com-lines .com-line[data-seq="${seq}"]`);
 function coAddLine(noFocus) {
   const seq = ++_coLineSeq;
-  document.getElementById('com-lines').insertAdjacentHTML('beforeend', `<div class="border rounded p-2 mb-2 com-line" data-seq="${seq}" data-fg="">
+  document.getElementById('com-lines').insertAdjacentHTML('beforeend', `<div class="border rounded p-2 mb-2 com-line" data-seq="${seq}" data-kind="F" data-item="">
     <div class="row g-2 align-items-end">
-      <div class="col-md-6"><label class="form-label small mb-1">ชื่อสินค้า <span class="text-danger">*</span></label><input class="form-control form-control-sm com-item" list="comFgList" placeholder="พิมพ์หรือเลือกสินค้า..." autocomplete="off" onchange="coLineItem(${seq})"></div>
+      <div class="col-md-4 col-6"><label class="form-label small mb-1">ประเภท <span class="text-danger">*</span></label>
+        <select class="form-select form-select-sm com-kind" onchange="coLineKind(${seq})"><option value="F">FG (สินค้าสำเร็จรูป)</option><option value="M">Material (วัตถุดิบ / แพ็คเกจจิ้ง)</option></select></div>
+      <div class="col-md-4 col-6 d-none com-cat-wrap"><label class="form-label small mb-1">หมวด</label>
+        <select class="form-select form-select-sm com-cat" onchange="coLineCat(${seq})"><option value="">ทุกหมวด</option>${_CO_RM_CATS.map(c => `<option value="${esc(c)}">${esc(catLabel(c))}</option>`).join('')}</select></div>
+      <div class="col-md-6"><label class="form-label small mb-1">ชื่อสินค้า <span class="text-danger">*</span></label><input class="form-control form-control-sm com-item" list="comItemList-${seq}" placeholder="พิมพ์หรือเลือกสินค้า..." autocomplete="off" onchange="coLineItem(${seq})"><datalist id="comItemList-${seq}"></datalist></div>
       <div class="col-md-2 col-6"><label class="form-label small mb-1">จำนวนสั่ง <span class="text-danger">*</span></label><input type="number" min="0" step="any" class="form-control form-control-sm com-qty"></div>
       <div class="col-md-2 col-6"><label class="form-label small mb-1">UOM</label><input class="form-control form-control-sm bg-light com-uom" readonly placeholder="อัตโนมัติ"></div>
       <div class="col-md-2 text-end"><button type="button" class="btn btn-sm btn-outline-danger" onclick="coRemoveLine(${seq})" title="ลบรายการนี้"><i class="fa-solid fa-xmark"></i></button></div>
       <div class="col-12"><label class="form-label small mb-1">หมายเหตุ (เฉพาะรายการนี้)</label><input class="form-control form-control-sm com-note" placeholder="หมายเหตุ"></div>
     </div></div>`);
-  if (!noFocus) document.querySelector(`#com-lines .com-line[data-seq="${seq}"] .com-item`).focus();
+  _coFillItems(seq);
+  if (!noFocus) _coLineEl(seq).querySelector('.com-kind').focus();
 }
 function coRemoveLine(seq) {
-  document.querySelector(`#com-lines .com-line[data-seq="${seq}"]`)?.remove();
+  _coLineEl(seq)?.remove();
   if (!document.querySelector('#com-lines .com-line')) coAddLine(true);
 }
-// "FG_ID · ชื่อ" จาก datalist → สินค้า (รับรหัสล้วน/ชื่อที่ไม่ซ้ำได้ด้วย) → ใส่ UOM อัตโนมัติ
-function _coResolveFg(val) {
+// รายการสินค้าในตัวเลือกของแถวนั้น: FG = สินค้าทั้งหมด · Material = วัตถุดิบ/แพ็คเกจจิ้งตามหมวดที่เลือก
+function _coLineItems(line) {
+  if (line.dataset.kind === 'M') {
+    const cat = line.querySelector('.com-cat').value;
+    return _rmMasterCache.filter(r => catMatches(r.Category, cat || null)).map(r => ({ id: r.RM_ID, label: _coRmLabel(r), unit: r.Unit || '' }));
+  }
+  return _fgMasterCache.map(f => ({ id: f.FG_ID, label: _coFgLabel(f), unit: f.Unit || '' }));
+}
+function _coFillItems(seq) {
+  const line = _coLineEl(seq);
+  if (!line) return;
+  line.querySelector('datalist').innerHTML = _coLineItems(line).map(x => `<option value="${esc(x.label)}">`).join('');
+}
+function _coResetLineItem(line) {
+  line.dataset.item = '';
+  const inp = line.querySelector('.com-item');
+  inp.value = ''; inp.classList.remove('is-invalid');
+  line.querySelector('.com-uom').value = '';
+}
+// เลือกประเภท FG / Material → Material แสดงตัวเลือกหมวด · เปลี่ยนประเภทแล้วล้างสินค้าที่เลือกไว้
+function coLineKind(seq) {
+  const line = _coLineEl(seq);
+  if (!line) return;
+  line.dataset.kind = line.querySelector('.com-kind').value;
+  line.querySelector('.com-cat-wrap').classList.toggle('d-none', line.dataset.kind !== 'M');
+  line.querySelector('.com-cat').value = '';
+  _coResetLineItem(line);
+  _coFillItems(seq);
+}
+// เปลี่ยนหมวด → กรองรายการ · ถ้าสินค้าที่เลือกไว้อยู่นอกหมวดใหม่ ล้างทิ้ง
+function coLineCat(seq) {
+  const line = _coLineEl(seq);
+  if (!line) return;
+  if (line.dataset.item && !_coLineItems(line).some(x => x.id === line.dataset.item)) _coResetLineItem(line);
+  _coFillItems(seq);
+}
+// "รหัส · ชื่อ" จาก datalist → สินค้า (รับรหัสล้วน/ชื่อที่ไม่ซ้ำได้ด้วย) → ใส่ UOM อัตโนมัติ
+function _coResolveItem(line, val) {
   val = (val || '').trim();
   if (!val) return null;
-  const hit = _fgMasterCache.find(f => _coFgLabel(f) === val) || _fgMasterCache.find(f => f.FG_ID === val);
+  const list = _coLineItems(line);
+  const hit = list.find(x => x.label === val) || list.find(x => x.id === val);
   if (hit) return hit;
-  const byName = _fgMasterCache.filter(f => f.FG_Name === val);
+  const byName = list.filter(x => x.label.split(' · ').slice(1).join(' · ') === val);
   return byName.length === 1 ? byName[0] : null;
 }
 function coLineItem(seq) {
-  const line = document.querySelector(`#com-lines .com-line[data-seq="${seq}"]`);
+  const line = _coLineEl(seq);
   if (!line) return;
-  const inp = line.querySelector('.com-item'), fg = _coResolveFg(inp.value);
-  line.dataset.fg = fg ? fg.FG_ID : '';
-  line.querySelector('.com-uom').value = fg?.Unit || '';
-  inp.classList.toggle('is-invalid', !fg && !!inp.value.trim());
-  if (fg) { inp.value = _coFgLabel(fg); line.querySelector('.com-qty').focus(); }
+  const inp = line.querySelector('.com-item'), hit = _coResolveItem(line, inp.value);
+  line.dataset.item = hit ? hit.id : '';
+  line.querySelector('.com-uom').value = hit?.unit || '';
+  inp.classList.toggle('is-invalid', !hit && !!inp.value.trim());
+  if (hit) { inp.value = hit.label; line.querySelector('.com-qty').focus(); }
 }
 // เลข CO ต่อเนื่อง CO-<ปีเดือน>-<ลำดับ> จองแบบ atomic (next_co_ids) — ยังไม่รัน SQL = สำรองด้วยเลขสูงสุดในข้อมูลที่โหลดไว้ (กันชนไม่สมบูรณ์ข้ามเครื่อง)
 async function _coNextIds(n) {
@@ -7203,7 +7292,8 @@ async function coModalSave() {
   const header = { CustomerName: cust, OrderDate: g('com-date').value || todayStr(), NeedDate: g('com-need').value || null,
     PO_No: v('com-po') || null, CustomerAddress: v('com-addr') || null, ContactPerson: v('com-contact') || null, ContactTel: v('com-tel') || null };
   const colErr = error => /PO_No|CustomerAddress|ContactPerson|ContactTel/.test(error.message || '')
-    ? 'ยังไม่ได้รัน migration_2026-10-17_co_details.sql ใน Supabase' : error.message;
+    ? 'ยังไม่ได้รัน migration_2026-10-17_co_details.sql ใน Supabase'
+    : (/ItemType|RM_ID|customer_orders_item_chk|FG_ID/.test(error.message || '') ? 'ยังไม่ได้รัน migration_2026-10-21_co_material.sql ใน Supabase (ต้องใช้สั่ง Material)' : error.message);
   if (_coEditId) {   // แก้รายละเอียด (ไม่แตะสินค้า/จำนวน/สถานะ)
     const ok = await sbRun(_sb.from('customer_orders').update({ ...header, Note: v('com-edit-note') || null }).eq('Order_ID', _coEditId), 'บันทึกการแก้ไขไม่สำเร็จ (ต้องรัน migration_2026-10-17_co_details.sql)');
     if (ok === null) return;
@@ -7216,22 +7306,231 @@ async function coModalSave() {
   if (!lines.length) { g('com-lines-err').textContent = 'เพิ่มอย่างน้อย 1 รายการสินค้า'; return; }
   const items = [];
   for (const l of lines) {
-    const fg = _fgMasterCache.find(f => f.FG_ID === l.dataset.fg), itemEl = l.querySelector('.com-item');
-    if (!fg) { g('com-lines-err').textContent = `เลือกสินค้าให้ถูกต้องจากรายการแนะนำ: "${itemEl.value.trim() || '(ว่าง)'}"`; itemEl.focus(); return; }
+    const kind = l.dataset.kind === 'M' ? 'M' : 'F', itemEl = l.querySelector('.com-item');
+    const fg = kind === 'F' ? _fgMasterCache.find(f => f.FG_ID === l.dataset.item) : null;
+    const rm = kind === 'M' ? _rmMasterCache.find(r => r.RM_ID === l.dataset.item) : null;
+    if (!fg && !rm) { g('com-lines-err').textContent = `เลือกสินค้าให้ถูกต้องจากรายการแนะนำ: "${itemEl.value.trim() || '(ว่าง)'}"`; itemEl.focus(); return; }
     const qty = parseFloat(l.querySelector('.com-qty').value);
-    if (!(qty > 0)) { g('com-lines-err').textContent = `${fg.FG_Name}: กรอกจำนวนสั่งให้ถูกต้อง`; l.querySelector('.com-qty').focus(); return; }
-    items.push({ fg, qty, note: l.querySelector('.com-note').value.trim() || null });
+    if (!(qty > 0)) { g('com-lines-err').textContent = `${fg ? fg.FG_Name : rm.RM_Name}: กรอกจำนวนสั่งให้ถูกต้อง`; l.querySelector('.com-qty').focus(); return; }
+    items.push({ fg, rm, qty, note: l.querySelector('.com-note').value.trim() || null });
   }
-  const ids = await _coNextIds(items.length);
-  // insert ชุดเดียว (all-or-nothing) — ผิดแถวเดียวไม่บันทึกเลยทั้งคำสั่ง
-  const payloads = items.map((it, i) => ({ ...header, Order_ID: ids[i], FG_ID: it.fg.FG_ID, OrderQty: it.qty, Status: 'สั่งผลิตแล้ว', Note: it.note }));
+  const ids = await _coNextIds(items.length), anyM = items.some(i => i.rm);   // รวม FG+Material ในคำสั่งเดียว: ทุกแถวต้องมีคีย์ครบเท่ากัน (supabase-js เติม null ให้คีย์ที่ขาด)
+  // insert ชุดเดียว (all-or-nothing) — ผิดแถวเดียวไม่บันทึกเลยทั้งคำสั่ง · แถว FG ไม่ส่ง ItemType/RM_ID (ยังไม่รัน SQL ใหม่ก็สั่ง FG ได้เหมือนเดิม)
+  const payloads = items.map((it, i) => ({ ...header, Order_ID: ids[i], OrderQty: it.qty, Status: 'สั่งผลิตแล้ว', Note: it.note,
+    ...(it.rm ? { ItemType: 'M', RM_ID: it.rm.RM_ID, FG_ID: null } : (anyM ? { ItemType: 'FG', FG_ID: it.fg.FG_ID, RM_ID: null } : { FG_ID: it.fg.FG_ID })) }));
   const { error } = await _sb.from('customer_orders').insert(payloads);
   if (error) { console.error(error); Swal.fire('บันทึกคำสั่งซื้อไม่สำเร็จ', esc(colErr(error)), 'error'); return; }
   bootstrap.Modal.getInstance(g('coModal')).hide();
   await coLoad();
   Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `เพิ่ม CO แล้ว${payloads.length > 1 ? ` (${payloads.length} รายการ: ${ids[0]} – ${ids[ids.length - 1]})` : ` (${ids[0]})`}`, showConfirmButton: false, timer: 2600 });
 }
+// เปลี่ยนสถานะ CO ด้วยมือ (2026-10-21 ผู้ใช้ขอ "ให้เปลี่ยนสถานะจัดส่งได้") — คลิกป้ายสถานะในตาราง (หัวหน้างานขึ้นไป) · เลือกได้ทั้ง 4 สถานะ (ไม่ผูกกับยอดเบิก)
+// เช่น ระบบตั้ง 'ส่งสำเร็จ' ให้ตอนเบิกครบ (Material/ขายลูกค้า ไม่มีขั้นจัดส่ง) แต่ของยังไม่ถึงลูกค้า → ย้อนเป็น 'ส่งบางส่วน'/'กำลังเบิก' ได้ · CompletedAt ตั้งเมื่อเป็น 'ส่งสำเร็จ' เท่านั้น
+async function coStatusChange(id) {
+  if (!_hasRole('supervisor')) { Swal.fire('ไม่มีสิทธิ์', 'เปลี่ยนสถานะคำสั่งซื้อได้เฉพาะหัวหน้างานขึ้นไป', 'info'); return; }
+  const c = _coCache.find(x => x.Order_ID === id);
+  if (!c) return;
+  const it = _coItem(c);
+  const { value: st } = await Swal.fire({ title: `สถานะ ${esc(id)}`, input: 'select', inputOptions: Object.fromEntries(CO_STATUSES.map(s => [s, s])), inputValue: c.Status,
+    html: `<div class="small text-muted">${esc(it.name)} · เบิกแล้ว ${_coQty(it, coWithdrawnQty(id))} / สั่ง ${_coQty(it, c.OrderQty)} ${esc(it.unit)}</div>`,
+    showCancelButton: true, confirmButtonText: 'เปลี่ยนสถานะ', cancelButtonText: 'ยกเลิก' });
+  if (!st || st === c.Status) return;
+  const res = await sbRun(_sb.from('customer_orders').update({ Status: st, CompletedAt: st === 'ส่งสำเร็จ' ? new Date().toISOString() : null }).eq('Order_ID', id).select(), 'เปลี่ยนสถานะไม่สำเร็จ');
+  if (!res) return;
+  if (!res.length) { Swal.fire('เปลี่ยนสถานะไม่สำเร็จ', 'ไม่พบคำสั่งซื้อนี้ หรือไม่มีสิทธิ์แก้ไข', 'error'); return; }
+  await coLoad();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `${id} → ${st}`, showConfirmButton: false, timer: 1800 });
+}
+// ── ใบส่งสินค้า (Delivery Note) ตามรายการ CO ที่เลือก (2026-10-21 ผู้ใช้ขอ "ให้ออกใบส่งแยกได้ ตามรายการที่เลือก") — migration_2026-10-21_delivery_notes.sql ──
+// ติ๊กเลือกแถว CO (ลูกค้าเดียวกัน) → กรอกจำนวน/Lot ที่ส่งครั้งนี้ → ออกเลข DN<ปี>/<เดือน><ครั้งที่> (delivery_note_create) เก็บเนื้อหาไว้พิมพ์ซ้ำ
+// เป็นเอกสารอย่างเดียว ไม่ตัด/คืนสต็อก (สต็อกตัดตอนเบิกตาม CO อยู่แล้ว) · จำนวนตั้งต้น = เบิกแล้ว − ที่เคยออกใบส่งไปแล้ว (กันออกซ้ำเกิน)
+const _coSel = new Set();
+let _dnList = [];
+function coSelToggle(id, on) { on ? _coSel.add(id) : _coSel.delete(id); coSelUpdate(); }
+function coSelAll(on) {
+  document.querySelectorAll('#coTableBody .co-sel').forEach(cb => { cb.checked = on; on ? _coSel.add(cb.value) : _coSel.delete(cb.value); });
+  coSelUpdate();
+}
+function coSelUpdate() {
+  document.getElementById('coDnCnt').textContent = _coSel.size;
+  document.getElementById('coDnBtn').disabled = !_coSel.size;
+  document.getElementById('coMiscCnt').textContent = _coSel.size;
+  document.getElementById('coMiscBtn').disabled = !_coSel.size;
+  const boxes = [...document.querySelectorAll('#coTableBody .co-sel')], all = document.getElementById('coSelAll');
+  if (all) { all.checked = boxes.length > 0 && boxes.every(b => b.checked); all.indeterminate = !all.checked && boxes.some(b => b.checked); }
+}
+// จำนวนที่เคยออกใบส่งไปแล้วต่อ CO (รวมทุกใบ) — ตารางยังไม่มี (ยังไม่รัน SQL) = ว่าง
+async function _dnNotedQty() {
+  const r = await _sb.from('delivery_notes').select('Lines').limit(2000);
+  const m = {};
+  (r.error ? [] : (r.data || [])).forEach(n => (n.Lines || []).forEach(l => { m[l.order_id] = (m[l.order_id] || 0) + (Number(l.qty) || 0); }));
+  return m;
+}
+// ส่งแถว CO ที่ติ๊กไปเบิกเบ็ดเตล็ด (2026-10-21 ผู้ใช้ติ๊กแถวแล้วบอก "เลือกเอาไปเบิกเบ็ดเตล็ด") — ลูกค้าเดียวกัน แล้วแยกตามสถานะการเบิก:
+// • ยังค้างส่ง → เปิดฟอร์มเบิกเบ็ดเตล็ด เติมรายการ + ล็อต FIFO ให้ (miscOutFillFromCo) · • เบิกครบไปแล้วแต่ยังไม่มีใบ → ออกใบ MI-… ทันทีไม่ตัดสต็อกซ้ำ (miscOutConvertCo)
+// ปนกันสองแบบไม่ได้ (ใบเดียวกันไม่ได้) · ที่เบิกครบและมีใบแล้วจะข้าม
+let _cmBusy = false;
+async function coSendToMisc() {
+  if (_cmBusy) return;
+  _cmBusy = true;
+  try {
+    const orders = [..._coSel].map(id => _coCache.find(c => c.Order_ID === id)).filter(Boolean);
+    if (!orders.length) return;
+    const custs = [...new Set(orders.map(c => (c.CustomerName || '').trim()))];
+    if (custs.length > 1) { Swal.fire('เลือกลูกค้าเดียวกัน', `รายการที่เลือกเป็นของ ${custs.length} ลูกค้า (${custs.map(esc).join(', ')}) — ใบเบิก 1 ใบต่อ 1 ลูกค้า กรุณาเลือกแยกกัน`, 'info'); return; }
+    const wds = [...(window._fgWithdrawCache || []), ...(window._rmCoWdCache || [])];
+    const open = [], done = [], skip = [];
+    orders.forEach(c => {
+      const remain = (Number(c.OrderQty) || 0) - coWithdrawnQty(c.Order_ID);
+      if (remain > 1e-9) open.push(c.Order_ID);
+      else if (wds.some(w => w.Order_ID === c.Order_ID && !w.DocNo)) done.push(c.Order_ID);
+      else skip.push(c.Order_ID);
+    });
+    if (open.length && done.length) { Swal.fire('เลือกปนกันไม่ได้', `ยังค้างส่ง: ${open.map(esc).join(', ')}<br>เบิกครบแล้ว: ${done.map(esc).join(', ')}<br><br>กรุณาเลือกทีละแบบ (ค้างส่ง = เบิกใหม่ · เบิกครบ = ออกใบจากที่เบิกไปแล้ว)`, 'info'); return; }
+    if (!open.length && !done.length) { Swal.fire('ไม่มีรายการให้เบิก', `${skip.map(esc).join(', ')} เบิกครบและออกใบเบ็ดเตล็ดแล้ว`, 'info'); return; }
+    const skipNote = skip.length ? `<div class="small text-muted mt-2">ข้าม (เบิกครบและมีใบแล้ว): ${skip.map(esc).join(', ')}</div>` : '';
+    if (done.length) {
+      const c = await Swal.fire({ icon: 'question', title: 'ออกใบเบิกเบ็ดเตล็ด (ขายลูกค้า)?', showCancelButton: true, confirmButtonText: 'ออกใบ', cancelButtonText: 'ยกเลิก',
+        html: `<div class="small">${done.map(esc).join(', ')}<br>เป็นรายการที่เบิกไปแล้ว — ใส่เลขใบ MI-… ให้ โดย <b>ไม่ตัดสต็อกเพิ่ม</b></div>${skipNote}` });
+      if (!c.isConfirmed) return;
+      _coSel.clear(); coSelUpdate();
+      showPage('miscout');
+      await miscOutConvertCo(done);
+      return;
+    }
+    _coSel.clear(); coSelUpdate();
+    showPage('miscout');
+    await miscOutOpen('เบิกเบ็ดเตล็ด');
+    miscOutFillFromCo(open, custs[0]);
+  } finally { _cmBusy = false; }
+}
+// กันกดซ้ำเอง (ไม่ใส่ใน _WRITE_ACTIONS เพราะตัวครอบนั้นจะคืน innerHTML เดิมของปุ่ม → ตัวเลข "(n)" ค้างหลังเคลียร์การเลือก)
+let _dnBusy = false;
+async function coDnOpen() {
+  if (_dnBusy) return;
+  _dnBusy = true;
+  try { await _coDnOpen(); } finally { _dnBusy = false; }
+}
+async function _coDnOpen() {
+  const orders = [..._coSel].map(id => _coCache.find(c => c.Order_ID === id)).filter(Boolean);
+  if (!orders.length) return;
+  const custs = [...new Set(orders.map(c => (c.CustomerName || '').trim()))];
+  if (custs.length > 1) { Swal.fire('เลือกลูกค้าเดียวกัน', `รายการที่เลือกเป็นของ ${custs.length} ลูกค้า (${custs.map(esc).join(', ')}) — ใบส่งสินค้า 1 ใบต่อ 1 ลูกค้า กรุณาเลือกแยกกัน`, 'info'); return; }
+  const noted = await _dnNotedQty();
+  const wds = [...(window._fgWithdrawCache || []), ...(window._rmCoWdCache || [])];
+  const h = orders[0], items = orders.map(c => ({ c, it: _coItem(c) }));
+  const rows = items.map(({ c, it }, i) => {
+    const sent = coWithdrawnQty(c.Order_ID), done = noted[c.Order_ID] || 0;
+    const lots = [...new Set(wds.filter(w => w.Order_ID === c.Order_ID && w.Lot).map(w => w.Lot))].join(', ');
+    const def = Math.round((sent > done ? sent - done : (sent === 0 ? Math.max(0, (Number(c.OrderQty) || 0) - done) : 0)) * 100000) / 100000;
+    return `<tr data-i="${i}"><td class="text-start"><div class="fw-semibold">${esc(it.name)}</div><div class="small text-muted">${esc(c.Order_ID)}</div></td>
+      <td class="text-end small">${_coQty(it, c.OrderQty)}</td><td class="text-end small">${_coQty(it, sent)}</td><td class="text-end small">${_coQty(it, done)}</td>
+      <td><input type="number" min="0" step="any" class="form-control form-control-sm dn-qty" value="${def || ''}" style="width:110px"> <span class="small text-muted">${esc(it.unit)}</span></td>
+      <td><input class="form-control form-control-sm dn-lot" value="${esc(lots)}" style="width:130px"></td>
+      <td><input class="form-control form-control-sm dn-note"></td></tr>`;
+  }).join('');
+  const res = await Swal.fire({ title: 'ออกใบส่งสินค้า', width: 980, showCancelButton: true, confirmButtonText: 'ออกใบส่ง + พิมพ์', cancelButtonText: 'ยกเลิก', focusConfirm: false,
+    html: `<div class="text-start small mb-2"><b>${esc(h.CustomerName)}</b>${h.PO_No ? ' · PO ' + esc(h.PO_No) : ''}</div>
+      <div class="d-flex gap-2 align-items-center mb-2"><label class="small mb-0">วันที่ส่ง</label><input type="date" id="dn-date" class="form-control form-control-sm" style="width:160px" value="${todayStr()}"></div>
+      <div class="table-responsive" style="max-height:50vh"><table class="table table-sm align-middle mb-2"><thead><tr class="small text-muted"><th class="text-start">สินค้า / CO</th><th class="text-end">สั่ง</th><th class="text-end">เบิกแล้ว</th><th class="text-end">ออกใบส่งแล้ว</th><th>จำนวนที่ส่งครั้งนี้</th><th>Lot</th><th>หมายเหตุ</th></tr></thead><tbody id="dn-rows">${rows}</tbody></table></div>
+      <div class="small text-muted text-start">จำนวนตั้งต้น = เบิกแล้ว − ที่เคยออกใบส่งไปแล้ว · แถวที่จำนวนเป็น 0 / ว่าง จะไม่อยู่ในใบ · ใบส่งสินค้าเป็นเอกสาร ไม่ตัดสต็อกเพิ่ม</div>`,
+    preConfirm: () => {
+      const lines = [...document.querySelectorAll('#dn-rows tr')].map(tr => {
+        const { c, it } = items[+tr.dataset.i], qty = parseFloat(tr.querySelector('.dn-qty').value) || 0;
+        return { order_id: c.Order_ID, kind: it.kind, id: it.id, name: it.name, cat: it.cat, lot: tr.querySelector('.dn-lot').value.trim(), qty, unit: it.unit, note: tr.querySelector('.dn-note').value.trim() };
+      }).filter(l => l.qty > 0);
+      if (!lines.length) { Swal.showValidationMessage('กรอกจำนวนที่ส่งอย่างน้อย 1 รายการ'); return false; }
+      return { date: document.getElementById('dn-date').value || todayStr(), lines };
+    } });
+  if (!res.isConfirmed) return;
+  const { date, lines } = res.value;
+  const { data: no, error } = await _sb.rpc('delivery_note_create', { p_date: date,
+    p_header: { customer: h.CustomerName, address: h.CustomerAddress || '', contact: h.ContactPerson || '', tel: h.ContactTel || '', po: h.PO_No || '' }, p_lines: lines });
+  if (error) {
+    console.error(error);
+    Swal.fire('ออกใบส่งสินค้าไม่สำเร็จ', error.code === 'PGRST202' || /delivery_notes/.test(error.message || '') ? 'แอดมินต้องรัน <code>migration_2026-10-21_delivery_notes.sql</code> ใน Supabase ก่อน' : esc(error.message), 'error');
+    return;
+  }
+  _coSel.clear(); coRenderTable();
+  _dnPrint({ DN_No: no, NoteDate: date, CustomerName: h.CustomerName, CustomerAddress: h.CustomerAddress, ContactPerson: h.ContactPerson, ContactTel: h.ContactTel, PO_No: h.PO_No, Lines: lines });
+}
+async function coDnHistory() {
+  const { data, error } = await _sb.from('delivery_notes').select('*').order('CreatedAt', { ascending: false }).limit(50);
+  if (error) { Swal.fire('โหลดไม่สำเร็จ', 'แอดมินต้องรัน <code>migration_2026-10-21_delivery_notes.sql</code> ใน Supabase ก่อน', 'info'); return; }
+  _dnList = data || [];
+  Swal.fire({ title: 'ใบส่งสินค้าที่ออกแล้ว', width: 820, showConfirmButton: false, showCloseButton: true,
+    html: `<div class="table-responsive" style="max-height:60vh"><table class="table table-sm align-middle text-start"><thead><tr class="small text-muted"><th>เลขที่ใบ</th><th>วันที่</th><th>ลูกค้า</th><th>รายการ</th><th></th></tr></thead><tbody>${
+      _dnList.map((n, i) => `<tr><td><code>${esc(n.DN_No)}</code></td><td class="text-nowrap">${fmtDate(n.NoteDate)}</td><td>${esc(n.CustomerName)}${n.PO_No ? `<div class="small text-muted">PO ${esc(n.PO_No)}</div>` : ''}</td>
+        <td class="small">${(n.Lines || []).map(l => esc(l.name)).join(', ')}</td><td><button class="btn btn-sm btn-outline-primary" onclick="coDnReprint(${i})"><i class="fa-solid fa-print me-1"></i>พิมพ์ซ้ำ</button></td></tr>`).join('')
+      || '<tr><td colspan="5" class="text-center text-muted py-3">ยังไม่เคยออกใบส่งสินค้า</td></tr>'}</tbody></table></div>` });
+}
+function coDnReprint(i) { Swal.close(); if (_dnList[i]) _dnPrint(_dnList[i]); }
+// พิมพ์ผ่านพื้นที่พิมพ์ของใบ genwd (A4 แนวตั้ง) — ต้นฉบับ + สำเนา
+function _genwdPrint(html) {
+  document.getElementById('genwd-print-root').innerHTML = html;
+  document.body.classList.add('print-genwd');
+  const done = () => {
+    document.body.classList.remove('print-genwd');
+    document.getElementById('genwd-print-root').innerHTML = '';
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+function _dnPrint(n) { _genwdPrint(_dnPageHTML(n, 'ต้นฉบับ') + _dnPageHTML(n, 'สำเนา')); }
+function _dnPageHTML(n, copyLabel) {
+  const lines = n.Lines || [], hasF = lines.some(l => l.kind === 'F'), hasM = lines.some(l => l.kind === 'M');
+  const whText = hasF && hasM ? `${WAREHOUSE_LABEL} (Material) · ${FG_WAREHOUSE_LABEL} (FG)` : (hasM ? WAREHOUSE_LABEL : FG_WAREHOUSE_LABEL);
+  const cos = [...new Set(lines.map(l => l.order_id))].join(', ');
+  const row = (l, v) => `<div class="genwd-infobox-row"><span class="lbl">${l}</span><span>${v}</span></div>`;
+  const contact = [n.ContactPerson, n.ContactTel].filter(Boolean).join(' · ');
+  const trs = lines.map((l, i) => `<tr><td class="num">${i + 1}</td><td>${esc(l.name)}</td><td>${esc(l.lot || '-')}</td><td class="qty">${l.kind === 'M' ? _qtyFmtByCat(l.qty, l.cat) : _bomFmtQty(l.qty)}</td><td>${esc(l.unit || '')}</td><td>${esc(l.note || '')}</td></tr>`).join('');
+  return `<div class="genwd-page">
+    ${_genwdHeadHTML(copyLabel, n.DN_No, fmtDateLong(n.NoteDate))}
+    <div class="genwd-title">ใบส่งสินค้า / Delivery Note</div>
+    <div class="genwd-infobox">
+      ${row('ลูกค้า (Customer)', `<b>${esc(n.CustomerName)}</b>`)}
+      ${row('ที่อยู่ (Address)', esc(n.CustomerAddress || '-'))}
+      ${row('ผู้ติดต่อ (Contact)', esc(contact || '-'))}
+      ${row('PO No.', esc(n.PO_No || '-'))}
+      ${row('อ้างอิง CO (Ref.)', esc(cos))}
+      ${row('คลัง (Warehouse)', esc(whText))}
+    </div>
+    <table class="genwd-table">
+      <thead><tr><th style="width:6%">ลำดับ<br>(No.)</th><th style="width:38%">รายละเอียดสินค้า<br>(Description)</th>
+        <th style="width:16%">Lot</th><th style="width:14%">จำนวน<br>(Quantity)</th><th style="width:10%">หน่วย<br>(Unit)</th><th style="width:16%">หมายเหตุ<br>(Remarks)</th></tr></thead>
+      <tbody>${trs}</tbody>
+    </table>
+    <div class="genwd-notes">
+      <div>หมายเหตุ: กรุณาตรวจสอบรายการและจำนวนให้ถูกต้องก่อนรับสินค้า</div>
+    </div>
+    <div class="genwd-footer">
+      <div class="genwd-sign"><div class="line">ผู้ส่งสินค้า</div><div class="date">วันที่ ...../...../.....</div></div>
+      <div class="genwd-sign"><div class="line">ผู้ตรวจสอบ</div><div class="date">วันที่ ...../...../.....</div></div>
+      <div class="genwd-sign"><div class="line">ผู้รับสินค้า (ลูกค้า)</div><div class="date">วันที่ ...../...../.....</div></div>
+    </div>
+  </div>`;
+}
 async function coDelete(id) {
+  // CO ที่เบิกของไปแล้ว (2026-10-21): ลบตรงๆ ติด FK (rm_withdraw/fg_withdraw/delivery ผูก CO) → เสนอ "ลบ CO + ลบรายการเบิก + คืนสต็อก" (co_delete_cascade)
+  const wds = [...(window._fgWithdrawCache || []), ...(window._rmCoWdCache || [])].filter(w => w.Order_ID === id);
+  if (wds.length) {
+    const co = _coCache.find(x => x.Order_ID === id), it = co ? _coItem(co) : null;
+    const total = wds.reduce((s, w) => s + Number(w.Qty), 0);
+    const cf = await Swal.fire({ icon: 'warning', title: `ลบ ${esc(id)} ที่เบิกไปแล้ว?`, showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ CO + คืนสต็อก', cancelButtonText: 'ยกเลิก',
+      html: `<div class="text-start small">CO นี้มีรายการเบิก <b>${wds.length}</b> รายการ${it ? ` รวม <b>${_coQty(it, total)}</b> ${esc(it.unit)}` : ''}<br><br>ถ้าลบต่อ ระบบจะ:<br>• ลบรายการเบิกทั้งหมดของ CO นี้ (รวมที่อยู่ในใบ MI-… และรายการจัดส่ง)<br>• <b>คืนสต็อกกลับล็อตเดิม</b><br>• แล้วลบ CO<br><br><span class="text-danger">ย้อนกลับไม่ได้</span></div>` });
+    if (!cf.isConfirmed) return;
+    const { error } = await _sb.rpc('co_delete_cascade', { p_order_id: id });
+    if (error) {
+      console.error(error);
+      Swal.fire('ลบไม่สำเร็จ', error.code === 'PGRST202' ? 'แอดมินต้องรัน <code>migration_2026-10-21_co_delete_cascade.sql</code> ใน Supabase ก่อน' : esc(error.message), 'error');
+      return;
+    }
+    _coSel.delete(id); _stockRmCache = [];
+    await Promise.all([coLoad(), stockFgLoad()]);
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `ลบ ${id} และคืนสต็อกแล้ว`, showConfirmButton: false, timer: 2200 });
+    return;
+  }
   const c = await Swal.fire({ title: 'ลบคำสั่งซื้อนี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
   if (await sbDelete('customer_orders', 'Order_ID', id)) coLoad();
@@ -7346,7 +7645,7 @@ function planOpenForm(id) {
   document.getElementById('pln-qty').value = row?.PlanQty ?? '';
   document.getElementById('pln-date').value = row?.PlanDate || todayStr();
   document.getElementById('pln-lot').value = row?.Lot || _genLotForDate(document.getElementById('pln-date').value);
-  const openCo = _coCache.filter(c => !_coDoneStatuses.includes(c.Status) || c.Order_ID === row?.Order_ID);
+  const openCo = _coCache.filter(c => !_coIsM(c) && (!_coDoneStatuses.includes(c.Status) || c.Order_ID === row?.Order_ID));   // CO แบบ Material ไม่เกี่ยวกับแผนผลิต
   document.getElementById('pln-co').innerHTML = '<option value="">-- ไม่อ้างอิง CO (ผลิตสต็อกล่วงหน้า) --</option>' + openCo.map(c => `<option value="${esc(c.Order_ID)}">${esc(c.Order_ID)} — ${esc(c.CustomerName)}</option>`).join('');
   if (row) document.getElementById('pln-co').value = row.Order_ID || '';
   planFgChanged();
@@ -8253,10 +8552,12 @@ async function issueLoad() {
     || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มี MO รอเบิกวัตถุดิบ</td></tr>';
 
   const [hist] = await Promise.all([
-    sbRun(_sb.from('issue_production').select('*').order('IssueDate', { ascending: false }).limit(100), 'โหลดประวัติการเบิก'),
+    sbRun(_sb.from('issue_production').select('*').order('IssueDate', { ascending: false }).limit(1000), 'โหลดประวัติการเบิก'),
     rcvEditLoadPending(),   // ปุ่มแก้ไข: มีคำขอค้าง = นาฬิกาทราย
   ]).then(([h]) => [h || []]);
-  _issueHistCache = hist;
+  // เดิม limit(100) แถว → การ์ด MO ที่ถูกตัดกลางคันโชว์รายการเบิกไม่ครบ (2026-10-22: MO 2026-001 มี 14 แถวแต่โชว์ 4 → ผู้ใช้เข้าใจว่าเบิกไม่ครบแล้วเพิ่มรายการซ้ำ)
+  // ตอนนี้โหลด 1000 แถว และถ้าเต็มลิมิต ตัดการ์ด MO สุดท้ายที่อาจโหลดมาไม่ครบทิ้ง (ไม่โชว์การ์ดครึ่งๆ กลางๆ)
+  _issueHistCache = hist.length >= 1000 ? hist.filter(h => h.MO_ID !== hist[hist.length - 1].MO_ID) : hist;
   _issueHistRenderCards();
 }
 // การ์ดต่อ MO (ทุกแถวของการเบิกครั้งเดียวกันมี MO_ID/IssueDate เดียวกันเสมอ — เบิกทีเดียวทุกวัตถุดิบผ่าน
@@ -8295,11 +8596,13 @@ function _issueHistRenderCards() {
     const fg = _fgMasterCache.find(f => f.FG_ID === mo?.FG_ID);
     const first = g.rows[0];
     const expanded = _issueHistExpanded.has(g.moId);
+    const rmCount = {};
+    g.rows.forEach(h => { rmCount[h.RM_ID] = (rmCount[h.RM_ID] || 0) + 1; });   // วัตถุดิบเดียวกันเบิกหลายแถวใน MO เดียว → ติดป้าย "ซ้ำ" ให้เห็น (อาจเบิกซ้ำโดยไม่ตั้งใจ)
     const rowsHtml = g.rows.map(h => {
       const hCat = rmMap[h.RM_ID]?.Category;
       return `<tr>
       <td><code>${esc(h.Issue_ID)}</code></td>
-      <td>${esc(rmMap[h.RM_ID]?.RM_Name || h.RM_ID)}</td>
+      <td>${esc(rmMap[h.RM_ID]?.RM_Name || h.RM_ID)}${rmCount[h.RM_ID] > 1 ? ' <span class="badge text-bg-warning" title="วัตถุดิบนี้มีรายการเบิกมากกว่า 1 แถวใน MO นี้ — ตรวจว่าเบิกซ้ำโดยไม่ตั้งใจหรือไม่">ซ้ำ</span>' : ''}</td>
       <td class="text-end">${h.QtyBase != null ? _qtyFmtByCat(h.QtyBase, hCat) : '-'}</td>
       <td class="text-end">${h.ScrapPct ? _bomFmtQty(h.ScrapPct) + '%' : '-'}</td>
       <td class="text-end fw-semibold">${_qtyFmtByCat(h.QtyIssued, hCat)} ${esc(h.Unit || '')}
@@ -8441,10 +8744,12 @@ async function issueDateBulkEdit(moId) {
 // แถววัตถุดิบจาก issueGenModal มาทั้งหมด (issadd- แทน issgen- กันชื่อ id ชนกัน) ต่างกันแค่ไม่มีช่อง FG/Lot/
 // จำนวนจะผลิต เพราะ MO มีข้อมูลนั้นอยู่แล้ว
 let _issAddMoId = null;
+let _issAddDupOk = new Set();   // วัตถุดิบที่ผู้ใช้กดยืนยัน "เพิ่มซ้ำ" แล้วในหน้าต่างเพิ่มรายการนี้ (ส่ง p_allow_dup ให้ rm_issue_add) — migration_2026-10-22_issue_add_no_duplicate.sql
 function issueHistAddItemOpen(gi) {
   const g = _issueHistGroupsCache[gi];
   if (!g) return;
   _issAddMoId = g.moId;
+  _issAddDupOk = new Set();
   const mo = _planCache.find(m => m.MO_ID === g.moId);
   const fg = _fgMasterCache.find(f => f.FG_ID === mo?.FG_ID);
   document.getElementById('issadd-title').textContent = `เพิ่มรายการเบิก — ${g.moId} (${fg?.FG_Name || mo?.FG_ID || '-'})`;
@@ -8478,9 +8783,17 @@ function issaddSearchMaterial(q) {
     : '<div class="list-group-item small text-muted">ไม่พบใน Master</div>';
   dd.style.display = 'block';
 }
-function issaddAddMaterial(rmId) {
+async function issaddAddMaterial(rmId) {
   const m = _rmMasterCache.find(r => r.RM_ID === rmId);
   if (!m) return;
+  // กันเพิ่มซ้ำ (2026-10-22): วัตถุดิบนี้เบิกให้ MO นี้ไปแล้ว → เตือนก่อน (เพิ่มซ้ำ = ตัดสต็อกซ้ำสองรอบ)
+  const dup = _issueHistCache.filter(h => h.MO_ID === _issAddMoId && h.RM_ID === rmId);
+  if (dup.length) {
+    const c = await Swal.fire({ icon: 'warning', title: 'เบิกรายการนี้ให้ MO นี้ไปแล้ว', showCancelButton: true, confirmButtonText: 'เพิ่มซ้ำ (ตัดสต็อกอีกรอบ)', cancelButtonText: 'ยกเลิก',
+      html: `<div class="small text-start">${esc(m.RM_Name)} (${esc(rmId)}) มีในใบเบิกของ ${esc(_issAddMoId)} แล้ว ${dup.length} แถว<br>${dup.map(h => `${esc(h.Issue_ID)} · ${_qtyFmtByCat(h.QtyIssued, m.Category)} ${esc(h.Unit || '')}`).join('<br>')}<br><br>ถ้าเพิ่มซ้ำ สต็อกจะถูกตัดซ้ำอีกครั้ง</div>` });
+    if (!c.isConfirmed) return;
+    _issAddDupOk.add(rmId);
+  }
   const stock = _stockRmCache.find(s => s.RM_ID === rmId)?.Qty ?? 0;
   document.getElementById('issadd-rows').insertAdjacentHTML('beforeend', _issaddRowHTML(m.RM_ID, m.RM_Name, m.Unit, stock));
   const tbody = document.getElementById('issadd-rows');
@@ -8509,6 +8822,7 @@ async function issueHistAddItemSave() {
   const { data: alloc, error } = await _sb.rpc('rm_issue_add', {
     p_mo_id: _issAddMoId,
     p_rows: rows.map((n, i) => ({ issue_id: _issIds[i], rm_id: n.RM_ID, qty: n.qty, unit: n.unit, issue_date: issueDate })),
+    ...(rows.some(r => _issAddDupOk.has(r.RM_ID)) ? { p_allow_dup: true } : {}),   // ส่งเฉพาะเมื่อผู้ใช้ยืนยันเพิ่มซ้ำ (เรียกแบบ 2 พารามิเตอร์ยังใช้ได้กับฟังก์ชันเดิม)
   });
   if (error) { _rmLotRpcErr(error, 'เบิกวัตถุดิบเพิ่มไม่สำเร็จ'); return; }
   bootstrap.Modal.getInstance(document.getElementById('issueAddModal')).hide();
@@ -10202,11 +10516,12 @@ async function fgLocMoveOpen(fgId, lot) {
 async function fgoutLoad() {
   if (!_coCache.length) await coLoad();
   if (!_stockFgCache.length) await stockFgLoad();
+  if (!_rmLotCache.length) await rmLotLoad();
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const openCo = _coCache.filter(c => !_coDoneStatuses.includes(c.Status));
   document.getElementById('fgoutCoTableBody').innerHTML = openCo.map(c => {
-    const remain = c.OrderQty - coWithdrawnQty(c.Order_ID);
-    return `<tr><td>${esc(c.Order_ID)}</td><td>${esc(c.CustomerName)}</td><td>${esc(fgMap[c.FG_ID]?.FG_Name || c.FG_ID)}</td><td>${_bomFmtQty(remain)}</td><td>${badge(c.Status, CO_STATUS_BADGE[c.Status])}</td>
+    const remain = c.OrderQty - coWithdrawnQty(c.Order_ID), it = _coItem(c);
+    return `<tr><td>${esc(c.Order_ID)}</td><td>${esc(c.CustomerName)}</td><td>${_coKindBadge(it)} ${esc(it.name)}</td><td>${_coQty(it, remain)} <span class="small text-muted">${esc(it.unit)}</span></td><td>${badge(c.Status, CO_STATUS_BADGE[c.Status])}</td>
     <td>${remain > 0 ? `<button class="btn btn-sm btn-success" onclick="fgoutOpenForm('${c.Order_ID}')"><i class="fa-solid fa-dolly me-1"></i>เบิกสินค้า</button>` : ''}</td></tr>`;
   }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีคำสั่งซื้อค้างส่ง</td></tr>';
 
@@ -10244,14 +10559,14 @@ async function miscOutLoad() {
   const from = fromEl.value, to = toEl.value;
   const [rmRes, fgRes] = await Promise.all([
     _sb.from('rm_withdraw').select('*').gte('WithdrawDate', from).lte('WithdrawDate', to).order('WithdrawDate', { ascending: false }).limit(MO_LIMIT),
-    _sb.from('fg_withdraw').select('*').is('Order_ID', null).gte('WithdrawDate', from).lte('WithdrawDate', to).order('WithdrawDate', { ascending: false }).limit(MO_LIMIT),
+    _sb.from('fg_withdraw').select('*').or('Order_ID.is.null,OutType.eq.ขายลูกค้า').gte('WithdrawDate', from).lte('WithdrawDate', to).order('WithdrawDate', { ascending: false }).limit(MO_LIMIT),
   ]);
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const lines = [
-    ...(rmRes.data || []).map(w => ({ kind: 'M', id: w.Withdraw_ID, docNo: w.DocNo, type: w.OutType || 'เบิกเบ็ดเตล็ด', dest: w.Destination, note: w.Note, date: w.WithdrawDate,
+    ...(rmRes.data || []).filter(w => !w.Order_ID || w.OutType === 'ขายลูกค้า').map(w => ({ kind: 'M', orderId: w.Order_ID, id: w.Withdraw_ID, docNo: w.DocNo, type: w.OutType || 'เบิกเบ็ดเตล็ด', dest: w.Destination, note: w.Note, date: w.WithdrawDate,
       name: rmMap[w.RM_ID]?.RM_Name || w.RM_ID, cat: rmMap[w.RM_ID]?.Category, qty: w.Qty, unit: w.Unit, lot: w.Lot })),
-    ...(fgRes.data || []).map(w => ({ kind: 'F', id: w.WD_ID, docNo: w.DocNo, type: w.OutType || 'เบิกเบ็ดเตล็ด', dest: w.Destination, note: w.Note, date: w.WithdrawDate,
+    ...(fgRes.data || []).map(w => ({ kind: 'F', orderId: w.Order_ID, id: w.WD_ID, docNo: w.DocNo, type: w.OutType || 'เบิกเบ็ดเตล็ด', dest: w.Destination, note: w.Note, date: w.WithdrawDate,
       name: fgMap[w.FG_ID]?.FG_Name || w.FG_ID, cat: null, qty: w.Qty, unit: fgMap[w.FG_ID]?.Unit, lot: w.Lot })),
   ];
   const slips = {};
@@ -10284,9 +10599,9 @@ function miscOutRender() {
     const lineHtml = s.lines.map(l => `<li>${l.kind === 'F' ? badge('FG', 'primary') : catBadge(l.cat)} ${esc(l.name)} <span class="text-muted">· Lot ${esc(l.lot || '-')}</span> · <b>${_qtyFmtByCat(l.qty, l.cat)}</b> ${esc(l.unit || '')}</li>`).join('');
     const purpose = s.type === 'โอนย้าย'
       ? `<b>${esc(s.dest || '-')}</b>${s.extra ? `<div class="small text-muted">${esc(s.extra)}</div>` : ''}`
-      : esc(s.note || '-');
+      : (s.type === 'ขายลูกค้า' ? `<b>${esc(s.dest || '-')}</b><div class="small text-muted">${esc(s.note || '')}</div>` : esc(s.note || '-'));
     return `<tr><td class="text-nowrap">${s.docNo ? `<code>${esc(s.docNo)}</code>` : '<span class="text-muted small">ยังไม่ออกเลข</span>'}</td>
-      <td>${badge(s.type, s.type === 'โอนย้าย' ? 'info' : 'secondary')}</td><td class="text-nowrap">${fmtDate(s.date)}</td><td>${purpose}</td>
+      <td>${badge(s.type, s.type === 'โอนย้าย' ? 'info' : (s.type === 'ขายลูกค้า' ? 'success' : 'secondary'))}</td><td class="text-nowrap">${fmtDate(s.date)}</td><td>${purpose}</td>
       <td><ul class="list-unstyled mb-0 small">${lineHtml}</ul></td>
       <td class="text-center text-nowrap"><button class="btn btn-sm btn-outline-secondary" data-k="${k}" onclick="miscOutPrint(this.dataset.k)" title="พิมพ์ใบ"><i class="fa-solid fa-print"></i></button>
         ${canDel ? `<button class="btn btn-sm btn-outline-danger" data-k="${k}" onclick="miscOutDelete(this.dataset.k)" title="ลบทั้งใบ (คืนสต็อก)"><i class="fa-solid fa-trash"></i></button>` : ''}</td></tr>`;
@@ -10300,7 +10615,10 @@ async function miscOutOpen(type) {
   if (!_rmMasterCache.length && !_fgMasterCache.length) { Swal.fire('ยังไม่มีรายการ', 'กรุณาเพิ่มวัตถุดิบหรือสินค้าก่อน', 'info'); return; }
   await Promise.all([rmLotLoad(), stockFgLoad()]);   // สต็อกล่าสุดทุกครั้งที่เปิดฟอร์ม
   _moType = type;
+  _moCo = null;
   const g = id => document.getElementById(id), tf = type === 'โอนย้าย';
+  g('mo-note').readOnly = false;
+  g('mo-co-btn').classList.toggle('d-none', tf);   // ดึงจาก CO ได้เฉพาะใบเบิกเบ็ดเตล็ด (ขายลูกค้า) ไม่ใช่โอนย้าย
   _modalClearErrors(['mo-dest', 'mo-note']);
   g('mo-err').textContent = '';
   g('mo-title').textContent = tf ? 'โอนย้าย' : 'เบิกเบ็ดเตล็ด';
@@ -10320,6 +10638,92 @@ async function miscOutOpen(type) {
   const el = g('miscOutModal');
   el.addEventListener('shown.bs.modal', () => (tf ? g('mo-dest') : g('mo-note')).focus(), { once: true });
   bootstrap.Modal.getOrCreateInstance(el).show();
+}
+// ── ดึงจากคำสั่งซื้อลูกค้า (2026-10-21 ผู้ใช้ขอ "ให้ดึงข้อมูลจากหน้าคำสั่งซื้อลูกค้าได้ด้วย") — migration_2026-10-21_co_misc_pull.sql ──
+// เลือก CO ค้างส่ง (ลูกค้าเดียวกัน หลายรายการได้) → เติมแถวรายการ + ล็อต FIFO ตามยอดค้างส่ง (แก้ล็อต/จำนวนต่อได้) → บันทึกด้วย co_issue_misc_multi
+// = ใบ MI-… ประเภท "ขายลูกค้า" ใบเดียว ผูก Order_ID แต่ละแถว (ยอดเบิก/สถานะของ CO อัปเดตให้) · _moCo != null = โหมดขายลูกค้า (ใช้ได้เฉพาะแถวที่ดึงมา)
+let _moCo = null;
+async function miscOutPickCo() {
+  if (_moType === 'โอนย้าย') return;
+  if (!_coCache.length) await coLoad();
+  const open = _coCache.map(c => ({ c, it: _coItem(c), remain: (Number(c.OrderQty) || 0) - coWithdrawnQty(c.Order_ID) }))
+    .filter(x => !_coDoneStatuses.includes(x.c.Status) && x.remain > 1e-9);
+  // ส่วนที่ 2: CO ที่ "เบิกไปแล้วแบบปกติ" และยังไม่มีเลขใบ (DocNo ว่าง) — ออกใบ MI-… ให้ได้โดยไม่ตัดสต็อกซ้ำ (co_withdraw_to_misc, ผู้ใช้ขอ 2026-10-21 ข้อ 1)
+  const unsl = {};
+  [...(window._fgWithdrawCache || []), ...(window._rmCoWdCache || [])].filter(w => w.Order_ID && !w.DocNo).forEach(w => (unsl[w.Order_ID] ||= []).push(w));
+  const done = _coCache.filter(c => unsl[c.Order_ID]).map(c => ({ c, it: _coItem(c), qty: unsl[c.Order_ID].reduce((s, w) => s + Number(w.Qty), 0), lots: [...new Set(unsl[c.Order_ID].map(w => w.Lot).filter(Boolean))].join(', ') }));
+  if (!open.length && !done.length) { Swal.fire('ไม่มีรายการให้ดึง', 'ทุกคำสั่งซื้อเบิกครบและออกใบแล้ว', 'info'); return; }
+  const section = (list, cls, rowHtml) => {
+    const groups = {};
+    list.forEach(x => (groups[x.c.CustomerName] ||= []).push(x));
+    return Object.entries(groups).map(([cust, xs]) => `<div class="text-start mb-2"><div class="fw-semibold">${esc(cust)}</div>${xs.map(x =>
+      `<label class="d-flex gap-2 align-items-start small py-1 border-bottom"><input type="checkbox" class="form-check-input mt-1 ${cls}" value="${esc(x.c.Order_ID)}" data-cust="${esc(cust)}"><span><code>${esc(x.c.Order_ID)}</code> ${_coKindBadge(x.it)} ${esc(x.it.name)} — ${rowHtml(x)}</span></label>`).join('')}</div>`).join('');
+  };
+  const html = (open.length ? `<div class="text-start small text-muted mb-1">ค้างส่ง — เบิกใหม่ (ตัดสต็อก)</div>${section(open, 'mo-co-chk', x => `ค้างส่ง <b>${_coQty(x.it, x.remain)}</b> ${esc(x.it.unit)} <span class="text-muted">· สต็อกพร้อมส่ง ${_coQty(x.it, x.it.stock.ready)}</span>`)}` : '')
+    + (done.length ? `<div class="text-start small text-muted mt-3 mb-1">เบิกไปแล้ว ยังไม่มีใบ — ออกใบเบิกขายลูกค้า <b>(ไม่ตัดสต็อกซ้ำ)</b></div>${section(done, 'mo-co-done', x => `เบิกแล้ว <b>${_coQty(x.it, x.qty)}</b> ${esc(x.it.unit)}${x.lots ? ` <span class="text-muted">· Lot ${esc(x.lots)}</span>` : ''}`)}` : '');
+  const res = await Swal.fire({ title: 'ดึงจากคำสั่งซื้อลูกค้า', width: 760, showCancelButton: true, confirmButtonText: 'ดึงรายการ', cancelButtonText: 'ยกเลิก', focusConfirm: false,
+    html: `<div style="max-height:55vh;overflow:auto">${html}</div><div class="small text-muted text-start mt-2">เลือกได้หลายรายการของลูกค้าเดียวกัน · ค้างส่ง → ระบบจัดล็อต FIFO ให้ตามยอดค้างส่ง (แก้ล็อต/จำนวนต่อได้) · เบิกไปแล้ว → ออกใบ MI-… ทันที ไม่ตัดสต็อกเพิ่ม · เลือกสองแบบปนกันไม่ได้</div>`,
+    preConfirm: () => {
+      const picked = [...document.querySelectorAll('.mo-co-chk:checked')], pickedDone = [...document.querySelectorAll('.mo-co-done:checked')];
+      if (!picked.length && !pickedDone.length) { Swal.showValidationMessage('เลือกอย่างน้อย 1 รายการ'); return false; }
+      if (picked.length && pickedDone.length) { Swal.showValidationMessage('เลือกได้ทีละแบบ: ค้างส่ง (เบิกใหม่) หรือ เบิกไปแล้ว (ออกใบ)'); return false; }
+      const sel = picked.length ? picked : pickedDone, custs = new Set(sel.map(i => i.dataset.cust));
+      if (custs.size > 1) { Swal.showValidationMessage('ใบเดียวเลือกได้เฉพาะลูกค้าเดียวกัน'); return false; }
+      return { ids: sel.map(i => i.value), customer: [...custs][0], converted: !picked.length };
+    } });
+  if (!res.isConfirmed) return;
+  if (res.value.converted) miscOutConvertCo(res.value.ids); else miscOutFillFromCo(res.value.ids, res.value.customer);
+}
+// ออกใบ MI-… ให้รายการที่เบิกไปแล้ว (ใส่เลขใบ/ประเภทลงแถวเดิม ไม่ตัดสต็อก) — migration_2026-10-21_co_misc_convert.sql
+async function miscOutConvertCo(ids) {
+  const { data: docNo, error } = await _sb.rpc('co_withdraw_to_misc', { p_order_ids: ids });
+  if (error) {
+    console.error(error);
+    Swal.fire('ออกใบไม่สำเร็จ', error.code === 'PGRST202' ? 'แอดมินต้องรัน <code>migration_2026-10-21_co_misc_convert.sql</code> ใน Supabase ก่อน' : esc(error.message), 'error');
+    return;
+  }
+  bootstrap.Modal.getInstance(document.getElementById('miscOutModal'))?.hide();
+  _coCache = [];
+  await miscOutLoad();
+  const r = await Swal.fire({ icon: 'success', title: `ออกใบ ${esc(docNo)} แล้ว`, text: 'รวมรายการที่เบิกไปแล้ว — ไม่ได้ตัดสต็อกเพิ่ม (ดู/ลบ/พิมพ์ซ้ำได้ที่หน้านี้)', showCancelButton: true, confirmButtonText: 'พิมพ์ใบ', cancelButtonText: 'ปิด' });
+  if (r.isConfirmed) miscOutPrint(docNo);
+}
+function miscOutFillFromCo(ids, customer) {
+  const g = id => document.getElementById(id), warns = [];
+  _moCo = { ids, customer };
+  g('mo-title').textContent = 'เบิกเบ็ดเตล็ด (ขายลูกค้า)';
+  g('mo-note').value = `ขายลูกค้า ${customer} (CO ${ids.join(', ')})`; g('mo-note').readOnly = true;
+  _modalClearErrors(['mo-note']);
+  g('mo-rows').innerHTML = '';
+  const usedLot = {};   // ล็อตที่ CO ก่อนหน้าในใบนี้จัดไปแล้ว — CO สินค้าเดียวกันหลายใบต้องไม่ใช้ล็อตเดียวกันเกินคงเหลือ
+  ids.forEach(id => {
+    const c = _coCache.find(x => x.Order_ID === id), it = _coItem(c);
+    let left = Math.max(0, (Number(c.OrderQty) || 0) - coWithdrawnQty(id));
+    // FIFO: เก่าก่อน (FG = วันผลิต · Material = วันรับเข้า) ข้ามล็อตหมดอายุ
+    const lots = (it.kind === 'M' ? _rmLotCache.filter(l => l.RM_ID === c.RM_ID && l.Qty > 0).map(l => ({ v: l.Lot_ID, qty: Number(l.Qty), d: l.ReceiveDate, exp: l.ExpDate }))
+      : _stockFgCache.filter(s => s.FG_ID === c.FG_ID && s.Qty > 0).map(s => ({ v: s.Lot, qty: Number(s.Qty), d: s.MfgDate || s.ExpDate, exp: s.ExpDate })))
+      .filter(l => !(l.exp && String(l.exp) < todayStr()))
+      .sort((a, b) => String(a.d || '9999-12-31').localeCompare(String(b.d || '9999-12-31')) || String(a.v).localeCompare(String(b.v), undefined, { numeric: true }));
+    for (const l of lots) {
+      if (left <= 1e-9) break;
+      const lk = `${it.kind}|${it.id}|${l.v}`, avail = l.qty - (usedLot[lk] || 0);
+      if (avail <= 1e-9) continue;
+      const take = Math.round(Math.min(avail, left) * 100000) / 100000;
+      usedLot[lk] = (usedLot[lk] || 0) + take;
+      left = Math.round((left - take) * 100000) / 100000;
+      miscOutAddRow(true);
+      const tr = g('mo-rows').lastElementChild;
+      tr.querySelector('.mo-item').value = _moLabel(it.id, it.name);
+      miscOutRowItem(tr.dataset.seq);
+      tr.querySelector('.mo-lot').value = l.v;
+      tr.querySelector('.mo-qty').value = take;
+      tr.dataset.order = id;
+    }
+    if (left > 1e-9) warns.push(`${esc(it.name)} (${esc(id)}): สต็อกพร้อมส่งไม่พอ ขาด ${_coQty(it, left)} ${esc(it.unit)}`);
+  });
+  if (!g('mo-rows').children.length) miscOutAddRow(true);
+  g('mo-err').innerHTML = warns.length ? `<span class="text-warning">${warns.join('<br>')}</span>` : '';
+  miscOutCalc();
 }
 function miscOutAddRow(noFocus) {
   const seq = ++_moSeq;
@@ -10409,15 +10813,27 @@ async function miscOutSave() {
     const key = `${tr.dataset.kind}|${tr.dataset.id}|${sel.value}`;
     used[key] = (used[key] || 0) + qty;
     if (used[key] > (parseFloat(opt.dataset.qty) || 0) + 1e-9) { fail(`${esc(name)}: จำนวนเกินคงเหลือของล็อตนี้ (เหลือ ${_qtyFmtByCat(parseFloat(opt.dataset.qty) || 0, tr.dataset.cat)})`, tr.querySelector('.mo-qty')); return; }
-    items.push(tr.dataset.kind === 'M' ? { kind: 'M', lot_id: sel.value, qty } : { kind: 'F', fg_id: tr.dataset.id, lot: sel.value, qty });
+    items.push(tr.dataset.kind === 'M' ? { kind: 'M', lot_id: sel.value, qty, order_id: tr.dataset.order } : { kind: 'F', fg_id: tr.dataset.id, lot: sel.value, qty, order_id: tr.dataset.order });
   }
-  const { data, error } = await _sb.rpc('misc_out_post', { p_type: _moType, p_date: date, p_dest: tf ? dest : null, p_note: note || null, p_items: items });
+  if (_moCo) {   // โหมดขายลูกค้า (ดึงจาก CO): ทุกแถวต้องมาจาก CO · เตือนถ้าเบิกเกินยอดค้างส่งของ CO ไหน
+    if (items.some(i => !i.order_id)) { fail('ใบขายลูกค้าใช้ได้เฉพาะรายการที่ดึงจากคำสั่งซื้อ — ลบแถวที่เพิ่มเอง หรือกด "ดึงจากคำสั่งซื้อลูกค้า" ใหม่'); return; }
+    const sums = {};
+    items.forEach(i => { sums[i.order_id] = (sums[i.order_id] || 0) + i.qty; });
+    const over = Object.entries(sums).filter(([id, q]) => { const c = _coCache.find(x => x.Order_ID === id); return c && q > (Number(c.OrderQty) || 0) - coWithdrawnQty(id) + 1e-9; });
+    if (over.length) {
+      const cf = await Swal.fire({ icon: 'warning', title: 'เบิกเกินยอดค้างส่ง', html: `<div class="text-start small">${over.map(([id]) => `• ${esc(id)}`).join('<br>')}</div>`, showCancelButton: true, confirmButtonText: 'บันทึกต่อ', cancelButtonText: 'กลับไปแก้' });
+      if (!cf.isConfirmed) return;
+    }
+  }
+  const { data, error } = _moCo ? await _sb.rpc('co_issue_misc_multi', { p_date: date, p_items: items })
+    : await _sb.rpc('misc_out_post', { p_type: _moType, p_date: date, p_dest: tf ? dest : null, p_note: note || null, p_items: items });
   if (error) {
-    if (error.code === 'PGRST202' && /misc_out_post/.test(error.message || '')) {
-      Swal.fire('ยังไม่ได้ตั้งค่า', 'แอดมินต้องรัน <code>migration_2026-10-15_misc_out.sql</code> ใน Supabase ก่อน', 'error'); return;
+    if (error.code === 'PGRST202' && /misc_out_post|co_issue_misc_multi/.test(error.message || '')) {
+      Swal.fire('ยังไม่ได้ตั้งค่า', `แอดมินต้องรัน <code>${_moCo ? 'migration_2026-10-21_co_misc_pull.sql' : 'migration_2026-10-15_misc_out.sql'}</code> ใน Supabase ก่อน`, 'error'); return;
     }
     _rmLotRpcErr(error, 'บันทึกใบไม่สำเร็จ (ไม่ได้ตัดสต็อกเลย)'); return;
   }
+  if (_moCo) _coCache = [];   // ยอดเบิก/สถานะของ CO เปลี่ยน — ให้หน้า CO โหลดใหม่
   bootstrap.Modal.getInstance(g('miscOutModal')).hide();
   await Promise.all([stockRmLoad(), stockFgLoad(), miscOutLoad()]);
   const r = await Swal.fire({ icon: 'success', title: `บันทึกใบ ${esc(data)} แล้ว`, text: `${items.length} รายการ — ตัดสต็อกเรียบร้อย`,
@@ -10449,6 +10865,7 @@ async function miscOutDelete(key) {
       await adjustStockFG(w.FG_ID, w.Lot, w.Qty);
     }
   }
+  _coCache = [];   // ใบ "ขายลูกค้า" ผูก CO — ลบแล้วสถานะ/ยอดเบิกของ CO เปลี่ยน ให้หน้า CO โหลดใหม่
   await Promise.all([stockRmLoad(), stockFgLoad(), miscOutLoad()]);
   Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ลบแล้ว คืนสต็อกเรียบร้อย', showConfirmButton: false, timer: 1800 });
 }
@@ -10479,6 +10896,7 @@ async function miscOutPrint(keyOrDoc) {
     if (error) Swal.fire('ออกเลขที่เอกสารไม่สำเร็จ', `${esc(error.message)} — จะพิมพ์ต่อโดยใช้เลขที่ระบบแทนไปก่อน`, 'warning');
     else { s.docNo = docNo; miscOutRender(); }
   }
+  if (s.type === 'ขายลูกค้า' && !_coCache.length) await coLoad();   // ใบขายลูกค้าดึง PO จาก CO มาใส่ช่องอ้างอิง
   document.getElementById('genwd-print-root').innerHTML = _moPageHTML(s, 'ต้นฉบับ') + _moPageHTML(s, 'สำเนา');
   document.body.classList.add('print-genwd');
   const done = () => {
@@ -10489,18 +10907,9 @@ async function miscOutPrint(keyOrDoc) {
   window.addEventListener('afterprint', done);
   window.print();
 }
-function _moPageHTML(s, copyLabel) {
-  const tf = s.type === 'โอนย้าย';
-  // คลังตามชนิดรายการในใบ: FG = คลัง 13 · วัตถุดิบ/แพ็คเกจจิ้ง = คลัง 10 · ปนกัน = ระบุทั้งสอง (2026-10-21)
-  const hasF = s.lines.some(l => l.kind === 'F'), hasM = s.lines.some(l => l.kind === 'M');
-  const whText = hasF && hasM ? `${WAREHOUSE_LABEL} (วัตถุดิบ/แพ็คเกจจิ้ง) · ${FG_WAREHOUSE_LABEL} (FG)` : (hasF ? FG_WAREHOUSE_LABEL : WAREHOUSE_LABEL);
-  const info = tf
-    ? `<div class="genwd-infobox-row"><span class="lbl">ปลายทาง (Destination)</span><span><b>${esc(s.dest || '-')}</b></span></div>
-       <div class="genwd-infobox-row"><span class="lbl">หมายเหตุ (Remarks)</span><span>${esc(s.extra || '-')}</span></div>`
-    : `<div class="genwd-infobox-row"><span class="lbl">วัตถุประสงค์ (Purpose)</span><span>${esc(s.note || '-')}</span></div>`;
-  const trs = s.lines.map((l, i) => `<tr><td class="num">${i + 1}</td><td>${esc(l.name)}</td><td>${esc(l.lot || '-')}</td><td class="qty">${_qtyFmtByCat(l.qty, l.cat)}</td><td>${esc(l.unit || '')}</td></tr>`).join('');
-  return `<div class="genwd-page">
-    <div class="genwd-head">
+// หัวใบ A4 ร่วม (โลโก้ + ที่อยู่บริษัท + ต้นฉบับ/สำเนา + เลขที่เอกสาร + วันที่) — ใช้ทั้งใบเบิกเบ็ดเตล็ด/โอนย้ายและใบส่งสินค้า
+function _genwdHeadHTML(copyLabel, docNo, dateText) {
+  return `<div class="genwd-head">
       <div class="genwd-brand"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
         <div class="genwd-company"><b>ที่อยู่:</b> บริษัท บลูมมิ่ง จำกัด (สำนักงานใหญ่)<br>
           เลขที่ 959 อาคารไซเบอร์พริ้นท์ ชั้นที่ 3,7 ซอยรัชดาภิเษก 3 (ซอยสุทธิพร)<br>
@@ -10508,13 +10917,36 @@ function _moPageHTML(s, copyLabel) {
           TAX ID: 0105535064032 ติดต่อ: 086-355-0358, 02-056-1692-4</div></div>
       <div class="genwd-meta">
         <div class="genwd-copytag">${esc(copyLabel)}</div>
-        <div>เลขที่เอกสาร (Document No.): <b>${esc(s.docNo || s.key)}</b></div>
-        <div>วันที่ (Date): <b>${fmtDateLong(s.date)}</b></div>
+        <div>เลขที่เอกสาร (Document No.): <b>${esc(docNo)}</b></div>
+        <div>วันที่ (Date): <b>${dateText}</b></div>
       </div>
-    </div>
-    <div class="genwd-title">${tf ? 'ใบโอนย้ายสินค้า / Stock Transfer Note' : 'ใบส่งเบิกเบ็ดเตล็ด / Miscellaneous Issue Note'}</div>
+    </div>`;
+}
+function _moPageHTML(s, copyLabel) {
+  const tf = s.type === 'โอนย้าย';
+  // คลังตามชนิดรายการในใบ: FG = คลัง 13 · วัตถุดิบ/แพ็คเกจจิ้ง = คลัง 10 · ปนกัน = ระบุทั้งสอง (2026-10-21)
+  const hasF = s.lines.some(l => l.kind === 'F'), hasM = s.lines.some(l => l.kind === 'M');
+  const whText = hasF && hasM ? `${WAREHOUSE_LABEL} (วัตถุดิบ/แพ็คเกจจิ้ง) · ${FG_WAREHOUSE_LABEL} (FG)` : (hasF ? FG_WAREHOUSE_LABEL : WAREHOUSE_LABEL);
+  const sale = s.type === 'ขายลูกค้า';   // เบิกตาม CO แบบเบ็ดเตล็ด (2026-10-21) — เลขใบ MI-… เหมือนเบิกเบ็ดเตล็ด แต่เป็นขายลูกค้า
+  // อ้างอิง = เลข PO ของ CO ที่อยู่ในใบ (ผู้ใช้ขอ 2026-10-21 "อ้างอิงให้ดึงข้อมูลจากช่อง PO") — PO เดียวกันทุก CO แสดงครั้งเดียว · ต่างกันแสดง "PO (CO)" ทีละคู่ · ไม่มี PO = "-"
+  const coIds = [...new Set(s.lines.map(l => l.orderId).filter(Boolean))];
+  const poMap = coIds.map(id => [id, String(_coCache.find(c => c.Order_ID === id)?.PO_No || '').trim()]).filter(([, p]) => p && p !== '-');
+  const poUniq = [...new Set(poMap.map(([, p]) => p))];
+  const poText = !poUniq.length ? '-' : (poUniq.length === 1 ? poUniq[0] : poMap.map(([id, p]) => `${p} (${id})`).join(', '));
+  const info = tf
+    ? `<div class="genwd-infobox-row"><span class="lbl">ปลายทาง (Destination)</span><span><b>${esc(s.dest || '-')}</b></span></div>
+       <div class="genwd-infobox-row"><span class="lbl">หมายเหตุ (Remarks)</span><span>${esc(s.extra || '-')}</span></div>`
+    : sale
+    ? `<div class="genwd-infobox-row"><span class="lbl">ลูกค้า (Customer)</span><span><b>${esc(s.dest || '-')}</b></span></div>
+       <div class="genwd-infobox-row"><span class="lbl">อ้างอิง (Reference)</span><span>${esc(coIds.length ? poText : (s.note || '-'))}</span></div>
+       ${coIds.length ? `<div class="genwd-infobox-row"><span class="lbl">เลขที่ CO</span><span>${esc(coIds.join(', '))}</span></div>` : ''}`
+    : `<div class="genwd-infobox-row"><span class="lbl">วัตถุประสงค์ (Purpose)</span><span>${esc(s.note || '-')}</span></div>`;
+  const trs = s.lines.map((l, i) => `<tr><td class="num">${i + 1}</td><td>${esc(l.name)}</td><td>${esc(l.lot || '-')}</td><td class="qty">${_qtyFmtByCat(l.qty, l.cat)}</td><td>${esc(l.unit || '')}</td></tr>`).join('');
+  return `<div class="genwd-page">
+    ${_genwdHeadHTML(copyLabel, s.docNo || s.key, fmtDateLong(s.date))}
+    <div class="genwd-title">${tf ? 'ใบโอนย้ายสินค้า / Stock Transfer Note' : (sale ? 'ใบเบิกขายลูกค้า / Customer Sales Issue Note' : 'ใบส่งเบิกเบ็ดเตล็ด / Miscellaneous Issue Note')}</div>
     <div class="genwd-infobox">
-      <div class="genwd-infobox-row"><span class="lbl">ประเภท (Type)</span><span>${tf ? 'โอนย้าย (Transfer)' : 'เบิกเบ็ดเตล็ด (Miscellaneous Issue)'}</span></div>
+      <div class="genwd-infobox-row"><span class="lbl">ประเภท (Type)</span><span>${tf ? 'โอนย้าย (Transfer)' : (sale ? 'ขายลูกค้า (Sale to Customer)' : 'เบิกเบ็ดเตล็ด (Miscellaneous Issue)')}</span></div>
       <div class="genwd-infobox-row"><span class="lbl">คลัง (Warehouse)</span><span>${esc(whText)}</span></div>
       ${info}
     </div>
@@ -10544,27 +10976,44 @@ function _fgoutFifo(a, b) {
 }
 const _fgoutIsExpired = l => !!l.ExpDate && String(l.ExpDate) < todayStr();
 function fgoutOpenForm(orderId) {
-  const co = _coCache.find(c => c.Order_ID === orderId);
+  const co = _coCache.find(c => c.Order_ID === orderId), it = _coItem(co), isM = it.kind === 'M';
   const remain = Math.max(0, co.OrderQty - coWithdrawnQty(orderId));
-  const lots = _stockFgCache.filter(s => s.FG_ID === co.FG_ID && s.Qty > 0).sort(_fgoutFifo);
+  // Material (2026-10-21): ล็อตจาก stock_rm_lot เรียง FIFO ตามวันรับเข้า — จับคู่ช่องให้เหมือนล็อต FG (วันที่ = วันรับเข้า) · id = Lot_ID ที่ส่งให้ rm_withdraw_for_co
+  const lots = isM
+    ? _rmLotCache.filter(l => l.RM_ID === co.RM_ID && l.Qty > 0).map(l => ({ id: l.Lot_ID, Lot: l.Lot || l.Lot_ID, MfgDate: l.ReceiveDate, ExpDate: l.ExpDate, Qty: Number(l.Qty) }))
+        .sort((a, b) => String(a.MfgDate || '9999-12-31').localeCompare(String(b.MfgDate || '9999-12-31')) || String(a.ExpDate || '9999-12-31').localeCompare(String(b.ExpDate || '9999-12-31')) || String(a.id).localeCompare(String(b.id)))
+    : _stockFgCache.filter(s => s.FG_ID === co.FG_ID && s.Qty > 0).sort(_fgoutFifo).map(s => ({ id: s.Lot, Lot: s.Lot, MfgDate: s.MfgDate, ExpDate: s.ExpDate, Qty: s.Qty }));
   if (!lots.length) { Swal.fire('ไม่มีสต็อก', 'สินค้านี้ไม่มีสต็อกคงเหลือให้เบิก', 'info'); return; }
   _fgoutOrderId = orderId;
   _fgoutLots = lots;
-  const unit = _fgMasterCache.find(f => f.FG_ID === co.FG_ID)?.Unit || 'หน่วย';
+  document.getElementById('fgo-mode-co').checked = true;
+  fgoutModeHint();
+  const unit = it.unit || 'หน่วย';
   _modalClearErrors(['fgo-qty']);
-  document.getElementById('fgo-title').textContent = `เบิกสินค้าสำหรับ ${orderId} (${FG_WAREHOUSE_LABEL})`;
-  document.getElementById('fgo-hint').textContent = `ค้างส่ง ${_bomFmtQty(remain)} ${unit} — สต็อกพร้อมส่งรวม ${_bomFmtQty(lots.filter(l => !_fgoutIsExpired(l)).reduce((s, l) => s + l.Qty, 0))} ${unit}`;
+  document.getElementById('fgo-th-date').textContent = isM ? 'วันที่รับเข้า' : 'วันที่ผลิต';
+  document.getElementById('fgo-title').textContent = `เบิกสินค้าสำหรับ ${orderId} (${it.wh})`;
+  document.getElementById('fgo-hint').textContent = `${it.name} · ค้างส่ง ${_coQty(it, remain)} ${unit} — สต็อกพร้อมส่งรวม ${_coQty(it, lots.filter(l => !_fgoutIsExpired(l)).reduce((s, l) => s + l.Qty, 0))} ${unit}`;
   document.getElementById('fgo-unit').textContent = unit;
   document.getElementById('fgo-lots').innerHTML = lots.map((l, i) => {
     const exp = _fgoutIsExpired(l);
     return `<tr${exp ? ' class="table-danger"' : ''}><td><span class="badge bg-light text-dark border">${esc(l.Lot)}</span>${exp ? ' <span class="badge text-bg-danger">หมดอายุแล้ว</span>' : ''}</td>
       <td>${l.MfgDate ? fmtDate(l.MfgDate) : '<span class="text-muted">—</span>'}</td><td>${l.ExpDate ? fmtDate(l.ExpDate) : '<span class="text-muted">—</span>'}</td>
-      <td class="text-end">${_bomFmtQty(l.Qty)}</td>
+      <td class="text-end">${_coQty(it, l.Qty)}</td>
       <td><input type="number" min="0" step="any" class="form-control form-control-sm fgo-lq" data-i="${i}" oninput="fgoutSumUpdate()"></td></tr>`;
   }).join('');
   document.getElementById('fgo-total').value = Math.min(remain, lots.filter(l => !_fgoutIsExpired(l)).reduce((s, l) => s + l.Qty, 0)) || '';
   fgoutAutoAlloc();
   new bootstrap.Modal(document.getElementById('fgoutModal')).show();
+}
+// รูปแบบการเบิก (2026-10-21 ผู้ใช้ขอ "ให้เลือกว่าจะเบิกแบบไหน — เบิกเบ็ดเตล็ด โยกไปหน้าเบิกเบ็ดเตล็ด ออกใบเบิกรันตามเบิกเบ็ดเตล็ด แต่เป็นขายลูกค้า")
+// • เบิกตาม CO (ปกติ): FG → fg_withdraw_for_co (สร้างรายการจัดส่ง) · Material → rm_withdraw_for_co
+// • เบิกเบ็ดเตล็ด (ขายลูกค้า): co_issue_misc — ใบเลข MI-… ประเภท "ขายลูกค้า" อยู่หน้า เบ็ดเตล็ด / โอนย้าย ยังผูก CO ไว้ ไม่สร้างรายการจัดส่ง — migration_2026-10-21_co_misc_sale.sql
+const _fgoutMode = () => document.getElementById('fgo-mode-misc').checked ? 'misc' : 'co';
+function fgoutModeHint() {
+  const co = _coCache.find(c => c.Order_ID === _fgoutOrderId), isM = co && _coIsM(co);
+  document.getElementById('fgo-mode-hint').textContent = _fgoutMode() === 'misc'
+    ? 'บันทึกที่หน้า "เบ็ดเตล็ด / โอนย้าย" ออกใบเบิกเลข MI-… ประเภท "ขายลูกค้า" (ผูก CO นี้ไว้) · ไม่สร้างรายการจัดส่ง · เบิกครบยอดสั่ง = ส่งสำเร็จ'
+    : (isM ? 'เบิกตาม CO · เบิกครบยอดสั่ง = ส่งสำเร็จ (Material ไม่มีขั้นตอนจัดส่ง)' : 'เบิกตาม CO · สร้างรายการจัดส่ง (รอจัดส่ง → จัดส่งแล้ว → ส่งถึงแล้ว) CO ปิดเมื่อส่งถึงครบ');
 }
 // จัดล็อตอัตโนมัติ FIFO ตามจำนวนรวมที่กรอก (ข้ามล็อตหมดอายุ)
 function fgoutAutoAlloc() {
@@ -10572,22 +11021,22 @@ function fgoutAutoAlloc() {
   document.querySelectorAll('#fgo-lots .fgo-lq').forEach(inp => {
     const l = _fgoutLots[+inp.dataset.i];
     const take = _fgoutIsExpired(l) ? 0 : Math.min(l.Qty, left);
-    inp.value = take > 0 ? Math.round(take * 1000) / 1000 : '';
-    left = Math.round((left - take) * 1000) / 1000;
+    inp.value = take > 0 ? Math.round(take * 100000) / 100000 : '';   // 5 ตำแหน่ง (Material ทศนิยม 5 ตำแหน่ง)
+    left = Math.round((left - take) * 100000) / 100000;
   });
   fgoutSumUpdate(left > 0 ? left : 0, true);
 }
 // รวมจำนวนรายล็อต → ตั้งเป็นยอดรวม (ถ้าแก้รายล็อตเอง) + สรุป/เตือน (fromTotal = มาจากการกรอกยอดรวม ไม่เขียนทับช่องยอดรวม)
 function fgoutSumUpdate(short, fromTotal) {
   const inputs = [...document.querySelectorAll('#fgo-lots .fgo-lq')];
-  const sum = Math.round(inputs.reduce((s, i) => s + (parseFloat(i.value) || 0), 0) * 1000) / 1000;
+  const sum = Math.round(inputs.reduce((s, i) => s + (parseFloat(i.value) || 0), 0) * 100000) / 100000;
   if (!fromTotal) document.getElementById('fgo-total').value = sum || '';
   inputs.forEach(i => { const l = _fgoutLots[+i.dataset.i]; i.classList.toggle('is-invalid', (parseFloat(i.value) || 0) > l.Qty + 1e-9); });
-  const co = _coCache.find(c => c.Order_ID === _fgoutOrderId), remain = Math.max(0, (co?.OrderQty || 0) - coWithdrawnQty(_fgoutOrderId));
+  const co = _coCache.find(c => c.Order_ID === _fgoutOrderId), remain = Math.max(0, (co?.OrderQty || 0) - coWithdrawnQty(_fgoutOrderId)), it = _coItem(co);
   const used = inputs.filter(i => (parseFloat(i.value) || 0) > 0).length;
-  let msg = `เบิกรวม <b>${_bomFmtQty(sum)}</b> จาก ${used} ล็อต · ค้างส่ง ${_bomFmtQty(remain)}`;
-  if (short > 0) msg += ` · <span class="text-danger fw-semibold">สต็อกพร้อมส่งไม่พอ ขาด ${_bomFmtQty(short)}</span>`;
-  else if (sum > remain + 1e-9) msg += ` · <span class="text-warning fw-semibold">เกินยอดค้างส่ง ${_bomFmtQty(sum - remain)}</span>`;
+  let msg = `เบิกรวม <b>${_coQty(it, sum)}</b> จาก ${used} ล็อต · ค้างส่ง ${_coQty(it, remain)}`;
+  if (short > 0) msg += ` · <span class="text-danger fw-semibold">สต็อกพร้อมส่งไม่พอ ขาด ${_coQty(it, short)}</span>`;
+  else if (sum > remain + 1e-9) msg += ` · <span class="text-warning fw-semibold">เกินยอดค้างส่ง ${_coQty(it, sum - remain)}</span>`;
   else if (sum > 0 && Math.abs(sum - remain) < 1e-9) msg += ' · <span class="text-success fw-semibold">ครบยอดค้างส่ง</span>';
   document.getElementById('fgo-sum').innerHTML = msg;
 }
@@ -10597,30 +11046,41 @@ async function fgoutModalSave() {
   for (const inp of document.querySelectorAll('#fgo-lots .fgo-lq')) {
     const qty = parseFloat(inp.value) || 0, l = _fgoutLots[+inp.dataset.i];
     if (qty <= 0) continue;
-    if (qty > l.Qty + 1e-9) { _modalShowError('fgo-qty', `ล็อต ${l.Lot} เบิกเกินสต็อกคงเหลือ (เหลือ ${_bomFmtQty(l.Qty)})`); inp.focus(); return; }
-    items.push({ lot: l.Lot, qty, expired: _fgoutIsExpired(l) });
+    if (qty > l.Qty + 1e-9) { _modalShowError('fgo-qty', `ล็อต ${l.Lot} เบิกเกินสต็อกคงเหลือ (เหลือ ${_coQty(_coItem(_coCache.find(c => c.Order_ID === _fgoutOrderId)), l.Qty)})`); inp.focus(); return; }
+    items.push({ lot: l.id, qty, expired: _fgoutIsExpired(l) });
   }
   if (!items.length) { _modalShowError('fgo-qty', 'กรอกจำนวนที่เบิกอย่างน้อย 1 ล็อต'); return; }
-  const orderId = _fgoutOrderId, co = _coCache.find(c => c.Order_ID === orderId);
+  const orderId = _fgoutOrderId, co = _coCache.find(c => c.Order_ID === orderId), it = _coItem(co), isM = it.kind === 'M';
   const total = items.reduce((s, i) => s + i.qty, 0), remain = Math.max(0, co.OrderQty - coWithdrawnQty(orderId));
   const warns = [];
-  if (total > remain + 1e-9) warns.push(`เบิกรวม ${_bomFmtQty(total)} <b>เกินยอดค้างส่ง</b> ${_bomFmtQty(remain)}`);
+  if (total > remain + 1e-9) warns.push(`เบิกรวม ${_coQty(it, total)} <b>เกินยอดค้างส่ง</b> ${_coQty(it, remain)}`);
   if (items.some(i => i.expired)) warns.push('มีล็อตที่ <b>หมดอายุแล้ว</b> ในรายการเบิก');
   if (warns.length) {
     const c = await Swal.fire({ icon: 'warning', title: 'ตรวจสอบก่อนเบิก', html: `<div class="text-start small">${warns.map(w => `• ${w}`).join('<br>')}</div>`,
       showCancelButton: true, confirmButtonText: 'เบิกต่อ', cancelButtonText: 'กลับไปแก้' });
     if (!c.isConfirmed) return;
   }
-  const { error } = await _sb.rpc('fg_withdraw_for_co', { p_order_id: orderId, p_items: items.map(i => ({ lot: i.lot, qty: i.qty })) });
+  // FG → fg_withdraw_for_co (ล็อต = ชื่อ Lot) · Material → rm_withdraw_for_co (ล็อต = stock_rm_lot.Lot_ID) — 2026-10-21
+  const misc = _fgoutMode() === 'misc';
+  const payload = items.map(i => isM ? { lot_id: i.lot, qty: i.qty } : { lot: i.lot, qty: i.qty });
+  const { data: docNo, error } = misc ? await _sb.rpc('co_issue_misc', { p_order_id: orderId, p_items: payload })
+    : isM ? await _sb.rpc('rm_withdraw_for_co', { p_order_id: orderId, p_items: payload })
+    : await _sb.rpc('fg_withdraw_for_co', { p_order_id: orderId, p_items: payload });
   if (error) {
     console.error(error);
-    Swal.fire('บันทึกการเบิกไม่สำเร็จ (ไม่ได้ตัดสต็อกเลย)', error.code === 'PGRST202' ? 'แอดมินต้องรัน <code>migration_2026-10-17_fg_withdraw_multilot.sql</code> ใน Supabase ก่อน' : esc(error.message), 'error');
+    const sqlFile = misc ? 'migration_2026-10-21_co_misc_sale.sql' : (isM ? 'migration_2026-10-21_co_material.sql' : 'migration_2026-10-17_fg_withdraw_multilot.sql');
+    Swal.fire('บันทึกการเบิกไม่สำเร็จ (ไม่ได้ตัดสต็อกเลย)', error.code === 'PGRST202' ? `แอดมินต้องรัน <code>${sqlFile}</code> ใน Supabase ก่อน` : esc(error.message), 'error');
     return;
   }
   bootstrap.Modal.getInstance(document.getElementById('fgoutModal')).hide();
+  if (isM) _stockRmCache = [];   // สต็อกวัตถุดิบเปลี่ยน — ให้หน้า Stock โหลดใหม่ครั้งหน้า
   await Promise.all([coLoad(), stockFgLoad()]);
   fgoutLoad();
-  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `เบิก ${_bomFmtQty(total)} จาก ${items.length} ล็อต แล้ว`, showConfirmButton: false, timer: 2200 });
+  if (!misc) { Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `เบิก ${_coQty(it, total)} จาก ${items.length} ล็อต แล้ว`, showConfirmButton: false, timer: 2200 }); return; }
+  // เบิกเบ็ดเตล็ด (ขายลูกค้า): ได้เลขที่ใบ MI-… แล้ว — ถามว่าจะพิมพ์ใบเบิกเลยไหม (ใบอยู่ที่หน้า เบ็ดเตล็ด / โอนย้าย พิมพ์ซ้ำได้ทุกเมื่อ)
+  const pr = await Swal.fire({ icon: 'success', title: `เบิกแล้ว — ใบเลขที่ ${esc(docNo)}`, html: `<div class="small">${_coQty(it, total)} ${esc(it.unit)} จาก ${items.length} ล็อต · บันทึกที่หน้า "เบ็ดเตล็ด / โอนย้าย" (ประเภท ขายลูกค้า)</div>`,
+    showCancelButton: true, confirmButtonText: '<i class="fa-solid fa-print me-1"></i>พิมพ์ใบเบิก', cancelButtonText: 'ปิด' });
+  if (pr.isConfirmed) { await miscOutLoad(); miscOutPrint(docNo); }
 }
 async function deliveryAdvance(deliveryId, newStatus) {
   const patch = { Status: newStatus };
@@ -11079,7 +11539,7 @@ async function stockCardRender() {
       ...(recv||[]).map(r => ({ date: r.ReceiveDate, ts: r.CreatedAt, label: 'รับเข้าคลัง', ref: r.FGReceive_ID, lot: r.Lot || '-', in: r.Qty, out: 0 })),
       // fg_withdraw ที่ไม่ผูก CO (Order_ID ว่าง) = เบิกเบ็ดเตล็ด/โอนย้ายออกจากหน้า "เบ็ดเตล็ด / โอนย้าย" ไม่ใช่ส่งลูกค้า
       ...(wd||[]).map(r => ({ date: r.WithdrawDate, ts: r.CreatedAt,
-        label: r.Order_ID ? 'เบิกส่งลูกค้า' : (r.OutType === 'โอนย้าย' ? `โอนย้ายออก → ${r.Destination || '-'}` : `เบิกเบ็ดเตล็ด${r.Note ? ` · ${r.Note}` : ''}`),
+        label: r.Order_ID ? (r.OutType === 'ขายลูกค้า' ? `ขายลูกค้า (เบิกเบ็ดเตล็ด) → ${r.Destination || '-'}` : 'เบิกส่งลูกค้า') : (r.OutType === 'โอนย้าย' ? `โอนย้ายออก → ${r.Destination || '-'}` : `เบิกเบ็ดเตล็ด${r.Note ? ` · ${r.Note}` : ''}`),
         ref: r.DocNo || r.WD_ID, lot: r.Lot || '-', in: 0, out: r.Qty })),
       ...(waste||[]).map(r => ({ date: r.WasteDate, ts: r.CreatedAt, label: 'ของเสีย', ref: r.Waste_ID, lot: r.Lot || '-', in: 0, out: r.Qty })),
     ];
@@ -11110,7 +11570,8 @@ async function stockCardRender() {
         // ยังไม่ออกใบรายงาน (ไม่มี RC_No) ใช้เลขที่รับภายใน Receive_ID ไปก่อน
         ref: r.RC_No ? `${r.RC_No}-${r.RM_ID}` : r.Receive_ID, lot: r.Lot || '-', in: r.Qty, out: 0 })),
       ...miscOut.map(r => ({ date: r.WithdrawDate, ts: r.CreatedAt,
-        label: r.OutType === 'โอนย้าย' ? `โอนย้ายออก → ${r.Destination || '-'}` : `เบิกเบ็ดเตล็ด${r.Note ? ` · ${r.Note}` : ''}`,
+        label: r.OutType === 'โอนย้าย' ? `โอนย้ายออก → ${r.Destination || '-'}`
+          : (r.Order_ID ? (r.OutType === 'ขายลูกค้า' ? `ขายลูกค้า (เบิกเบ็ดเตล็ด) → ${r.Destination || '-'}` : `เบิกส่งลูกค้า (${r.Order_ID})`) : `เบิกเบ็ดเตล็ด${r.Note ? ` · ${r.Note}` : ''}`),
         ref: r.DocNo || r.Withdraw_ID, lot: r.Lot || '-', in: 0, out: r.Qty })),
       // ต่อท้าย "เบิกเข้าไลน์ผลิต" ด้วย Lot ของ MO ที่เบิกไป (= FG Lot ที่จะออกมาในที่สุด ดู MO.Lot) ให้ตามรอยได้
       // ว่าวัตถุดิบล็อตนี้ถูกเบิกไปทำสินค้าล็อตไหน (ผู้ใช้ขอ 2026-10-05 "เบิกเป็น FG Lot ไหน ใส่ด้วย")
