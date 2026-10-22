@@ -11592,10 +11592,11 @@ async function stockCardRender() {
       ...prepIn.map(r => ({ date: r.ReceivedAt ? new Date(r.ReceivedAt).toLocaleDateString('sv-SE') : r.PrepDate, ts: r.ReceivedAt, label: 'รับกลับจากการเตรียม', ref: r.Prep_ID, lot: _lotLabel(_rmLotCache.find(l => l.Lot_ID === r.BackLotID) || { Lot_ID: r.BackLotID }), in: r.QtyBack, out: 0 })),
     ];
   }
-  // เรียงตามวันที่ แล้วตามเวลาบันทึกจริง (วันเดียวกันหลายรายการ) — ไม่มีเวลา: รับเข้าก่อนเบิกออก ยอดคงเหลือจะไม่ติดลบหลอก
+  // เรียงตามวันที่ → วันเดียวกัน "รับเข้าก่อนจ่ายออก" เสมอ → แล้วจึงตามเวลาบันทึกจริง (2026-10-22 ผู้ใช้ขอ: รับเข้า/จ่ายออกวันเดียวกัน
+  // เดิมเรียงตามเวลาบันทึก ใบรับที่คีย์ย้อนหลังทีหลังใบเบิกเลยไปอยู่ใต้การเบิก ยอดคงเหลือสะสมติดลบหลอก — ของต้องเข้าก่อนถึงจ่ายออกได้)
   entries.sort((a, b) => (new Date(a.date) - new Date(b.date))
-    || ((a.ts && b.ts) ? new Date(a.ts) - new Date(b.ts) : 0)
-    || ((b.in > 0) - (a.in > 0)));
+    || ((b.in > 0) - (a.in > 0))
+    || ((a.ts && b.ts) ? new Date(a.ts) - new Date(b.ts) : 0));
   // pkg (แพ็คเกจจิ้ง) นับเป็นชิ้น ไม่ใช่หมวดวัตถุดิบ (ชั่งน้ำหนัก) — ใช้ _bomFmtQty แบบผันแปรเหมือน FG
   const scFmt = (type === 'fg' || type === 'pkg') ? _bomFmtQty : _rmFmtQty;
   _scRawEntries = entries; _scRawUnit = unit; _scRawFmt = scFmt; _scRawType = type; _scRawId = id;
