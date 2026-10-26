@@ -2482,7 +2482,7 @@ td.empty-cell { white-space: normal !important; }
         <div class="rrpt-step">
           <div class="rrpt-step-title"><span class="n">1</span>เลือกข้อมูลที่จะพิมพ์</div>
           <div class="rrpt-row">
-            <div><label>ประเภทการรับ</label><select id="rrpt-source" class="form-select form-select-sm" onchange="rcvReportScopeChanged()" title="รับปกติออกเลข RC… · รับโอนย้ายจากคลังใหญ่ออกเลข TF… แยกใบกัน"><option value="RC">รับปกติ (RC)</option><option value="TF">รับโอนย้ายจากคลังใหญ่ (TF)</option></select></div>
+            <div><label>ประเภทการรับ</label><select id="rrpt-source" class="form-select form-select-sm" onchange="rcvReportScopeChanged()" title="รับปกติออกเลข RC… · รับโอนย้ายจากคลังใหญ่ออกเลข TF… · รับกลับจากการเตรียมออกเลข PR… แยกใบกัน"><option value="RC">รับปกติ (RC)</option><option value="TF">รับโอนย้ายจากคลังใหญ่ (TF)</option><option value="PR">รับกลับจากการเตรียมวัตถุดิบ (PR)</option></select></div>
             <div><label>วันที่รับ</label><input type="date" id="rrpt-date" class="form-control form-control-sm" onchange="rcvReportScopeChanged()"></div>
             <div><label>ซัพพลายเออร์</label><select id="rrpt-supplier" class="form-select form-select-sm" onchange="rcvReportScopeChanged()"></select></div>
             <button type="button" class="btn btn-outline-secondary btn-sm" id="rrpt-refresh-btn" onclick="rcvReportRefresh()" title="โหลดรายการรับและเลข RC ล่าสุดจากฐานข้อมูลใหม่ (เช่น เพิ่งแก้ไข/เพิ่มรายการรับ)"><i class="fa-solid fa-rotate me-1"></i>ดึงข้อมูลใหม่</button>
@@ -4076,7 +4076,7 @@ async function refreshCurrentPage() {
   _refreshing = true;
   const snap = _snapScroll();   // จำตำแหน่งเลื่อนก่อนโหลดใหม่ (หน้า + ตารางที่เลื่อนในกรอบ) — ไม่งั้นทุกครั้งที่มีคนอื่นบันทึกหน้าจะเด้งกลับบนสุด
   try {
-    _planCache = []; _coCache = []; _bomCache = []; _stockRmCache = []; _stockFgCache = []; _receivedCache = []; _wasteCache = []; _rmLotCache = []; _prepCache = []; _reqOrderCache = []; _reqOrderLinesCache = []; _packBoxCache = []; _stockMoveCache = [];
+    _planCache = []; _coCache = []; _bomCache = []; _stockRmCache = []; _stockFgCache = []; _receivedCache = []; _receivedPrep = []; _wasteCache = []; _rmLotCache = []; _prepCache = []; _reqOrderCache = []; _reqOrderLinesCache = []; _packBoxCache = []; _stockMoveCache = [];
     window._prodRecordCache = [];   // ไม่ใช่ let _xCache เหมือนตัวอื่น แต่ fgReceiveLoad เช็ค .length ของตัวนี้เหมือนกัน (ดูคอมเมนต์ที่ fgReceiveLoad)
     await _withLoading(async () => {
       await Promise.all([fgMasterLoad(), rmMasterLoad()]);
@@ -5825,6 +5825,26 @@ async function bomDeleteProduct(gi) {
 // RECEIVED — รับวัตถุดิบ+แพ็คเกจจิ้งรวมหน้าเดียว (ตาราง rm_receive เดิม แยกแค่ "หมวดหมู่" ในตาราง/ฟิลเตอร์)
 // ═══════════════════════════════════════════════════════════
 let _receivedCache = [];
+// รับกลับจากการเตรียมวัตถุดิบ (prep_orders สถานะ "รับกลับแล้ว") แสดงในหน้านี้ด้วยเพื่อเลือกพิมพ์ใบรายงานรับให้บัญชี (ผู้ใช้ขอ 2026-10-26)
+// แปลงเป็นแถวหน้าตาเหมือน rm_receive (_prep:true) เก็บแยกจาก _receivedCache — ไม่ปนกับการลบ/แก้ไขใบรับเดิม · เป็นเอกสารอย่างเดียว ไม่แตะสต็อก
+// เลขใบรายงานชุด PR<ปี>/<เดือน><ครั้งที่> เก็บที่ prep_orders.RC_No — migration_2026-10-26_prep_receipt_report.sql
+let _receivedPrep = [];
+const RCV_PREP_SUPPLIER = 'เตรียมเองภายใน';
+function _rcvAll() { return _receivedCache.concat(_receivedPrep); }
+function _prepAsReceive(p) {
+  const lot = _rmLotCache.find(l => l.Lot_ID === p.BackLotID);
+  const alloc = Array.isArray(p.SourceAlloc) ? p.SourceAlloc.filter(a => a && Number(a.qty) > 0) : [];
+  const src = _rmName(p.SourceRM_ID);
+  return { _prep: true, _lot: lot || null, Receive_ID: p.Prep_ID, RM_ID: p.TargetRM_ID, Qty: p.QtyBack, Unit: p.Unit,
+    ReceiveDate: p.ReceivedAt ? new Date(p.ReceivedAt).toLocaleDateString('sv-SE') : p.PrepDate,
+    CreatedAt: p.ReceivedAt || null, Lot: lot ? _lotLabel(lot) : '', ExpDate: lot?.ExpDate || null, Supplier: RCV_PREP_SUPPLIER,
+    Note: `← ${src}${_prepSrcLotText(p)}`, _noteEn: `From ${src}${alloc.length ? ', Lot ' + alloc.map(a => `${a.lot || a.lot_id || '-'} (${_rmFmtQty(a.qty)})`).join(', ') : ''}`,
+    RC_No: p.RC_No || null };
+}
+async function _receivedPrepLoad() {
+  const { data, error } = await _sb.from('prep_orders').select('*').eq('Status', 'รับกลับแล้ว').order('ReceivedAt', { ascending: false }).limit(RECEIVED_LIMIT);
+  _receivedPrep = error ? [] : (data || []).filter(p => Number(p.QtyBack) > 0).map(_prepAsReceive);
+}
 const RECEIVED_LIMIT = 1000;   // กันโหลดทั้งตารางไม่มีลิมิต (ผู้ใช้ขอ 2026-10-11) — ตั้งสูงพอที่จะไม่กระทบการ
 // ใช้งานจริงปัจจุบันเลย (รายงานรับเข้า/ค้นหา Lot ย้อนหลัง ฯลฯ ยังใช้ได้ครบ) แค่กันไม่ให้โตไม่มีเพดานในระยะยาว
 // เหมือนรูปแบบ AUDIT_LIMIT ที่มีอยู่แล้วในหน้า Log — ถ้าวันไหนแตะเพดานจริง จะมีข้อความเตือนที่ท้ายตาราง
@@ -5836,6 +5856,7 @@ async function receivedLoad() {
     rcvEditLoadPending(),
   ]);
   _receivedCache = rows || [];
+  await _receivedPrepLoad();   // หลัง rmLotLoad (ต้องใช้ล็อตของการรับกลับ)
   document.getElementById('receivedFooter').textContent = _receivedCache.length >= RECEIVED_LIMIT
     ? `แสดง ${RECEIVED_LIMIT} รายการล่าสุด — ใช้ช่องค้นหาหรือตัวกรองหมวดหมู่เพื่อหารายการที่เก่ากว่านี้` : '';
   receivedRenderTable();
@@ -5897,7 +5918,7 @@ function receivedRenderTable() {
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
   const catFilter = document.getElementById('receivedCategoryFilter').value;
   const q = (document.getElementById('receivedSearch').value || '').trim().toLowerCase();
-  const rows = _receivedCache.filter(r => {
+  const rows = _rcvAll().filter(r => {
     const cat = rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
     // ค้นหาแบบไฮบริด: พิมพ์อะไรก็ได้ที่อยู่ใน "ชื่อรายการ" (ไม่ใช่แค่รหัส) ซัพพลายเออร์ Lot (ทั้งของเราและ
     // ของผู้ผลิต) หรือหมายเหตุ — เดิมค้นแค่ JSON.stringify(r) ซึ่งเป็นแถวดิบไม่มีชื่อรายการ (มีแค่ RM_ID)
@@ -5915,7 +5936,7 @@ function receivedRenderTable() {
     r.Qty, r.Unit, r.Supplier || '', r.Lot || '', r.MfgLot || '', r.UnitPrice ?? '', r.ExpDate ? fmtDate(r.ExpDate) : '', r.Note || '']);
   document.getElementById('receivedTableBody').innerHTML = rows.map(r => {
     const cat = rmMap[r.RM_ID]?.Category || 'วัตถุดิบ';
-    const lot = lotByRcv[r.Receive_ID];
+    const lot = r._prep ? r._lot : lotByRcv[r.Receive_ID];
     const used = lot && lot.Qty < lot.QtyReceived;
     const pending = pendingByRcv[r.Receive_ID];
     // (คอลัมน์ "คงเหลือในล็อต" เอาออกตามที่ผู้ใช้ขอ 2026-09-26 — ดูคงเหลือรายล็อตได้ที่หน้าสต็อก)
@@ -5925,7 +5946,9 @@ function receivedRenderTable() {
     // ถ้าล็อตถูกใช้ไปแล้วจริง จะ reject พร้อมเหตุผลชัดเจน ไม่ได้ปล่อยให้ลบได้เสมอไปแบบไม่มีการป้องกัน
     const editBtn = _editBtn('rm_receive', r.Receive_ID);
     const delBtn = `<button class="btn btn-sm btn-outline-danger" onclick="receivedDelete('${esc(r.Receive_ID)}')" title="${used ? 'ล็อตนี้ถูกเบิก/ตัดของเสียไปแล้วบางส่วน — ลบได้แต่ต้องยืนยันอีกที' : 'ลบใบรับ'}"><i class="fa-solid fa-trash"></i></button>`;
-    const action = `<span class="text-nowrap">${editBtn}${delBtn}</span>`;
+    // แถวรับกลับจากเตรียม: ไม่มีปุ่มแก้/ลบที่นี่ (ยกเลิก/แก้ที่หน้าเตรียมวัตถุดิบ) มีแต่ปุ่มพาไปหน้านั้น
+    const action = r._prep ? `<button class="btn btn-sm btn-outline-secondary" onclick="showPage('prep')" title="มาจากการเตรียมวัตถุดิบ — แก้ไข/ยกเลิกที่หน้าเตรียมวัตถุดิบ"><i class="fa-solid fa-mortar-pestle"></i></button>`
+      : `<span class="text-nowrap">${editBtn}${delBtn}</span>`;
     const rcTag = r.RC_No ? `<div class="small text-primary" title="ออกใบรายงานรับแล้ว"><i class="fa-solid fa-file-lines me-1"></i>${esc(r.RC_No)}</div>` : '';
     const pendTag = pending ? `<div><span class="badge text-bg-warning"><i class="fa-solid fa-hourglass-half me-1"></i>รออนุมัติแก้ไข</span></div>` : '';
     // เลขที่รับ (Receive_ID) เป็นรหัสเบื้องหลัง ไม่แสดง — แสดงวันที่บันทึกแบบเดือนเต็ม (ผู้ใช้ขอ 2026-09-26) · ค้นหาด้วยเลขที่รับยังได้
@@ -5934,7 +5957,7 @@ function receivedRenderTable() {
     const groupRow = _rcvMonthGroupRow(r.ReceiveDate, sortMode);
     return `${groupRow}<tr><td class="text-nowrap" title="รับ ${esc(fmtDateLong(r.ReceiveDate))} · บันทึกเมื่อ ${esc(created ? _toLocalDate(created).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }) : '-')}">${fmtDayMonth(r.ReceiveDate)}${rcTag}${pendTag}</td><td>${catBadge(cat)}</td><td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}${r.Note ? `<div class="small text-muted" style="white-space:normal;max-width:260px"><i class="fa-regular fa-note-sticky me-1"></i>${esc(r.Note)}</div>` : ''}</td>
     <td class="text-end text-nowrap rcv-qty-cell"><span class="num">${_qtyFmtByCat(r.Qty, cat)}</span> <span class="unit">${esc(r.Unit)}</span></td>
-    <td>${esc(r.Supplier||'-')}${r.SourceType ? `<div class="small"><span class="badge text-bg-info">โอน</span> <span class="text-muted">${esc(r.TransferNo || '')}</span></div>` : ''}</td><td>${esc(r.Lot||'-')}${r.MfgLot ? `<div class="small text-muted">ผู้ผลิต: ${esc(r.MfgLot)}</div>` : ''}</td>
+    <td>${esc(r.Supplier||'-')}${r._prep ? '<div class="small"><span class="badge text-bg-success">รับกลับจากเตรียม</span></div>' : ''}${r.SourceType ? `<div class="small"><span class="badge text-bg-info">โอน</span> <span class="text-muted">${esc(r.TransferNo || '')}</span></div>` : ''}</td><td>${esc(r.Lot||'-')}${r.MfgLot ? `<div class="small text-muted">ผู้ผลิต: ${esc(r.MfgLot)}</div>` : ''}</td>
     <td class="text-end text-nowrap" ${r.HarvestDate ? `title="วันที่ผลิต ${esc(fmtDateLong(r.HarvestDate))}"` : ''}>${r.UnitPrice != null
       ? `${_fmtBaht(r.UnitPrice)} ฿<div class="small text-muted">รวม ${_fmtBaht(r.UnitPrice * r.Qty)} ฿</div>` : '<span class="text-muted">—</span>'}</td>
     <td class="text-nowrap">${lot && lot.Qty > 0 ? _expBadge(r.ExpDate) : (r.ExpDate ? fmtDate(r.ExpDate) : '<span class="text-muted">—</span>')}</td>
@@ -6928,7 +6951,7 @@ async function rcvEditBulkApprove() {
     const { error } = await _sb.rpc('edit_request_approve', { p_req_id: id, p_note: null });
     if (error) errs.push({ id, error });
   }
-  _receivedCache = []; _stockRmCache = []; _stockFgCache = []; _rmLotCache = []; _wasteCache = [];
+  _receivedCache = []; _receivedPrep = []; _stockRmCache = []; _stockFgCache = []; _rmLotCache = []; _wasteCache = [];
   await rcvEditLoad();
   if (errs.length) {
     Swal.fire('อนุมัติสำเร็จบางส่วน', `สำเร็จ ${ids.length - errs.length} จาก ${ids.length} รายการ<br>` + errs.map(e => `Req ${e.id}: ${esc(e.error.message)}`).join('<br>'), 'warning');
@@ -6970,7 +6993,7 @@ async function rcvEditApprove(reqId) {
   const { error } = await _sb.rpc('edit_request_approve', { p_req_id: reqId, p_note: c.value || null });
   if (error) { Swal.fire('อนุมัติไม่สำเร็จ', esc(error.message), 'error'); return; }
   Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'อนุมัติแล้ว — ปรับข้อมูลและสต็อกแล้ว', showConfirmButton: false, timer: 2200 });
-  _receivedCache = []; _stockRmCache = []; _stockFgCache = []; _rmLotCache = []; _wasteCache = [];
+  _receivedCache = []; _receivedPrep = []; _stockRmCache = []; _stockFgCache = []; _rmLotCache = []; _wasteCache = [];
   await rcvEditLoad();
 }
 async function rcvEditReject(reqId) {
@@ -7057,12 +7080,13 @@ async function rcvReportOpen() {
   if (!_receivedCache.length) await receivedLoad();
   // วันเริ่มต้น: วันนี้ถ้ามีรายการรับ ไม่งั้นวันล่าสุดที่ยังมีรายการรอออกรายงาน
   const today = todayStr();
-  const pendingDate = _receivedCache.filter(r => !r.RC_No).map(r => r.ReceiveDate).sort().pop();
+  const pendingDate = _rcvAll().filter(r => !r.RC_No).map(r => r.ReceiveDate).sort().pop();
   const dateEl = document.getElementById('rrpt-date');
-  dateEl.value = _receivedCache.some(r => r.ReceiveDate === today) ? today : (pendingDate || today);
+  dateEl.value = _rcvAll().some(r => r.ReceiveDate === today) ? today : (pendingDate || today);
   // ประเภทเริ่มต้น: รับปกติ (RC) — ยกเว้นวันนั้นไม่มีรายการรับปกติที่รอออกเลขแต่มีรายการรับโอนรออยู่ → เปิดที่ TF ให้เลย
-  const pend = _receivedCache.filter(r => r.ReceiveDate === dateEl.value && !r.RC_No);
-  document.getElementById('rrpt-source').value = !pend.some(r => !r.SourceType) && pend.some(r => r.SourceType) ? 'TF' : 'RC';
+  const pend = _rcvAll().filter(r => r.ReceiveDate === dateEl.value && !r.RC_No);
+  const hasRc = pend.some(r => !r._prep && !r.SourceType), hasTf = pend.some(r => !r._prep && r.SourceType), hasPr = pend.some(r => r._prep);
+  document.getElementById('rrpt-source').value = !hasRc && hasTf ? 'TF' : !hasRc && !hasTf && hasPr ? 'PR' : 'RC';
   document.getElementById('rrpt-supplier').innerHTML = '';
   document.getElementById('rrpt-history-wrap').open = false;
   // focus:false — ไม่งั้น focus trap ของ Bootstrap จะแย่งโฟกัสจากช่องกรอกของกล่อง "แก้เลข RC No" (Swal) ที่เปิดซ้อน
@@ -7074,16 +7098,18 @@ async function rcvReportOpen() {
 // เลขรายงานแยกตามประเภทการรับ (ผู้ใช้ขอ 2026-10-16): รับปกติ = RC<ปี>/<เดือน><ครั้งที่> เช่น RC2026/10001 · รับโอนย้ายจากคลังใหญ่ =
 // TF<ปี>/<เดือน><ครั้งที่> เช่น TF2026/10001 (ตัวนับแยกกัน) รายการที่รับโอน (rm_receive.SourceType) ออกใบแยกจากรายการรับปกติเสมอ
 // เลขเก่าที่ไม่มีคำนำหน้า (2026/10001) ยังใช้ได้ตามเดิม และนับเป็นส่วนหนึ่งของชุด RC ตอนหาเลขถัดไป (ลำดับไม่ตกหล่น/ไม่ซ้ำ)
-function _rrptSource() { return document.getElementById('rrpt-source').value === 'TF' ? 'TF' : 'RC'; }
+// ประเภทที่ 3 (2026-10-26): รับกลับจากการเตรียมวัตถุดิบ = PR<ปี>/<เดือน><ครั้งที่> เช่น PR2026/10001 (แถว _prep จาก prep_orders — ออกใบแยกจาก RC/TF เสมอ)
+function _rrptSource() { const v = document.getElementById('rrpt-source').value; return v === 'TF' || v === 'PR' ? v : 'RC'; }
 function _rrptDayRows(date, source) {
   source = source || _rrptSource();
-  return _receivedCache.filter(r => r.ReceiveDate === date && (source === 'TF' ? !!r.SourceType : !r.SourceType));
+  return _rcvAll().filter(r => r.ReceiveDate === date && (source === 'PR' ? !!r._prep : !r._prep && (source === 'TF' ? !!r.SourceType : !r.SourceType)));
 }
 // ใบที่ออกเลขแล้วเป็นของประเภทไหน: ดูจากรายการในใบ (ใบเก่าก่อนมีคำนำหน้ารวมรายการรับโอนไว้ได้) ไม่งั้นดูจากคำนำหน้าเลข
 function _rrptSourceOfRc(rcNo) {
-  const rows = _receivedCache.filter(r => r.RC_No === rcNo);
+  const rows = _rcvAll().filter(r => r.RC_No === rcNo);
+  if (rows.length && rows.every(r => r._prep)) return 'PR';
   if (rows.length && rows.every(r => r.SourceType)) return 'TF';
-  return /^TF/i.test(String(rcNo || '')) ? 'TF' : 'RC';
+  return /^PR/i.test(String(rcNo || '')) ? 'PR' : /^TF/i.test(String(rcNo || '')) ? 'TF' : 'RC';
 }
 function _rrptFillSuppliers(dayRows) {
   const sel = document.getElementById('rrpt-supplier');
@@ -7135,7 +7161,7 @@ async function _rrptSuggestNo(date, source) {
   // like '%2026/10%' ครอบทั้ง 2026/10…, RC2026/10…, TF2026/10… แล้วกรองชุดที่ต้องการด้วย regex ฝั่งเว็บ
   const { data, error } = await _sb.from('rm_rc_numbers').select('RC_No').like('RC_No', `%${ym}%`);
   if (error) return `${full}001`;
-  const re = new RegExp(`^${source === 'RC' ? '(?:RC)?' : 'TF'}${ym.replace('/', '\\/')}(\\d+)$`);
+  const re = new RegExp(`^${source === 'RC' ? '(?:RC)?' : source}${ym.replace('/', '\\/')}(\\d+)$`);
   const max = Math.max(0, ...(data || []).map(r => (r.RC_No.match(re) || [])[1]).filter(Boolean).map(Number));
   return `${full}${String(max + 1).padStart(3, '0')}`;
 }
@@ -7153,7 +7179,7 @@ async function rcvReportShowRc(rcNo, keepScope) {
     _rrptMsg('warn', '');
   }
   _rrptMsg('error', '');
-  _rrpt = { rows: _receivedCache.filter(r => r.RC_No === rcNo), rcNo, confirmed: true, fromData: true,
+  _rrpt = { rows: _rcvAll().filter(r => r.RC_No === rcNo), rcNo, confirmed: true, fromData: true,
             supplier: rec ? (rec.Supplier || '') : document.getElementById('rrpt-supplier').value };
   document.getElementById('rrpt-rcno').value = rcNo;
   _rrptApplyState();
@@ -7184,13 +7210,15 @@ async function rcvReportConfirm() {
   const no = document.getElementById('rrpt-rcno').value.trim();
   if (!no) { _rrptMsg('error', 'กรุณากรอกเลข RC No'); return; }
   if (!_rrpt.rows.length) { _rrptMsg('error', 'ไม่มีรายการใหม่ที่ต้องออกเลข RC No'); return; }
-  const { error } = await _sb.rpc('rm_report_issue', {
-    p_rc_no: no, p_date: document.getElementById('rrpt-date').value,
-    p_supplier: _rrpt.supplier || null, p_receive_ids: _rrpt.rows.map(r => r.Receive_ID),
-  });
+  const isPr = _rrpt.rows.every(r => r._prep);   // ใบรับกลับจากเตรียม → rm_report_issue_prep (stamp prep_orders.RC_No)
+  const date = document.getElementById('rrpt-date').value;
+  const { error } = isPr
+    ? await _sb.rpc('rm_report_issue_prep', { p_rc_no: no, p_date: date, p_prep_ids: _rrpt.rows.map(r => r.Receive_ID) })
+    : await _sb.rpc('rm_report_issue', { p_rc_no: no, p_date: date, p_supplier: _rrpt.supplier || null, p_receive_ids: _rrpt.rows.map(r => r.Receive_ID) });
   if (error) {
     console.error(error);
-    _rrptMsg('error', _rrptSetupErr(error) ? RRPT_SETUP_MSG : esc(error.message));
+    _rrptMsg('error', isPr && _rrptSetupErr(error) ? 'ยังไม่ได้ตั้งค่าใบรายงานรับกลับจากเตรียม — แอดมินต้องรัน <code>migration_2026-10-26_prep_receipt_report.sql</code> ใน Supabase ก่อน'
+      : _rrptSetupErr(error) ? RRPT_SETUP_MSG : esc(error.message));
     // มีคนออกเลข/ลบรายการไปก่อนเมื่อสักครู่ → ดึงข้อมูลล่าสุดแล้วคำนวณสโคปใหม่ (ข้อความ error ยังแสดงอยู่)
     if (/รีเฟรช/.test(error.message || '')) {
       const msg = document.getElementById('rrpt-error').innerHTML;
@@ -7244,7 +7272,7 @@ async function rcvReportRefresh() {
 async function rcvReportCancel(rcNo) {
   if (!rcNo || !_hasRole('supervisor')) return;
   const rec = _rrptHistory.find(h => h.RC_No === rcNo) || (await _sb.from('rm_rc_numbers').select('*').eq('RC_No', rcNo).maybeSingle()).data;
-  const n = _receivedCache.filter(r => r.RC_No === rcNo).length;
+  const n = _rcvAll().filter(r => r.RC_No === rcNo).length;
   const ok = await Swal.fire({
     icon: 'warning', title: `ยกเลิกใบ ${esc(rcNo)} ?`,
     html: `<div class="text-start small">รายการรับ <b>${n || (rec?.ItemCount ?? '-')}</b> รายการในใบนี้จะกลับเป็น <b>"ยังไม่ออกรายงาน"</b> และเลข <b>${esc(rcNo)}</b> จะถูกลบออกจากทะเบียน<br>
@@ -7265,7 +7293,7 @@ async function rcvReportCancel(rcNo) {
   await rcvReportRenderHistory();
   if (rec) {
     document.getElementById('rrpt-date').value = rec.ReceiveDate;
-    document.getElementById('rrpt-source').value = /^TF/i.test(rcNo) ? 'TF' : _rrptSourceOfRc(rcNo);   // ใบที่ยกเลิกไปแล้วไม่มีรายการเหลือผูกเลข → ดูจากคำนำหน้า
+    document.getElementById('rrpt-source').value = _rrptSourceOfRc(rcNo);   // ใบที่ยกเลิกไปแล้วไม่มีรายการเหลือผูกเลข → ดูจากคำนำหน้า (TF/PR)
     _rrptFillSuppliers(_rrptDayRows(rec.ReceiveDate));
     const sel = document.getElementById('rrpt-supplier');
     sel.value = [...sel.options].some(o => o.value === (rec.Supplier || '')) ? (rec.Supplier || '') : '';
@@ -7283,7 +7311,7 @@ async function rcvReportRename(oldNo) {
   const newNo = value.trim();
   const { error } = await _sb.rpc('rm_report_rename', { p_old: oldNo, p_new: newNo });
   if (error) { Swal.fire('แก้เลขไม่สำเร็จ', _rrptSetupErr(error) ? RRPT_SETUP_MSG : esc(error.message), 'error'); return; }
-  _receivedCache.forEach(r => { if (r.RC_No === oldNo) r.RC_No = newNo; });
+  _rcvAll().forEach(r => { if (r.RC_No === oldNo) r.RC_No = newNo; });
   if (_rrpt.rcNo === oldNo) { _rrpt.rcNo = newNo; document.getElementById('rrpt-rcno').value = newNo; }
   await rcvReportRenderHistory();
   _rrptApplyState();
@@ -7316,7 +7344,8 @@ function _rrptPageHtml(copyLabel) {
     (_BOM_CAT_ORDER[catOf(a)] ?? 9) - (_BOM_CAT_ORDER[catOf(b)] ?? 9)
     || String(rmMap[a.RM_ID]?.RM_Name || a.RM_ID).localeCompare(String(rmMap[b.RM_ID]?.RM_Name || b.RM_ID), 'th')
     || String(a.Receive_ID).localeCompare(String(b.Receive_ID)));
-  const showSup = !_rrpt.supplier;   // ใบรวมทุกซัพพลายเออร์ → แสดงคอลัมน์ซัพพลายเออร์ด้วย
+  const isPr = rows.length > 0 && rows.every(r => r._prep);   // ใบรับกลับจากการเตรียม (เลข PR…) — ไม่มีซัพพลายเออร์/ราคา ที่มาอยู่ในช่องหมายเหตุ
+  const showSup = !_rrpt.supplier && !isPr;   // ใบรวมทุกซัพพลายเออร์ → แสดงคอลัมน์ซัพพลายเออร์ด้วย
   // เลขที่ใบโอน (rm_receive.TransferNo ที่กรอกตอนรับโอน) แสดงบนใบ TF — ผู้ใช้ 2026-10-16 "ไม่เห็นเลขที่ใบโอนที่กรอกไปเลย":
   // อยู่ในแถบหัวใบ (ถ้าใบรวมหลายใบโอน แสดงทุกเลข + ใส่เลขของแต่ละแถวในช่องหมายเหตุให้รู้ว่ามาจากใบโอนไหน)
   const tfNos = [...new Set(rows.map(r => r.TransferNo).filter(Boolean))].sort();
@@ -7329,7 +7358,7 @@ function _rrptPageHtml(copyLabel) {
     <td>${esc(r.Lot || '-')}</td><td>${_fmtDateEn(r.ExpDate)}</td>
     <td class="num qty">${_qtyFmtByCat(r.Qty, catOf(r))}</td><td>${esc(_rrptUnit(r.Unit))}</td>
     <td class="num">${r.UnitPrice != null ? _fmtBaht(r.UnitPrice) : '-'}</td>
-    <td>${tfNos.length > 1 && r.TransferNo ? `<b>Doc: ${esc(r.TransferNo)}</b>${r.Note ? ' · ' : ''}` : ''}${esc(r.Note || '')}</td>
+    <td>${tfNos.length > 1 && r.TransferNo ? `<b>Doc: ${esc(r.TransferNo)}</b>${r.Note ? ' · ' : ''}` : ''}${esc(r._prep ? r._noteEn : (r.Note || ''))}</td>
   </tr>`).join('');
   // สรุปตามรายการ + หน่วย (หน่วยต่างกันบวกกันไม่ได้) · มูลค่ารวมนับเฉพาะรายการที่มีราคา
   const sum = {};
@@ -7343,7 +7372,7 @@ function _rrptPageHtml(copyLabel) {
   const sumRows = Object.values(sum).map(s => `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(_rrptCat(s.cat))}</td>
     <td class="num">${s.lots}</td><td class="num qty">${_qtyFmtByCat(s.qty, s.cat)}</td><td>${esc(_rrptUnit(s.unit))}</td>
     <td class="num">${s.priced ? _fmtBaht(s.amount) : '-'}</td></tr>`).join('')
-    + `<tr class="rrpt-total"><td colspan="6">Grand Total (THB)${unpriced ? ` <span class="small fw-normal">— ${unpriced} item(s) without price not included</span>` : ''}</td><td class="num">${_fmtBaht(grand)}</td></tr>`;
+    + `<tr class="rrpt-total"><td colspan="6">Grand Total (THB)${unpriced && !isPr ?` <span class="small fw-normal">— ${unpriced} item(s) without price not included</span>` : ''}</td><td class="num">${isPr ? '-' : _fmtBaht(grand)}</td></tr>`;
   const now = new Date();
   const sign = (en, th) => `<div class="rrpt-sign"><div class="line">${en}<div class="th">${th}</div></div><div class="date">Date ____ / ____ / ______</div></div>`;
   return `<div class="rrpt-page">
@@ -7354,13 +7383,13 @@ function _rrptPageHtml(copyLabel) {
       </div>
       <div>
         <div class="rrpt-title">GOODS RECEIVING REPORT<span class="rrpt-copytag">${esc(copyLabel)}</span></div>
-        <div class="rrpt-title-th">${isTf ? 'รายงานรับโอนย้ายจากคลังใหญ่ / วัตถุดิบ แพ็คเกจจิ้ง' : 'รายงานรับวัตถุดิบ / แพ็คเกจจิ้ง'}</div>
-        <div class="rrpt-no">${isTf ? 'TF' : 'RC'} No: ${_rrpt.confirmed ? esc(_rrpt.rcNo) : '(Not confirmed)'}</div>
+        <div class="rrpt-title-th">${isTf ? 'รายงานรับโอนย้ายจากคลังใหญ่ / วัตถุดิบ แพ็คเกจจิ้ง' : isPr ? 'รายงานรับกลับจากการเตรียมวัตถุดิบ / Received from Preparation' : 'รายงานรับวัตถุดิบ / แพ็คเกจจิ้ง'}</div>
+        <div class="rrpt-no">${isTf ? 'TF' : isPr ? 'PR' : 'RC'} No: ${_rrpt.confirmed ? esc(_rrpt.rcNo) : '(Not confirmed)'}</div>
       </div>
     </div>
     <div class="rrpt-filters">
       <div><span class="lbl">Receiving Date</span><span class="val">${_fmtDateEn(date)}</span></div>
-      <div><span class="lbl">Supplier</span><span class="val">${esc(!_rrpt.supplier ? 'All' : _rrpt.supplier === RRPT_NO_SUPPLIER ? 'Not specified' : _rrpt.supplier)}</span></div>
+      <div><span class="lbl">Supplier</span><span class="val">${esc(isPr ? 'In-house preparation' : !_rrpt.supplier ? 'All' : _rrpt.supplier === RRPT_NO_SUPPLIER ? 'Not specified' : _rrpt.supplier)}</span></div>
       <div><span class="lbl">Warehouse</span><span class="val">${esc(WAREHOUSE_LABEL)}</span></div>
       ${isTf && tfNos.length ? `<div><span class="lbl">Transfer Doc No.</span><span class="val">${esc(tfNos.join(', '))}</span></div>` : ''}
       <span class="minor">Items: <b>${rows.length}</b></span>
@@ -7750,10 +7779,7 @@ const CAT_TO_SCTYPE = { 'วัตถุดิบ': 'rm', [CAT_DRY]: 'dry', [CAT
 async function goStockCard(scType, id) {
   await showPage('stockcard');
   document.getElementById('scType').value = scType;
-  stockCardLoadItems();   // เติมตัวเลือกรายการของ scType นี้ใหม่ (เรียก stockCardRender() ในตัวด้วย)
-  const sel = document.getElementById('scItem');
-  if ([...sel.options].some(o => o.value === id)) sel.value = id;
-  stockCardRender();
+  stockCardLoadItems(id);   // เติมตัวเลือกรายการของ scType นี้ใหม่ + เลือก id ที่ขอ แล้วเรียก stockCardRender() ครั้งเดียว
 }
 // สถานะสต็อก (ตัวกรอง + สีขอบซ้าย) ใช้ร่วมกันทั้งวัตถุดิบและแพ็คเกจจิ้ง
 function _stockStatus(qty, minStock) {
@@ -12810,7 +12836,7 @@ async function stockCardLoad() {
   if (!_planCache.length) await planLoad();     // ไว้หา MO.Lot (= FG Lot) ของแถว "เบิกเข้าไลน์ผลิต" (2026-10-05)
   stockCardLoadItems();
 }
-function stockCardLoadItems() {
+function stockCardLoadItems(selectId) {
   const type = document.getElementById('scType').value;
   const sel = document.getElementById('scItem');
   let items;
@@ -12828,6 +12854,7 @@ function stockCardLoadItems() {
   // .order('RM_Name'/'FG_Name') ไว้ใช้กับดรอปดาวน์ค้นหาที่อื่น เลยเรียงใหม่เฉพาะที่นี่แทนที่จะแก้ query ต้นทาง
   items.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
   sel.innerHTML = items.map(i => `<option value="${esc(i.id)}">${esc(i.id)} — ${esc(i.name)}${i.supplier ? ' — ' + esc(i.supplier) : ''}</option>`).join('');
+  if (selectId && items.some(i => i.id === selectId)) sel.value = selectId;   // มาจากปุ่ม "ดูการ์ดสต็อก" — ต้องเลือกก่อนวาด ไม่งั้นวาดรายการแรกก่อนแล้วโหลดช้ากว่ามาทับ (บั๊กที่ผู้ใช้เจอ 2026-10-26)
   stockCardRender();
 }
 let _scLastRows = []; let _scLastLabel = '';
@@ -12838,6 +12865,12 @@ let _scRawEntries = []; let _scRawUnit = ''; let _scRawFmt = _bomFmtQty; let _sc
 let _scRawType = ''; let _scRawId = '';   // เก็บไว้คำนวณ "มูลค่าคงเหลือ" ตอนวาด KPI (ดู _scValueForBalance)
 // ล็อตที่ตัด/รับของแต่ละประเภทธุรกรรม — รวมเป็น string เดียวพอ (ProFlow-style ตาราง 1 แถว = 1 Lot pill,
 // แต่ issue/prep ของ BM Flow ตัดได้หลายล็อตต่อแถวจาก FEFO จึงรวมเป็น "lot1, lot2" ถ้ามีมากกว่า 1)
+// ที่มาของ "รับกลับจากการเตรียม" ในสต็อกการ์ด (ผู้ใช้ขอ 2026-10-26 "จาก Lot ไหนด้วย ให้ละเอียด"): ล็อตต้นทางที่เบิกไปเตรียมใบนี้ (SourceAlloc) + จำนวนต่อล็อต
+function _prepSrcLotText(r) {
+  const alloc = Array.isArray(r.SourceAlloc) ? r.SourceAlloc.filter(a => a && Number(a.qty) > 0) : [];
+  const lots = alloc.map(a => `${a.lot || a.lot_id || '-'} (${_rmFmtQty(a.qty)})`).join(', ');
+  return lots ? ` · จาก Lot ${lots}` : '';   // ผู้ใช้เลือกแค่ "จาก Lot … (จำนวน)" — ไม่ใส่ เบิกไป/ได้กลับ ต่อท้าย
+}
 function _scAllocLots(alloc) {
   return Array.isArray(alloc) && alloc.length ? [...new Set(alloc.map(a => a.lot).filter(Boolean))].join(', ') : '-';
 }
@@ -12855,7 +12888,10 @@ async function _wasteLotFromDeletedIssue(missingIds) {
 function _wasteRefIssueId(reason) {
   return (reason || '').match(/อ้างอิง (ISS-\S+)\)/)?.[1];
 }
+// กันผลโหลดเก่ามาทับผลใหม่: สลับรายการ/ประเภทเร็วๆ แล้วคำขอแรกที่ข้อมูลเยอะกว่าเสร็จทีหลัง เคยวาดข้อมูลของรายการอื่นทับ (ผู้ใช้เจอ 2026-10-26)
+let _scSeq = 0;
 async function stockCardRender() {
+  const seq = ++_scSeq;
   const type = document.getElementById('scType').value;
   const id = document.getElementById('scItem').value;
   const tbody = document.getElementById('stockCardTableBody');
@@ -12934,11 +12970,12 @@ async function stockCardRender() {
         return { date: r.WasteDate, ts: r.CreatedAt, label: 'ของเสีย', ref: r.Waste_ID, lot, in: 0, out: r.Qty };
       }),
       ...prepOut.map(r => ({ date: r.PrepDate, ts: r.CreatedAt, label: 'เบิกไปเตรียม', ref: r.Prep_ID, lot: _scAllocLots(r.SourceAlloc), alloc: r.SourceAlloc, in: 0, out: r.QtyOut })),
-      ...prepIn.map(r => ({ date: r.ReceivedAt ? new Date(r.ReceivedAt).toLocaleDateString('sv-SE') : r.PrepDate, ts: r.ReceivedAt, label: `รับกลับจากการเตรียม ← ${_rmName(r.SourceRM_ID)} (${r.SourceRM_ID})`, ref: r.Prep_ID, lot: _lotLabel(_rmLotCache.find(l => l.Lot_ID === r.BackLotID) || { Lot_ID: r.BackLotID }), in: r.QtyBack, out: 0 })),
+      ...prepIn.map(r => ({ date: r.ReceivedAt ? new Date(r.ReceivedAt).toLocaleDateString('sv-SE') : r.PrepDate, ts: r.ReceivedAt, label: `รับกลับจากการเตรียม ← ${_rmName(r.SourceRM_ID)} (${r.SourceRM_ID})${_prepSrcLotText(r)}`, ref: r.Prep_ID, lot: _lotLabel(_rmLotCache.find(l => l.Lot_ID === r.BackLotID) || { Lot_ID: r.BackLotID }), in: r.QtyBack, out: 0 })),
     ];
   }
   // เรียงตามวันที่ → วันเดียวกัน "รับเข้าก่อนจ่ายออก" เสมอ → แล้วจึงตามเวลาบันทึกจริง (2026-10-22 ผู้ใช้ขอ: รับเข้า/จ่ายออกวันเดียวกัน
   // เดิมเรียงตามเวลาบันทึก ใบรับที่คีย์ย้อนหลังทีหลังใบเบิกเลยไปอยู่ใต้การเบิก ยอดคงเหลือสะสมติดลบหลอก — ของต้องเข้าก่อนถึงจ่ายออกได้)
+  if (seq !== _scSeq) return;   // มีการเลือกรายการใหม่ระหว่างรอโหลด — ผลนี้ล้าสมัยแล้ว ทิ้ง
   entries.sort((a, b) => (new Date(a.date) - new Date(b.date))
     || ((b.in > 0) - (a.in > 0))
     || ((a.ts && b.ts) ? new Date(a.ts) - new Date(b.ts) : 0));
