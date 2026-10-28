@@ -7354,7 +7354,7 @@ function _rrptPageHtml(copyLabel) {
   const isTf = rows.length > 0 && rows.every(r => r.SourceType);   // ใบรับโอนย้ายจากคลังใหญ่ (เลข TF…) ใช้หัวเรื่อง/ป้ายเลขต่างจากใบรับปกติ
   const date = rows[0]?.ReceiveDate || document.getElementById('rrpt-date').value;
   const trs = rows.map((r, i) => `<tr>
-    <td class="ord">${i + 1}</td><td>${esc(r.RM_ID)}</td>
+    <td class="ord">${i + 1}</td><td style="white-space:nowrap">${esc(r.RM_ID)}</td>
     <td>${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td><td>${esc(_rrptCat(catOf(r)))}</td>
     ${showSup ? `<td>${esc(r.Supplier || '-')}</td>` : ''}
     <td>${esc(r.Lot || '-')}</td><td>${_fmtDateEn(r.ExpDate)}</td>
@@ -7371,7 +7371,7 @@ function _rrptPageHtml(copyLabel) {
     sum[k].lots++; sum[k].qty += parseFloat(r.Qty) || 0;
     if (r.UnitPrice != null) { const a = r.UnitPrice * r.Qty; sum[k].amount += a; sum[k].priced = true; grand += a; } else unpriced++;
   });
-  const sumRows = Object.values(sum).map(s => `<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(_rrptCat(s.cat))}</td>
+  const sumRows = Object.values(sum).map(s => `<tr><td style="white-space:nowrap">${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(_rrptCat(s.cat))}</td>
     <td class="num">${s.lots}</td><td class="num qty">${_qtyFmtByCat(s.qty, s.cat)}</td><td>${esc(_rrptUnit(s.unit))}</td>
     <td class="num">${s.priced ? _fmtBaht(s.amount) : '-'}</td></tr>`).join('')
     + `<tr class="rrpt-total"><td colspan="6">Grand Total (THB)${unpriced && !isPr ?` <span class="small fw-normal">— ${unpriced} item(s) without price not included</span>` : ''}</td><td class="num">${isPr ? '-' : _fmtBaht(grand)}</td></tr>`;
@@ -7398,14 +7398,14 @@ function _rrptPageHtml(copyLabel) {
     </div>
     ${rows.length ? `
     <table class="rrpt-table">
-      <thead><tr><th style="width:4%">No.</th><th style="width:6%">Code</th><th style="width:15%">Description</th><th style="width:7%">Category</th>
+      <thead><tr><th style="width:4%">No.</th><th style="width:13%">Code</th><th style="width:15%">Description</th><th style="width:7%">Category</th>
         ${showSup ? '<th style="width:8%">Supplier</th>' : ''}<th style="width:8%">Lot No.</th><th style="width:8%">Exp. Date</th>
         <th class="num" style="width:9%">Qty</th><th style="width:4%">Unit</th><th class="num" style="width:7%">Unit Price</th><th>Remarks</th></tr></thead>
       <tbody>${trs}</tbody>
     </table>
     <div class="rrpt-sum-title">Summary by Item</div>
     <table class="rrpt-table sum">
-      <thead><tr><th style="width:10%">Code</th><th style="width:26%">Description</th><th style="width:12%">Category</th><th class="num" style="width:8%">Lots</th><th class="num" style="width:16%">Total Qty</th><th style="width:7%">Unit</th><th class="num">Amount (THB)</th></tr></thead>
+      <thead><tr><th style="width:17%">Code</th><th style="width:25%">Description</th><th style="width:12%">Category</th><th class="num" style="width:8%">Lots</th><th class="num" style="width:16%">Total Qty</th><th style="width:7%">Unit</th><th class="num">Amount (THB)</th></tr></thead>
       <tbody>${sumRows}</tbody>
     </table>` : '<div class="rrpt-empty">No items for the selected date / supplier.</div>'}
     <div class="rrpt-foot">
