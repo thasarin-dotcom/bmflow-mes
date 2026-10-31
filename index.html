@@ -482,6 +482,24 @@ table.rrpt-table.rrpt-table.sum tr.rrpt-total td { font-size: 10px; }
 .rrpt-sign .date { font-size: 10px; margin-top: 8px; }
 .rrpt-title-th { font-size: 11px; color: #64748b; text-align: right; }
 .rrpt-empty { color: #dc2626; font-size: 12px; margin-top: 18px; }
+/* FM-WH-01 (ฟอร์ม GMP — ปุ่มแยกที่หน้ารับวัตถุดิบเข้าคลัง) — A4 แนวนอน ขอบบน-ล่าง 5mm ซ้าย-ขวา 6mm ตามไฟล์ Word ต้นฉบับ (ดู _fm01Html) */
+.fm01-page { font-family: 'Sarabun', sans-serif; font-size: 12pt; color: #000; background: #fff; width: 297mm; box-sizing: border-box; padding: 5mm 6mm; margin: 0 auto 16px; line-height: 1.25; }
+.fm01-head { display: grid; grid-template-columns: 108fr 86fr 96fr; align-items: center; text-align: center; }
+.fm01-head img { width: 22.5mm; height: auto; }
+.fm01-title { font-size: 15pt; font-weight: 700; white-space: nowrap; }
+.fm01-code { font-size: 13pt; font-weight: 700; line-height: 1.35; white-space: nowrap; }
+.fm01-info { display: flex; gap: 3mm; font-size: 11.5pt; margin: 4mm 0 1.5mm; }
+.fm01-info .f { display: flex; flex: 1 1 auto; gap: 2mm; align-items: flex-end; min-width: 0; white-space: nowrap; }
+.fm01-info .f > span:first-child { flex: none; }
+.fm01-info .v { flex: 1; min-width: 20mm; border-bottom: 1px dotted #000; min-height: 1.3em; padding-left: 1mm; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+table.fm01-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.fm01-table th, .fm01-table td { border: .5pt solid #000; padding: 0 .8mm; text-align: center; vertical-align: middle; font-size: 10pt; line-height: 1.1; overflow: hidden; word-break: break-word; }
+.fm01-table th { font-weight: 700; line-height: 1.1; padding: .6mm .5mm; font-size: 10.5pt; }
+.fm01-table th small { font-weight: 400; font-size: 8.5pt; }
+.fm01-table tbody tr { height: 6.6mm; }
+.fm01-note { display: grid; grid-template-columns: 22mm 1fr 1fr; gap: 2mm; border: .5pt solid #000; margin-top: 4mm; padding: 1.5mm 3mm; font-size: 10.5pt; line-height: 1.3; }
+@media print { @page fm01 { size: A4 landscape; margin: 5mm 6mm; }
+  #rrpt-print-root .fm01-page { page: fm01; width: auto; padding: 0; margin: 0; break-before: page; page-break-before: always; } }
 #rrpt-print-root { display: none; }
 @media print {
   /* เฉพาะตอนกดปุ่มพิมพ์ใบรายงาน (body.print-rrpt) — ซ่อนแอปทั้งหมด และล้าง flex/overflow ของ body ที่ใช้บนจอ
@@ -1035,6 +1053,7 @@ td.empty-cell { white-space: normal !important; }
     <div class="nav-group-header" data-g="qc" onclick="toggleNavGroup(this)"><span><i class="fa-solid fa-clipboard-check ng-ic"></i>งานคุณภาพ QA / QC</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
     <ul class="nav flex-column nav-group-body">
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('qc');return false;" id="navlink-qc"><i class="fa-solid fa-vial-circle-check me-2"></i>ตรวจรับ (IQC) <span class="badge text-bg-warning ms-1" id="qcNavBadge" style="display:none" title="ล็อตใหม่ที่รอ QC ตรวจ"></span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('qcspec');return false;" id="navlink-qcspec"><i class="fa-solid fa-ruler-combined me-2"></i>สเปควัตถุดิบ</a></li>
     </ul>
     </div>
 
@@ -1145,6 +1164,7 @@ td.empty-cell { white-space: normal !important; }
       <div><h4 class="mb-0 text-white"><i class="fa-solid fa-inbox me-2"></i>รับวัตถุดิบเข้าคลัง</h4><div class="text-white-50 small">รับเข้าคลัง — บันทึกรับวัตถุดิบและแพ็คเกจจิ้ง</div></div>
       <div class="d-flex gap-2 flex-wrap">
         <button class="btn btn-light" onclick="rcvReportOpen()"><i class="fa-solid fa-print me-1"></i>ออกใบรายงานรับ</button>
+        <button class="btn btn-light" onclick="fm01Open()" title="พิมพ์ฟอร์ม GMP FM-WH-01 บันทึกการรับ-จัดเก็บ — เลือกรายการรับเข้าที่จะพิมพ์"><i class="fa-solid fa-file-lines me-1"></i>พิมพ์ FM-WH-01</button>
         <button class="btn btn-light" onclick="receivedExportCsv()" title="ส่งออกรายการที่กรองอยู่เป็น CSV"><i class="fa-solid fa-file-csv me-1"></i>Export CSV</button>
         <button class="btn btn-light" onclick="trfOpen()" title="รับของที่โอนมาจากคลังใหญ่ หลายรายการในใบเดียว"><i class="fa-solid fa-truck-ramp-box me-1"></i>รับจากโอนย้ายคลังใหญ่</button>
         <button class="btn btn-success" onclick="receivedOpenForm()"><i class="fa-solid fa-plus me-1"></i>รับเข้าคลัง</button>
@@ -1707,7 +1727,7 @@ td.empty-cell { white-space: normal !important; }
         <button class="btn btn-success" onclick="vendorOpenForm()"><i class="fa-solid fa-plus me-1"></i>เพิ่มผู้ส่งมอบ</button>
       </div>
       <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
-        <thead><tr><th>รหัส</th><th>ชื่อผู้ส่งมอบ</th><th>ที่อยู่ / ติดต่อ</th><th>รายการที่ส่งมอบ</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead>
+        <thead><tr><th style="min-width:90px">รหัส</th><th style="min-width:280px">ชื่อผู้ส่งมอบ</th><th>ที่อยู่ / ติดต่อ</th><th>รายการที่ส่งมอบ</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead>
         <tbody id="vendorTableBody"></tbody>
       </table></div></div></div>
     </div>
@@ -5877,7 +5897,7 @@ function vendorRenderTable() {
     const itemsHtml = items.length
       ? items.map(it => `<span class="badge bg-light text-dark border me-1 mb-1">${esc(it.ItemName)}${it.RM_ID ? ` <span class="text-muted">(${esc(it.RM_ID)})</span>` : (it.MaterialType ? ` <span class="text-muted">(${esc(it.MaterialType)})</span>` : '')}</span>`).join('')
       : '<span class="text-muted small">-</span>';
-    return `<tr><td>${esc(v.Vendor_ID)}</td><td>${esc(v.VendorName)}</td>
+    return `<tr><td class="text-nowrap">${esc(v.Vendor_ID)}</td><td style="min-width:280px">${esc(v.VendorName)}</td>
       <td class="small">${esc(v.ContactPerson || '-')}${v.ContactTel ? ` · ${esc(v.ContactTel)}` : ''}${v.Address ? `<div class="text-muted">${esc(v.Address)}</div>` : ''}</td>
       <td>${itemsHtml}</td><td>${esc(v.Note || '')}</td>
       <td><button class="btn btn-sm btn-outline-primary me-1" onclick="vendorOpenForm('${esc(v.Vendor_ID)}')" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>
@@ -8400,8 +8420,128 @@ function _fmtDateEn(s) {
 // ตายตัว) เพราะใบนี้แนวนอน รายการอาจยาวล้นมากกว่า 1 หน้าได้เอง (page-break-inside:avoid ต่อแถวอยู่แล้ว) —
 // ให้แต่ละชุดไหลข้ามหน้าได้เองตามจำนวนรายการจริง แล้วค่อยขึ้นชุดถัดไปด้วย page-break-after:always บน .rrpt-page
 // (ไม่ใช่ fixed "1 หน้าต่อชุด" แบบ dlvbill/genwd) — เรียก _rrptPageHtml(copyLabel) 2 ครั้งต่อกัน
+// ── FM-WH-01 บันทึกการรับ-จัดเก็บวัตถุดิบ/วัสดุการบรรจุ (ฟอร์ม GMP ของ WH) — พิมพ์จากปุ่ม "พิมพ์ FM-WH-01" ที่หน้ารับวัตถุดิบเข้าคลัง (แยกจากใบรายงานรับที่ส่งบัญชี) ──
+// ผู้ใช้ 2026-10-31: "ต้องแบบฟอร์มตามนี้ 100% เพราะเก็บระบบ GMP" → โครงตาราง/หัวคอลัมน์/ข้อความหมายเหตุยึดไฟล์ FM-WH-01_บันทึกการรับ-จัดเก็บวัตถุดิบวัสดุการบรรจ.docx
+// เป๊ะ: A4 แนวนอน ขอบ บน-ล่าง 5mm ซ้าย-ขวา 6mm · หัวกระดาษ โลโก้ | ชื่อฟอร์ม | รหัส · แถวข้อมูล 15 แถว/หน้า · 1 ชนิดวัตถุดิบ = 1 ชุดหน้า (เกิน 15 แถวต่อหน้าถัดไป)
+// สัดส่วนคอลัมน์ = ความกว้าง gridCol ของไฟล์ต้นฉบับ (twips) · ฟอนต์ต้นฉบับ TH SarabunPSK 14pt → ใช้ Sarabun 12pt ที่แอปโหลดอยู่ให้ขนาดตัวอักษรใกล้เคียง
+// เติมให้จากระบบเฉพาะที่ระบบรู้จริง: วันที่รับ · Lot ผู้ผลิต · จำนวน(+ภาชนะ) · Lot รับเข้า · ตำแหน่งเก็บ · ผล QC (ถ้ามีใบตรวจแล้ว)
+// ช่องที่ต้องคนทำเอง (น้ำหนักตามใบส่งของ · สภาพภาชนะ · ผู้ตรวจรับ) เว้นว่างไว้เขียน ไม่เดาแทน — รหัสฟอร์ม "REV00 – ddmmyy" คงตามต้นฉบับ (ยังเป็น placeholder ในไฟล์ Word)
+const FM01_ROWS = 15, FM01_COLS = [1276, 1701, 1559, 1560, 1701, 1701, 1842, 993, 1701, 2114];
+const FM01_CODE = 'FM-WH-01', FM01_REV = 'REV00 – ddmmyy';
+function _fm01Html(rowsIn) {
+  const src = (rowsIn || []).filter(r => !r._prep);
+  if (!src.length) return '';
+  const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  const thd = s => { const p = String(s || '').slice(0, 10).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${String(+p[0] + 543).slice(-2)}` : ''; };   // วว/ดด/ปป (พ.ศ. 2 หลัก) — คอลัมน์แรกแคบ (22mm)
+  const qtyTxt = r => {
+    const c = parseInt(r.Containers, 10);
+    return `${+(+r.Qty).toFixed(3)} ${r.Unit || ''}${c >= 0 ? `/${c} ภาชนะ` : ''}`.trim();   // เช่น "25 กก./8 ภาชนะ" — สั้นพอให้อยู่บรรทัดเดียวในคอลัมน์แคบ (แถวสูง 6.6mm ตามต้นฉบับ)
+  };
+  const locTxt = r => (typeof rmLotLocs === 'function' ? rmLotLocs(r.Receive_ID).map(x => x.Location).filter(l => l && l !== RM_LOC_NONE) : []).join(', ') || r.Location || '';
+  const qcTxt = r => { const s = typeof qcStatusOf === 'function' ? qcStatusOf(r.Receive_ID) : 'pending'; return s === 'PASS' ? 'ผ่าน' : s === 'REJECT' ? 'ไม่ผ่าน' : ''; };
+  const groups = {};
+  [...src].sort((a, b) => String(a.ReceiveDate).localeCompare(String(b.ReceiveDate)) || String(a.Receive_ID).localeCompare(String(b.Receive_ID)))
+    .forEach(r => (groups[r.RM_ID] = groups[r.RM_ID] || []).push(r));
+  const ids = Object.keys(groups).sort((a, b) => String(rmMap[a]?.RM_Name || a).localeCompare(String(rmMap[b]?.RM_Name || b), 'th'));
+  const colgroup = '<colgroup>' + FM01_COLS.map(w => `<col style="width:${(w / 15848 * 100).toFixed(3)}%">`).join('') + '</colgroup>';
+  const blank = '<tr>' + '<td></td>'.repeat(10) + '</tr>';
+  let html = '';
+  ids.forEach(id => {
+    const list = groups[id], name = rmMap[id]?.RM_Name || id;
+    const sup = [...new Set(list.map(r => (r.Supplier || '').trim()).filter(Boolean))].join(', ');
+    for (let p = 0; p < list.length; p += FM01_ROWS) {
+      const chunk = list.slice(p, p + FM01_ROWS);
+      const trs = chunk.map(r => `<tr><td>${thd(r.ReceiveDate)}</td><td>${esc(r.MfgLot || '')}</td><td>${esc(qtyTxt(r))}</td><td></td><td></td>
+        <td>${esc(qtyTxt(r))}</td><td>${esc(r.Lot || '')}</td><td></td><td>${qcTxt(r)}</td><td>${esc(locTxt(r))}</td></tr>`).join('')
+        + blank.repeat(FM01_ROWS - chunk.length);
+      html += `<div class="fm01-page">
+        <div class="fm01-head">
+          <div><img src="assets/logo-blooming.webp" alt="Blooming"></div>
+          <div class="fm01-title">บันทึกการรับ-จัดเก็บวัตถุดิบ/วัสดุการบรรจุ</div>
+          <div class="fm01-code">รหัส : ${FM01_CODE}<br>${FM01_REV}</div>
+        </div>
+        <div class="fm01-info">
+          <div class="f"><span>ชื่อวัตถุดิบ/วัสดุบรรจุ :</span><span class="v">${esc(name)}</span></div>
+          <div class="f"><span>รหัสวัตถุดิบ/วัสดุบรรจุ :</span><span class="v">${esc(id)}</span></div>
+          <div class="f"><span>ชื่อผู้ผลิต หรือ จำหน่าย :</span><span class="v">${esc(sup)}</span></div>
+        </div>
+        <table class="fm01-table">${colgroup}
+          <thead>
+            <tr><th colspan="5">รับวัตถุดิบ / วัสดุบรรจุ</th><th colspan="5">จัดเก็บวัตถุดิบ / วัสดุบรรจุ</th></tr>
+            <tr><th rowspan="2">ว/ด/ป<br>ที่รับ</th><th rowspan="2">Lot.จากผู้ผลิต</th><th rowspan="2">จำนวน /<br>ภาชนะบรรจุที่รับ<br><small>จากผู้จำหน่าย</small></th>
+              <th colspan="2">การตรวจสอบสภาพภาชนะบรรจุหีบห่อ</th>
+              <th rowspan="2">จำนวน /<br>ภาชนะบรรจุ /<br>ที่จัดเก็บ</th><th rowspan="2">Lot.การรับเข้า</th><th rowspan="2">ผู้ตรวจรับ</th>
+              <th rowspan="2">รับรองผล /<br>การตรวจรับ /<br>โดย QC<br><small>ผ่าน/ไม่ผ่าน</small></th><th rowspan="2">ตำแหน่งจัดเก็บ</th></tr>
+            <tr><th>น้ำหนัก<br><small>ตามใบส่งของ</small></th><th>สภาพภาชนะบรรจุ<br><small>เรียบร้อย/ไม่เรียบร้อย</small></th></tr>
+          </thead>
+          <tbody>${trs}</tbody>
+        </table>
+        <div class="fm01-note"><b>หมายเหตุ</b>
+          <div><div>1.เรียบร้อย คือ ภาชนะที่บรรจุ ไม่ฉีกขาด ไม่มีรอยรั่ว ไม่สกปรก</div><div>2.ไม่เรียบร้อย คือ ภาชนะที่บรรจุ ฉีกขาด มีรอยรั่ว สกปรก</div></div>
+          <div><div>3.ผ่าน คือ ได้ตามเกณฑ์มาตรฐานที่ยอมรับได้</div><div>4.ไม่ผ่าน คือ ไม่ได้ตามเกณฑ์มาตรฐานที่ยอมรับได้</div></div>
+        </div>
+      </div>`;
+    }
+  });
+  return html;
+}
+// ปุ่ม "พิมพ์ FM-WH-01" ที่หน้า "รับวัตถุดิบเข้าคลัง" (ผู้ใช้ 2026-10-31 "ไม่ต้องรวม ให้สร้างปุ่มแยก เลือกว่าจะปริ้นตัวไหนที่มีในรายการรับเข้า")
+// → หน้าต่างเลือกรายการรับเข้า (กรองวันที่/ค้นหา, ติ๊กได้หลายรายการ) แล้วพิมพ์ฟอร์ม GMP — ไม่เกี่ยวกับใบรายงานรับที่ส่งบัญชี
+async function fm01Open() {
+  if (!_receivedCache.length) await receivedLoad();
+  const day = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const from0 = day(new Date(Date.now() - 6 * 86400000)), to0 = todayStr();
+  const sel = new Set();
+  const r = await Dlg.form({
+    title: '<i class="fa-solid fa-file-lines me-2"></i>พิมพ์ FM-WH-01 บันทึกการรับ-จัดเก็บวัตถุดิบ/วัสดุการบรรจุ', width: 900, confirmText: 'พิมพ์ FM-WH-01',
+    html: `<div class="row g-2 align-items-end mb-2">
+        <div class="col-6 col-md-3"><label class="form-label small mb-1">วันที่รับ ตั้งแต่</label><input type="date" id="fm01-from" class="form-control form-control-sm" value="${from0}"></div>
+        <div class="col-6 col-md-3"><label class="form-label small mb-1">ถึง</label><input type="date" id="fm01-to" class="form-control form-control-sm" value="${to0}"></div>
+        <div class="col-12 col-md-3"><label class="form-label small mb-1">ค้นหา (ชื่อ / รหัส / Lot / ซัพ)</label><input id="fm01-q" class="form-control form-control-sm"></div>
+        <div class="col-12 col-md-3 d-flex gap-1"><button type="button" class="btn btn-sm btn-outline-primary flex-fill" id="fm01-all">เลือกทั้งหมดที่แสดง</button><button type="button" class="btn btn-sm btn-outline-secondary" id="fm01-none">ล้าง</button></div></div>
+      <div class="border rounded" style="max-height:48vh;overflow:auto"><table class="table table-sm table-hover mb-0 align-middle"><thead class="table-light" style="position:sticky;top:0;z-index:1"><tr>
+        <th style="width:34px"></th><th>วันที่รับ</th><th>รายการ</th><th>Lot</th><th class="text-end">จำนวน</th><th>ภาชนะ</th><th>ซัพพลายเออร์</th></tr></thead><tbody id="fm01-body"></tbody></table></div>
+      <div class="small text-muted mt-2" id="fm01-count"></div>
+      <div class="small text-muted">ฟอร์มจัดเป็น 1 ชุดหน้าต่อ 1 ชนิดวัตถุดิบ (15 แถว/หน้า) · ช่องน้ำหนักตามใบส่งของ / สภาพภาชนะ / ผู้ตรวจรับ เว้นว่างไว้เขียนมือ</div>`,
+    didOpen(el) {
+      const q = id => el.querySelector(id);
+      const shown = () => {
+        const a = q('#fm01-from').value, b = q('#fm01-to').value, t = q('#fm01-q').value.trim().toLowerCase();
+        return _receivedCache.filter(x => (!a || String(x.ReceiveDate).slice(0, 10) >= a) && (!b || String(x.ReceiveDate).slice(0, 10) <= b)
+          && (!t || [x.RM_ID, _rmName(x.RM_ID), x.Lot, x.MfgLot, x.Supplier].join(' ').toLowerCase().includes(t)))
+          .sort((x, y) => String(y.ReceiveDate).localeCompare(String(x.ReceiveDate)) || String(y.Receive_ID).localeCompare(String(x.Receive_ID))).slice(0, 400);
+      };
+      const render = () => {
+        const list = shown();
+        q('#fm01-body').innerHTML = list.map(x => `<tr><td><input type="checkbox" class="form-check-input fm01-chk" data-id="${esc(x.Receive_ID)}" ${sel.has(x.Receive_ID) ? 'checked' : ''}></td>
+          <td class="text-nowrap">${fmtDate(x.ReceiveDate)}</td><td>${esc(_rmName(x.RM_ID))} <span class="text-muted small">${esc(x.RM_ID)}</span></td>
+          <td>${esc(x.Lot || '-')}</td><td class="text-end text-nowrap">${+(+x.Qty).toFixed(3)} ${esc(x.Unit || '')}</td><td>${x.Containers ?? '-'}</td><td class="small">${esc(x.Supplier || '-')}</td></tr>`).join('')
+          || '<tr><td colspan="7" class="text-center text-muted py-3">ไม่มีรายการรับเข้าในช่วงนี้</td></tr>';
+        q('#fm01-count').textContent = `แสดง ${list.length} รายการ · เลือกแล้ว ${sel.size} รายการ`;
+        el._shown = list;
+      };
+      el.addEventListener('change', e => { if (e.target.classList.contains('fm01-chk')) { e.target.checked ? sel.add(e.target.dataset.id) : sel.delete(e.target.dataset.id); render(); } });
+      ['#fm01-from', '#fm01-to', '#fm01-q'].forEach(s => q(s).addEventListener('input', render));
+      q('#fm01-all').onclick = () => { (el._shown || []).forEach(x => sel.add(x.Receive_ID)); render(); };
+      q('#fm01-none').onclick = () => { sel.clear(); render(); };
+      render();
+    },
+    preConfirm() { if (!sel.size) { Dlg.invalid('ติ๊กเลือกรายการรับเข้าอย่างน้อย 1 รายการ'); return false; } return [...sel]; },
+  });
+  if (!r.isConfirmed) return;
+  fm01Print(_receivedCache.filter(x => r.value.includes(x.Receive_ID)));
+}
+function fm01Print(rows) {
+  const html = _fm01Html(rows);
+  if (!html) return;
+  document.getElementById('rrpt-print-root').innerHTML = html;   // ใช้ print root/คลาสพิมพ์ชุดเดียวกับใบรายงานรับ (body.print-rrpt) — หน้า FM-WH-01 ตั้ง @page fm01 ของตัวเอง
+  document.body.classList.add('print-rrpt');
+  const done = () => { document.body.classList.remove('print-rrpt'); document.getElementById('rrpt-print-root').innerHTML = ''; window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
 function _rrptHtml() {
-  return _rrptPageHtml('ต้นฉบับ / Original') + _rrptPageHtml('สำเนา / Copy');
+  return _rrptPageHtml('ต้นฉบับ / Original') + _rrptPageHtml('สำเนา / Copy');   // ใบรายงานรับ (ส่งบัญชี) เท่านั้น — FM-WH-01 แยกเป็นปุ่มของตัวเองที่หน้า "รับวัตถุดิบเข้าคลัง" (fm01Open)
 }
 function _rrptPageHtml(copyLabel) {
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
@@ -15240,6 +15380,6 @@ async function wasteDelete(id) {
 <!-- ที่พิมพ์ใบบันทึกผลิต — คนละ root อีกเช่นกัน -->
 <div id="prp-print-root"></div>
 <!-- ระบบ QC (ตรวจรับ IQC / NCR / ป้ายสถานะ) — ไฟล์แยก ต้องอัปโหลดคู่กับ index.html · เปลี่ยน qc.js แล้วเปลี่ยนเลข ?v= ด้วย -->
-<script src="qc.js?v=3"></script>
+<script src="qc.js?v=8"></script>
 </body>
 </html>
