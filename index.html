@@ -1819,7 +1819,7 @@ td.empty-cell { white-space: normal !important; }
           </div>
         </div>
         <div class="table-responsive"><table class="table table-hover mb-0">
-          <thead><tr><th>ใบเตรียม</th><th>วันที่</th><th>จาก → เป็น</th><th class="text-end">เบิกไป</th><th class="text-end">ได้กลับ</th><th class="text-end">สูญเสียจริง</th><th class="text-end">มาตรฐาน</th><th>Lot ที่ได้</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
+          <thead><tr><th>ใบเตรียม</th><th>วันที่</th><th>จาก → เป็น</th><th class="text-end">เบิกไป</th><th class="text-end">ได้กลับ</th><th class="text-end">สูญเสียจริง</th><th class="text-end">มาตรฐาน</th><th>Lot ที่ได้</th><th class="text-end">ต้นทุน/หน่วย</th><th class="text-end">มูลค่ารวม</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
           <tbody id="prepHistBody"></tbody>
         </table></div>
       </div>
@@ -2658,6 +2658,11 @@ td.empty-cell { white-space: normal !important; }
               <button type="button" class="btn btn-outline-primary" data-n="48" data-unit="m" onclick="rcvExpPreset(48,'m')">4 ปี</button>
             </div>
             <div class="form-text" style="font-size:.72rem" id="rcv-exp-hint">นับจากวันที่ผลิต (ไม่มี = นับจากวันที่รับ) · ใช้ตัดล็อต FEFO และเตือนใกล้หมดอายุ</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">สถานที่เก็บ</label>
+            <select id="rcv-loc" class="form-select"></select>
+            <div class="form-text" style="font-size:.72rem">ล็อตเดียวเก็บหลายที่ได้ — ย้ายที่เก็บภายหลังได้ที่หน้า Stock Card</div>
           </div>
           <div class="col-12">
             <label class="form-label">หมายเหตุ</label>
@@ -3713,6 +3718,21 @@ async function rmLotLoad() {
   const { data, error } = await _sb.from('stock_rm_lot').select('*');
   _rmLotCache = error ? [] : (data || []);
 }
+// สถานที่เก็บวัตถุดิบ (2026-10-31 ผู้ใช้ขอ "เหมือน FG") — ใช้ตาราง storage_locations ร่วมกับ FG (ชื่อใช้ร่วมกันได้ทั้ง
+// 2 ฝั่ง) + ตารางลูก stock_rm_loc แยกยอดคงเหลือของแต่ละล็อต (keyed ด้วย Lot_ID ตรงๆ ต่างจาก FG ที่ต้องคีย์คู่
+// FG_ID+Lot เพราะ stock_rm_lot มี Lot_ID เป็น PK อยู่แล้ว) — ยอดต่อที่เก็บถูกฝั่ง DB (trigger) คอยซิงค์ให้อัตโนมัติ
+// ทุกครั้งที่ Qty ของล็อตเปลี่ยน ไม่ว่าจะมาจากฟังก์ชันเบิก/ของเสีย/แก้ไขตัวไหนก็ตาม — migration_2026-10-31_rm_locations.sql
+const RM_LOC_NONE = 'ไม่ระบุ';
+let _rmLocList = [], _stockRmLocCache = [];
+async function rmLocLoad() {
+  const [locs, rows] = await Promise.all([
+    _sb.from('storage_locations').select('Name').eq('Active', true).order('SortOrder'),
+    _sb.from('stock_rm_loc').select('*'),
+  ]);
+  if (!locs.error && locs.data?.length) _rmLocList = locs.data.map(l => l.Name);
+  _stockRmLocCache = rows.error ? [] : (rows.data || []);
+}
+const rmLotLocs = lotId => _stockRmLocCache.filter(r => r.Lot_ID === lotId && (parseFloat(r.Qty) || 0) > 0);
 // ลำดับ FEFO เดียวกับ rm_issue_post ฝั่ง DB: หมดอายุก่อน (ไม่ระบุวัน = ท้ายสุด) → รับเข้าก่อน → Lot_ID
 function _lotsFefo(rmId) {
   const t = v => v ? new Date(v).getTime() : Infinity;
@@ -4066,10 +4086,10 @@ function integrityRender() {
 // ═══════════════════════════════════════════════════════════
 const BACKUP_TABLES = [
   ['rm_master', 'วัตถุดิบ / แพ็คเกจจิ้ง (Master)', 'ข้อมูลหลัก'], ['product_master', 'สินค้า FG (Master)', 'ข้อมูลหลัก'], ['bom', 'สูตรแม่บท (BOM)', 'ข้อมูลหลัก'],
-  ['employees', 'พนักงาน', 'ข้อมูลหลัก'], ['storage_locations', 'ที่เก็บ FG', 'ข้อมูลหลัก'], ['overhead_costs', 'ต้นทุนแฝง', 'ข้อมูลหลัก'],
+  ['employees', 'พนักงาน', 'ข้อมูลหลัก'], ['storage_locations', 'สถานที่เก็บ (FG/วัตถุดิบ)', 'ข้อมูลหลัก'], ['overhead_costs', 'ต้นทุนแฝง', 'ข้อมูลหลัก'],
   ['vendors', 'ผู้ส่งมอบ (Vendor/AVL)', 'ข้อมูลหลัก'], ['vendor_items', 'รายการที่ผู้ส่งมอบส่งได้', 'ข้อมูลหลัก'], ['vendor_evaluations', 'แบบประเมินผู้ส่งมอบ', 'ข้อมูลหลัก'],
   ['stock_counts', 'ใบตรวจนับสต็อก', 'สต็อก'], ['stock_count_lines', 'รายการในใบตรวจนับ', 'สต็อก'], ['stock_adjustments', 'ปรับยอดสต็อก (จากตรวจนับ)', 'สต็อก'],
-  ['stock_balance', 'สต็อกวัตถุดิบ (ยอดรวม)', 'สต็อก'], ['stock_rm_lot', 'สต็อกวัตถุดิบ (รายล็อต)', 'สต็อก'], ['stock_fg', 'สต็อก FG (รายล็อต)', 'สต็อก'], ['stock_fg_loc', 'สต็อก FG (แยกที่เก็บ)', 'สต็อก'],
+  ['stock_balance', 'สต็อกวัตถุดิบ (ยอดรวม)', 'สต็อก'], ['stock_rm_lot', 'สต็อกวัตถุดิบ (รายล็อต)', 'สต็อก'], ['stock_rm_loc', 'สต็อกวัตถุดิบ (แยกที่เก็บ)', 'สต็อก'], ['stock_fg', 'สต็อก FG (รายล็อต)', 'สต็อก'], ['stock_fg_loc', 'สต็อก FG (แยกที่เก็บ)', 'สต็อก'],
   ['rm_receive', 'รับวัตถุดิบเข้าคลัง', 'รับ-จ่าย'], ['rm_rc_numbers', 'เลข RC / ใบรายงานรับ', 'รับ-จ่าย'], ['prep_issue_numbers', 'เลข PI / ใบเบิกไปเตรียม', 'รับ-จ่าย'],['rm_withdraw', 'เบิกเบ็ดเตล็ด / โอนย้าย / เบิกตาม CO (วัตถุดิบ)', 'รับ-จ่าย'],
   ['req_orders', 'ใบขอเบิก', 'รับ-จ่าย'], ['req_order_lines', 'รายการในใบขอเบิก', 'รับ-จ่าย'], ['issue_production', 'เบิกเข้าไลน์ผลิต', 'รับ-จ่าย'], ['prep_orders', 'ใบเตรียมวัตถุดิบ', 'รับ-จ่าย'], ['waste_log', 'ของเสีย', 'รับ-จ่าย'],
   ['manufacturing_orders', 'คำสั่งผลิต (MO)', 'ผลิต'], ['production_records', 'บันทึกผลิต', 'ผลิต'], ['fg_receive', 'รับ FG เข้าคลัง', 'ผลิต'], ['pack_boxes', 'แพ็คกล่อง', 'ผลิต'],
@@ -6236,11 +6256,15 @@ async function bomLoad() {
   bomUpdateKPIs();
   bomRenderCards();
 }
+// ราคา/หน่วยของล็อตหนึ่งๆ — เก็บตรงที่ stock_rm_lot.UnitPrice โดยตรง (2026-10-31: ล็อตรับเข้าปกติก็มี, ล็อตที่ได้
+// จากการเตรียมวัตถุดิบก็คำนวณต้นทุนจริงใส่ไว้แล้วตอนรับกลับ — ดู prep_receive_post) · _rmPriceMap[Receive_ID]
+// เป็นสำรองไว้เผื่อล็อตเก่าก่อนมีคอลัมน์นี้ที่ migration ยังไม่ได้ backfill ให้ครบ (ปกติไม่ควรเกิดแล้ว)
+function _rmLotPrice(l) { return l.UnitPrice ?? (l.Receive_ID ? _rmPriceMap[l.Receive_ID] : null) ?? null; }
 // ราคาเฉลี่ย (ถ่วงน้ำหนักตามจำนวน) ของล็อตที่ยังมีของเหลืออยู่และทราบราคา — ตัวเดียวกับที่หน้า Stock การ์ดใช้โชว์
 // "มูลค่ารวม/ราคาเฉลี่ย" (ดู _stockRenderByCategory) null = ไม่มีล็อตที่ทราบราคาเลย (ยังไม่เคยรับเข้าแบบใส่ราคา)
 function _rmAvgCost(rmId) {
   let value = 0, pricedQty = 0;
-  _lotsFefo(rmId).forEach(l => { const p = l.Receive_ID && _rmPriceMap[l.Receive_ID]; if (p != null) { value += p * l.Qty; pricedQty += l.Qty; } });
+  _lotsFefo(rmId).forEach(l => { const p = _rmLotPrice(l); if (p != null) { value += p * l.Qty; pricedQty += l.Qty; } });
   return pricedQty > 0 ? value / pricedQty : null;
 }
 // วัตถุดิบอื่นที่ "ชื่อเดียวกัน" กับ rmId (ต่างกันแค่คนละรหัส/คนละซัพพลายเออร์ เช่น ขมิ้นสด SPF005-ตลาดไท กับ
@@ -6901,6 +6925,7 @@ function receivedOpenForm(editId) {
   g('rcv-harvest').value = row ? (row.HarvestDate || '') : todayStr();
   g('rcv-receive').value = row ? (row.ReceiveDate || '') : todayStr();
   g('rcv-exp').value = row ? (row.ExpDate || '') : '';
+  _rcvLocFill(row ? (row.Location || '') : '');
   g('rcv-note').value = row ? (row.Note || '') : '';
   g('rcv-reason').value = '';
   rcvExpPreset(null);
@@ -7072,6 +7097,25 @@ function rcvExpRecalc() {
     `= <b>${fmtDate(exp)}</b> · นับจาก${harvest ? 'วันที่ผลิต' : 'วันที่รับ'} ${fmtDate(base)}`;
 }
 
+// ── สถานที่เก็บของฟอร์มรับวัตถุดิบ (2026-10-31) — ไม่บังคับเลือก (ต่างจาก FG) เผื่อผู้ใช้ยังไม่พร้อมจัดระเบียบที่เก็บ
+// ทุกล็อต · จำที่เลือกครั้งล่าสุดไว้ในเครื่องเป็นค่าเริ่มต้น (รับหลายใบติดกันที่เดียวกันไม่ต้องเลือกซ้ำ) ·
+// editVal = ที่เก็บเดิมของใบที่กำลังแก้ไข (ถ้ามี) ชนะค่าที่จำไว้เสมอ
+const RCVR_LOC_KEY = 'bmflow.rcvLastLoc';
+function _rcvLocFill(editVal) {
+  const sel = document.getElementById('rcv-loc');
+  const draw = () => {
+    const keep = sel.value; let last = ''; try { last = localStorage.getItem(RCVR_LOC_KEY) || ''; } catch (e) {}
+    sel.innerHTML = '<option value="">-- ไม่ระบุ --</option>' + _rmLocList.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+    sel.value = editVal || (_rmLocList.includes(keep) ? keep : (_rmLocList.includes(last) ? last : ''));
+  };
+  draw(); rmLocLoad().then(draw).catch(() => {});   // รายชื่อจากตารางอาจต่างจากค่าตั้งต้น — โหลดแล้ววาดซ้ำ คงค่าที่เลือกไว้
+}
+function _rcvLocRead() {
+  const v = document.getElementById('rcv-loc').value;
+  try { if (v) localStorage.setItem(RCVR_LOC_KEY, v); } catch (e) {}
+  return v || null;
+}
+
 // ── ราคา/หน่วย + มูลค่ารวม (rm_receive.UnitPrice — migration_2026-09-26_receive_note_price.sql) ──
 // คืน null = ไม่ได้กรอก · false = กรอกผิด · ตัวเลข = ราคา (ปัด 2 ตำแหน่ง)
 function _rcvReadPrice() {
@@ -7123,9 +7167,11 @@ async function receivedModalSave() {
   if (note) args.p_note = note;
   if (price !== null) args.p_unit_price = price;
   if (mfglot) args.p_mfglot = mfglot;
+  const loc = _rcvLocRead();
+  if (loc) args.p_loc = loc;
   const { error } = await _sb.rpc('rm_receive_post', args);
   if (error) {
-    if ((note || price !== null || mfglot) && error.code === 'PGRST202') {
+    if ((note || price !== null || mfglot || loc) && error.code === 'PGRST202') {
       Swal.fire('บันทึกบางช่องไม่ได้', 'ระบบยังไม่รองรับบางช่องที่กรอกเพิ่ม (หมายเหตุ/ราคา/Lot จากผู้ผลิต) — แอดมินต้องรัน migration ล่าสุดใน Supabase ก่อน (หรือลบช่องเหล่านี้ออกแล้วบันทึก)', 'error');
       return;
     }
@@ -7314,7 +7360,7 @@ async function trfSave() {
 const EDIT_TYPES = {
   rm_receive: { label: 'ใบรับเข้าคลัง', icon: 'fa-inbox', table: 'rm_receive', pk: 'Receive_ID',
     fields: { RM_ID: 'รายการ', Qty: 'จำนวน', UnitPrice: 'ราคา/หน่วย', Supplier: 'ซัพพลายเออร์', Lot: 'Lot', MfgLot: 'Lot จากผู้ผลิต', HarvestDate: 'วันที่ผลิต',
-      ExpDate: 'วันหมดอายุ', ReceiveDate: 'วันที่รับ', Note: 'หมายเหตุ' } },   // ใช้ฟอร์ม receivedModal (โหมดแก้ไข)
+      ExpDate: 'วันหมดอายุ', ReceiveDate: 'วันที่รับ', Note: 'หมายเหตุ', Location: 'สถานที่เก็บ' } },   // ใช้ฟอร์ม receivedModal (โหมดแก้ไข) — Location 2026-10-31
   issue_production: { label: 'เบิกเข้าไลน์ผลิต', icon: 'fa-dolly', table: 'issue_production', pk: 'Issue_ID',
     fields: { QtyIssued: 'จำนวนเบิก', IssueDate: 'วันที่เบิก', Note: 'หมายเหตุ' },
     form: [{ k: 'QtyIssued', type: 'number', unit: r => r.Unit, req: true }, { k: 'IssueDate', type: 'date', req: true }, { k: 'Note', type: 'textarea' }],
@@ -7565,7 +7611,8 @@ async function rcvEditSubmit() {
   const old = _receivedCache.find(r => r.Receive_ID === _rcvEditId) || {};
   const p_new = _editChanged(old, { RM_ID: rmId, Qty: qty, UnitPrice: price, Supplier: g('rcv-supplier').value.trim() || null, Lot: g('rcv-lot').value.trim() || null,
     MfgLot: g('rcv-mfglot').value.trim() || null,
-    HarvestDate: g('rcv-harvest').value || null, ExpDate: exp, ReceiveDate: receiveDate || null, Note: g('rcv-note').value.trim() || null });
+    HarvestDate: g('rcv-harvest').value || null, ExpDate: exp, ReceiveDate: receiveDate || null, Note: g('rcv-note').value.trim() || null,
+    Location: g('rcv-loc').value || null });
   if (!Object.keys(p_new).length) { Swal.fire('ไม่มีช่องไหนเปลี่ยน', 'แก้ข้อมูลช่องที่ผิดก่อนกดส่ง', 'info'); return; }
   if (!(await _editSubmitRequest('rm_receive', _rcvEditId, p_new, reason))) return;
   bootstrap.Modal.getInstance(g('receivedModal')).hide();
@@ -8685,7 +8732,7 @@ async function _loadRmPriceMap() {
 }
 async function stockRmLoad() {
   if (!_rmMasterCache.length) await rmMasterLoad();
-  const [bal] = await Promise.all([sbRun(_sb.from('stock_balance').select('*'), 'โหลดสต็อก'), rmLotLoad(), _loadRmPriceMap()]);
+  const [bal] = await Promise.all([sbRun(_sb.from('stock_balance').select('*'), 'โหลดสต็อก'), rmLotLoad(), _loadRmPriceMap(), rmLocLoad().catch(() => {})]);
   _stockRmCache = bal || [];
   stockRmRenderTable();
   stockPkgRenderTable();
@@ -8749,18 +8796,21 @@ function _stockRenderByCategory(categories, searchInputId, containerId, statusFi
     const expanded = _stockLotExpanded.has(r.RM_ID);
     // มูลค่ารวม + ราคาเฉลี่ย จากราคา/หน่วยของใบรับแต่ละล็อต (เฉพาะล็อตที่ทราบราคา — migration_2026-09-26_receive_note_price.sql)
     let value = 0, pricedQty = 0;
-    lots.forEach(l => { const p = l.Receive_ID && _rmPriceMap[l.Receive_ID]; if (p != null) { value += p * l.Qty; pricedQty += l.Qty; } });
+    lots.forEach(l => { const p = _rmLotPrice(l); if (p != null) { value += p * l.Qty; pricedQty += l.Qty; } });
     const cardCls = st.key === 'low' ? ' stock-card-low' : '';
     const lotDetail = !lots.length ? '' : `<div class="stock-lot-detail" style="${expanded ? '' : 'display:none'}"><div class="table-responsive"><table class="table table-sm mb-0 stock-lot-table">
-      <thead><tr><th>Lot</th><th class="text-end">คงเหลือ / หน่วย</th><th>หมดอายุ</th><th class="text-end">ราคา/หน่วย</th><th class="text-end">มูลค่า</th><th class="text-end">รับเข้า</th><th class="text-end">จ่ายออก</th></tr></thead><tbody>
+      <thead><tr><th>Lot</th><th class="text-end">คงเหลือ / หน่วย</th><th>สถานที่เก็บ</th><th>หมดอายุ</th><th class="text-end">ราคา/หน่วย</th><th class="text-end">มูลค่า</th><th class="text-end">รับเข้า</th><th class="text-end">จ่ายออก</th></tr></thead><tbody>
       ${lots.map(l => {
-        const price = l.Receive_ID ? _rmPriceMap[l.Receive_ID] : null;
+        const price = _rmLotPrice(l);
         const lotValue = price != null ? price * l.Qty : null;
         const used = (parseFloat(l.QtyReceived) || 0) - (parseFloat(l.Qty) || 0);
         const traceId = l.Receive_ID || (l.Lot_ID?.startsWith('OPEN-') ? 'ยอดยกมา' : l.Lot_ID);
+        const lc = rmLotLocs(l.Lot_ID);
         return `<tr>
           <td title="${esc(traceId)}">${esc(_lotLabel(l))}${_isRefDate(l.ReceiveDate) ? ' ' + _refBadge('อ้างอิง') : ''}</td>
           <td class="text-end"><b class="text-primary">${_qtyFmtByCat(l.Qty, r.Category)}</b> ${esc(l.Unit || r.Unit)}</td>
+          <td class="small">${lc.length ? lc.map(x => `<span class="badge ${x.Location === RM_LOC_NONE ? 'text-bg-light border text-muted' : 'text-bg-info'} me-1">${esc(x.Location)}: ${_bomFmtQty(x.Qty)}</span>`).join('') : '<span class="text-muted">—</span>'}
+            <button class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.72rem" data-lot="${esc(l.Lot_ID)}" onclick="rmLocMoveOpen(this.dataset.lot)" title="ย้ายที่เก็บของล็อตนี้"><i class="fa-solid fa-right-left"></i> ย้าย</button></td>
           <td class="text-nowrap text-muted">${l.ExpDate ? fmtDate(l.ExpDate) : '—'}</td>
           <td class="text-end text-primary">${price != null ? '฿' + _fmtBaht(price) : '<span class="text-muted">—</span>'}</td>
           <td class="text-end text-success fw-semibold">${lotValue != null ? '฿' + _fmtBaht(lotValue) : '<span class="text-muted">—</span>'}</td>
@@ -8799,6 +8849,40 @@ function stockRmRenderTable() {
 }
 function stockPkgRenderTable() { _stockRenderByCategory([CAT_PKG], 'stockPkgSearch', 'stockPkgCards', 'stockPkgStatusFilter', 'stockPkgSort'); }
 async function stockPkgLoad() { await stockRmLoad(); }
+
+// ย้ายที่เก็บของล็อตวัตถุดิบ (ภายในล็อตเดียวกัน) — rm_loc_move ฝั่ง DB ตรวจยอดต้นทางให้ (2026-10-31 เหมือน FG)
+async function rmLocMoveOpen(lotId) {
+  await rmLocLoad();
+  const rows = rmLotLocs(lotId);
+  if (!rows.length) { Swal.fire('ไม่มียอดให้ย้าย', 'ล็อตนี้ยังไม่มียอดคงเหลือที่ระบุที่เก็บ', 'info'); return; }
+  const lot = _rmLotCache.find(l => l.Lot_ID === lotId), rm = _rmMasterCache.find(r => r.RM_ID === lot?.RM_ID), unit = lot?.Unit || rm?.Unit || '';
+  const fromOpts = rows.map(r => `<option value="${esc(r.Location)}" data-q="${r.Qty}">${esc(r.Location)} (เหลือ ${_bomFmtQty(r.Qty)})</option>`).join('');
+  const toOpts = _rmLocList.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  if (!toOpts) { Swal.fire('ยังไม่มีรายชื่อที่เก็บ', 'แอดมินต้องเพิ่มรายชื่อสถานที่เก็บในตาราง storage_locations ก่อน', 'info'); return; }
+  const res = await Dlg.form({
+    title: 'ย้ายที่เก็บ', width: 480, confirmText: 'ย้าย',
+    html: `<div class="text-start small"><div class="mb-2 text-muted">${esc(rm?.RM_Name || lot?.RM_ID || '')} · Lot ${esc(_lotLabel(lot || {}))}</div>
+      <label class="form-label mb-1">ย้ายจาก</label><select id="rlm-from" class="form-select mb-2">${fromOpts}</select>
+      <label class="form-label mb-1">ไปที่</label><select id="rlm-to" class="form-select mb-2">${toOpts}</select>
+      <label class="form-label mb-1">จำนวนที่ย้าย (${esc(unit)})</label><input id="rlm-qty" type="number" step="any" min="0" class="form-control"></div>`,
+    didOpen: () => {
+      const from = document.getElementById('rlm-from'), to = document.getElementById('rlm-to'), qty = document.getElementById('rlm-qty');
+      const sync = () => { qty.value = from.selectedOptions[0]?.dataset.q || ''; const first = [...to.options].find(o => o.value !== from.value); if (to.value === from.value && first) to.value = first.value; };
+      from.onchange = sync; sync();
+    },
+    preConfirm: () => {
+      const from = document.getElementById('rlm-from').value, to = document.getElementById('rlm-to').value, q = parseFloat(document.getElementById('rlm-qty').value);
+      if (!(q > 0)) { Dlg.invalid('กรอกจำนวนที่ย้าย'); return false; }
+      if (from === to) { Dlg.invalid('เลือกที่เก็บปลายทางให้ต่างจากต้นทาง'); return false; }
+      return { from, to, q };
+    },
+  });
+  if (!res.isConfirmed) return;
+  const { error } = await _sb.rpc('rm_loc_move', { p_lot_id: lotId, p_from: res.value.from, p_to: res.value.to, p_qty: res.value.q });
+  if (error) { _rpcErr(error, 'ย้ายที่เก็บไม่สำเร็จ', 'migration_2026-10-31_rm_locations.sql'); return; }
+  await stockRmLoad();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2000, title: `ย้าย ${_bomFmtQty(res.value.q)} ไป ${res.value.to} แล้ว` });
+}
 
 // ═══════════════════════════════════════════════════════════
 // CUSTOMER ORDERS
@@ -10100,11 +10184,17 @@ function prepRender() {
     .filter(p => !q || [p.Prep_ID, _rmName(p.SourceRM_ID), _rmName(p.TargetRM_ID), p.MO_ID].join(' ').toLowerCase().includes(q));
   document.getElementById('prepHistBody').innerHTML = hist.map(p => {
     const over = p.ActualLossPct !== null && +p.ActualLossPct > (+p.StdLossPct || 0) + 2;
+    // ต้นทุนจริงต่อหน่วยของล็อตที่ได้กลับ (ผู้ใช้ขอ 2026-10-31) — คำนวณไว้แล้วตอนรับกลับฝั่ง DB
+    // (prep_receive_post, migration_2026-10-31_prep_cost_tracking.sql) หน้านี้แค่ดึงมาโชว์เฉยๆ ไม่คำนวณเอง
+    const backLot = p.BackLotID ? _rmLotCache.find(l => l.Lot_ID === p.BackLotID) : null;
+    const unitCost = backLot ? _rmLotPrice(backLot) : null;
     return `<tr><td><code>${esc(p.Prep_ID)}</code>${p.PI_No ? `<div class="small text-muted">${esc(p.PI_No)}</div>` : ''}</td><td>${fmtDate(p.PrepDate)}</td><td>${fromTo(p)}</td>
       <td class="text-end">${_rmFmtQty(p.QtyOut)}</td><td class="text-end fw-semibold">${p.QtyBack != null ? _rmFmtQty(p.QtyBack) : '—'}</td>
       <td class="text-end ${over ? 'text-danger fw-semibold' : ''}">${p.ActualLossPct != null ? _bomFmtQty(p.ActualLossPct) + '%' : '—'}${over ? ' <i class="fa-solid fa-triangle-exclamation" title="สูญเสียมากกว่ามาตรฐานเกิน 2%"></i>' : ''}</td>
       <td class="text-end text-muted">${_bomFmtQty(p.StdLossPct || 0)}%</td>
-      <td class="small">${esc(p.BackLotID ? (_rmLotCache.find(l => l.Lot_ID === p.BackLotID)?.Lot || p.BackLotID) : '—')}</td>
+      <td class="small">${esc(p.BackLotID ? (backLot?.Lot || p.BackLotID) : '—')}</td>
+      <td class="text-end">${unitCost != null ? `฿${_fmtBaht(unitCost)}` : '<span class="text-muted">—</span>'}</td>
+      <td class="text-end">${unitCost != null && p.QtyBack != null ? `฿${_fmtBaht(unitCost * p.QtyBack)}` : '<span class="text-muted">—</span>'}</td>
       <td>${badge(p.Status, PREP_STATUS_BADGE[p.Status])}</td>
       <td class="text-center text-nowrap">${p.Status === 'รับกลับแล้ว' ? `<button class="btn btn-sm btn-outline-primary me-1" data-id="${esc(p.Prep_ID)}" onclick="prepHistPrintIssue(this.dataset.id)" title="พิมพ์ใบเบิกไปเตรียม (PI) ของวันที่เบิกใบนี้"><i class="fa-solid fa-print me-1"></i>ใบเบิก</button><button class="btn btn-sm btn-outline-success me-1" data-id="${esc(p.Prep_ID)}" onclick="prepHistPrintReceipt(this.dataset.id)" title="พิมพ์ใบรับเข้าจากเตรียม (RP) ของวันที่รับกลับใบนี้"><i class="fa-solid fa-print me-1"></i>ใบรับ</button>${_editBtn('prep_orders', p.Prep_ID)}
         ${_editPendingFor('prep_orders_delete', p.Prep_ID) ? `<button class="btn btn-sm btn-warning" onclick="showPage('rcvedit')" title="มีคำขอลบรออนุมัติ — ดูคำขอ"><i class="fa-solid fa-hourglass-half"></i></button>`
@@ -10112,7 +10202,7 @@ function prepRender() {
         : p.Status === 'ยกเลิก'
           ? `<button class="btn btn-sm btn-outline-danger" data-id="${esc(p.Prep_ID)}" onclick="prepHistDelete(this.dataset.id)" title="ลบใบเตรียมที่ยกเลิกนี้ทิ้ง"><i class="fa-solid fa-trash"></i></button>`
           : '<span class="text-muted small">—</span>'}</td></tr>`;
-  }).join('') || '<tr><td colspan="10" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
+  }).join('') || '<tr><td colspan="12" class="text-center text-muted py-3">ยังไม่มีประวัติ</td></tr>';
 }
 // ขอลบใบเตรียมที่ "รับกลับแล้ว" ทั้งใบ (ต่างจาก prepDelete ที่ยกเลิกได้ทันทีเฉพาะใบที่ยังกำลังเตรียมอยู่) —
 // ต้องผ่านคำขอ+อนุมัติเพราะย้อนกลับสต็อกสองด้าน (คืนวัตถุดิบสดต้นทาง + ตัดวัตถุดิบพร้อมผลิตที่สร้างไว้)
@@ -10952,6 +11042,7 @@ async function issueLoad() {
   if (!_planCache.length) await planLoad();
   if (!_bomCache.length) await bomLoad();
   if (!_stockRmCache.length) await stockRmLoad();
+  if (!_rmLotCache.length) await rmLotLoad();   // ไว้คิดต้นทุนที่เบิกจริงต่อแถว/รวม (ผู้ใช้ขอ 2026-10-31)
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const pending = _planCache.filter(p => p.Status === 'วางแผน');
   document.getElementById('issueMoTableBody').innerHTML = pending.map(p => `
@@ -10980,6 +11071,19 @@ function issueHistToggle(gi) {
   if (_issueHistExpanded.has(g.moId)) _issueHistExpanded.delete(g.moId); else _issueHistExpanded.add(g.moId);
   _issueHistRenderCards();
 }
+// ต้นทุนของ 1 แถวที่เบิก — รวมราคา/หน่วยของทุกล็อตที่ตัดมาจริง (LotAlloc) × จำนวนที่ตัดจากล็อตนั้น ไม่ใช่แค่
+// ราคาเฉลี่ยรวม เพราะล็อตที่เบิกมาจริงอาจคนละราคากัน (ผู้ใช้ขอ 2026-10-31 "อยากเห็นต้นทุนที่เบิกมาด้วย")
+// null = ไม่มีล็อตไหนในแถวนี้ทราบราคาเลย (ยังไม่เคยรับเข้า/เตรียมแบบมีราคา) ไม่ใช่ 0 — กันเข้าใจผิดว่าของฟรี
+function _issueRowCost(h) {
+  if (!Array.isArray(h.LotAlloc) || !h.LotAlloc.length) return null;
+  let cost = 0, pricedQty = 0;
+  h.LotAlloc.forEach(a => {
+    const lot = _rmLotCache.find(l => l.Lot_ID === a.lot_id);
+    const p = lot ? _rmLotPrice(lot) : null;
+    if (p != null) { cost += p * (parseFloat(a.qty) || 0); pricedQty += parseFloat(a.qty) || 0; }
+  });
+  return pricedQty > 0 ? cost : null;
+}
 function _issueHistRenderCards() {
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
   const groups = [];
@@ -11006,8 +11110,11 @@ function _issueHistRenderCards() {
     const expanded = _issueHistExpanded.has(g.moId);
     const rmCount = {};
     g.rows.forEach(h => { rmCount[h.RM_ID] = (rmCount[h.RM_ID] || 0) + 1; });   // วัตถุดิบเดียวกันเบิกหลายแถวใน MO เดียว → ติดป้าย "ซ้ำ" ให้เห็น (อาจเบิกซ้ำโดยไม่ตั้งใจ)
+    let groupCost = 0, groupCostKnown = 0;   // รวมต้นทุนของ MO นี้ + นับว่ารู้ราคากี่แถวจากทั้งหมด (ไม่ครบ = เตือนในป้าย)
     const rowsHtml = g.rows.map(h => {
       const hCat = rmMap[h.RM_ID]?.Category;
+      const rowCost = _issueRowCost(h);
+      if (rowCost != null) { groupCost += rowCost; groupCostKnown++; }
       return `<tr>
       <td><code>${esc(h.Issue_ID)}</code></td>
       <td>${esc(rmMap[h.RM_ID]?.RM_Name || h.RM_ID)}${rmCount[h.RM_ID] > 1 ? ' <span class="badge text-bg-warning" title="วัตถุดิบนี้มีรายการเบิกมากกว่า 1 แถวใน MO นี้ — ตรวจว่าเบิกซ้ำโดยไม่ตั้งใจหรือไม่">ซ้ำ</span>' : ''}</td>
@@ -11015,9 +11122,15 @@ function _issueHistRenderCards() {
       <td class="text-end">${h.ScrapPct ? _bomFmtQty(h.ScrapPct) + '%' : '-'}</td>
       <td class="text-end fw-semibold">${_qtyFmtByCat(h.QtyIssued, hCat)} ${esc(h.Unit || '')}
         ${Array.isArray(h.LotAlloc) && h.LotAlloc.length ? `<div class="small text-muted fw-normal">${_lotAllocText(h.LotAlloc, CAT_RAW_ALL.includes(hCat) ? _rmFmtQty : _bomFmtQty, false)}</div>` : ''}</td>
+      <td class="text-end">${rowCost != null ? `฿${_fmtBaht(rowCost)}` : '<span class="text-muted">—</span>'}</td>
       <td class="text-center">${_editBtn('issue_production', h.Issue_ID)}${_issueLotBtn(h.Issue_ID)}${_issueDeleteBtn(h.Issue_ID)}</td>
     </tr>`;
     }).join('');
+    // ป้ายต้นทุนรวม (ผู้ใช้ขอ 2026-10-31 "อยากเห็นต้นทุนที่เบิกมาด้วย ว่ารวมเป็นเท่าไหร่ของยอดเบิกทั้งหมด") — เตือน
+    // ถ้าบางแถวยังไม่มีราคา (ยอดรวมจะต่ำกว่าความจริง ไม่ใช่ตัวเลขที่สมบูรณ์)
+    const costBadge = groupCostKnown === 0 ? ''
+      : `<span class="badge bg-light text-dark border ms-1" title="${groupCostKnown < g.rows.length ? `รวมเฉพาะ ${groupCostKnown}/${g.rows.length} รายการที่ทราบราคา — ที่เหลือยังไม่มีข้อมูลราคา` : 'ต้นทุนวัตถุดิบรวมของ MO นี้'}">
+        <i class="fa-solid fa-coins me-1"></i>฿${_fmtBaht(groupCost)}${groupCostKnown < g.rows.length ? '*' : ''}</span>`;
     return `<div class="glass-card mb-2">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 bom-card-head" onclick="issueHistToggle(${gi})">
         <div>
@@ -11025,6 +11138,7 @@ function _issueHistRenderCards() {
           <b>${esc(fg?.FG_Name || mo?.FG_ID || '-')}</b>
           <span class="badge bg-light text-dark border ms-2">ผลิต ${_bomFmtQty(first?.ForQty ?? mo?.PlanQty ?? 0)} ${esc(fg?.Unit || '')}</span>
           <span class="badge bg-light text-dark border ms-1"><i class="fa-solid fa-tag me-1"></i>${esc(mo?.Lot || '-')}</span>
+          ${costBadge}
           <span onclick="event.stopPropagation()">${_editBtn('mo_lot', g.moId)}</span>
           <span class="text-muted ms-2 small">${fmtDate(first?.IssueDate)} · ${g.rows.length} วัตถุดิบ</span>
           <span onclick="event.stopPropagation()">${_issueDateBulkBtn(g.moId)}</span>
@@ -11037,7 +11151,7 @@ function _issueHistRenderCards() {
         </div>
       </div>
       ${!expanded ? '' : `<div class="table-responsive mt-3"><table class="table table-sm table-hover mb-0">
-        <thead><tr><th>เลขที่เบิก</th><th>วัตถุดิบ</th><th class="text-end">ตามสูตร</th><th class="text-end">Scrap</th><th class="text-end">เบิกจริง</th><th class="text-center">จัดการ</th></tr></thead>
+        <thead><tr><th>เลขที่เบิก</th><th>วัตถุดิบ</th><th class="text-end">ตามสูตร</th><th class="text-end">Scrap</th><th class="text-end">เบิกจริง</th><th class="text-end">ต้นทุน</th><th class="text-center">จัดการ</th></tr></thead>
         <tbody>${rowsHtml}</tbody></table></div>`}
     </div>`;
   }).join('') || `<div class="glass-card text-center py-4 text-muted">${q ? 'ไม่พบรายการที่ค้นหา' : 'ยังไม่มีประวัติ'}</div>`;
@@ -11760,7 +11874,7 @@ async function prodCostLoad() {
   const iss = moIds.length ? (await sbRun(_sb.from('issue_production').select('*').in('MO_ID', moIds), 'โหลดข้อมูลต้นทุนไม่สำเร็จ') || []) : [];
   const lotIds = [...new Set(iss.flatMap(r => (r.LotAlloc || []).map(a => a.lot_id).filter(Boolean)))];
   const lots = lotIds.length ? (await sbRun(_sb.from('stock_rm_lot').select('Lot_ID,Receive_ID').in('Lot_ID', lotIds), 'โหลดข้อมูลต้นทุนไม่สำเร็จ') || []) : [];
-  const receiveIdByLot = Object.fromEntries(lots.map(l => [l.Lot_ID, l.Receive_ID]));
+  const priceByLot = Object.fromEntries(lots.map(l => [l.Lot_ID, _rmLotPrice(l)]));
   const issByMo = {};
   iss.forEach(r => { (issByMo[r.MO_ID] ||= []).push(r); });
   const bomGroups = _bomGroupByProduct();
@@ -11776,8 +11890,7 @@ async function prodCostLoad() {
       const qty = parseFloat(r.QtyIssued) || 0;
       let cost = 0, pricedQty = 0;
       (r.LotAlloc || []).forEach(a => {
-        const recvId = a.lot_id ? receiveIdByLot[a.lot_id] : null;
-        const price = recvId ? _rmPriceMap[recvId] : null;
+        const price = a.lot_id ? (priceByLot[a.lot_id] ?? null) : null;
         if (price != null) { cost += price * (parseFloat(a.qty) || 0); pricedQty += parseFloat(a.qty) || 0; }
       });
       // orig = "พร้อมใช้ในสูตร" (เบิกเดิม ไม่เปลี่ยนตามการแก้เบิกตั้งต้น — _rmUseOrigQty/OrigQty) เทียบกับ qty = ใช้จริง
@@ -13065,7 +13178,7 @@ async function fgReceiveGeneralSave() {
 let _stockFgCache = [];
 // สถานที่เก็บ FG (2026-10-18 ผู้ใช้ขอ คลังชั้น 3 / คลังชั้น 6 / โกดังเก็บของ) — รายชื่ออ่านจากตาราง storage_locations ถ้ายังไม่รัน SQL ใช้ 3 ที่ตั้งต้นนี้
 // _stockFgLocCache = ยอดต่อ (สินค้า, ล็อต, ที่เก็บ) จาก stock_fg_loc ('ไม่ระบุ' = ล็อตเก่าที่ยังไม่เคยกำหนดที่เก็บ) — migration_2026-10-18_fg_locations.sql
-const FG_LOC_DEFAULT = ['คลังชั้น 3', 'คลังชั้น 6', 'โกดังเก็บของ'], FG_LOC_NONE = 'ไม่ระบุ';
+const FG_LOC_DEFAULT = ['คลังชั้น 3', 'คลังชั้น 6', 'คลังชั้น 7', 'คลังชั้น 8', 'คลังโกดัง'], FG_LOC_NONE = 'ไม่ระบุ';
 let _fgLocList = FG_LOC_DEFAULT.slice(), _stockFgLocCache = [];
 async function fgLocLoad() {
   const [locs, rows] = await Promise.all([_sb.from('storage_locations').select('Name').eq('Active', true).order('SortOrder'), _sb.from('stock_fg_loc').select('*')]);
@@ -14599,7 +14712,7 @@ function _scValueForBalance(type, id, lot, balance) {
   }
   if (lot) {
     const l = _lotsFefo(id).find(x => _lotLabel(x) === lot);
-    const p = l && l.Receive_ID ? _rmPriceMap[l.Receive_ID] : null;
+    const p = l ? _rmLotPrice(l) : null;
     return p != null ? { value: p * balance, label: 'ต้นทุน' } : null;
   }
   const avg = _rmAvgCost(id);
