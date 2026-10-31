@@ -110,7 +110,7 @@
   --brand-blue-light: #a2c4e3;   /* น้ำเงินอ่อน ไฮไลต์ */
   --accent-pink: #e86e7a;        /* ชมพูดอกไม้ในโลโก้ ใช้เป็น accent เท่านั้น
                                      ไม่ใช้แทนสีสถานะ (success/warning/danger เดิมยังคงความหมายเดิม) */
-  --sidebar-width: 210px;
+  --sidebar-width: 240px;   /* เดิม 210px — ชื่อกลุ่ม "งานคุณภาพ QA / QC" และเมนูยาว (เช่น สต็อกสินค้าสำเร็จรูป (FG)) ตกบรรทัด (ผู้ใช้ขอ 2026-10-31) */
 }
 body {
   font-family: 'Sarabun', sans-serif;
@@ -151,6 +151,7 @@ body {
 .nav-group-header[data-g="stock"],  .nav-group-header[data-g="stock"]  + .nav-group-body { --g: #0e7490; --gsoft: #dcf1f6; }
 .nav-group-header[data-g="prod"],   .nav-group-header[data-g="prod"]   + .nav-group-body { --g: #4457b8; --gsoft: #e4e8fa; }
 .nav-group-header[data-g="bal"],    .nav-group-header[data-g="bal"]    + .nav-group-body { --g: #b45309; --gsoft: #fcefd9; }
+.nav-group-header[data-g="qc"],     .nav-group-header[data-g="qc"]     + .nav-group-body { --g: #7a3fb0; --gsoft: #efe5f8; }
 .nav-group-header[data-g="master"], .nav-group-header[data-g="master"] + .nav-group-body { --g: #475569; --gsoft: #e6ebf1; }
 .nav-group-header[data-g="admin"],  .nav-group-header[data-g="admin"]  + .nav-group-body { --g: #b91c1c; --gsoft: #fbe4e4; }
 .nav-group { margin-top: 10px; }
@@ -999,8 +1000,7 @@ td.empty-cell { white-space: normal !important; }
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('fgreceive');return false;" id="navlink-fgreceive"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('reqorder');return false;" id="navlink-reqorder"><i class="fa-solid fa-file-signature me-2"></i>ใบขอเบิก</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('miscout');return false;" id="navlink-miscout"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>เบิกเบ็ดเตล็ด / โอนย้าย</a></li>
-      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockmove');return false;" id="navlink-stockmove"><i class="fa-solid fa-right-left me-2"></i>ความเคลื่อนไหวสต็อก</a></li>
-    </ul>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockmove');return false;" id="navlink-stockmove"><i class="fa-solid fa-right-left me-2"></i>ความเคลื่อนไหวสต็อก</a></li>    </ul>
     </div>
 
     <div class="nav-group">
@@ -1028,6 +1028,13 @@ td.empty-cell { white-space: normal !important; }
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockcard');return false;" id="navlink-stockcard"><i class="fa-solid fa-clipboard-list me-2"></i>สต็อกการ์ด</a></li>
       <li class="nav-item" id="navlink-integrity-wrap" style="display:none"><a class="nav-link" href="#" onclick="showPage('integrity');return false;" id="navlink-integrity"><i class="fa-solid fa-shield-halved me-2"></i>ตรวจความถูกต้อง</a></li>
       <li class="nav-item" id="navlink-stockcount-wrap" style="display:none"><a class="nav-link" href="#" onclick="showPage('stockcount');return false;" id="navlink-stockcount"><i class="fa-solid fa-list-check me-2"></i>ตรวจนับสต็อก</a></li>
+    </ul>
+    </div>
+
+    <div class="nav-group">
+    <div class="nav-group-header" data-g="qc" onclick="toggleNavGroup(this)"><span><i class="fa-solid fa-clipboard-check ng-ic"></i>งานคุณภาพ QA / QC</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
+    <ul class="nav flex-column nav-group-body">
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('qc');return false;" id="navlink-qc"><i class="fa-solid fa-vial-circle-check me-2"></i>ตรวจรับ (IQC) <span class="badge text-bg-warning ms-1" id="qcNavBadge" style="display:none" title="ล็อตใหม่ที่รอ QC ตรวจ"></span></a></li>
     </ul>
     </div>
 
@@ -1960,13 +1967,13 @@ td.empty-cell { white-space: normal !important; }
         <div class="row g-2">
           <div class="col-md-4"><div class="role-desc" style="border-left-color:#64748b"><div class="fw-bold mb-1"><span class="role-badge text-bg-secondary">พนักงาน</span> operator</div><div class="small text-muted">ดู / เพิ่ม / แก้ไขข้อมูลได้ทุกหน้า แต่ <b>ลบไม่ได้</b> (ไม่เห็นปุ่มลบ)</div></div></div>
           <div class="col-md-4"><div class="role-desc" style="border-left-color:#0ea5e9"><div class="fw-bold mb-1"><span class="role-badge text-bg-info">หัวหน้างาน</span> supervisor</div><div class="small text-muted">ทำได้เท่าพนักงาน + <b>ลบข้อมูลได้</b></div></div></div>
-          <div class="col-md-4"><div class="role-desc" style="border-left-color:var(--primary-blue)"><div class="fw-bold mb-1"><span class="role-badge text-bg-primary">แอดมิน</span> admin</div><div class="small text-muted">ทำได้ทุกอย่าง + <b>จัดการสิทธิ์ผู้ใช้</b> ในหน้านี้</div></div></div>
+          <div class="col-md-4"><div class="role-desc" style="border-left-color:var(--primary-blue)"><div class="fw-bold mb-1"><span class="role-badge text-bg-primary">แอดมิน</span> admin</div><div class="small text-muted">ทำได้ทุกอย่าง + <b>จัดการสิทธิ์ผู้ใช้</b> ในหน้านี้ · เป็นผู้ตรวจ/อนุมัติ <b>QC / QA</b></div></div></div>
         </div>
       </div>
       <div class="glass-card p-0 overflow-hidden">
         <div class="table-responsive"><table class="table table-hover mb-0">
-          <thead><tr><th>Username</th><th>อีเมลเข้าสู่ระบบ</th><th>ชื่อแสดงผล</th><th style="width:210px">ระดับสิทธิ์</th><th>แก้ไขล่าสุด</th></tr></thead>
-          <tbody id="userrolesTableBody"><tr><td colspan="5" class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังโหลด...</td></tr></tbody>
+          <thead><tr><th>Username</th><th>อีเมลเข้าสู่ระบบ</th><th>ชื่อแสดงผล</th><th style="width:190px">แผนก</th><th style="width:210px">ระดับสิทธิ์</th><th>แก้ไขล่าสุด</th></tr></thead>
+          <tbody id="userrolesTableBody"><tr><td colspan="6"class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังโหลด...</td></tr></tbody>
         </table></div>
       </div>
       <div class="glass-card">
@@ -2622,7 +2629,7 @@ td.empty-cell { white-space: normal !important; }
           <div class="col-md-4">
             <label class="form-label">จำนวน<span class="text-danger">*</span></label>
             <div class="input-group has-validation">
-              <input id="rcv-qty" type="number" step="any" class="form-control" oninput="rcvCalcAmount()">
+              <input id="rcv-qty" type="number" step="any" class="form-control" oninput="rcvCalcAmount(); rcvWpcHint()">
               <span class="input-group-text" id="rcv-unit">—</span>
               <div class="invalid-feedback" id="rcv-qty-err"></div>
             </div>
@@ -2653,6 +2660,20 @@ td.empty-cell { white-space: normal !important; }
           <div class="col-md-6">
             <label class="form-label">Lot จากผู้ผลิต</label>
             <input id="rcv-mfglot" class="form-control" placeholder="เลข Lot ที่ซัพพลายเออร์/ผู้ผลิตติดมา (ถ้ามี)">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">จำนวนภาชนะ</label>
+            <input id="rcv-containers" type="number" min="0" step="1" class="form-control" placeholder="ถุง/กล่อง" oninput="rcvWpcHint()">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">น้ำหนัก/ภาชนะ</label>
+            <div class="input-group">
+              <input id="rcv-wpc" type="number" min="0" step="any" class="form-control" placeholder="เช่น 5" oninput="rcvWpcHint()">
+              <span class="input-group-text" id="rcv-wpc-unit">—</span>
+            </div>
+          </div>
+          <div class="col-12" style="margin-top:-.4rem">
+            <div class="form-text" style="font-size:.72rem" id="rcv-cont-hint">ใช้กำหนดจำนวนป้าย Released ตอน QC พิมพ์ (ภาชนะ + 2) และ Remark บนป้าย (น้ำหนัก/ภาชนะ) · แก้หลังบันทึกไม่ได้จากฟอร์มนี้</div>
           </div>
           <div class="col-md-6">
             <label class="form-label">วันที่ผลิต (ถ้ามี)</label>
@@ -3730,6 +3751,7 @@ let _rmLotCache = [];
 async function rmLotLoad() {
   const { data, error } = await _sb.from('stock_rm_lot').select('*');
   _rmLotCache = error ? [] : (data || []);
+  if (typeof qcLoadStatus === 'function') await qcLoadStatus();   // สถานะ QC ของล็อต (qc.js) — ใช้ขึ้นป้ายในหน้า Stock + เตือนตอนเบิก
 }
 // สถานที่เก็บวัตถุดิบ (2026-10-31 ผู้ใช้ขอ "เหมือน FG") — ใช้ตาราง storage_locations ร่วมกับ FG (ชื่อใช้ร่วมกันได้ทั้ง
 // 2 ฝั่ง) + ตารางลูก stock_rm_loc แยกยอดคงเหลือของแต่ละล็อต (keyed ด้วย Lot_ID ตรงๆ ต่างจาก FG ที่ต้องคีย์คู่
@@ -3852,7 +3874,9 @@ async function logout() { await _logSession('LOGOUT'); await _sb.auth.signOut();
 const _ROLE_RANK = { operator: 1, supervisor: 2, admin: 3 };
 const _ROLE_LABEL = { operator: 'พนักงาน', supervisor: 'หัวหน้างาน', admin: 'แอดมิน' };
 const _ROLE_BADGE = { operator: 'secondary', supervisor: 'info', admin: 'primary' };
-let _currentUser = null;   // { id, email, name, role, rolesReady }
+// แผนกของผู้ใช้ — 1 คนอยู่ได้หลายแผนก (เก็บเป็น text[] ใน user_roles.Depts — migration_2026-10-31_user_dept.sql) เพิ่ม/ลดแผนกแก้ที่นี่ที่เดียว
+const _DEPT_LIST = ['ผลิต', 'คลังสินค้า (WH)', 'ควบคุมคุณภาพ (QC)', 'ประกันคุณภาพ (QA)', 'วิจัยและพัฒนา (R&D)', 'จัดซื้อ', 'ขาย / การตลาด', 'บัญชี / การเงิน', 'บริหาร'];
+let _currentUser = null;   // { id, email, name, role, dept, rolesReady }
 function _hasRole(minRole) { return (_ROLE_RANK[_currentUser?.role] || 1) >= (_ROLE_RANK[minRole] || 1); }
 function _roleBadge(role) { return `<span class="role-badge text-bg-${_ROLE_BADGE[role] || 'secondary'}">${_ROLE_LABEL[role] || role}</span>`; }
 async function _loadMyRole(user) {
@@ -3861,7 +3885,7 @@ async function _loadMyRole(user) {
   // (ถ้าบังคับเป็นพนักงาน ปุ่มลบจะหายทั้งที่ DB ยังลบได้) และหน้าสิทธิ์จะแจ้งให้รัน SQL
   if (error) return { role: 'admin', rolesReady: false, name: user.email };
   // มีตารางแล้วแต่ไม่มีแถวของคนนี้ = operator ตรงกับ current_role_rank() ฝั่ง DB
-  return { role: data?.Role || 'operator', rolesReady: true, name: data?.DisplayName || user.email };
+  return { role: data?.Role || 'operator', rolesReady: true, name: data?.DisplayName || user.email, depts: data?.Depts || [] };
 }
 function _applyRolePermissions() {
   document.body.classList.toggle('role-operator', !_hasRole('supervisor'));
@@ -3872,7 +3896,8 @@ function _applyRolePermissions() {
   if (_hasRole('admin')) _backupBadge();   // เตือนบนเมนู ถ้ายังไม่ได้สำรองข้อมูลเกิน 7 วัน   // หน้าตรวจความถูกต้อง: หัวหน้างานขึ้นไป (integrity_report ตรวจสิทธิ์ซ้ำที่ DB)   // แอดมินเท่านั้น (ผู้ใช้ปรับ 2026-10-12 จากเดิมหัวหน้างานขึ้นไป)
   document.getElementById('currentUserEmail').textContent = _currentUser.name;
   document.getElementById('currentUserEmail').title = _currentUser.email;
-  document.getElementById('currentUserRole').innerHTML = _currentUser.rolesReady ? _roleBadge(_currentUser.role) : '';
+  document.getElementById('currentUserRole').innerHTML = _currentUser.rolesReady
+    ? _roleBadge(_currentUser.role) + (_currentUser.depts?.length ? ` <span class="small text-muted ms-1">${esc(_currentUser.depts.join(', '))}</span>` : '') : '';
   if (_hasRole('admin')) signupreqRefreshBadge();   // จำนวนคำขอรอตรวจสอบบนเมนู
   rcvEditLoadPending();                               // จำนวนคำขอแก้ไข + คำขอสมัครใช้งานบนเมนู
 }
@@ -5087,13 +5112,13 @@ let _userrolesCache = [];
 async function userrolesLoad() {
   const body = document.getElementById('userrolesTableBody');
   if (!_hasRole('admin')) {
-    body.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">หน้านี้สำหรับแอดมินเท่านั้น</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">หน้านี้สำหรับแอดมินเท่านั้น</td></tr>';
     document.getElementById('userrolesKpis').innerHTML = '';
     return;
   }
   const { data, error } = await _sb.from('user_roles').select('*').order('Email');
   if (error) {
-    body.innerHTML = `<tr><td colspan="5" class="text-center py-4"><div class="text-danger fw-semibold mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่ได้ตั้งค่าระบบสิทธิ์</div>
+    body.innerHTML = `<tr><td colspan="6" class="text-center py-4"><div class="text-danger fw-semibold mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่ได้ตั้งค่าระบบสิทธิ์</div>
       <div class="small text-muted">รันไฟล์ <code>migration_2026-09-25_user_roles.sql</code> ใน Supabase SQL Editor ก่อน แล้ว logout / login ใหม่</div>
       <div class="small text-muted mt-1">(${esc(error.message)})</div></td></tr>`;
     document.getElementById('userrolesKpis').innerHTML = '';
@@ -5118,13 +5143,44 @@ function userrolesRender() {
       <td><input class="form-control form-control-sm" value="${esc(u.DisplayName || '')}" placeholder="ตั้งชื่อแสดงผล..."
         data-id="${esc(u.id)}" onchange="userrolesUpdateName(this.dataset.id, this.value)"></td>
       <td>
+        <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-start" data-id="${esc(u.id)}" onclick="userrolesPickDepts(this.dataset.id)" title="กดเพื่อเลือกแผนก (เลือกได้หลายแผนก)">
+          <i class="fa-solid fa-building-user me-1 text-muted"></i>${esc(_userDeptLabel(u.Depts))}</button>
+      </td>
+      <td>
         <select class="form-select form-select-sm" data-id="${esc(u.id)}" onchange="userrolesUpdateRole(this.dataset.id, this.value)" ${isMe ? 'disabled title="เปลี่ยนสิทธิ์ตัวเองไม่ได้ (กันแอดมินล็อกตัวเองออก) — ให้แอดมินคนอื่นเปลี่ยนให้"' : ''}>
           ${['operator', 'supervisor', 'admin'].map(v => `<option value="${v}" ${u.Role === v ? 'selected' : ''}>${_ROLE_LABEL[v]}</option>`).join('')}
         </select>
       </td>
       <td class="small text-muted">${u.UpdatedAt ? fmtDate(u.UpdatedAt) : '-'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="5" class="text-center text-muted py-4">ยังไม่มีผู้ใช้</td></tr>';
+  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">ยังไม่มีผู้ใช้</td></tr>';
+}
+function _userDeptLabel(depts) { return depts?.length ? depts.join(', ') : '— ยังไม่ระบุ —'; }
+// เลือกแผนกในหน้าต่างป๊อปอัป (ไม่ใช้เมนูลอยในตาราง เพราะตารางเลื่อนได้แล้วเมนูถูกกรอบตัด) ติ๊กได้หลายแผนก
+async function userrolesPickDepts(id) {
+  const u = _userrolesCache.find(x => x.id === id); if (!u) return;
+  const cur = u.Depts || [];
+  const opts = _DEPT_LIST.concat(cur.filter(d => !_DEPT_LIST.includes(d)));   // แผนกเก่าที่ไม่อยู่ในลิสต์แล้ว ยังโชว์ให้เอาออกได้
+  const c = await Swal.fire({
+    title: 'เลือกแผนก', showCancelButton: true, confirmButtonText: 'บันทึก', cancelButtonText: 'ยกเลิก',
+    html: `<div class="small text-muted mb-2">${esc(u.DisplayName || u.Email || '')} · เลือกได้หลายแผนก</div>
+      <div class="text-start mx-auto" style="max-width:280px" id="urDeptPick">${opts.map(d => `<label class="d-flex align-items-center gap-2 py-1" style="cursor:pointer">
+        <input type="checkbox" class="form-check-input mt-0" value="${esc(d)}" ${cur.includes(d) ? 'checked' : ''}> ${esc(d)}</label>`).join('')}</div>`,
+    preConfirm: () => [...document.querySelectorAll('#urDeptPick input:checked')].map(i => i.value),
+  });
+  if (!c.isConfirmed) return;
+  await userrolesUpdateDepts(id, c.value);
+}
+async function userrolesUpdateDepts(id, depts) {
+  const { data, error } = await _sb.from('user_roles').update({ Depts: depts, UpdatedAt: new Date().toISOString() }).eq('id', id).select();
+  if (error || !data?.length) {
+    const noCol = /Depts/i.test(error?.message || '');
+    Swal.fire('บันทึกแผนกไม่สำเร็จ', noCol ? 'ยังไม่ได้รัน migration_2026-10-31_user_dept.sql ใน Supabase SQL Editor' : (error?.message || 'ไม่มีสิทธิ์แก้ไข (ต้องเป็นแอดมิน)'), 'error');
+    userrolesLoad(); return;
+  }
+  if (id === _currentUser.id) { _currentUser.depts = depts; _applyRolePermissions(); }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'บันทึกแผนกแล้ว', showConfirmButton: false, timer: 1500 });
+  userrolesLoad();
 }
 async function userrolesUpdateRole(id, newRole) {
   const u = _userrolesCache.find(x => x.id === id);
@@ -6942,6 +6998,8 @@ function receivedOpenForm(editId) {
   sup.value = row ? (row.Supplier || '') : '';
   lot.value = row ? (row.Lot || '') : '';
   g('rcv-mfglot').value = row ? (row.MfgLot || '') : '';
+  g('rcv-containers').value = row?.Containers ?? ''; g('rcv-containers').disabled = !!row;   // แก้ไขใบเดิมไม่ได้ผ่านคำขอแก้ไข (ไม่อยู่ในรายการช่องที่แก้ได้)
+  g('rcv-wpc').value = row?.WeightPerContainer ?? ''; g('rcv-wpc').disabled = !!row;
   g('rcv-harvest').value = row ? (row.HarvestDate || '') : todayStr();
   g('rcv-receive').value = row ? (row.ReceiveDate || '') : todayStr();
   g('rcv-exp').value = row ? (row.ExpDate || '') : '';
@@ -7033,11 +7091,22 @@ function rcvRmKey(e) {
   }
 }
 // เลือกรายการ (id = null → ล้าง) · keepText = ไม่ลบข้อความที่ผู้ใช้กำลังพิมพ์
+// ช่วยดูน้ำหนัก/ภาชนะ: ถ้ากรอกจำนวนรวม + จำนวนภาชนะ แต่ยังไม่กรอกน้ำหนัก/ภาชนะ → แสดงค่าเฉลี่ยให้ดู (ไม่ใส่ให้เอง เพราะภาชนะอาจหนักไม่เท่ากัน)
+function rcvWpcHint() {
+  const el = document.getElementById('rcv-cont-hint'); if (!el) return;
+  const qty = parseFloat(document.getElementById('rcv-qty').value), n = parseInt(document.getElementById('rcv-containers').value, 10);
+  const w = parseFloat(document.getElementById('rcv-wpc').value), unit = document.getElementById('rcv-unit').textContent;
+  const base = 'ใช้กำหนดจำนวนป้าย Released ตอน QC พิมพ์ (ภาชนะ + 2) และ Remark บนป้าย (น้ำหนัก/ภาชนะ) · แก้หลังบันทึกไม่ได้จากฟอร์มนี้';
+  el.innerHTML = qty > 0 && n > 0 && !(w > 0)
+    ? `เฉลี่ยจากจำนวนรวม ≈ <b>${Math.round(qty / n * 1000) / 1000} ${esc(unit)}/ภาชนะ</b> (ยังไม่ได้กรอกน้ำหนัก/ภาชนะ) · ${base}` : base;
+}
 function rcvRmPick(id, keepText) {
   const r = id ? _rmMasterCache.find(x => x.RM_ID === id) : null;
   document.getElementById('rcv-rm').value = r?.RM_ID || '';
   document.getElementById('rcv-code').value = r?.RM_ID || '';
   document.getElementById('rcv-unit').textContent = r?.Unit || '—';
+  document.getElementById('rcv-wpc-unit').textContent = r?.Unit || '—';
+  rcvWpcHint();
   document.getElementById('rcv-price-unit').textContent = r?.Unit ? `฿/${r.Unit}` : '฿';
   if (!keepText) document.getElementById('rcv-rm-search').value = r?.RM_Name || '';
   // ซัพพลายเออร์: แนะนำตัวเลือกจากผู้ส่งมอบที่ผูกไว้กับรายการนี้ใน Vendor Master (เลือกจาก dropdown ได้เลย)
@@ -7189,7 +7258,13 @@ async function receivedModalSave() {
   if (mfglot) args.p_mfglot = mfglot;
   const loc = _rcvLocRead();
   if (loc) args.p_loc = loc;
+  const containers = parseInt(document.getElementById('rcv-containers').value, 10), wpc = parseFloat(document.getElementById('rcv-wpc').value);
   const { error } = await _sb.rpc('rm_receive_post', args);
+  if (!error && (containers >= 0 || wpc >= 0)) {   // จำนวนภาชนะ + น้ำหนัก/ภาชนะ (migration_2026-10-31_receive_containers.sql) — ยังไม่รัน = ข้ามเงียบๆ ไม่กระทบการรับของ
+    const upd = {}; if (containers >= 0) upd.Containers = containers; if (wpc >= 0) upd.WeightPerContainer = wpc;
+    const ce = await _sb.from('rm_receive').update(upd).eq('Receive_ID', args.p_receive_id);
+    if (ce.error) console.warn('บันทึกจำนวนภาชนะ/น้ำหนักต่อภาชนะไม่สำเร็จ', ce.error.message);
+  }
   if (error) {
     if ((note || price !== null || mfglot || loc) && error.code === 'PGRST202') {
       Swal.fire('บันทึกบางช่องไม่ได้', 'ระบบยังไม่รองรับบางช่องที่กรอกเพิ่ม (หมายเหตุ/ราคา/Lot จากผู้ผลิต) — แอดมินต้องรัน migration ล่าสุดใน Supabase ก่อน (หรือลบช่องเหล่านี้ออกแล้วบันทึก)', 'error');
@@ -8834,7 +8909,7 @@ function _stockRenderByCategory(categories, searchInputId, containerId, statusFi
         const traceId = l.Receive_ID || (l.Lot_ID?.startsWith('OPEN-') ? 'ยอดยกมา' : l.Lot_ID);
         const lc = rmLotLocs(l.Lot_ID);
         return `<tr>
-          <td title="${esc(traceId)}">${esc(_lotLabel(l))}${_isRefDate(l.ReceiveDate) ? ' ' + _refBadge('อ้างอิง') : ''}</td>
+          <td title="${esc(traceId)}">${esc(_lotLabel(l))}${_isRefDate(l.ReceiveDate) ? ' ' + _refBadge('อ้างอิง') : ''} ${typeof qcBadge === 'function' ? qcBadge(l.Lot_ID) : ''}</td>
           <td class="text-end"><b class="text-primary">${_qtyFmtByCat(l.Qty, r.Category)}</b> ${esc(l.Unit || r.Unit)}</td>
           <td class="small">${lc.length ? lc.map(x => `<span class="badge ${x.Location === RM_LOC_NONE ? 'text-bg-light border text-muted' : 'text-bg-info'} me-1">${esc(x.Location)}: ${_bomFmtQty(x.Qty)}</span>`).join('') : '<span class="text-muted">—</span>'}
             <button class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.72rem" data-lot="${esc(l.Lot_ID)}" onclick="rmLocMoveOpen(this.dataset.lot)" title="ย้ายที่เก็บของล็อตนี้"><i class="fa-solid fa-right-left"></i> ย้าย</button></td>
@@ -10143,6 +10218,7 @@ async function prepPlanBulkIssue() {
   const c = await Swal.fire({ icon: 'question', title: `เบิกไปเตรียมทั้งหมด ${shortRows.length} รายการ?`, html: listHtml,
     showCancelButton: true, confirmButtonText: 'ยืนยันเบิกทั้งหมด', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
+  if (typeof qcConfirmPlan === 'function' && !await qcConfirmPlan(shortRows.filter(r => r.rawToIssue > 0).map(r => ({ rm_id: r.t.SourceRM_ID, qty: r.rawToIssue })))) return;   // QC: เตือน/บล็อกล็อตที่ยังไม่ผ่าน
   let okCount = 0, skipped = 0; const errors = []; const usedIds = new Set();
   for (const r of shortRows) {
     if (r.rawToIssue <= 0) { skipped++; continue; }
@@ -10552,6 +10628,7 @@ async function prepIssueSave() {
   // ยืนยันคู่ต้นทาง → ปลายทางอีกครั้งก่อนตัดสต็อกจริง (2026-09-29) — ตั้งแต่แยกช่องเลือกต้นทางออกมาอิสระ
   // จากปลายทางแล้ว มีเคสจริงที่ผู้ใช้เปลี่ยนต้นทางแต่ลืมเช็คปลายทาง จนได้คู่ที่ไม่สัมพันธ์กัน (เบิกกฤษณาแห้ง
   // ไปเตรียมเป็นขมิ้นสดหั่นพร้อมใช้) — เพิ่ม dialog สรุปคู่ให้เห็นชัดๆ ก่อนกดจริง แทนที่จะยิง RPC ทันที
+  if (typeof qcConfirmLots === 'function' && !await qcConfirmLots(lots.map(x => x.lot_id))) return;   // QC: เตือน/บล็อกล็อตที่ยังไม่ผ่าน
   const sameCode = srcId === t.RM_ID;
   const c = await Swal.fire({ icon: 'question', title: 'ยืนยันเบิกไปเตรียม?',
     html: sameCode
@@ -11633,6 +11710,7 @@ async function issueModalSave() {
   // เลขที่เบิก = ISS-ปีเดือนวัน-รหัสวัตถุดิบ (ผู้ใช้ขอ 2026-09-28) — ถ้าวันเดียวกันมีเบิกวัตถุดิบตัวเดียวกันจาก
   // คนละ MO ต่อท้าย -2, -3 ... กันชนกัน (เหมือน Prep_ID) ผ่าน _nextIssueIds (2026-10-03, แก้บั๊กเดิมที่เคย
   // ทำให้รายการที่สองของวันเบิกไม่ผ่านเลยจนกว่าจะข้ามวัน)
+  if (typeof qcConfirmPlan === 'function' && !await qcConfirmPlan(rows.map(n => ({ rm_id: n.RM_ID, qty: n.issueQty })))) return;   // QC: เตือน/บล็อกล็อตที่ยังไม่ผ่าน
   const _issIds = await _nextIssueIds(todayStr(), rows.map(n => n.RM_ID));
   const { data: alloc, error } = await _sb.rpc('rm_issue_post', {
     p_mo_id: _issueMoId,
@@ -11822,6 +11900,7 @@ async function issueGenSave() {
       showCancelButton: true, confirmButtonText: 'เบิกต่อ', cancelButtonText: 'กลับไปแก้' });
     if (!c.isConfirmed) return;
   }
+  if (typeof qcConfirmPlan === 'function' && !await qcConfirmPlan(rows.map(n => ({ rm_id: n.RM_ID, qty: n.qty })))) return;   // QC: เตือน/บล็อกล็อตที่ยังไม่ผ่าน (ก่อนสร้าง MO)
   const moId = await _nextMoId();
   const moPayload = {
     MO_ID: moId, FG_ID: fgId, PlanQty: planQty, PlanDate: issueDate, Lot: lot,
@@ -13818,6 +13897,7 @@ async function miscOutSave() {
     if (loc && qty > (parseFloat(locOpt.dataset.qty) || 0) + 1e-9) { fail(`${esc(name)}: ที่เก็บ “${esc(loc)}” เหลือ ${_bomFmtQty(parseFloat(locOpt.dataset.qty) || 0)} — หยิบ ${_bomFmtQty(qty)} ไม่ได้ (เลือก “อัตโนมัติ” หรือแบ่งหลายแถว)`, tr.querySelector('.mo-qty')); return; }
     items.push(tr.dataset.kind === 'M' ? { kind: 'M', lot_id: sel.value, qty, order_id: tr.dataset.order } : { kind: 'F', fg_id: tr.dataset.id, lot: sel.value, qty, order_id: tr.dataset.order, ...(loc ? { loc } : {}) });
   }
+  if (typeof qcConfirmLots === 'function' && !await qcConfirmLots(items.filter(i => i.kind === 'M').map(i => i.lot_id))) return;   // QC: เตือน/บล็อกล็อตวัตถุดิบที่ยังไม่ผ่าน
   const { data, error } = await _sb.rpc('misc_out_post', { p_type: _moType, p_date: date, p_dest: needDest ? dest : null, p_note: note || null, p_items: items });
   if (error) {
     if (error.code === 'PGRST202' && /misc_out_post/.test(error.message || '')) {
@@ -15159,5 +15239,7 @@ async function wasteDelete(id) {
 <div id="genwd-print-root"></div>
 <!-- ที่พิมพ์ใบบันทึกผลิต — คนละ root อีกเช่นกัน -->
 <div id="prp-print-root"></div>
+<!-- ระบบ QC (ตรวจรับ IQC / NCR / ป้ายสถานะ) — ไฟล์แยก ต้องอัปโหลดคู่กับ index.html · เปลี่ยน qc.js แล้วเปลี่ยนเลข ?v= ด้วย -->
+<script src="qc.js?v=3"></script>
 </body>
 </html>
