@@ -610,6 +610,19 @@ table.reqo-table td.reqo-item { text-align: left; }
 .reqo-sign .sigimg { display: block; max-height: 100%; max-width: 90%; object-fit: contain; }
 .reqo-sign .sigline { border-top: 1px solid #1e293b; margin: 0 8px 4px; padding-top: 2px; color: #64748b; }
 .reqo-sign .dateline { margin-top: 2px; color: #64748b; }
+/* รายการเยอะ → บีบความสูงแถวให้พอดีครึ่งแผ่น ช่องเซ็นไม่ถูกตัด (overflow:hidden ของ .reqo-half) — ผู้ใช้ทักรายการ 15 แถวช่องเซ็นหาย 2026-11-02
+   แถวเตี้ยลง = padding บาง + บรรทัดเดียว (ไม่ตัดคำ) · ช่องเซ็นหดเหลือ 9mm เฉพาะตอนหนาแน่น */
+table.reqo-table td, table.reqo-table th { line-height: 1.25; }
+table.reqo-table.dense td { padding: 3px 4px; font-size: 10px; }
+table.reqo-table.dense td.reqo-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 0; }
+table.reqo-table.dense th { padding: 2px 4px; }
+.reqo-half.dense { padding: 6mm 14mm; }
+.reqo-half.dense .reqo-head { margin-bottom: 4px; padding-bottom: 4px; }
+.reqo-half.dense .reqo-meta { margin-bottom: 4px; }
+.reqo-half.dense .reqo-note-box { margin-bottom: 4px; padding: 2px 8px; min-height: 0; }
+.reqo-half.dense .reqo-sign .sigspace { height: 9mm; }
+.reqo-half.dense .reqo-sign { padding-top: 2px; }
+table.reqo-table.xdense td { padding: 2px 4px; font-size: 10px; }
 #reqo-print-root { display: none; }
 @media print {
   body.print-reqo { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
@@ -8773,6 +8786,7 @@ function reqOrderRender() {
       actions += `<button class="btn btn-sm btn-outline-danger" onclick="reqOrderDelete('${esc(r.Req_ID)}')" title="ลบร่าง"><i class="fa-solid fa-trash"></i></button>`;
     } else if (r.Status === 'อนุมัติแล้ว' || r.Status === 'พิมพ์แล้ว') {
       actions += `<button class="btn btn-sm btn-primary me-1" onclick="reqOrderOpenPrintPreview('${esc(r.Req_ID)}')" title="พิมพ์"><i class="fa-solid fa-print"></i></button>`;
+      if (_hasRole('supervisor')) actions += `<button class="btn btn-sm btn-outline-primary me-1" onclick="reqOrderOpenForm('${esc(r.Req_ID)}')" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>`;
       if (_hasRole('supervisor')) actions += `<button class="btn btn-sm btn-outline-danger" onclick="reqOrderCancel('${esc(r.Req_ID)}')" title="ยกเลิกใบขอเบิก"><i class="fa-solid fa-ban"></i></button>`;
     } else if (_hasRole('supervisor')) {
       actions += `<button class="btn btn-sm btn-outline-danger" onclick="reqOrderDelete('${esc(r.Req_ID)}')" title="ลบทิ้ง"><i class="fa-solid fa-trash"></i></button>`;
@@ -8898,6 +8912,16 @@ async function reqOrderSave() {
   const note = document.getElementById('reqo-note').value.trim() || null;
   const isEdit = !!_reqOrderEditId;
   const reqId = isEdit ? _reqOrderEditId : await _nextReqId();
+  const editStatus = isEdit ? _reqOrderCache.find(x => x.Req_ID === reqId)?.Status : null;
+  if (isEdit && editStatus !== 'รออนุมัติ') {
+    // ใบที่อนุมัติ/พิมพ์แล้ว — แก้ผ่านฟังก์ชัน req_order_edit (หัวหน้างานขึ้นไป · สถานะคงเดิม) · migration_2026-11-03_req_order_edit.sql
+    const { error } = await _sb.rpc('req_order_edit', { p_req_id: reqId, p_date: reqDate, p_note: note, p_lines: rows });
+    if (error) { Swal.fire('บันทึกไม่สำเร็จ', esc(error.code === 'PGRST202' ? 'ต้องรัน migration_2026-11-03_req_order_edit.sql ใน Supabase ก่อน' : error.message), 'error'); return; }
+    bootstrap.Modal.getInstance(document.getElementById('reqOrderModal')).hide();
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 1800, title: 'บันทึกแล้ว' });
+    await reqOrderLoad();
+    return;
+  }
   if (isEdit) {
     const ok = await sbRun(_sb.from('req_orders').update({ ReqDate: reqDate, Note: note }).eq('Req_ID', reqId).eq('Status', 'รออนุมัติ'), 'บันทึกไม่สำเร็จ');
     if (ok === null) return;
@@ -8955,8 +8979,9 @@ function _reqoHalfHTML(r, copyLabel) {
   // เผื่อแถวว่างท้ายตารางไว้เขียนเพิ่มมือ อย่างน้อย 2 แถวเสมอ (ไม่ว่ารายการจริงจะมีกี่แถว)
   const trs = lines.map((l, i) => `<tr><td>${i + 1}</td><td class="reqo-item">${esc(l.RM_ID)} — ${esc(_rmName(l.RM_ID))}</td>
     <td>${_rmFmtQty(l.Qty)}</td><td>${esc(l.Unit || '')}</td><td class="reqo-item">${esc(l.Note || '')}</td></tr>`).join('')
-    + '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>'.repeat(2);
-  return `<div class="reqo-half">
+    + '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>'.repeat(lines.length > 8 ? 1 : 2);
+  const dense = lines.length > 8, xd = lines.length > 14;
+  return `<div class="reqo-half${dense ? ' dense' : ''}">
     <div class="reqo-head">
       <div class="reqo-head-left"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
         <div class="reqo-company"><b>Blooming Company Limited</b><br>BLM Herbal — Raw Material Warehouse</div></div>
@@ -8967,7 +8992,7 @@ function _reqoHalfHTML(r, copyLabel) {
       <div><span class="lbl">ผู้ขอเบิก</span>${esc(r.RequestedBy || '-')}</div>
       <div><span class="lbl">ขอเบิกจาก</span>คลังใหญ่</div>
     </div>
-    <table class="reqo-table">
+    <table class="reqo-table${dense ? ' dense' : ''}${xd ? ' xdense' : ''}">
       <thead><tr><th style="width:6%">ลำดับ</th><th>รายการ</th><th style="width:12%">จำนวน</th><th style="width:12%">หน่วย</th><th style="width:22%">หมายเหตุ</th></tr></thead>
       <tbody>${trs}</tbody>
     </table>
