@@ -1027,6 +1027,7 @@ td.empty-cell { white-space: normal !important; }
     <div class="nav-group">
     <div class="nav-group-header" data-g="stock" onclick="toggleNavGroup(this)"><span><i class="fa-solid fa-truck-ramp-box ng-ic"></i>รับ-จ่ายคลัง</span><i class="fa-solid fa-chevron-down nav-group-chevron"></i></div>
     <ul class="nav flex-column nav-group-body">
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('pr');return false;" id="navlink-pr"><i class="fa-solid fa-cart-shopping me-2"></i>ใบขอซื้อ (PR)</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('received');return false;" id="navlink-received"><i class="fa-solid fa-inbox me-2"></i>รับวัตถุดิบเข้าคลัง</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('fgreceive');return false;" id="navlink-fgreceive"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('reqorder');return false;" id="navlink-reqorder"><i class="fa-solid fa-file-signature me-2"></i>ใบขอเบิก</a></li>
@@ -1229,6 +1230,30 @@ td.empty-cell { white-space: normal !important; }
       <thead><tr><th>เลขที่</th><th>วันที่</th><th>ผู้ขอเบิก</th><th>รายการ</th><th>หมายเหตุ</th><th>สถานะ</th><th class="text-center">จัดการ</th></tr></thead>
       <tbody id="reqOrderTableBody"></tbody>
     </table></div></div></div>
+  </div>
+
+  <!-- ═══════════════ ใบขอซื้อ (PR) — แบบเดียวกับ ProFlow ═══════════════ -->
+  <div class="page-view" id="page-pr">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-cart-shopping me-2"></i>ใบขอซื้อวัตถุดิบ (PR)</h4><div class="text-white-50 small">ขอซื้อวัตถุดิบ / แพ็คเกจจิ้ง — แอดมินอนุมัติแล้วพิมพ์ไปเซ็นจริง · ราคาเป็นราคาโดยประมาณ ไม่มีผลต่อสต็อก</div></div>
+      <button class="btn btn-success" onclick="prOpenForm()"><i class="fa-solid fa-plus me-1"></i>สร้างใบขอซื้อ</button>
+    </div>
+    <div class="sticky-toolbar"><div class="d-flex flex-wrap gap-2 mb-2">
+      <div class="search-wrap"><input class="form-control search-input" id="prSearch" placeholder="ค้นหา เลขที่ / วัตถุดิบ / ซัพพลายเออร์..." oninput="prRender()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('prSearch').value='';prRender()"></i></div>
+      <select class="form-select w-auto" id="prFilter" onchange="prRender()">
+        <option value="">สถานะ: ทั้งหมด</option><option value="รออนุมัติ">รออนุมัติ</option><option value="อนุมัติแล้ว">อนุมัติแล้ว</option><option value="__recv_pending">อนุมัติแล้ว · ค้างรับ</option><option value="__recv_full">อนุมัติแล้ว · รับครบ</option><option value="ไม่อนุมัติ">ไม่อนุมัติ</option><option value="ยกเลิก">ยกเลิก</option>
+      </select>
+      <select class="form-select w-auto" id="prSupFilter" onchange="prRender()"><option value="">ซัพพลายเออร์: ทั้งหมด</option></select>
+      <select class="form-select w-auto" id="prSort" onchange="prRender()"><option value="latest">เรียง: ล่าสุดก่อน</option><option value="supplier">เรียง: ตามซัพพลายเออร์</option></select>
+      <div class="ms-auto d-flex gap-2">
+        <button class="btn btn-info text-white fw-bold" id="prMergeBtn" style="display:none" onclick="prMergeSelected()"><i class="fa-solid fa-object-group me-1"></i>รวมใบขอซื้อ (<span id="prMergeCount">0</span>)</button>
+        <button class="btn btn-outline-primary" onclick="prLoad()"><i class="fa-solid fa-rotate me-1"></i>รีเฟรช</button>
+      </div>
+    </div></div>
+    <div class="scroll-content">
+      <div class="row g-3 mb-3" id="prKpi"></div>
+      <div id="prCards"></div>
+    </div>
   </div>
 
   <!-- ═══════════════ STOCK MOVEMENT ═══════════════ -->
@@ -2220,6 +2245,57 @@ td.empty-cell { white-space: normal !important; }
   </div>
 </div>
 
+<!-- ═══════════════ MODAL: สร้าง/แก้ไขใบขอซื้อ (PR) ═══════════════ -->
+<div class="modal fade" id="prModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-cart-shopping me-2"></i><span id="pr-title">สร้างใบขอซื้อ</span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3 mb-3">
+          <div class="col-md-3"><label class="form-label">วันที่</label><input id="pr-date" type="date" class="form-control"></div>
+          <div class="col-md-9"><label class="form-label">หมายเหตุ / คำแนะนำในการซื้อ (ไม่บังคับ)</label><input id="pr-note" class="form-control" placeholder="เช่น ต้องการภายในสัปดาห์นี้ / ขอใบเสนอราคา"></div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-start mb-2">
+          <div class="position-relative flex-grow-1" style="min-width:260px">
+            <input id="pr-add-search" class="form-control" placeholder="ค้นหารหัส / ชื่อวัตถุดิบ / แพ็คเกจจิ้ง เพื่อเพิ่มรายการ..." oninput="prSearchMaterial(this.value)" autocomplete="off">
+            <div id="pr-add-dd" class="list-group position-absolute w-100" style="z-index:1060;display:none;max-height:260px;overflow:auto"></div>
+          </div>
+          <button type="button" class="btn btn-outline-warning" onclick="prAddLow()" title="เติมรายการที่คงเหลือต่ำกว่า Min ทั้งหมด จำนวนแนะนำ = 2×Min − คงเหลือ"><i class="fa-solid fa-triangle-exclamation me-1"></i>เติมรายการที่ต่ำกว่า Min</button>
+        </div>
+        <div class="table-responsive"><table class="table table-sm align-middle mb-2">
+          <thead><tr><th>รายการ</th><th class="text-end" style="width:9%">คงเหลือ / Min</th><th style="width:25%">ซัพพลายเออร์</th><th style="width:11%">ราคา/หน่วย (฿)</th><th style="width:12%">จำนวนขอซื้อ</th><th style="width:6%">หน่วย</th><th style="width:3%"></th></tr></thead>
+          <tbody id="pr-rows"></tbody>
+        </table></div>
+        <div class="d-flex justify-content-between"><div class="invalid-feedback d-block" id="pr-rows-err"></div><div class="fw-semibold">มูลค่ารวมโดยประมาณ: <span id="pr-total" class="text-success">฿0</span></div></div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="prSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: ตัวอย่างใบขอซื้อ — ตรวจสอบก่อนพิมพ์ ═══════════════ -->
+<div class="modal fade" id="prPrintModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-print me-2"></i>ตัวอย่างใบขอซื้อ — ตรวจสอบก่อนพิมพ์</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="background:#e2e8f0;max-height:75vh;overflow:auto"><div id="pr-preview-body"></div></div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+        <button type="button" class="btn btn-brand" onclick="prPrintConfirm()"><i class="fa-solid fa-print me-1"></i>พิมพ์ / บันทึกเป็น PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════ MODAL: ตัวอย่างใบขอเบิก — ตรวจสอบก่อนพิมพ์ ═══════════════ -->
 <div class="modal fade" id="reqOrderPrintModal" tabindex="-1">
   <div class="modal-dialog modal-xl">
@@ -2684,6 +2760,11 @@ td.empty-cell { white-space: normal !important; }
             <input id="rcv-supplier" class="form-control" list="rcvSupplierList" oninput="this.dataset.auto=''">
             <datalist id="rcvSupplierList"></datalist>
             <div class="form-text" style="font-size:.72rem" id="rcv-supplier-hint"></div>
+          </div>
+          <div class="col-12" id="rcv-pr-wrap" style="display:none">
+            <label class="form-label">อ้างอิงใบขอซื้อ (PR)</label>
+            <select id="rcv-pr" class="form-select" onchange="rcvPrChanged()"><option value="">— ไม่อ้างอิงใบขอซื้อ —</option></select>
+            <div class="form-text" style="font-size:.72rem" id="rcv-pr-hint"></div>
           </div>
           <div class="col-md-6">
             <label class="form-label">Lot</label>
@@ -3963,7 +4044,7 @@ const PAGE_LOADERS = {
   fgreceive: fgReceiveLoad, stockfg: stockFgLoad, stockcard: stockCardLoad,
   co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
   rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad, employee: employeeLoad, auditlog: auditLoad, prep: prepLoad, vendor: vendorLoad,
-  rcvedit: rcvEditLoad, integrity: integrityShow, backup: backupLoad, stockcount: stockCountLoad, reqorder: reqOrderLoad, packbox: packboxLoad, stockmove: stockMoveLoad, miscout: miscOutLoad,
+  rcvedit: rcvEditLoad, integrity: integrityShow, backup: backupLoad, stockcount: stockCountLoad, reqorder: reqOrderLoad, pr: prLoad, packbox: packboxLoad, stockmove: stockMoveLoad, miscout: miscOutLoad,
 };
 let _currentPage = 'dashboard';
 async function showPage(name) {
@@ -7175,6 +7256,39 @@ function rcvWpcHint() {
   el.innerHTML = qty > 0 && n > 0 && !(w > 0)
     ? `เฉลี่ยจากจำนวนรวม ≈ <b>${Math.round(qty / n * 1000) / 1000} ${esc(unit)}/ภาชนะ</b> (ยังไม่ได้กรอกน้ำหนัก/ภาชนะ) · ${base}` : base;
 }
+// ── อ้างอิงใบขอซื้อตอนรับของ (2026-11-04) — migration_2026-11-04_pr_merge_receive.sql ──
+// แสดงเฉพาะ PR ที่อนุมัติแล้ว มีรายการนี้ และยังรับไม่ครบ · ยังไม่รัน SQL / ไม่มี PR ให้เลือก = ซ่อนช่องนี้เงียบๆ ไม่กระทบการรับของ
+let _rcvPrOpts = [];
+async function rcvPrLoad(rmId) {
+  const wrap = document.getElementById('rcv-pr-wrap'), sel = document.getElementById('rcv-pr');
+  sel.innerHTML = '<option value="">— ไม่อ้างอิงใบขอซื้อ —</option>'; wrap.style.display = 'none';
+  document.getElementById('rcv-pr-hint').textContent = ''; _rcvPrOpts = [];
+  if (!rmId || _rcvEditId) return;
+  const [ln, rc] = await Promise.all([
+    _sb.from('purchase_request_lines').select('PR_No,RequestQty,UnitCost,Supplier').eq('RM_ID', rmId),
+    _sb.from('rm_receive').select('PR_No,Qty').eq('RM_ID', rmId).not('PR_No', 'is', null),
+  ]);
+  if (ln.error || rc.error || document.getElementById('rcv-rm').value !== rmId) return;
+  const prs = ln.data?.length ? await _sb.from('purchase_requests').select('PR_No,PRDate').eq('Status', 'อนุมัติแล้ว').in('PR_No', [...new Set(ln.data.map(x => x.PR_No))]) : { data: [] };
+  if (prs.error || document.getElementById('rcv-rm').value !== rmId) return;
+  const got = {}; (rc.data || []).forEach(r => got[r.PR_No] = (got[r.PR_No] || 0) + (parseFloat(r.Qty) || 0));
+  _rcvPrOpts = (prs.data || []).map(p => {
+    const mine = ln.data.filter(x => x.PR_No === p.PR_No), need = mine.reduce((s, x) => s + (parseFloat(x.RequestQty) || 0), 0);
+    return { no: p.PR_No, date: p.PRDate, left: need - (got[p.PR_No] || 0), need, supplier: mine[0].Supplier || '', cost: mine[0].UnitCost };
+  }).filter(o => o.left > 0.0001).sort((a, b) => a.no.localeCompare(b.no));
+  if (!_rcvPrOpts.length) return;
+  sel.innerHTML += _rcvPrOpts.map(o => `<option value="${esc(o.no)}">${esc(o.no)} · ${esc(o.supplier || 'ไม่ระบุซัพ')} · ค้างรับ ${_rmFmtQty(o.left)} (ขอ ${_rmFmtQty(o.need)})</option>`).join('');
+  wrap.style.display = '';
+}
+function rcvPrChanged() {
+  const o = _rcvPrOpts.find(x => x.no === document.getElementById('rcv-pr').value), hint = document.getElementById('rcv-pr-hint');
+  if (!o) { hint.textContent = ''; return; }
+  const sup = document.getElementById('rcv-supplier'), price = document.getElementById('rcv-price'), qty = document.getElementById('rcv-qty');
+  if (o.supplier && !sup.value.trim()) sup.value = o.supplier;
+  if (o.cost != null && price.value === '') { price.value = o.cost; rcvCalcAmount(); }
+  if (qty.value === '') { qty.value = Math.round(o.left * 1000) / 1000; rcvCalcAmount(); rcvWpcHint(); }
+  hint.textContent = `ใบ ${o.no}: ค้างรับ ${_rmFmtQty(o.left)} จากที่ขอ ${_rmFmtQty(o.need)} — เติมซัพพลายเออร์/ราคา/จำนวนให้เฉพาะช่องที่ยังว่าง`;
+}
 function rcvRmPick(id, keepText) {
   const r = id ? _rmMasterCache.find(x => x.RM_ID === id) : null;
   document.getElementById('rcv-rm').value = r?.RM_ID || '';
@@ -7195,6 +7309,7 @@ function rcvRmPick(id, keepText) {
   if (sup.dataset.auto) sup.value = vendorNames.length === 1 ? vendorNames[0]
     : vendorNames.length > 1 ? '' : (r?.Supplier || '').trim().replace(/^[-–—.]+$/, '');
   rcvAutoLot();   // Lot นับแยกต่อรายการ → เปลี่ยนรายการแล้วต้องคำนวณใหม่
+  rcvPrLoad(r?.RM_ID || '');   // ใบขอซื้อ (PR) ที่อนุมัติแล้วและยังค้างรับรายการนี้ — เลือกอ้างอิงได้
   if (r) {
     _modalClearErrors(['rcv-rm-search']);
     rcvRmHideSuggest();
@@ -7346,6 +7461,11 @@ async function receivedModalSave() {
       return;
     }
     _rmLotRpcErr(error, 'บันทึกรับเข้าคลังไม่สำเร็จ'); return;
+  }
+  const prNo = document.getElementById('rcv-pr').value;
+  if (prNo) {   // อ้างอิงใบขอซื้อ — พลาด = ใบรับเข้าบันทึกแล้วตามปกติ แค่ไม่ผูกกับ PR (แจ้งให้รู้)
+    const pe = await _sb.rpc('rm_receive_set_pr', { p_receive_id: args.p_receive_id, p_pr_no: prNo });
+    if (pe.error) Swal.fire('รับเข้าแล้ว แต่ผูกใบขอซื้อไม่สำเร็จ', esc(pe.error.code === 'PGRST202' ? 'ต้องรัน migration_2026-11-04_pr_merge_receive.sql ใน Supabase ก่อน' : pe.error.message), 'warning');
   }
   bootstrap.Modal.getInstance(document.getElementById('receivedModal')).hide();
   await Promise.all([receivedLoad(), stockRmLoad()]);
@@ -9031,6 +9151,366 @@ async function reqOrderPrintConfirm() {
   if (!fresh) return;
   document.getElementById('reqo-print-root').innerHTML = _reqoPrintHTML(fresh);
   bootstrap.Modal.getInstance(document.getElementById('reqOrderPrintModal')).hide();
+  document.body.classList.add('print-reqo');
+  const done = () => {
+    document.body.classList.remove('print-reqo');
+    document.getElementById('reqo-print-root').innerHTML = '';
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+
+// ═══════════════════════════════════════════════════════════
+// ใบขอซื้อ (PR) — แบบเดียวกับ ProFlow (2026-11-04) · SQL: migration_2026-11-04_purchase_requests.sql
+// สถานะ: รออนุมัติ → (แอดมิน) อนุมัติแล้ว / ไม่อนุมัติ · อนุมัติแล้วแอดมินยกเลิก (เลขเปลี่ยนเป็น …-C คืนเลข) หรือเปิดกลับมาแก้ได้
+// ซัพพลายเออร์ต่อรายการ = เวนเดอร์ที่ผูกกับรหัสนี้ใน Vendor Master (vendor_items) + Supplier เดิมของ Master · ราคา = ราคาโดยประมาณ ไม่ตัดสต็อก
+// ═══════════════════════════════════════════════════════════
+let _prData = [], _prExpanded = new Set(), _prEditNo = null, _prPrintNo = null, _prLatestPrice = {}, _prHasRecv = false, _prMerge = new Set();
+const PR_STATUS_BADGE = { 'รออนุมัติ': 'warning', 'อนุมัติแล้ว': 'success', 'ไม่อนุมัติ': 'danger', 'ยกเลิก': 'secondary' };
+const _prMoney = n => '฿' + (parseFloat(n) || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 });
+const _prLineTotal = l => (parseFloat(l.RequestQty) || 0) * (parseFloat(l.UnitCost) || 0);
+const _prTotal = p => p.lines.reduce((s, l) => s + _prLineTotal(l), 0);
+const _prSuppliers = p => [...new Set(p.lines.map(l => (l.Supplier || '').trim()).filter(Boolean))];
+// เฉพาะส่วนที่ไม่ใช่สต็อกจริง/ราคาที่เคยซื้อ — คืนรายชื่อซัพพลายเออร์ที่เลือกได้ของรหัสนี้
+function _prSupplierOptions(rmId) {
+  const m = _rmMasterCache.find(r => r.RM_ID === rmId);
+  const names = _vendorItemsCache.filter(it => it.RM_ID === rmId)
+    .map(it => _vendorCache.find(v => v.Vendor_ID === it.Vendor_ID)?.VendorName).filter(Boolean);
+  const own = (m?.Supplier || '').trim();
+  if (own && !/^[-–—.]+$/.test(own)) names.push(own);
+  return [...new Set(names)];
+}
+async function prLoad() {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  const [h, l] = await Promise.all([
+    _sb.from('purchase_requests').select('*').order('CreatedAt', { ascending: false }),
+    _sb.from('purchase_request_lines').select('*').order('Line_ID'),
+    stockRmLoad(),
+  ]);
+  if (h.error) {
+    document.getElementById('prCards').innerHTML = `<div class="glass-card text-center text-danger py-4">รัน <code>migration_2026-11-04_purchase_requests.sql</code> ใน Supabase ก่อน<div class="small text-muted mt-1">${esc(h.error.message)}</div></div>`;
+    return;
+  }
+  const by = {};
+  (l.data || []).forEach(x => (by[x.PR_No] ||= []).push(x));
+  _prData = (h.data || []).map(p => ({ ...p, lines: by[p.PR_No] || [] }));
+  await _prComputeReceived();
+  prRender();
+}
+// ตามรับเข้า: ใบรับวัตถุดิบที่อ้างเลข PR (rm_receive.PR_No — migration_2026-11-04_pr_merge_receive.sql) รวมต่อ PR+รหัส
+// ใบ "อนุมัติแล้ว" เท่านั้นที่ตาม — ตั้ง l._received / l._left ต่อรายการ และ p._recv = 'full' | 'partial' | 'none' ต่อใบ · ยังไม่รัน SQL = ไม่โชว์สถานะรับเข้า
+async function _prComputeReceived() {
+  const { data, error } = await _sb.from('rm_receive').select('RM_ID,Qty,PR_No').not('PR_No', 'is', null);
+  if (error) return;
+  const got = {};
+  (data || []).forEach(r => { const k = `${r.PR_No}|${r.RM_ID}`; got[k] = (got[k] || 0) + (parseFloat(r.Qty) || 0); });
+  _prData.filter(p => p.Status === 'อนุมัติแล้ว').forEach(p => {
+    const pool = { ...got };   // รหัสเดียวกันซ้ำหลายบรรทัดในใบเดียว: ใช้ยอดรับที่เหลือทีละบรรทัด
+    p.lines.forEach(l => {
+      const k = `${p.PR_No}|${l.RM_ID}`, need = parseFloat(l.RequestQty) || 0, g = Math.min(need, pool[k] || 0);
+      pool[k] = (pool[k] || 0) - g; l._received = g; l._left = need - g;
+    });
+    const total = p.lines.reduce((s, l) => s + (parseFloat(l.RequestQty) || 0), 0), recv = p.lines.reduce((s, l) => s + l._received, 0);
+    p._recv = p.lines.every(l => l._left <= 0.0001) ? 'full' : recv > 0.0001 ? 'partial' : 'none';
+    p._recvPct = total > 0 ? Math.round(recv / total * 100) : 0;
+  });
+  _prHasRecv = true;
+}
+function prRender() {
+  const q = (document.getElementById('prSearch').value || '').trim().toLowerCase();
+  const f = document.getElementById('prFilter').value;
+  const supSel = document.getElementById('prSupFilter');
+  const allSup = [...new Set(_prData.flatMap(_prSuppliers))].sort((a, b) => a.localeCompare(b, 'th'));
+  const supF = supSel.value;
+  supSel.innerHTML = '<option value="">ซัพพลายเออร์: ทั้งหมด</option>' + allSup.map(s => `<option value="${esc(s)}"${s === supF ? ' selected' : ''}>${esc(s)}</option>`).join('');
+  const statusOk = p => f === '__recv_pending' ? p.Status === 'อนุมัติแล้ว' && p._recv && p._recv !== 'full'
+    : f === '__recv_full' ? p.Status === 'อนุมัติแล้ว' && p._recv === 'full' : !f || p.Status === f;
+  [..._prMerge].forEach(no => { const p = _prData.find(x => x.PR_No === no); if (!p || !_prCanMerge(p)) _prMerge.delete(no); });
+  const mb = document.getElementById('prMergeBtn');
+  mb.style.display = _prMerge.size >= 2 ? '' : 'none'; document.getElementById('prMergeCount').textContent = _prMerge.size;
+  const items = _prData.filter(p => statusOk(p) && (!supF || _prSuppliers(p).includes(supF))
+    && (!q || [p.PR_No, p.Note, p.RequestedBy, ...p.lines.flatMap(l => [l.RM_ID, l.RM_Name, l.Supplier])].join(' ').toLowerCase().includes(q)));
+  if (document.getElementById('prSort').value === 'supplier') {
+    const key = p => { const s = _prSuppliers(p); return s.length === 1 ? s[0] : '￿' + s.length; };
+    items.sort((a, b) => key(a).localeCompare(key(b), 'th'));
+  }
+  const cnt = st => _prData.filter(p => p.Status === st).length;
+  const kpi = (n, label, cls, st) => `<div class="col-6 col-md-3"><div class="glass-card py-2 text-center" style="cursor:pointer" onclick="document.getElementById('prFilter').value='${st}';prRender()"><div class="fs-4 fw-bold ${cls}">${n}</div><div class="small text-muted">${label}</div></div></div>`;
+  const pendVal = _prData.filter(p => p.Status === 'รออนุมัติ').reduce((s, p) => s + _prTotal(p), 0);
+  document.getElementById('prKpi').innerHTML = kpi(_prData.length, 'ใบขอซื้อทั้งหมด', '', '') + kpi(cnt('รออนุมัติ'), `รออนุมัติ · ${_prMoney(pendVal)}`, 'text-warning', 'รออนุมัติ')
+    + kpi(cnt('อนุมัติแล้ว'), _prHasRecv ? `อนุมัติแล้ว · ค้างรับ ${_prData.filter(p => p.Status === 'อนุมัติแล้ว' && p._recv && p._recv !== 'full').length}` : 'อนุมัติแล้ว', 'text-success', _prHasRecv ? '__recv_pending' : 'อนุมัติแล้ว') + kpi(cnt('ยกเลิก'), 'ยกเลิก', 'text-secondary', 'ยกเลิก');
+  document.getElementById('prCards').innerHTML = items.map(_prCardHTML).join('')
+    || '<div class="glass-card text-center text-muted py-5">ยังไม่มีใบขอซื้อ<div class="mt-2"><button class="btn btn-brand btn-sm" onclick="prOpenForm()"><i class="fa-solid fa-plus me-1"></i>สร้างใบขอซื้อ</button></div></div>';
+}
+// รวมใบได้เฉพาะใบ "รออนุมัติ" ที่ทั้งใบมีซัพพลายเออร์เดียว (หัวหน้างานขึ้นไป)
+const _prCanMerge = p => p.Status === 'รออนุมัติ' && _prSuppliers(p).length === 1 && _hasRole('supervisor');
+function prToggleMerge(no, on) { if (on) _prMerge.add(no); else _prMerge.delete(no); prRender(); }
+async function prMergeSelected() {
+  const prs = [..._prMerge].map(no => _prData.find(p => p.PR_No === no)).filter(Boolean).sort((a, b) => a.PR_No.localeCompare(b.PR_No));
+  if (prs.length < 2) return;
+  const sups = new Set(prs.flatMap(_prSuppliers));
+  if (sups.size !== 1) { Swal.fire({ icon: 'error', title: 'ซัพพลายเออร์ไม่ตรงกัน', text: 'รวมได้เฉพาะใบที่เป็นซัพพลายเออร์เดียวกันทั้งหมด' }); return; }
+  const target = prs[0], src = prs.slice(1);
+  const merged = new Set(prs.flatMap(p => p.lines.map(l => l.RM_ID))).size;
+  const c = await Swal.fire({ icon: 'question', title: `รวม ${prs.length} ใบเป็นใบเดียว?`, showCancelButton: true, confirmButtonText: 'รวมใบ', cancelButtonText: 'ยกเลิก',
+    html: `<div class="text-start small">ซัพพลายเออร์: <b>${esc([...sups][0])}</b><br>ใบที่คงไว้: <b>${esc(target.PR_No)}</b><br>ใบที่รวมเข้าแล้วลบทิ้ง: <b>${src.map(s => esc(s.PR_No)).join(', ')}</b> (เลขจะถูกนำไปใช้กับใบใหม่)<br>รายการหลังรวม: <b>${merged}</b> รายการ · มูลค่า <b>${_prMoney(prs.reduce((s, p) => s + _prTotal(p), 0))}</b></div>` });
+  if (!c.isConfirmed) return;
+  const { data, error } = await _sb.rpc('purchase_request_merge', { p_nos: prs.map(p => p.PR_No) });
+  if (error) { Swal.fire('รวมใบไม่สำเร็จ', esc(error.code === 'PGRST202' ? 'ต้องรัน migration_2026-11-04_pr_merge_receive.sql ใน Supabase ก่อน' : error.message), 'error'); return; }
+  _prMerge.clear(); _prExpanded.add(data);
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: `รวมเข้าใบ ${data} แล้ว` });
+  await prLoad();
+}
+function prToggleExpand(no) { if (_prExpanded.has(no)) _prExpanded.delete(no); else _prExpanded.add(no); prRender(); }
+function _prCardHTML(p) {
+  const sups = _prSuppliers(p), open = _prExpanded.has(p.PR_No), k = esc(p.PR_No);
+  const supBadge = sups.length === 1 ? `<span class="badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd"><i class="fa-solid fa-truck me-1"></i>${esc(sups[0])}</span>`
+    : sups.length > 1 ? `<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a" title="${esc(sups.join(', '))}"><i class="fa-solid fa-truck me-1"></i>${sups.length} ซัพพลายเออร์</span>` : '';
+  const pend = p.Status === 'รออนุมัติ', appr = p.Status === 'อนุมัติแล้ว', admin = _hasRole('admin');
+  const hasRecv = appr && !!p._recv;
+  const recvBadge = !hasRecv ? ''
+    : p._recv === 'full' ? '<span class="badge" style="background:#dcfce7;color:#166534;border:1px solid #86efac"><i class="fa-solid fa-circle-check me-1"></i>รับเข้าครบแล้ว</span>'
+    : p._recv === 'partial' ? `<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d"><i class="fa-solid fa-hourglass-half me-1"></i>รับบางส่วน ${p._recvPct}%</span>`
+    : '<span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5"><i class="fa-solid fa-clock me-1"></i>ค้างรับ</span>';
+  const btn = (cls, fn, ic, tip) => `<button class="btn btn-sm ${cls} py-0 px-2" onclick="event.stopPropagation();${fn}('${k}')" title="${tip}"><i class="fa-solid ${ic}"></i></button>`;
+  const head = `<div class="d-flex flex-wrap gap-2 align-items-center px-3 py-2" style="cursor:pointer;user-select:none" onclick="prToggleExpand('${k}')">
+      ${_prCanMerge(p) ? `<input type="checkbox" class="form-check-input m-0" title="เลือกเพื่อรวมใบ (ซัพพลายเออร์เดียวกัน)" ${_prMerge.has(p.PR_No) ? 'checked' : ''} onclick="event.stopPropagation();prToggleMerge('${k}', this.checked)">` : ''}
+      <span class="badge text-bg-secondary">${k}</span>${supBadge}
+      <span class="small text-muted text-nowrap">${fmtDate(p.PRDate)} · ${p.lines.length} รายการ · <b class="text-success">${_prMoney(_prTotal(p)).replace(/\.\d+$/, '')}</b></span>
+      ${badge(p.Status, PR_STATUS_BADGE[p.Status])}${recvBadge}
+      <span class="ms-auto d-flex gap-1">
+        ${pend ? btn('btn-outline-primary', 'prOpenForm', 'fa-pen', 'แก้ไข') : ''}
+        ${pend || (_hasRole('supervisor') && (p.Status === 'ไม่อนุมัติ' || p.Status === 'ยกเลิก')) ? btn('btn-outline-danger', 'prDelete', 'fa-trash', 'ลบ') : ''}
+        ${appr ? btn('btn-outline-secondary', 'prOpenPrint', 'fa-print', 'พิมพ์') : ''}
+      </span><i class="fa-solid fa-chevron-down text-muted small" style="transition:transform .2s${open ? ';transform:rotate(180deg)' : ''}"></i></div>`;
+  const lines = p.lines.map(l => `<tr><td><code>${esc(l.RM_ID)}</code></td><td>${esc(l.RM_Name || '')}</td><td>${esc(l.Supplier || '—')}</td>
+      <td class="text-end">${_rmFmtQty(l.QtyAtRequest)}</td><td class="text-end">${_rmFmtQty(l.MinStock)}</td><td class="text-end fw-bold">${_rmFmtQty(l.RequestQty)}</td>${hasRecv ? `<td class="text-end text-success">${_rmFmtQty(l._received)}</td><td class="text-end fw-bold" style="color:${l._left > 0.0001 ? '#dc2626' : '#16a34a'}">${l._left > 0.0001 ? _rmFmtQty(l._left) : '✓'}</td>` : ''}<td>${esc(l.Unit || '')}</td>
+      <td class="text-end">${l.UnitCost != null ? _prMoney(l.UnitCost) : '—'}</td><td class="text-end text-success fw-semibold">${_prMoney(_prLineTotal(l))}</td></tr>`).join('');
+  const actions = pend && admin ? `<button class="btn btn-sm btn-success" onclick="prApprove('${k}')"><i class="fa-solid fa-check me-1"></i>อนุมัติ</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="prReject('${k}')">ไม่อนุมัติ</button>`
+    : pend ? '<span class="small text-muted"><i class="fa-solid fa-user-shield me-1"></i>รอแอดมินตรวจและอนุมัติ</span>'
+    : (appr || p.Status === 'ไม่อนุมัติ') && admin ? `<button class="btn btn-sm btn-outline-primary" onclick="prReopen('${k}')">เปิดกลับมาแก้ไข</button>
+        ${appr ? `<button class="btn btn-sm btn-outline-danger" onclick="prCancel('${k}')">ยกเลิกใบขอซื้อ</button>` : ''}` : '';
+  const body = `<div class="px-3 pb-3" style="display:${open ? 'block' : 'none'}"><div class="table-responsive"><table class="table table-sm mb-2">
+      <thead><tr><th>รหัส</th><th>รายการ</th><th>ซัพพลายเออร์</th><th class="text-end">คงเหลือตอนขอ</th><th class="text-end">Min</th><th class="text-end">ขอซื้อ</th>${hasRecv ? '<th class="text-end">รับแล้ว</th><th class="text-end">ค้างรับ</th>' : ''}<th>หน่วย</th><th class="text-end">ราคา/หน่วย</th><th class="text-end">ราคารวม</th></tr></thead><tbody>${lines}</tbody></table></div>
+      <div class="small text-muted">ผู้ขอซื้อ: ${esc(p.RequestedBy || '-')}${p.Note ? ` · หมายเหตุ: ${esc(p.Note)}` : ''}</div>
+      ${p.RejectReason && p.Status !== 'รออนุมัติ' ? `<div class="alert alert-secondary py-1 px-2 small mb-0 mt-1">เหตุผล${p.Status === 'ยกเลิก' ? 'ที่ยกเลิก' : 'ที่ไม่อนุมัติ'}: ${esc(p.RejectReason)}</div>` : ''}
+      ${appr && p.ApprovedBy ? `<div class="small text-success mt-1"><i class="fa-solid fa-circle-check me-1"></i>อนุมัติโดย ${esc(p.ApprovedBy)}${p.ApprovedAt ? ' · ' + new Date(p.ApprovedAt).toLocaleString('th-TH') : ''}</div>` : ''}
+      ${actions ? `<div class="d-flex flex-wrap gap-2 mt-2">${actions}</div>` : ''}</div>`;
+  return `<div class="glass-card mb-2 p-0 overflow-hidden">${head}${body}</div>`;
+}
+
+// ── สร้าง / แก้ไข ──
+let _prSeq = 0;
+function _prRowHTML(r) {
+  const seq = _prSeq++, opts = r.sups || [];
+  const inList = !!r.supplier && opts.includes(r.supplier);
+  const supOpts = opts.map(s => `<option value="${esc(s)}"${s === r.supplier ? ' selected' : ''}>${esc(s)}</option>`).join('')
+    + `<option value="__other__"${inList || (!r.supplier && opts.length) ? '' : ' selected'}>ระบุเอง...</option>`;
+  const show = !(inList || (!r.supplier && opts.length));
+  return `<tr class="pr-row" data-seq="${seq}" data-rm="${esc(r.rm)}" data-name="${esc(r.name)}" data-unit="${esc(r.unit || '')}" data-stock="${r.stock ?? 0}" data-min="${r.min ?? 0}">
+    <td><div class="fw-semibold small">${esc(r.name)}</div><code class="small">${esc(r.rm)}</code></td>
+    <td class="text-end small ${(r.stock ?? 0) < (r.min ?? 0) ? 'text-danger fw-semibold' : 'text-muted'}">${_rmFmtQty(r.stock)}<br><span class="text-muted">/ ${_rmFmtQty(r.min)}</span></td>
+    <td><select class="form-select form-select-sm pr-sup" onchange="this.nextElementSibling.style.display=this.value==='__other__'?'block':'none'">${supOpts}</select>
+      <input class="form-control form-control-sm mt-1 pr-sup-other" placeholder="ระบุชื่อซัพพลายเออร์" value="${inList ? '' : esc(r.supplier || '')}" style="display:${show ? 'block' : 'none'}"></td>
+    <td><input type="number" min="0" step="0.01" class="form-control form-control-sm text-end pr-cost" value="${r.cost ?? ''}" placeholder="ระบุราคา" oninput="prCalcTotal()"></td>
+    <td><input type="number" min="0" step="any" class="form-control form-control-sm text-end pr-qty" style="background:#fef08a;font-weight:600" value="${r.qty ?? ''}" placeholder="กรอกจำนวน" oninput="prCalcTotal()"></td>
+    <td class="small text-muted">${esc(r.unit || '')}</td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove();prCalcTotal()" title="เอาออก"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
+}
+function prCalcTotal() {
+  const t = [...document.querySelectorAll('#pr-rows .pr-row')].reduce((s, tr) =>
+    s + (parseFloat(tr.querySelector('.pr-qty').value) || 0) * (parseFloat(tr.querySelector('.pr-cost').value) || 0), 0);
+  document.getElementById('pr-total').textContent = _prMoney(t);
+}
+// ราคาล่าสุดที่เคยรับเข้า (rm_receive.UnitPrice) ต่อรหัส — เติมเป็นราคาตั้งต้นให้แก้ได้ · ไม่มีคอลัมน์/ไม่มีราคา = เว้นว่าง
+async function _prLoadLatestPrice() {
+  const { data, error } = await _sb.from('rm_receive').select('RM_ID,UnitPrice,ReceiveDate').not('UnitPrice', 'is', null).order('ReceiveDate', { ascending: false }).limit(3000);
+  _prLatestPrice = {};
+  if (!error) (data || []).forEach(r => { if (!(r.RM_ID in _prLatestPrice)) _prLatestPrice[r.RM_ID] = r.UnitPrice; });
+}
+function _prNewRow(m, qty) {
+  const stock = parseFloat(_stockRmCache.find(s => s.RM_ID === m.RM_ID)?.Qty) || 0, min = parseFloat(m.MinStock) || 0, sups = _prSupplierOptions(m.RM_ID);
+  return _prRowHTML({ rm: m.RM_ID, name: m.RM_Name, unit: m.Unit, stock, min, sups, supplier: sups[0] || '',
+    cost: _prLatestPrice[m.RM_ID] ?? '', qty: qty ?? '' });
+}
+function _prSuggestQty(stock, min) { return !min || stock >= min ? 0 : Math.max(0, Math.round((min * 2 - stock) * 100) / 100); }   // 2×Min − คงเหลือ (สูตรเดียวกับ ProFlow)
+async function prOpenForm(no) {
+  _prEditNo = no || null;
+  document.getElementById('pr-title').textContent = no ? `แก้ไขใบขอซื้อ — ${no}` : 'สร้างใบขอซื้อ';
+  document.getElementById('pr-add-search').value = '';
+  document.getElementById('pr-add-dd').style.display = 'none';
+  document.getElementById('pr-rows-err').textContent = '';
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  if (!_stockRmCache.length) await stockRmLoad();
+  await _prLoadLatestPrice();
+  const p = no ? _prData.find(x => x.PR_No === no) : null;
+  document.getElementById('pr-date').value = p?.PRDate || todayStr();
+  document.getElementById('pr-note').value = p?.Note || '';
+  document.getElementById('pr-rows').innerHTML = (p?.lines || []).map(l => {
+    const stock = parseFloat(l.QtyAtRequest) || 0, min = parseFloat(l.MinStock) || 0, sups = _prSupplierOptions(l.RM_ID);
+    return _prRowHTML({ rm: l.RM_ID, name: l.RM_Name || _rmName(l.RM_ID), unit: l.Unit, stock, min, sups, supplier: l.Supplier || '', cost: l.UnitCost ?? '', qty: l.RequestQty });
+  }).join('');
+  prCalcTotal();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('prModal')).show();
+}
+function prSearchMaterial(q) {
+  const dd = document.getElementById('pr-add-dd');
+  q = (q || '').trim().toLowerCase();
+  if (!q) { dd.style.display = 'none'; return; }
+  const have = new Set([...document.querySelectorAll('#pr-rows .pr-row')].map(tr => tr.dataset.rm));
+  const res = _rmMasterCache.filter(m => !have.has(m.RM_ID) && ((m.RM_Name || '').toLowerCase().includes(q) || (m.RM_ID || '').toLowerCase().includes(q))).slice(0, 10);
+  dd.innerHTML = res.length ? res.map(m => `<button type="button" class="list-group-item list-group-item-action py-1 px-2" style="font-size:.84rem" data-rm="${esc(m.RM_ID)}" onclick="prAddMaterial(this.dataset.rm)">
+      <span class="badge text-bg-secondary me-1">${esc(m.RM_ID)}</span>${esc(m.RM_Name)} ${catBadge(m.Category)} <span class="text-muted small ms-1">(${esc(m.Unit)})</span></button>`).join('')
+    : '<div class="list-group-item small text-muted">ไม่พบใน Master — เพิ่มที่หน้า "วัตถุดิบ / แพ็คเกจจิ้ง (Master)" ก่อน</div>';
+  dd.style.display = 'block';
+}
+function prAddMaterial(rmId) {
+  const m = _rmMasterCache.find(r => r.RM_ID === rmId);
+  if (!m) return;
+  const stock = parseFloat(_stockRmCache.find(s => s.RM_ID === rmId)?.Qty) || 0;
+  document.getElementById('pr-rows').insertAdjacentHTML('beforeend', _prNewRow(m, _prSuggestQty(stock, parseFloat(m.MinStock) || 0) || ''));
+  document.getElementById('pr-add-search').value = '';
+  document.getElementById('pr-add-dd').style.display = 'none';
+  document.getElementById('pr-rows-err').textContent = '';
+  prCalcTotal();
+}
+function prAddLow() {
+  const have = new Set([...document.querySelectorAll('#pr-rows .pr-row')].map(tr => tr.dataset.rm));
+  const low = _rmMasterCache.filter(m => !have.has(m.RM_ID) && (parseFloat(m.MinStock) || 0) > 0
+    && (parseFloat(_stockRmCache.find(s => s.RM_ID === m.RM_ID)?.Qty) || 0) < parseFloat(m.MinStock));
+  if (!low.length) { Swal.fire({ toast: true, position: 'top-end', icon: 'info', showConfirmButton: false, timer: 2200, title: 'ไม่มีรายการที่ต่ำกว่า Min (หรือเพิ่มครบแล้ว)' }); return; }
+  document.getElementById('pr-rows').insertAdjacentHTML('beforeend', low.map(m => {
+    const stock = parseFloat(_stockRmCache.find(s => s.RM_ID === m.RM_ID)?.Qty) || 0;
+    return _prNewRow(m, _prSuggestQty(stock, parseFloat(m.MinStock) || 0));
+  }).join(''));
+  prCalcTotal();
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('pr-add-dd');
+  if (dd && !dd.contains(e.target) && e.target.id !== 'pr-add-search') dd.style.display = 'none';
+});
+function _prReadRows() {
+  return [...document.querySelectorAll('#pr-rows .pr-row')].map(tr => {
+    const sel = tr.querySelector('.pr-sup').value, cost = tr.querySelector('.pr-cost').value;
+    return { RM_ID: tr.dataset.rm, RM_Name: tr.dataset.name, Unit: tr.dataset.unit || null,
+      QtyAtRequest: parseFloat(tr.dataset.stock) || 0, MinStock: parseFloat(tr.dataset.min) || 0,
+      RequestQty: parseFloat(tr.querySelector('.pr-qty').value) || 0,
+      UnitCost: cost === '' ? null : Math.round((parseFloat(cost) || 0) * 100) / 100,
+      Supplier: (sel === '__other__' ? tr.querySelector('.pr-sup-other').value.trim() : sel) || null };
+  });
+}
+async function prSave() {
+  const errEl = document.getElementById('pr-rows-err');
+  errEl.textContent = '';
+  const rows = _prReadRows();
+  if (!rows.length) { errEl.textContent = 'เพิ่มอย่างน้อย 1 รายการ'; return; }
+  const bad = rows.find(r => !(r.RequestQty > 0));
+  if (bad) { errEl.textContent = `กรอกจำนวนของ "${bad.RM_Name}" ให้มากกว่า 0`; return; }
+  const date = document.getElementById('pr-date').value || todayStr();
+  const note = document.getElementById('pr-note').value.trim() || null;
+  let no = _prEditNo;
+  if (no) {
+    const ok = await sbRun(_sb.from('purchase_requests').update({ PRDate: date, Note: note }).eq('PR_No', no).eq('Status', 'รออนุมัติ'), 'บันทึกไม่สำเร็จ');
+    if (ok === null) return;
+    await sbRun(_sb.from('purchase_request_lines').delete().eq('PR_No', no), 'บันทึกรายการไม่สำเร็จ');
+  } else {
+    // เลขว่างน้อยสุด — ถ้าสองคนกดสร้างพร้อมกันแล้วชนกัน (23505) ขอเลขใหม่อีกครั้ง
+    for (let i = 0; i < 3; i++) {
+      const r = await _sb.rpc('next_pr_no');
+      if (r.error) { Swal.fire('ออกเลขไม่สำเร็จ', esc(r.error.code === 'PGRST202' ? 'ต้องรัน migration_2026-11-04_purchase_requests.sql ใน Supabase ก่อน' : r.error.message), 'error'); return; }
+      no = r.data;
+      const ins = await _sb.from('purchase_requests').insert({ PR_No: no, PRDate: date, Note: note,
+        RequestedByID: _currentUser?.id || null, RequestedBy: _currentUser?.name || _currentUser?.email || null });
+      if (!ins.error) break;
+      if (ins.error.code !== '23505' || i === 2) { Swal.fire('สร้างใบขอซื้อไม่สำเร็จ', esc(ins.error.message), 'error'); return; }
+    }
+  }
+  const ok2 = await sbRun(_sb.from('purchase_request_lines').insert(rows.map(r => ({ ...r, PR_No: no }))), 'บันทึกรายการไม่สำเร็จ');
+  if (ok2 === null) return;
+  bootstrap.Modal.getInstance(document.getElementById('prModal')).hide();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2200, title: _prEditNo ? 'บันทึกแล้ว' : `สร้างใบขอซื้อ ${no} แล้ว` });
+  await prLoad();
+}
+async function prDelete(no) {
+  const c = await Swal.fire({ icon: 'warning', title: `ลบใบขอซื้อ ${no}?`, text: 'ลบแล้วกู้คืนไม่ได้ — เลขที่นี้จะถูกนำไปใช้กับใบใหม่', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ', cancelButtonText: 'ไม่ลบ' });
+  if (!c.isConfirmed) return;
+  const { error, data } = await _sb.from('purchase_requests').delete().eq('PR_No', no).select();
+  if (error) { Swal.fire('ลบไม่สำเร็จ', esc(error.message), 'error'); return; }
+  if (!data?.length) { Swal.fire('ลบไม่สำเร็จ', 'ไม่มีสิทธิ์ลบใบนี้ หรือสถานะเปลี่ยนไปแล้ว', 'error'); await prLoad(); return; }
+  await prLoad();
+}
+async function prApprove(no) {
+  const c = await Swal.fire({ icon: 'question', title: `อนุมัติใบขอซื้อ ${no}?`, showCancelButton: true, confirmButtonText: 'อนุมัติ', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  const { error } = await _sb.rpc('purchase_request_approve', { p_no: no });
+  if (error) { Swal.fire('อนุมัติไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await prLoad();
+}
+async function _prAskReason(title, btn) {
+  const { value } = await Swal.fire({ icon: 'warning', title, input: 'textarea', inputPlaceholder: 'เหตุผล', inputValidator: v => !v?.trim() ? 'กรุณาระบุเหตุผล' : undefined,
+    showCancelButton: true, confirmButtonText: btn, cancelButtonText: 'ปิด' });
+  return value ? value.trim() : null;
+}
+async function prReject(no) {
+  const r = await _prAskReason(`ไม่อนุมัติใบขอซื้อ ${no}?`, 'ไม่อนุมัติ'); if (!r) return;
+  const { error } = await _sb.rpc('purchase_request_reject', { p_no: no, p_reason: r });
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await prLoad();
+}
+async function prCancel(no) {
+  const r = await _prAskReason(`ยกเลิกใบขอซื้อ ${no}?`, 'ยกเลิกใบขอซื้อ'); if (!r) return;
+  const { error } = await _sb.rpc('purchase_request_cancel', { p_no: no, p_reason: r });
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await prLoad();
+}
+async function prReopen(no) {
+  const c = await Swal.fire({ icon: 'question', title: `เปิดใบ ${no} กลับมาแก้ไข?`, text: 'สถานะกลับเป็นรออนุมัติ — แก้เสร็จต้องอนุมัติใหม่', showCancelButton: true, confirmButtonText: 'เปิดกลับมา', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  const { error } = await _sb.rpc('purchase_request_reopen', { p_no: no });
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await prLoad();
+}
+
+// ── พิมพ์: A4 แบ่งครึ่งบน/ล่าง ต้นฉบับ/สำเนา ใช้โครงเดียวกับใบขอเบิก (.reqo-*) เพิ่มคอลัมน์ซัพพลายเออร์/ราคา ──
+function _prHalfHTML(p, copyLabel) {
+  const n = p.lines.length, dense = n > 8, xd = n > 14, sups = _prSuppliers(p);
+  const trs = p.lines.map((l, i) => `<tr><td>${i + 1}</td><td class="reqo-item"><b>${esc(l.RM_ID)}</b> ${esc(l.RM_Name || '')}</td>
+    <td>${_rmFmtQty(l.RequestQty)}</td><td>${esc(l.Unit || '')}</td><td class="reqo-item">${esc(l.Supplier || '')}</td>
+    <td>${l.UnitCost != null ? (parseFloat(l.UnitCost) || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 }) : ''}</td><td></td></tr>`).join('')
+    + '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'.repeat(n > 8 ? 1 : 2);
+  const date = d => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '.......... / .......... / ..........';
+  const sign = (role, name, dt) => `<div><div class="role">${role}</div><div class="sigspace"></div><div class="sigline">${name ? esc(name) : 'ลายเซ็น'}</div><div class="dateline">วันที่ ${dt}</div></div>`;
+  return `<div class="reqo-half${dense ? ' dense' : ''}">
+    <div class="reqo-head">
+      <div class="reqo-head-left"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited"><div class="reqo-company"><b>Blooming Company Limited</b><br>BLM Herbal — Raw Material Warehouse</div></div>
+      <div><div class="reqo-title">ใบขอซื้อ<span class="reqo-copy-label">${esc(copyLabel)}</span><div style="font-size:11px;font-weight:600;color:#64748b">Purchase Requisition</div></div><div class="reqo-no">PR No: ${esc(p.PR_No)}</div></div>
+    </div>
+    <div class="reqo-meta"><div><span class="lbl">วันที่</span>${fmtDateLong(p.PRDate)}</div><div><span class="lbl">ผู้ขอซื้อ</span>${esc(p.RequestedBy || '-')}</div>${sups.length === 1 ? `<div><span class="lbl">Supplier</span>${esc(sups[0])}</div>` : ''}</div>
+    <table class="reqo-table${dense ? ' dense' : ''}${xd ? ' xdense' : ''}">
+      <thead><tr><th style="width:5%">ลำดับ</th><th>รายการ</th><th style="width:11%">จำนวน</th><th style="width:8%">หน่วย</th><th style="width:20%">Supplier</th><th style="width:10%">ราคา/หน่วย</th><th style="width:12%">หมายเหตุ</th></tr></thead>
+      <tbody>${trs}</tbody>
+    </table>
+    <div class="reqo-note-box"><b>หมายเหตุ/คำแนะนำในการซื้อ:</b> ${esc(p.Note || '-')}</div>
+    <div class="reqo-sign">${sign('ผู้ขอซื้อ', '', date(null))}${sign('ฝ่ายจัดซื้อ', '', date(null))}${sign('ผู้อนุมัติ', p.ApprovedBy || '', p.Status === 'อนุมัติแล้ว' ? date(p.ApprovedAt) : date(null))}</div>
+  </div>`;
+}
+function _prPrintHTML(p) {
+  return `<div class="reqo-page">${_prHalfHTML(p, 'ต้นฉบับ')}<div class="reqo-cut"><span><i class="fa-solid fa-scissors"></i> ตัดตามรอยประ</span></div>${_prHalfHTML(p, 'สำเนา')}</div>`;
+}
+function prOpenPrint(no) {
+  const p = _prData.find(x => x.PR_No === no);
+  if (!p) return;
+  _prPrintNo = no;
+  document.getElementById('pr-preview-body').innerHTML = _prPrintHTML(p);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('prPrintModal')).show();
+}
+function prPrintConfirm() {
+  const p = _prData.find(x => x.PR_No === _prPrintNo);
+  if (!p) return;
+  document.getElementById('reqo-print-root').innerHTML = _prPrintHTML(p);
+  bootstrap.Modal.getInstance(document.getElementById('prPrintModal')).hide();
   document.body.classList.add('print-reqo');
   const done = () => {
     document.body.classList.remove('print-reqo');
