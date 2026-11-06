@@ -623,6 +623,9 @@ table.reqo-table.dense th { padding: 2px 4px; }
 .reqo-half.dense .reqo-sign .sigspace { height: 9mm; }
 .reqo-half.dense .reqo-sign { padding-top: 2px; }
 table.reqo-table.xdense td { padding: 2px 4px; font-size: 10px; }
+/* ใบขอซื้อ (PR): ชื่อใต้เส้นเซ็นใหญ่ขึ้น เข้มขึ้น เว้นระยะใต้เส้น/ก่อนวันที่มากขึ้น (ผู้ใช้ขอ 2026-11-04) */
+.reqo-sign-pr .sigline { font-size: 11.5px; color: #1e293b; padding-top: 4px; margin-bottom: 7px; }
+.reqo-sign-pr .dateline { font-size: 10.5px; margin-top: 4px; }
 #reqo-print-root { display: none; }
 @media print {
   body.print-reqo { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
@@ -725,6 +728,21 @@ table.prp-table .prp-unit { color: #64748b; font-weight: 400; }
 .prp-sign .sigline { border-top: 1px solid #1e293b; margin: 0 8px 4px; padding-top: 2px; color: #64748b; }
 .prp-sign .dateline { margin-top: 2px; color: #64748b; }
 .prp-footer { margin-top: 4px; padding-top: 4px; font-size: 9px; color: #64748b; text-align: right; }
+/* วัตถุดิบเยอะ (>8) → บีบความสูงแถว/ระยะห่างให้ช่องเซ็นไม่ถูกตัด (ผู้ใช้ทักใบรวม 12 รายการช่องเซ็นไม่พอ 2026-11-06) · >12 บีบอีกขั้น */
+.prp-half.dense { padding-top: 4mm; padding-bottom: 4mm; }
+.prp-half.dense .prp-head { padding-bottom: 3px; margin-bottom: 4px; }
+.prp-half.dense .prp-highlight { margin-bottom: 4px; padding: 3px 10px; }
+.prp-half.dense .prp-meta { margin-bottom: 4px; gap: 1px 14px; }
+table.prp-table.dense { margin-bottom: 3px; }
+table.prp-table.dense td { padding: 3px 4px; line-height: 1.25; }   /* 7-10 รายการ — ผู้ใช้ขอขยายให้อ่านง่ายขึ้น (2026-11-06) */
+table.prp-table.d11 td { padding: 2px 4px; }
+table.prp-table.d14 td { padding: 1px 4px; line-height: 1.2; }
+table.prp-table.dense th { padding: 2px 4px; }
+.prp-half.dense .prp-note { margin-bottom: 4px; padding: 2px 8px; min-height: 0; }
+.prp-half.dense .prp-sign { padding-top: 2px; }
+.prp-half.dense .prp-sign .sigspace { height: 7mm; }
+.prp-half.dense .prp-footer { margin-top: 1px; padding-top: 1px; }
+table.prp-table.xdense td { padding: 0 4px; font-size: 9.5px; line-height: 1.15; }
 #prp-print-root { display: none; }
 @media print {
   body.print-prp { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
@@ -2030,7 +2048,7 @@ td.empty-cell { white-space: normal !important; }
       </div>
       <div class="glass-card p-0 overflow-hidden">
         <div class="table-responsive"><table class="table table-hover mb-0">
-          <thead><tr><th>Username</th><th>อีเมลเข้าสู่ระบบ</th><th>ชื่อแสดงผล</th><th style="width:190px">แผนก</th><th style="width:210px">ระดับสิทธิ์</th><th>แก้ไขล่าสุด</th></tr></thead>
+          <thead><tr><th>Username</th><th>อีเมลเข้าสู่ระบบ</th><th>ชื่อแสดงผล</th><th title="ชื่อ-นามสกุลจริงที่พิมพ์ในช่องเซ็นของเอกสารสำคัญที่ส่งบัญชี">ชื่อในเอกสารสำคัญ</th><th style="width:190px">แผนก</th><th style="width:210px">ระดับสิทธิ์</th><th>แก้ไขล่าสุด</th></tr></thead>
           <tbody id="userrolesTableBody"><tr><td colspan="6"class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังโหลด...</td></tr></tbody>
         </table></div>
       </div>
@@ -3792,12 +3810,14 @@ const CAT_RAW_GROUP = ['วัตถุดิบ', CAT_DRY, CAT_CHEM];   // ว�
 // โครงหมวด: "วัตถุดิบ" มีหมวดย่อย สด / แห้ง / เคมี / พร้อมผลิต · "แพ็คเกจจิ้ง" แยกต่างหาก
 const CAT_RAW_ALL = [...CAT_RAW_GROUP, CAT_PREP];
 const CAT_PKG = 'แพ็คเกจจิ้ง';
+const CAT_CONS = 'วัสดุสิ้นเปลือง';   // ถุงมือ/หน้ากาก/สก๊อตไบรต์ ฯลฯ (2026-11-06) — จัดการเหมือนแพ็คเกจจิ้ง (ไม่ใช่วัตถุดิบ ไม่ต้องมีวันหมดอายุ) แสดงในหน้าสต็อกแพ็คเกจจิ้ง
+const _isPkgLike = c => c === CAT_PKG || c === CAT_CONS;
 // หมวดที่ตั้งค่าเริ่มต้น "ของเสีย" ทั้งหมดเมื่อ "เบิกตั้งต้น" ลดลงจากที่บันทึกไว้แล้ว (ผู้ใช้ยืนยัน 2026-10-30:
 // เฉพาะวัตถุดิบสด — ของจริงสูญเสียจากล้าง/ตัดแต่ง) ส่วนอื่น (แห้ง/เคมี/พร้อมผลิต/แพ็คเกจจิ้ง) ตั้งค่าเริ่มต้น
 // "คืนสต็อก" ทั้งหมดแทน เพราะปกติชั่งตวงแม่นยำ ไม่มีเหตุผลให้ "หาย" จากกระบวนการเองโดยไม่มีใครสั่ง — ดู
 // _rmUseSplitUpdate/issue_qty_correct(); ผู้ใช้แก้สัดส่วนเองได้เสมอต่อแถว ไม่ใช่กฎตายตัว
 const CAT_DEFAULT_WASTE = ['วัตถุดิบ'];
-const CAT_BADGE = { 'วัตถุดิบ': 'secondary', [CAT_DRY]: 'warning', [CAT_CHEM]: 'primary', [CAT_PKG]: 'info', [CAT_PREP]: 'success' };
+const CAT_BADGE = { 'วัตถุดิบ': 'secondary', [CAT_DRY]: 'warning', [CAT_CHEM]: 'primary', [CAT_PKG]: 'info', [CAT_CONS]: 'dark', [CAT_PREP]: 'success' };
 const CAT_LABEL = { 'วัตถุดิบ': 'วัตถุดิบสด' };
 function catLabel(cat) { cat = cat || 'วัตถุดิบ'; return CAT_LABEL[cat] || cat; }
 function catBadge(cat) { cat = cat || 'วัตถุดิบ'; return badge(catLabel(cat), CAT_BADGE[cat] || 'secondary'); }
@@ -3813,7 +3833,7 @@ function catOptionsHtml({ all, rawAll = false, pkg = true } = {}) {
   const opt = (v, t) => `<option value="${esc(v)}">${esc(t)}</option>`;
   return (all ? opt('', all) : '') +
     `<optgroup label="วัตถุดิบ">${rawAll ? opt(CAT_FILTER_RAW, 'วัตถุดิบทั้งหมด') : ''}${CAT_RAW_ALL.map(c => opt(c, catLabel(c))).join('')}</optgroup>` +
-    (pkg ? `<optgroup label="บรรจุภัณฑ์">${opt(CAT_PKG, CAT_PKG)}</optgroup>` : '');
+    (pkg ? `<optgroup label="บรรจุภัณฑ์ / วัสดุ">${opt(CAT_PKG, CAT_PKG)}${opt(CAT_CONS, CAT_CONS)}</optgroup>` : '');
 }
 function _fillCategorySelects() {
   const set = (id, o) => { const el = document.getElementById(id); if (el) { const v = el.value; el.innerHTML = catOptionsHtml(o); if (v && [...el.options].some(x => x.value === v)) el.value = v; } };
@@ -4724,7 +4744,8 @@ const _WRITE_ACTIONS = [
   'issueModalSave', 'prodRecordModalSave', 'fgReceiveModalSave', 'fgoutModalSave', 'deliveryAdvance', 'planRequestDelete',
   'wasteModalNext', 'wasteLotModalSave', 'employeeSave', 'miscOutSave', 'miscOutDelete',
   'rmMasterDelete', 'bomDeleteLine', 'bomDeleteProduct', 'receivedDelete', 'coDelete', 'coStatusChange', 'deliveryAdvanceGroup', 'dlvEdit', 'dlvCancel', 'planDelete', 'prodRecordDelete', 'wasteDelete',
-  'signupreqApprove', 'signupreqReject', 'userrolesUpdateRole', 'userrolesUpdateName',
+  'signupreqApprove', 'signupreqReject', 'userrolesUpdateRole', 'userrolesUpdateName', 'userrolesUpdateDocName',
+  'prSave', 'prDelete', 'prApprove', 'prReject', 'prCancel', 'prReopen', 'prMergeSelected',
   'prepIssueSave', 'prepSaveProgress', 'prepReceiveSave', 'prepDelete', 'prepPlanBulkIssue', 'prepHistRequestDelete', 'prepHistDelete',
   'rcvReportConfirm', 'rcvReportRename', 'rcvReportCancel', 'trfSave', 'pirConfirm', 'pirRename', 'pirCancel', 'miscOutPrintFiTi', 'miscOutPrintDel',
   'rcvEditApprove', 'rcvEditReject', 'rcvEditCancel', 'rcvEditSignup', 'editReqSubmit',
@@ -5298,6 +5319,8 @@ function userrolesRender() {
       <td class="text-muted small">${esc(u.Email || '—')}</td>
       <td><input class="form-control form-control-sm" value="${esc(u.DisplayName || '')}" placeholder="ตั้งชื่อแสดงผล..."
         data-id="${esc(u.id)}" onchange="userrolesUpdateName(this.dataset.id, this.value)"></td>
+      <td><input class="form-control form-control-sm" value="${esc(u.DocName || '')}" placeholder="ชื่อ-นามสกุลจริง (ถ้าต่างจากชื่อแสดงผล)"
+        data-id="${esc(u.id)}" onchange="userrolesUpdateDocName(this.dataset.id, this.value)"></td>
       <td>
         <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-start" data-id="${esc(u.id)}" onclick="userrolesPickDepts(this.dataset.id)" title="กดเพื่อเลือกแผนก (เลือกได้หลายแผนก)">
           <i class="fa-solid fa-building-user me-1 text-muted"></i>${esc(_userDeptLabel(u.Depts))}</button>
@@ -5348,6 +5371,23 @@ async function userrolesUpdateRole(id, newRole) {
   const { data, error } = await _sb.from('user_roles').update({ Role: newRole, UpdatedAt: new Date().toISOString() }).eq('id', id).select();
   if (error || !data?.length) { Swal.fire('เปลี่ยนสิทธิ์ไม่สำเร็จ', error?.message || 'ไม่มีสิทธิ์แก้ไข (ต้องเป็นแอดมิน)', 'error'); userrolesLoad(); return; }
   Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'เปลี่ยนสิทธิ์แล้ว — มีผลทันทีที่ผู้ใช้นั้นรีเฟรชหน้า', showConfirmButton: false, timer: 2500 });
+  userrolesLoad();
+}
+// ชื่อในเอกสารสำคัญ (user_roles.DocName — migration_2026-11-04_user_docname.sql) — พิมพ์ในช่องเซ็นของเอกสารที่ส่งบัญชี
+// เว้นว่าง = ใช้ชื่อแสดงผลแทน · _docName(ชื่อแสดงผล) แปลงเป็นชื่อในเอกสาร (ต้องเรียก _docNamesLoad() ก่อนสร้างใบพิมพ์)
+let _docNameMap = {};
+async function _docNamesLoad() {
+  const { data, error } = await _sb.rpc('user_doc_names');
+  if (!error) _docNameMap = Object.fromEntries((data || []).map(r => [r.display_name, r.doc_name]));
+}
+const _docName = n => (n && _docNameMap[n]) || n || '';
+async function userrolesUpdateDocName(id, name) {
+  const { data, error } = await _sb.from('user_roles').update({ DocName: name.trim() || null, UpdatedAt: new Date().toISOString() }).eq('id', id).select();
+  if (error || !data?.length) {
+    Swal.fire('บันทึกชื่อในเอกสารไม่สำเร็จ', /DocName/i.test(error?.message || '') ? 'ยังไม่ได้รัน migration_2026-11-04_user_docname.sql ใน Supabase SQL Editor' : (error?.message || 'ไม่มีสิทธิ์แก้ไข (ต้องเป็นแอดมิน)'), 'error');
+    userrolesLoad(); return;
+  }
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'บันทึกชื่อในเอกสารแล้ว', showConfirmButton: false, timer: 1500 });
   userrolesLoad();
 }
 async function userrolesUpdateName(id, name) {
@@ -5593,7 +5633,7 @@ const _acctLineCode = l => l.kind === 'M' ? _acctCode(l.id) : l.id;   // บร�
 // (แก้ 2026-10-30 หลังผู้ใช้ชี้ว่าล่าสุดคือ SPF005 ไม่ใช่ SPF012: เดิมนับรหัสซัพ SPF006–011 ที่รวมเข้ารหัสบัญชีแล้วเป็น "ใช้แล้ว" ด้วย)
 // รหัสรายการในระบบ (RM_ID) แนะนำแยกต่างหาก: เลขสูงสุดของ RM_ID รูปแบบ SP<ตัวอักษร>### + 1 (_rmNextId)
 // หมวด "พร้อมผลิต" ไม่แนะนำ (ยังไม่มีตัวอักษรกลุ่ม)
-const _ACCT_LETTER = { 'วัตถุดิบ': 'F', [CAT_DRY]: 'D', [CAT_CHEM]: 'C', [CAT_PKG]: 'P' };
+const _ACCT_LETTER = { 'วัตถุดิบ': 'F', [CAT_DRY]: 'D', [CAT_CHEM]: 'C', [CAT_PKG]: 'P', [CAT_CONS]: 'S' };
 function _acctNextCode(cat) {
   const L = _ACCT_LETTER[cat];
   if (!L) return '';
@@ -5720,7 +5760,7 @@ function rmMasterOpenForm(id) {
   const idInput = document.getElementById('rmm-id');
   idInput.value = row?.RM_ID || genId('RM');
   _setCodeFieldAccess(idInput, 'rmm-id-help', !!id);
-  document.getElementById('rmm-cat').value = [...CAT_RAW_ALL, CAT_PKG].includes(row?.Category) ? row.Category : 'วัตถุดิบ';
+  document.getElementById('rmm-cat').value = [...CAT_RAW_ALL, CAT_PKG, CAT_CONS].includes(row?.Category) ? row.Category : 'วัตถุดิบ';
   document.getElementById('rmm-name').value = row?.RM_Name || '';
   document.getElementById('rmm-unit').value = row?.Unit || 'กรัม';
   document.getElementById('rmm-min').value = row?.MinStock ?? '';
@@ -6101,7 +6141,7 @@ function _vendorReadItems() {
       Item_ID: el.dataset.itemId ? Number(el.dataset.itemId) : null,
       ItemName: rm ? rm.RM_Name : el.querySelector('.vnd-item-name').value.trim(),
       RM_ID: rmId,
-      MaterialType: rm ? (rm.Category === CAT_PKG ? 'วัสดุบรรจุ' : 'วัตถุดิบ') : (matSel ? matSel.value || null : null),
+      MaterialType: rm ? (_isPkgLike(rm.Category) ? 'วัสดุบรรจุ' : 'วัตถุดิบ') : (matSel ? matSel.value || null : null),
     };
   }).filter(it => it.ItemName);
 }
@@ -6448,7 +6488,7 @@ let _bomRowSeq = 0;               // เลขรันของแถวใน�
 let _bomMultiRowMode = true;      // true = เพิ่มได้หลายแถว, false = แก้ไขรายการเดิม 1 แถว
 let _bomModalFgId = null;         // สินค้าที่กำลังเพิ่ม/แก้รายการ (null = โหมดเพิ่มสินค้าใหม่)
 let _bomEditId = null;            // BOM_ID ที่กำลังแก้ไข (null = เพิ่มใหม่)
-const _BOM_CAT_ORDER = { [CAT_PREP]: 0, 'วัตถุดิบ': 1, [CAT_DRY]: 2, [CAT_CHEM]: 3, 'แพ็คเกจจิ้ง': 4 };
+const _BOM_CAT_ORDER = { [CAT_PREP]: 0, 'วัตถุดิบ': 1, [CAT_DRY]: 2, [CAT_CHEM]: 3, 'แพ็คเกจจิ้ง': 4, [CAT_CONS]: 5 };
 
 // ── %Scrap ขั้นตอนเตรียมสมุนไพร (bom.ScrapSteps = [{step, pct}]) ──
 // ผู้ใช้เลือก (2026-09-25): ตั้งไว้ใน BOM, ขั้นตอนปรับได้ต่อวัตถุดิบ, หลายขั้น "บวกกันตรงๆ" (ไม่ทบ)
@@ -6588,7 +6628,7 @@ function bomRenderCards() {
   }
   box.innerHTML = groups.map((g, gi) => {
     const expanded = _bomExpandedSet.has(g.FG_ID);
-    const pkgCount = g.lines.filter(l => l.rm?.Category === 'แพ็คเกจจิ้ง').length;
+    const pkgCount = g.lines.filter(l => _isPkgLike(l.rm?.Category)).length;
     const rmCount = g.lines.length - pkgCount;
     const uc = _bomUnitCost(g);
     let costBadge = '';
@@ -7435,7 +7475,7 @@ async function receivedModalSave() {
   const note = document.getElementById('rcv-note').value.trim();
   const mfglot = document.getElementById('rcv-mfglot').value.trim();
   const args = {
-    p_receive_id: genId(rm?.Category === 'แพ็คเกจจิ้ง' ? 'PC' : 'RC'), p_rm_id: rmId, p_qty: qty, p_unit: rm?.Unit || null,
+    p_receive_id: genId(_isPkgLike(rm?.Category) ? 'PC' : 'RC'), p_rm_id: rmId, p_qty: qty, p_unit: rm?.Unit || null,
     p_supplier: document.getElementById('rcv-supplier').value.trim() || null,
     p_lot: document.getElementById('rcv-lot').value.trim() || null,
     p_harvest: document.getElementById('rcv-harvest').value || null, p_exp: exp, p_receive_date: receiveDate,
@@ -7620,7 +7660,7 @@ async function trfSave() {
   const used = new Set();
   for (const it of items) {
     it.lot = it.tr.querySelector('.trf-lot').value.trim() || null;
-    let id; do { id = genId(it.rm.Category === 'แพ็คเกจจิ้ง' ? 'PC' : 'RC'); } while (used.has(id));
+    let id; do { id = genId(_isPkgLike(it.rm.Category) ? 'PC' : 'RC'); } while (used.has(id));
     used.add(id); it.id = id;
   }
   const note = g('trf-note').value.trim();
@@ -8576,7 +8616,7 @@ async function rcvReportRename(oldNo) {
 
 // ใบรายงานรับเป็นภาษาอังกฤษ (ผู้ใช้ขอ "ภาษาอังกฤษ 90%" 2026-09-26) — หัวข้อ/คอลัมน์/หมวด/หน่วย/วันที่เป็นอังกฤษ
 // ส่วนที่เป็นข้อมูลจริง (ชื่อรายการ ซัพพลายเออร์ หมายเหตุ) คงตามที่กรอก · ชื่อเอกสารและช่องเซ็นมีภาษาไทยตัวเล็กกำกับ
-const RRPT_CAT_EN = { 'วัตถุดิบ': 'Fresh', [CAT_DRY]: 'Dry', [CAT_CHEM]: 'Chemical', [CAT_PREP]: 'Ready-to-use', [CAT_PKG]: 'Packaging' };
+const RRPT_CAT_EN = { 'วัตถุดิบ': 'Fresh', [CAT_DRY]: 'Dry', [CAT_CHEM]: 'Chemical', [CAT_PREP]: 'Ready-to-use', [CAT_PKG]: 'Packaging', [CAT_CONS]: 'Consumable' };
 const RRPT_UNIT_EN = { 'กรัม': 'g', 'กิโลกรัม': 'kg', 'กก.': 'kg', 'มิลลิลิตร': 'mL', 'ลิตร': 'L', 'ชิ้น': 'pcs' };
 function _rrptCat(cat) { cat = cat || 'วัตถุดิบ'; return RRPT_CAT_EN[cat] || cat; }
 function _rrptUnit(u) { return RRPT_UNIT_EN[u] || u || ''; }
@@ -9195,7 +9235,7 @@ async function prLoad() {
   const by = {};
   (l.data || []).forEach(x => (by[x.PR_No] ||= []).push(x));
   _prData = (h.data || []).map(p => ({ ...p, lines: by[p.PR_No] || [] }));
-  await _prComputeReceived();
+  await Promise.all([_prComputeReceived(), _docNamesLoad()]);
   prRender();
 }
 // ตามรับเข้า: ใบรับวัตถุดิบที่อ้างเลข PR (rm_receive.PR_No — migration_2026-11-04_pr_merge_receive.sql) รวมต่อ PR+รหัส
@@ -9481,7 +9521,7 @@ function _prHalfHTML(p, copyLabel) {
     <td>${l.UnitCost != null ? (parseFloat(l.UnitCost) || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 }) : ''}</td><td></td></tr>`).join('')
     + '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'.repeat(n > 8 ? 1 : 2);
   const date = d => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '.......... / .......... / ..........';
-  const sign = (role, name, dt) => `<div><div class="role">${role}</div><div class="sigspace"></div><div class="sigline">${name ? esc(name) : 'ลายเซ็น'}</div><div class="dateline">วันที่ ${dt}</div></div>`;
+  const sign = (role, name, dt) => `<div><div class="role">${role}</div><div class="sigspace"></div><div class="sigline">${name ? '(' + esc(name) + ')' : '(.....................................)'}</div><div class="dateline">วันที่ ${dt}</div></div>`;
   return `<div class="reqo-half${dense ? ' dense' : ''}">
     <div class="reqo-head">
       <div class="reqo-head-left"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited"><div class="reqo-company"><b>Blooming Company Limited</b><br>BLM Herbal — Raw Material Warehouse</div></div>
@@ -9493,7 +9533,7 @@ function _prHalfHTML(p, copyLabel) {
       <tbody>${trs}</tbody>
     </table>
     <div class="reqo-note-box"><b>หมายเหตุ/คำแนะนำในการซื้อ:</b> ${esc(p.Note || '-')}</div>
-    <div class="reqo-sign">${sign('ผู้ขอซื้อ', '', date(null))}${sign('ฝ่ายจัดซื้อ', '', date(null))}${sign('ผู้อนุมัติ', p.ApprovedBy || '', p.Status === 'อนุมัติแล้ว' ? date(p.ApprovedAt) : date(null))}</div>
+    <div class="reqo-sign reqo-sign-pr">${sign('ผู้ขอซื้อ', _docName(p.RequestedBy), date(p.PRDate))}${sign('ผู้อนุมัติ', p.Status === 'อนุมัติแล้ว' ? _docName(p.ApprovedBy) : '', p.Status === 'อนุมัติแล้ว' ? date(p.ApprovedAt) : date(null))}${sign('ฝ่ายจัดซื้อ', '', date(null))}</div>
   </div>`;
 }
 function _prPrintHTML(p) {
@@ -9546,7 +9586,7 @@ function stockToggleLots(rmId) {
   stockPkgRenderTable();
 }
 // รหัสหมวดของ rm_master → ค่าตัวกรอง scType ของหน้า Stock Card (ไว้กดปุ่ม "ดูการ์ดสต็อก" แล้วพาไปพร้อมเลือกรายการให้)
-const CAT_TO_SCTYPE = { 'วัตถุดิบ': 'rm', [CAT_DRY]: 'dry', [CAT_CHEM]: 'chem', [CAT_PREP]: 'prep', [CAT_PKG]: 'pkg' };
+const CAT_TO_SCTYPE = { 'วัตถุดิบ': 'rm', [CAT_DRY]: 'dry', [CAT_CHEM]: 'chem', [CAT_PREP]: 'prep', [CAT_PKG]: 'pkg', [CAT_CONS]: 'pkg' };
 // เปิดหน้า Stock Card พร้อมเลือกประเภท+รายการให้ทันที — showPage('stockcard') โหลดรายการของ scType เดิมก่อน
 // (ตาม PAGE_LOADERS) จึงต้องตั้งประเภท/รายการที่ต้องการ "หลัง" โหลดเสร็จ ไม่งั้นค่าที่ตั้งจะถูกทับ
 async function goStockCard(scType, id) {
@@ -9657,7 +9697,7 @@ function stockRmRenderTable() {
   const f = document.getElementById('stockRmCatFilter').value;
   _stockRenderByCategory(f ? [f] : [...CAT_RAW_GROUP, CAT_PREP], 'stockRmSearch', 'stockRmCards', 'stockRmStatusFilter', 'stockRmSort');
 }
-function stockPkgRenderTable() { _stockRenderByCategory([CAT_PKG], 'stockPkgSearch', 'stockPkgCards', 'stockPkgStatusFilter', 'stockPkgSort'); }
+function stockPkgRenderTable() { _stockRenderByCategory([CAT_PKG, CAT_CONS], 'stockPkgSearch', 'stockPkgCards', 'stockPkgStatusFilter', 'stockPkgSort'); }
 async function stockPkgLoad() { await stockRmLoad(); }
 
 // ย้ายที่เก็บของล็อตวัตถุดิบ (ภายในล็อตเดียวกัน) — rm_loc_move ฝั่ง DB ตรวจยอดต้นทางให้ (2026-10-31 เหมือน FG)
@@ -9814,7 +9854,7 @@ let _coEditId = null, _coLineSeq = 0;
 const _coFgLabel = f => `${f.FG_ID} · ${f.FG_Name}`;
 const _coRmLabel = r => `${r.RM_ID} · ${r.RM_Name}`;
 // หมวด Material ในตัวเลือกของฟอร์ม CO — วัตถุดิบ (สด/แห้ง/เคมี/พร้อมผลิต) + แพ็คเกจจิ้ง
-const _CO_RM_CATS = [...CAT_RAW_ALL, CAT_PKG];
+const _CO_RM_CATS = [...CAT_RAW_ALL, CAT_PKG, CAT_CONS];
 function coOpenForm(editId) {
   const edit = typeof editId === 'string' ? _coCache.find(c => c.Order_ID === editId) : null;
   if (editId && !edit) return;
@@ -12358,7 +12398,7 @@ async function issueOpenForm(moId) {
 // เป็นจำนวนเต็มเสมอ (ของนับเป็นชิ้น เศษไม่มีความหมาย ต้องปัดขึ้นไม่ใช่ปัดลงกันเบิกไม่พอ — ต่างจาก _issgenRound
 // ของหน้าเบิกเบ็ดเตล็ดที่ปัดลงตามปกติ) ใช้แค่ตั้งค่าเริ่มต้นในช่อง ผู้ใช้ยังแก้เป็นเลขอื่นเองได้อิสระเหมือนเดิม
 function _issueQtyRound(qty, category) {
-  if (category === CAT_PKG) return Math.ceil(qty);
+  if (_isPkgLike(category)) return Math.ceil(qty);
   if (category === CAT_DRY || category === CAT_CHEM || category === CAT_PREP) return Math.round(qty * 1000) / 1000;
   return Math.round(qty * 100) / 100;   // วัตถุดิบสด (ค่าเริ่มต้น ไม่เข้าเงื่อนไขไหนเลยก็ใช้กฎนี้)
 }
@@ -12508,7 +12548,7 @@ function issueGenRecalc(from) {
 // จำนวนที่เบิกให้ตรงกับของจริง (ผู้ใช้ขอ 2026-10-04): แพ็คเกจจิ้ง (กล่อง/ถุง/เชือก ฯลฯ) นับเป็นชิ้น เศษไม่มี
 // ความหมาย ต้องปัดเป็นจำนวนเต็ม — วัตถุดิบ (ชั่งน้ำหนัก) ปัดทศนิยม 1 ตำแหน่งพอสำหรับงานจริง ไม่ต้องละเอียดเกิน
 function _issgenRound(qty, category) {
-  return category === CAT_PKG ? Math.round(qty) : Math.round(qty * 10) / 10;
+  return _isPkgLike(category) ? Math.round(qty) : Math.round(qty * 10) / 10;
 }
 // แก้ "จะผลิตกี่หน่วย" → คำนวณจำนวนใหม่เฉพาะแถวที่มาจากสูตร (data-qtyperunit) ทับค่าที่เคยพิมพ์เอง — พฤติกรรม
 // เดียวกับ issueRecalc() ของหน้าเบิกปกติ (เปลี่ยนจำนวนจะผลิต รีเซ็ตทุกแถวตามสูตรใหม่หมด) แถวที่เพิ่มเองไม่โดนแตะ
@@ -12664,7 +12704,7 @@ function _prodHistRenderTable() {
   document.getElementById('prodHistTableBody').innerHTML = hist.map(h => `
     <tr><td>${esc(h.Prod_ID)}</td><td>${esc(fgMap[h.FG_ID]?.FG_Name || h.FG_ID)}</td><td>${_bomFmtQty(h.QtyProduced)}</td>
     <td><span class="badge bg-light text-dark border">${esc(h.ProdLot || '-')}</span></td><td>${fmtDate(h.MfgDate)}</td><td>${h.ExpDate ? _expBadge(h.ExpDate) : '<span class="text-muted">—</span>'}</td>
-    <td class="text-nowrap">${_editBtn('production_records', h.Prod_ID)}<button class="btn btn-sm btn-outline-secondary" onclick="prodRecordPrint('${h.Prod_ID}')" title="พิมพ์ใบบันทึกผลิต (ส่งบัญชี)"><i class="fa-solid fa-print"></i></button><button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')" title="ลบ"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
+    <td class="text-nowrap">${_editBtn('production_records', h.Prod_ID)}<button class="btn btn-sm btn-outline-secondary" onclick="prodRecordPrint('${h.Prod_ID}')" title="พิมพ์ใบบันทึกผลิต (ส่งบัญชี)"><i class="fa-solid fa-print"></i></button><button class="btn btn-sm btn-outline-primary" onclick="prodRecordPrint('${h.Prod_ID}', true)" title="พิมพ์รวมส่งบัญชี — ครึ่งบน: เอกสารบันทึกผลิต · ครึ่งล่าง: เอกสารรับ FG เข้าคลัง 13 (สรุปรวม) ในแผ่นเดียว"><i class="fa-solid fa-print"></i><i class="fa-solid fa-plus mx-1" style="font-size:.6em"></i><i class="fa-solid fa-box-open"></i></button><button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')" title="ลบ"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
     || `<tr><td colspan="7" class="text-center text-muted py-3">${q ? 'ไม่พบรายการที่ค้นหา' : 'ยังไม่มีประวัติ'}</td></tr>`;
 }
 // ═══════════════════════════════════════════════════════════
@@ -12960,7 +13000,7 @@ function _prodCostBuild(key, rs, bomGroups) {
   // แยกต้นทุนวัตถุดิบ (สด/แห้ง/เคมี/พร้อมผลิต) ออกจากแพ็คเกจจิ้ง (ผู้ใช้ขอ 2026-10-12) — ไม่มี LotAlloc/ราคาก็ติดธง
   // incomplete แยกกันสองกลุ่ม ไม่ให้ธงของกลุ่มหนึ่งไปทำให้อีกกลุ่มดูไม่น่าเชื่อถือไปด้วย
   const grp = isPkg => {
-    const ls = lines.filter(l => (l.category === CAT_PKG) === isPkg)
+    const ls = lines.filter(l => _isPkgLike(l.category) === isPkg)
       .sort((a, b) => String(a.RM_ID).localeCompare(String(b.RM_ID), undefined, { numeric: true }));
     const cost = ls.reduce((s, l) => s + l.cost, 0);
     return { lines: ls, cost, perUnit: qtyProduced > 0 ? cost / qtyProduced : null, incomplete: ls.some(l => l.incomplete) };
@@ -13169,7 +13209,7 @@ function prodCostDetail(key) {
 // — กดปริ้นจากแถวไหนในประวัติก็ได้ ระบบหาแถวอื่นที่ Lot เดียวกัน (+ สินค้าเดียวกัน กันชื่อ Lot ชนกันข้ามสินค้า)
 // มารวมเป็นใบเดียวให้อัตโนมัติ (ไม่มีตัวเลือก Lot แยกต่างหาก) ยืนยันแล้ว: รวมยอดผลิต/เสีย/ได้ทั้งหมด, วันผลิต
 // ใช้วันแรกสุด, วันรับเข้าคลัง FG ใช้วันสุดท้ายสุด, ตารางวัตถุดิบรวมยอดตามรหัส (ไม่แยกตาม MO) แม้มาจากคนละ MO
-async function prodRecordPrint(id) {
+async function prodRecordPrint(id, combined = false) {
   const base = (window._prodRecordCache || []).find(x => x.Prod_ID === id);
   if (!base) return;
   if (!_rmMasterCache.length) await rmMasterLoad();
@@ -13208,7 +13248,12 @@ async function prodRecordPrint(id) {
   });
   const iss = Object.values(issByRm).map(g => ({ ...g, LotAlloc: _mergeLotAllocJs(g.LotAlloc) }));
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
-  document.getElementById('prp-print-root').innerHTML = _prpPrintHTML(h, fg, fgRecv || [], iss, rmMap);
+  if (combined) {
+    // ใบรวมส่งบัญชี (ผู้ใช้ขอ 2026-11-06) — A4 แผ่นเดียว: ครึ่งบน = เอกสารบันทึกผลิต · ครึ่งล่าง = เอกสารรับสินค้าสำเร็จรูปเข้าคลัง 13 (สรุปรวม) ของล็อตเดียวกัน
+    // ต้องมีการรับเข้าคลังแล้วอย่างน้อย 1 ครั้ง (ไม่งั้นครึ่งล่างไม่มีอะไรให้ออก)
+    if (!(fgRecv || []).length) { Swal.fire('ยังไม่ได้รับ FG เข้าคลัง', 'ล็อตนี้ยังไม่มีการรับเข้าคลัง 13 จึงพิมพ์ใบรวมไม่ได้ — พิมพ์เฉพาะใบบันทึกผลิตได้ที่ปุ่มพิมพ์ปกติ', 'info'); return; }
+    document.getElementById('prp-print-root').innerHTML = `<div class="prp-page">${_prpHalfHTML(h, fg, fgRecv, iss, rmMap, 'ส่งบัญชี')}<div class="prp-cut"><span><i class="fa-solid fa-scissors"></i> ตัดตามรอยประ</span></div><div style="height:148.5mm;overflow:hidden">${_fgrCombinedSlipHTML(fgRecv, fg, base, 'ส่งบัญชี')}</div></div>`;
+  } else document.getElementById('prp-print-root').innerHTML = _prpPrintHTML(h, fg, fgRecv || [], iss, rmMap);
   document.body.classList.add('print-prp');
   const done = () => {
     document.body.classList.remove('print-prp');
@@ -13248,7 +13293,8 @@ function _prpHalfHTML(h, fg, fgRecv, iss, rmMap, copyLabel) {
       <td class="prp-unit">${esc(r.Unit || '')}</td>
       <td class="prp-item">${Array.isArray(r.LotAlloc) && r.LotAlloc.length ? _lotAllocText(r.LotAlloc, CAT_RAW_ALL.includes(rCat) ? _rmFmtQty : _bomFmtQty, false) : '-'}</td></tr>`;
   }).join('');
-  return `<div class="prp-half">
+  const dense = sortedIss.length > 6, xd = sortedIss.length > 14;
+  return `<div class="prp-half${dense ? ' dense' : ''}">
     <div class="prp-head">
       <div class="prp-head-left"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
         <div class="prp-company"><b>Blooming Company Limited</b><br>BLM Herbal — Production</div></div>
@@ -13266,7 +13312,7 @@ function _prpHalfHTML(h, fg, fgRecv, iss, rmMap, copyLabel) {
       <div><span class="lbl">วันผลิต</span>${fmtDateLong(h.MfgDate)}</div>
       <div><span class="lbl">รับเข้าคลัง FG</span><b class="prp-emph">${esc(recvStatus)}</b>${recvRows.length ? `<div style="font-size:9px;color:#64748b;line-height:1.2">${recvRows.map(r => esc(r.FGReceive_ID)).join(', ')}</div>` : ''}</div>
     </div>
-    <table class="prp-table">
+    <table class="prp-table${dense ? ' dense' : ''}${sortedIss.length > 10 ? ' d11' : ''}${sortedIss.length > 13 ? ' d14' : ''}${xd ? ' xdense' : ''}">
       <thead><tr><th style="width:6%">ลำดับ</th><th style="width:42%">วัตถุดิบ</th><th style="width:13%">จำนวนเบิก</th><th style="width:9%">หน่วย</th><th style="width:30%">ล็อตที่ตัด</th></tr></thead>
       <tbody>${issRows || '<tr><td colspan="5" class="text-center text-muted">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>'}</tbody>
     </table>
@@ -15527,7 +15573,7 @@ function stockCardLoadItems(selectId) {
   if (type === 'fg') items = _fgMasterCache.map(f => ({ id: f.FG_ID, name: f.FG_Name }));
   else {
     const cat = { pkg: 'แพ็คเกจจิ้ง', prep: CAT_PREP, dry: CAT_DRY, chem: CAT_CHEM }[type] || 'วัตถุดิบ';
-    items = _rmMasterCache.filter(r => (r.Category || 'วัตถุดิบ') === cat).map(r => ({ id: r.RM_ID, name: r.RM_Name }));
+    items = _rmMasterCache.filter(r => type === 'pkg' ? _isPkgLike(r.Category) : (r.Category || 'วัตถุดิบ') === cat).map(r => ({ id: r.RM_ID, name: r.RM_Name }));
   }
   // ใส่รหัสนำหน้าชื่อเสมอ (ไม่ใช่แค่ชื่อเฉยๆ) — ถ้ามี 2 รายการชื่อซ้ำกันใน Master (พิมพ์ผิด/สร้างซ้ำ) จะแยกไม่ออก
   // เลยว่าเลือกตัวไหนอยู่ (ผู้ใช้เจอจริง 2026-10-04) — ของเดิมเคยต่อท้ายด้วยชื่อซัพพลายเออร์ด้วย (2026-10-11) ช่วย

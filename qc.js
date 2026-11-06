@@ -33,8 +33,11 @@ function qcHerbSpec(lot) {
   const s = _qcSpecs[lot.RM_ID]; if (!s) return null;
   const n = v => v == null ? null : +v;
   const sensory = [['ลักษณะ', s.Appearance], ['กลิ่น', s.Odor], ['รส', s.Taste]].filter(([, t]) => t).map(([k, t]) => `${k}: ${t}`);   // ลักษณะ/กลิ่น/รส → ข้อเช็กในหน้าตรวจรับ (ข้อกำหนดวัตถุดิบแห้ง)
+  const chem = { nameEn: s.NameEn, cas: s.CasNo, formula: s.Formula, grade: s.Grade, state: s.PhysicalState, apprRef: s.AppearanceRef, odorRef: s.OdorRef,   // วัตถุดิบเคมี: ค่าตาม CoA/ห้องปฏิบัติการ (แสดงอ้างอิง)
+    purity: s.Purity, mp: s.MeltingRange, sg: s.SpecificGravity, ri: s.RefractiveIndex, fp: s.FlashPoint, sol: s.Solubility };
   return { label: s.SpecName || _rmName(lot.RM_ID), normal: s.NormalAge || '', min: n(s.MinAge), soft: n(s.SoftAge),
-    items: sensory.concat((Array.isArray(s.Items) ? s.Items : []).filter(Boolean)), note: s.Note || '',
+    chem: Object.values(chem).some(Boolean) ? chem : null,
+    items: sensory.concat((Array.isArray(s.Items) ? s.Items : []).filter(Boolean), s.RequireCoA ? ['มีใบ Certificate of Analysis (CoA) แนบมากับ Lot นี้'] : []), note: s.Note || '',
     moistureMax: n(s.MoistureMax), foreignMax: n(s.ForeignMax), criteria: s.Criteria || '',
     lab: { plant: s.PlantPart, ash: n(s.TotalAshMax), acid: n(s.AcidInsolAshMax), oil: n(s.VolatileOilMin), active: s.ActiveConstituent } };
 }
@@ -207,7 +210,7 @@ async function qcPrintReleased(lotId) {
   if (!r.isConfirmed) return;
   const dmy = x => { const p = String(x || '').slice(0, 10).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : ''; };
   const my = x => { const p = String(x || '').slice(0, 10).split('-'); return p.length === 3 ? `${p[1]}/${p[0]}` : ''; };
-  const data = { rm: rm?.Category !== CAT_PKG, pm: rm?.Category === CAT_PKG, code: lot.RM_ID, name: rm?.RM_Name || lot.RM_ID, lot: _lotLabel(lot),
+  const data = { rm: !_isPkgLike(rm?.Category), pm: _isPkgLike(rm?.Category), code: lot.RM_ID, name: rm?.RM_Name || lot.RM_ID, lot: _lotLabel(lot),
     mfg: dmy(rec?.HarvestDate), exp: my(lot.ExpDate), date: dmy(insp?.InspectedAt ? new Date(new Date(insp.InspectedAt).getTime() + 7 * 3600000).toISOString() : todayStr()), remark: r.value.remark };
   const sheets = Math.ceil(r.value.n / 10); let html = '', k = 0;
   for (let s = 0; s < sheets; s++) {
@@ -235,8 +238,9 @@ function _qcFm01Rows(insp) {
     const label = String(c.label || '');
     const mm = label.match(/^(ความชื้น \(%\)|สิ่งแปลกปลอม \(%\)) — ไม่เกิน\s*([\d.]+)/);
     if (mm) return { item: mm[1], crit: `ไม่เกิน ${mm[2]}%`, ok: c.ok !== false, note: c.value != null ? `วัดได้ ${c.value}%` : '' };
-    const sm = label.match(/^(ลักษณะ|กลิ่น|รส): (.*)$/);
+    const sm = label.match(/^(ลักษณะ|กลิ่น|รส|การละลาย): (.*)$/);
     if (sm) return { item: sm[1], crit: sm[2], ok: c.ok !== false, note: '' };
+    if (/^มีใบ Certificate of Analysis/.test(label)) return { item: 'ใบ CoA', crit: 'แนบมากับทุก Lot', ok: c.ok !== false, note: '' };
     if (/^อายุเก็บเกี่ยว/.test(label)) { const m = label.match(/เกณฑ์ต่ำสุด\s*([\d.]+)/); return { item: 'อายุเก็บเกี่ยว (เดือน)', crit: m ? `ไม่น้อยกว่า ${m[1]} เดือน (นอกฤดู)` : '', ok: c.ok !== false, note: c.value != null ? `อายุ ${c.value} เดือน` : '' }; }
     if (QC_CHECK_PARTS[label]) return { item: QC_CHECK_PARTS[label][0], crit: QC_CHECK_PARTS[label][1], ok: c.ok !== false, note: '' };
     if (/^ตรวจแบบรวม/.test(label)) return { item: 'ตรวจแบบรวม', crit: 'ตรวจสภาพจริงแล้ว', ok: c.ok !== false, note: '' };
@@ -502,6 +506,11 @@ async function qcInspect(lotId) {
           ${spec.foreignMax != null ? `<div class="col-6"><div class="input-group input-group-sm"><span class="input-group-text">สิ่งแปลกปลอม ≤ ${spec.foreignMax}</span><input id="qci-foreign" type="number" min="0" step="0.1" class="form-control"><span class="input-group-text">%</span></div></div>` : ''}</div>
         ${spec.criteria ? `<div class="small text-muted mt-2">เกณฑ์ QC: ${esc(spec.criteria)}</div>` : ''}
         <div class="small text-muted mt-1">ห้องปฏิบัติการ/CoA: ${[spec.lab.ash != null ? `เถ้ารวม ≤ ${spec.lab.ash}%` : '', spec.lab.acid != null ? `เถ้าไม่ละลายกรด ≤ ${spec.lab.acid}%` : '', spec.lab.oil != null ? `น้ำมันระเหย ≥ ${spec.lab.oil}%` : '', spec.lab.active ? esc(spec.lab.active) : ''].filter(Boolean).join(' · ') || '-'} · โลหะหนัก/อะฟลาท็อกซิน/จุลินทรีย์ ดูเกณฑ์ทั่วไปที่หน้า "สเปควัตถุดิบ"</div></div>` : ''}
+      ${spec && spec.chem ? `<div class="border rounded p-2 mb-3 bg-light"><div class="fw-semibold small mb-1"><i class="fa-solid fa-flask me-1 text-primary"></i>ข้อกำหนดตาม CoA — ${esc(spec.label)}${spec.chem.nameEn ? ` <span class="text-muted fw-normal">(${esc(spec.chem.nameEn)})</span>` : ''}</div>
+        <div class="small text-muted">${[spec.chem.cas ? `CAS ${esc(spec.chem.cas)}` : '', spec.chem.formula ? esc(spec.chem.formula) : '', spec.chem.grade ? esc(spec.chem.grade) : '', spec.chem.state ? esc(spec.chem.state) : ''].filter(Boolean).join(' · ')}</div>
+        <div class="small mt-1">${[['ความบริสุทธิ์', spec.chem.purity], ['จุดหลอมเหลว', spec.chem.mp], ['ความถ่วงจำเพาะ', spec.chem.sg], ['ดัชนีหักเห', spec.chem.ri], ['จุดวาบไฟ', spec.chem.fp], ['การละลาย', spec.chem.sol]]
+          .filter(([, v]) => v && v !== 'N/A').map(([k, v]) => `<div><b>${k}:</b> ${esc(v)}</div>`).join('') || '-'}</div>
+        ${_qcGeneral?.chem ? `<div class="small text-muted mt-1">เก็บรักษา: ${esc(_qcGeneral.chem.storage_condition || '')}<br>⚠ ${esc(_qcGeneral.chem.flammability_warning || '')}</div>` : ''}</div>` : ''}
       <div class="fw-semibold mb-1">ผลการตรวจ</div>
       <div class="btn-group w-100 mb-2" role="group">
         <input type="radio" class="btn-check" name="qci-res" id="qci-pass" value="PASS" autocomplete="off" checked><label class="btn btn-outline-success py-2" for="qci-pass">ผ่าน</label>
@@ -649,10 +658,13 @@ function qcSpecRender() {
     .sort((a, b) => String(_rmName(a.RM_ID)).localeCompare(String(_rmName(b.RM_ID)), 'th'));
   document.getElementById('qcspBody').innerHTML = rows.map(s => `<tr>
     <td class="fw-semibold">${esc(_rmName(s.RM_ID))} <span class="text-muted small">${esc(s.RM_ID)}</span></td>
-    <td>${esc(s.SpecName || '-')}${s.PlantPart ? `<div class="small text-muted">${esc(s.PlantPart)}</div>` : ''}</td>
+    <td>${esc(s.SpecName || '-')}${s.PlantPart ? `<div class="small text-muted">${esc(s.PlantPart)}</div>` : ''}${s.NameEn ? `<div class="small text-muted">${esc(s.NameEn)}</div>` : ''}
+      ${s.CasNo || s.Grade || s.Formula ? `<div class="small text-muted">${[s.CasNo ? 'CAS ' + esc(s.CasNo) : '', s.Formula ? esc(s.Formula) : '', s.Grade ? esc(s.Grade) : ''].filter(Boolean).join(' · ')}</div>` : ''}</td>
     <td class="small">${[s.MinAge != null ? `อายุเก็บเกี่ยว ≥ <b>${+s.MinAge}</b> เดือน${s.SoftAge != null ? ` (ควร ${+s.SoftAge})` : ''}${s.NormalAge ? ` <span class="text-muted">· ปกติ ${esc(s.NormalAge)}</span>` : ''}` : '',
         s.MoistureMax != null ? `ความชื้น ≤ <b>${+s.MoistureMax}</b>%` : '', s.ForeignMax != null ? `สิ่งแปลกปลอม ≤ <b>${+s.ForeignMax}</b>%` : ''].filter(Boolean).map(t => `<div>${t}</div>`).join('') || '<span class="text-muted">-</span>'}</td>
-    <td class="small">${[s.TotalAshMax != null ? `เถ้ารวม ≤ ${+s.TotalAshMax}%` : '', s.AcidInsolAshMax != null ? `เถ้าไม่ละลายกรด ≤ ${+s.AcidInsolAshMax}%` : '', s.VolatileOilMin != null ? `น้ำมันระเหย ≥ ${+s.VolatileOilMin}%` : '', s.ActiveConstituent ? esc(s.ActiveConstituent) : '']
+    <td class="small">${[s.TotalAshMax != null ? `เถ้ารวม ≤ ${+s.TotalAshMax}%` : '', s.AcidInsolAshMax != null ? `เถ้าไม่ละลายกรด ≤ ${+s.AcidInsolAshMax}%` : '', s.VolatileOilMin != null ? `น้ำมันระเหย ≥ ${+s.VolatileOilMin}%` : '', s.ActiveConstituent ? esc(s.ActiveConstituent) : '',
+        s.Purity ? `ความบริสุทธิ์: ${esc(s.Purity)}` : '', s.MeltingRange && s.MeltingRange !== 'N/A' ? `จุดหลอมเหลว: ${esc(s.MeltingRange)}` : '', s.SpecificGravity ? `ความถ่วงจำเพาะ: ${esc(s.SpecificGravity)}` : '',
+        s.RefractiveIndex ? `ดัชนีหักเห: ${esc(s.RefractiveIndex)}` : '', s.FlashPoint ? `จุดวาบไฟ: ${esc(s.FlashPoint)}` : '', s.Solubility ? `การละลาย: ${esc(s.Solubility)}` : '', s.RequireCoA ? 'ต้องมีใบ CoA ทุก Lot' : '']
         .filter(Boolean).map(t => `<div>${t}</div>`).join('') || '<span class="text-muted">-</span>'}</td>
     <td class="small">${[['ลักษณะ', s.Appearance], ['กลิ่น', s.Odor], ['รส', s.Taste]].filter(([, t]) => t).map(([k, t]) => `<div><b>${k}:</b> ${esc(t)}</div>`).join('')
         + (Array.isArray(s.Items) ? s.Items : []).map(t => `<div>• ${esc(t)}</div>`).join('') || '-'}</td><td class="small">${esc(s.Note || '')}</td>
@@ -670,6 +682,10 @@ function qcSpecRender() {
         · อะฟลาท็อกซิน (ppb): รวม ≤ <b>${af.total}</b>, B1 ≤ <b>${af.aflatoxin_b1}</b></div>
       <div>จุลินทรีย์: TAMC ≤ <b>${fmtN(mb.tamc_cfu_per_g_max)}</b> cfu/g · TYMC ≤ <b>${fmtN(mb.tymc_cfu_per_g_max)}</b> cfu/g · E. coli: ${esc(mb.e_coli || '-')} · Salmonella spp.: ${esc(mb.salmonella_spp || '-')}</div></div>`;
   } else gEl.innerHTML = '';
+  const gchem = _qcGeneral?.chem;   // แนวทางเก็บรักษา/ความปลอดภัยของกลุ่มเคมี (qc_settings.GeneralLimits.chem)
+  if (gchem && (_qcSpecCat === CAT_CHEM || _qcSpecCat === 'all'))
+    gEl.insertAdjacentHTML('beforeend', `<div class="glass-card small"><div class="fw-semibold mb-1"><i class="fa-solid fa-shield-halved me-1"></i>แนวทางเก็บรักษาและความปลอดภัย — วัตถุดิบเคมีทุกตัว</div>
+      <div><b>การเก็บ:</b> ${esc(gchem.storage_condition || '-')}</div><div><b>ไวไฟ:</b> ${esc(gchem.flammability_warning || '-')}</div><div><b>GMP:</b> ${esc(gchem.gmp_safety_check || '-')}</div></div>`);
 }
 async function qcSpecEdit(rmId) {
   if (!_qcAdmin() || !_qcSpecsReady) return;
@@ -702,6 +718,21 @@ async function qcSpecEdit(rmId) {
           <div class="col-6"><label class="form-label small mb-1">กลิ่น</label><input id="qcs-odor" class="form-control form-control-sm" value="${esc(cur?.Odor || '')}"></div>
           <div class="col-6"><label class="form-label small mb-1">รส</label><input id="qcs-taste" class="form-control form-control-sm" value="${esc(cur?.Taste || '')}"></div>
           <div class="col-12"><label class="form-label small mb-1">เกณฑ์ยอมรับของ QC (ข้อความ)</label><input id="qcs-crit" class="form-control form-control-sm" value="${esc(cur?.Criteria || '')}"></div></div></div>
+      <div class="border rounded p-2 mb-2 bg-light"><div class="fw-semibold small mb-1">วัตถุดิบเคมี — ข้อมูลตาม CoA <span class="text-muted fw-normal">(ช่องที่ไม่ใช้เว้นว่าง · "ลักษณะ/กลิ่น" ด้านบนใช้เป็นข้อเช็กตอนรับ)</span></div>
+        <div class="row g-2 mb-1"><div class="col-8"><label class="form-label small mb-1">ชื่ออังกฤษ</label><input id="qcs-en" class="form-control form-control-sm" value="${esc(cur?.NameEn || '')}"></div>
+          <div class="col-4"><label class="form-label small mb-1">สูตรเคมี</label><input id="qcs-formula" class="form-control form-control-sm" value="${esc(cur?.Formula || '')}"></div>
+          <div class="col-5"><label class="form-label small mb-1">CAS No.</label><input id="qcs-cas" class="form-control form-control-sm" value="${esc(cur?.CasNo || '')}"></div>
+          <div class="col-4"><label class="form-label small mb-1">เกรด</label><input id="qcs-grade" class="form-control form-control-sm" value="${esc(cur?.Grade || '')}"></div>
+          <div class="col-3"><label class="form-label small mb-1">สถานะ</label><input id="qcs-state" class="form-control form-control-sm" value="${esc(cur?.PhysicalState || '')}" placeholder="Solid/Liquid"></div>
+          <div class="col-12"><label class="form-label small mb-1">ความบริสุทธิ์ / Assay</label><input id="qcs-purity" class="form-control form-control-sm" value="${esc(cur?.Purity || '')}"></div>
+          <div class="col-6"><label class="form-label small mb-1">จุดหลอมเหลว</label><input id="qcs-mp" class="form-control form-control-sm" value="${esc(cur?.MeltingRange || '')}"></div>
+          <div class="col-6"><label class="form-label small mb-1">จุดวาบไฟ</label><input id="qcs-fp" class="form-control form-control-sm" value="${esc(cur?.FlashPoint || '')}"></div>
+          <div class="col-6"><label class="form-label small mb-1">ความถ่วงจำเพาะ</label><input id="qcs-sg" class="form-control form-control-sm" value="${esc(cur?.SpecificGravity || '')}"></div>
+          <div class="col-6"><label class="form-label small mb-1">ดัชนีหักเห</label><input id="qcs-ri" class="form-control form-control-sm" value="${esc(cur?.RefractiveIndex || '')}"></div>
+          <div class="col-12"><label class="form-label small mb-1">การละลาย</label><input id="qcs-sol" class="form-control form-control-sm" value="${esc(cur?.Solubility || '')}"></div>
+          <div class="col-6"><label class="form-label small mb-1">ลักษณะตามข้อกำหนด (อ้างอิง)</label><input id="qcs-appref" class="form-control form-control-sm" value="${esc(cur?.AppearanceRef || '')}"></div>
+          <div class="col-6"><label class="form-label small mb-1">กลิ่นตามข้อกำหนด (อ้างอิง)</label><input id="qcs-odorref" class="form-control form-control-sm" value="${esc(cur?.OdorRef || '')}"></div></div>
+        <label class="d-flex align-items-center gap-2 small mt-1"><input type="checkbox" class="form-check-input mt-0" id="qcs-coa" ${cur?.RequireCoA ? 'checked' : ''}> ตอนตรวจรับต้องมีใบ CoA แนบมากับ Lot (เพิ่มเป็นข้อเช็ก)</label></div>
       <label class="form-label small mb-1">รายการเช็กเพิ่มตอนตรวจรับ (1 บรรทัด = 1 ข้อ)</label>
       <textarea id="qcs-items" class="form-control form-control-sm mb-2" rows="4" placeholder="เช่น แกนเป็นสีส้มแสดชัดเจน">${esc((Array.isArray(cur?.Items) ? cur.Items : []).join('\n'))}</textarea>
       <label class="form-label small mb-1">หมายเหตุ</label><input id="qcs-note" class="form-control form-control-sm" value="${esc(cur?.Note || '')}">`,
@@ -716,9 +747,13 @@ async function qcSpecEdit(rmId) {
         Items: g('qcs-items').value.split('\n').map(t => t.trim()).filter(Boolean), Note: g('qcs-note').value.trim() || null, UpdatedBy: _qcMe(), UpdatedAt: new Date().toISOString(),
         PlantPart: g('qcs-plant').value.trim() || null, MoistureMax: num(g('qcs-moist')), ForeignMax: num(g('qcs-foreign')), TotalAshMax: num(g('qcs-ash')), AcidInsolAshMax: num(g('qcs-acid')),
         VolatileOilMin: num(g('qcs-oil')), ActiveConstituent: g('qcs-active').value.trim() || null, Appearance: g('qcs-app').value.trim() || null, Odor: g('qcs-odor').value.trim() || null,
-        Taste: g('qcs-taste').value.trim() || null, Criteria: g('qcs-crit').value.trim() || null };
+        Taste: g('qcs-taste').value.trim() || null, Criteria: g('qcs-crit').value.trim() || null,
+        NameEn: g('qcs-en').value.trim() || null, Formula: g('qcs-formula').value.trim() || null, CasNo: g('qcs-cas').value.trim() || null, Grade: g('qcs-grade').value.trim() || null,
+        PhysicalState: g('qcs-state').value.trim() || null, Purity: g('qcs-purity').value.trim() || null, MeltingRange: g('qcs-mp').value.trim() || null, FlashPoint: g('qcs-fp').value.trim() || null,
+        SpecificGravity: g('qcs-sg').value.trim() || null, RefractiveIndex: g('qcs-ri').value.trim() || null, Solubility: g('qcs-sol').value.trim() || null,
+        AppearanceRef: g('qcs-appref').value.trim() || null, OdorRef: g('qcs-odorref').value.trim() || null, RequireCoA: g('qcs-coa').checked };
       const { data, error } = await _sb.from('qc_specs').upsert(row, { onConflict: 'RM_ID' }).select();
-      if (error || !data?.length) { Dlg.invalid(/column|schema cache/i.test(error?.message || '') ? 'ยังไม่ได้รัน migration_2026-10-31_qc_specs_dry.sql (เพิ่มคอลัมน์เกณฑ์วัตถุดิบแห้ง) ใน Supabase SQL Editor' : (error?.message || 'ไม่มีสิทธิ์บันทึก (ต้องเป็นแอดมิน)')); return false; }
+      if (error || !data?.length) { Dlg.invalid(/column|schema cache/i.test(error?.message || '') ? 'ยังไม่ได้รัน migration_2026-10-31_qc_specs_dry.sql และ migration_2026-10-31_qc_specs_chem.sql (เพิ่มคอลัมน์เกณฑ์วัตถุดิบแห้ง/เคมี) ใน Supabase SQL Editor' : (error?.message || 'ไม่มีสิทธิ์บันทึก (ต้องเป็นแอดมิน)')); return false; }
       return true;
     } });
   if (r.isConfirmed) { await qcLoadStatus(); qcSpecRender(); Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'บันทึกสเปคแล้ว — ใช้ตอนตรวจรับทันที', showConfirmButton: false, timer: 2200 }); }
