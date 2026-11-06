@@ -707,6 +707,14 @@ table.ihist-table .ihist-unit { color: #64748b; font-weight: 400; }
 .prp-highlight > div { flex: 1; }
 .prp-highlight .lbl { display: block; font-size: 8.5px; color: #64748b; font-weight: 700; }
 .prp-highlight b { font-size: 14px; color: var(--primary-blue); }
+/* หัวข้อกับชื่ออยู่บรรทัดเดียวกัน ชื่อสินค้าไม่ตัดขึ้นบรรทัดใหม่ · Lot / ยอดสุทธิชิดขวา (ผู้ใช้ขอ 2026-11-06) */
+.prp-highlight { align-items: baseline; }
+.prp-highlight > div { white-space: nowrap; }
+.prp-highlight .prp-hl-prod { flex: 1 1 auto; }
+.prp-highlight .prp-hl-lot, .prp-highlight .prp-hl-net { flex: 0 0 auto; }
+.prp-highlight .lbl { display: inline; margin-right: 5px; font-size: 9.5px; }
+.prp-highlight b { font-size: 13px; }
+.prp-subtitle { font-size: 10px; font-weight: 700; color: var(--primary-blue); margin: 2px 0 2px; }
 .prp-meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px 14px; margin-bottom: 8px; font-size: 10.5px; line-height: 1.3; }
 .prp-meta .lbl { color: #64748b; font-weight: 700; margin-right: 4px; }
 .prp-meta .prp-emph { color: var(--primary-blue); font-size: 12px; }
@@ -13286,14 +13294,21 @@ function _prpHalfHTML(h, fg, fgRecv, iss, rmMap, copyLabel) {
     return (_BOM_CAT_ORDER[catA] ?? 9) - (_BOM_CAT_ORDER[catB] ?? 9)
       || String(a.RM_ID).localeCompare(String(b.RM_ID), undefined, { numeric: true });
   });
-  const issRows = sortedIss.map((r, i) => {
+  // ตาราง 1 = วัตถุดิบ + แพ็คเกจจิ้ง · ตาราง 2 (ต่อท้าย แยกชัดเจน) = วัสดุสิ้นเปลือง — มีคอลัมน์ "ประเภท" (ผู้ใช้ขอ 2026-11-06)
+  const mkRows = (list) => list.map((r, i) => {
     const rCat = rmMap[r.RM_ID]?.Category;
     return `<tr><td>${i + 1}</td><td class="prp-item">${esc(_acctCode(r.RM_ID))} —${esc(rmMap[r.RM_ID]?.RM_Name || r.RM_ID)}</td>
+      <td>${esc(catLabel(rCat || 'วัตถุดิบ'))}</td>
       <td class="prp-qty-num">${_qtyFmtByCat(r.QtyIssued, rCat)}</td>
       <td class="prp-unit">${esc(r.Unit || '')}</td>
       <td class="prp-item">${Array.isArray(r.LotAlloc) && r.LotAlloc.length ? _lotAllocText(r.LotAlloc, CAT_RAW_ALL.includes(rCat) ? _rmFmtQty : _bomFmtQty, false) : '-'}</td></tr>`;
   }).join('');
-  const dense = sortedIss.length > 6, xd = sortedIss.length > 14;
+  const mainIss = sortedIss.filter(r => (rmMap[r.RM_ID]?.Category) !== CAT_CONS), consIss = sortedIss.filter(r => (rmMap[r.RM_ID]?.Category) === CAT_CONS);
+  const issRows = mkRows(mainIss), consRows = mkRows(consIss);
+  const tHead = (first) => `<thead><tr><th style="width:5%">ลำดับ</th><th style="width:33%">${first}</th><th style="width:13%">ประเภท</th><th style="width:12%">จำนวนเบิก</th><th style="width:8%">หน่วย</th><th style="width:29%">ล็อตที่ตัด</th></tr></thead>`;
+  const nRows = sortedIss.length + (consIss.length ? 2 : 0);   // ตารางที่สองกินที่เพิ่มอีก ~2 แถว (หัวข้อ + หัวตาราง)
+  const dense = nRows > 6, xd = nRows > 14;
+  const tCls = `prp-table${dense ? ' dense' : ''}${nRows > 10 ? ' d11' : ''}${nRows > 13 ? ' d14' : ''}${xd ? ' xdense' : ''}`;
   return `<div class="prp-half${dense ? ' dense' : ''}">
     <div class="prp-head">
       <div class="prp-head-left"><img src="assets/logo-blooming.webp" alt="Blooming Company Limited">
@@ -13301,9 +13316,9 @@ function _prpHalfHTML(h, fg, fgRecv, iss, rmMap, copyLabel) {
       <div><div class="prp-title">เอกสารบันทึกผลิต<span class="prp-copy-label">${esc(copyLabel)}</span><div style="font-size:11px;font-weight:600;color:#64748b">Batch Production Record</div></div><div class="prp-no">BPR No: ${esc(h.DocNo || h.Prod_ID)}</div></div>
     </div>
     <div class="prp-highlight">
-      <div><span class="lbl">สินค้า</span><b>${esc(h.FG_ID || '-')} — ${esc(fg?.FG_Name || '-')}</b></div>
-      <div><span class="lbl">Lot ผลิต</span><b>${esc(h.ProdLot || '-')}</b></div>
-      <div><span class="lbl">ผลิตได้สุทธิ</span><b>${_bomFmtQty(h.QtyProduced)} ${esc(fg?.Unit || '')}</b></div>
+      <div class="prp-hl-prod"><span class="lbl">สินค้า</span><b>${esc(h.FG_ID || '-')} — ${esc(fg?.FG_Name || '-')}</b></div>
+      <div class="prp-hl-lot"><span class="lbl">Lot ผลิต</span><b>${esc(h.ProdLot || '-')}</b></div>
+      <div class="prp-hl-net"><span class="lbl">ผลิตได้สุทธิ</span><b>${_bomFmtQty(h.QtyProduced)} ${esc(fg?.Unit || '')}</b></div>
     </div>
     <div class="prp-meta">
       <div><span class="lbl">MO</span>${esc(h.MO_ID)}</div>
@@ -13312,10 +13327,15 @@ function _prpHalfHTML(h, fg, fgRecv, iss, rmMap, copyLabel) {
       <div><span class="lbl">วันผลิต</span>${fmtDateLong(h.MfgDate)}</div>
       <div><span class="lbl">รับเข้าคลัง FG</span><b class="prp-emph">${esc(recvStatus)}</b>${recvRows.length ? `<div style="font-size:9px;color:#64748b;line-height:1.2">${recvRows.map(r => esc(r.FGReceive_ID)).join(', ')}</div>` : ''}</div>
     </div>
-    <table class="prp-table${dense ? ' dense' : ''}${sortedIss.length > 10 ? ' d11' : ''}${sortedIss.length > 13 ? ' d14' : ''}${xd ? ' xdense' : ''}">
-      <thead><tr><th style="width:6%">ลำดับ</th><th style="width:42%">วัตถุดิบ</th><th style="width:13%">จำนวนเบิก</th><th style="width:9%">หน่วย</th><th style="width:30%">ล็อตที่ตัด</th></tr></thead>
-      <tbody>${issRows || '<tr><td colspan="5" class="text-center text-muted">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>'}</tbody>
+    <table class="${tCls}">
+      ${tHead('วัตถุดิบ / แพ็คเกจจิ้ง')}
+      <tbody>${issRows || '<tr><td colspan="6" class="text-center text-muted">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>'}</tbody>
     </table>
+    ${consIss.length ? `<div class="prp-subtitle">วัสดุสิ้นเปลือง</div>
+    <table class="${tCls}">
+      ${tHead('วัสดุสิ้นเปลือง')}
+      <tbody>${consRows}</tbody>
+    </table>` : ''}
     ${h.Note ? `<div class="prp-note"><b>หมายเหตุ:</b> ${esc(h.Note)}</div>` : ''}
     <div class="prp-sign">
       <div><div class="role">ผู้บันทึก</div><div class="sigspace"></div><div class="sigline">ลายเซ็น</div><div class="dateline">วันที่ .......... / .......... / ..........</div></div>
