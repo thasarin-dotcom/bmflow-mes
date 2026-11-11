@@ -3890,9 +3890,31 @@ function _rmLotRpcErr(error, title) {
 }
 // ── ล็อตวัตถุดิบ (stock_rm_lot) ──
 let _rmLotCache = [];
+// ซัพพลายเออร์ของล็อตที่ยังมีของ (rm_receive.Supplier ผ่าน Lot_ID = Receive_ID) → _lotSupMap[RM_ID] = [ชื่อ…]
+// เพราะซัพเลือกตอนรับของจริง ไม่ได้ผูกกับรหัสใน Master (Master.Supplier มักว่าง) — ใช้โชว์ในรายการเลือกต้นทางเตรียม/เบิก
+// แทน "ไม่ระบุซัพ" (ผู้ใช้ทัก 2026-11-11)
+let _lotSupMap = {};
+function _rmSupLabel(r) {
+  const own = (r?.Supplier || '').trim().replace(/^[-–—.]+$/, '');
+  const names = _lotSupMap[r?.RM_ID] || [];
+  return names.length ? names.join(', ') : (own || 'ไม่ระบุซัพ');
+}
+async function _loadLotSuppliers() {
+  _lotSupMap = {};
+  const lots = _rmLotCache.filter(l => (parseFloat(l.Qty) || 0) > 0 && l.Receive_ID);
+  const supOf = {};
+  for (let i = 0; i < lots.length; i += 150) {
+    const ids = lots.slice(i, i + 150).map(l => l.Receive_ID);
+    const { data, error } = await _sb.from('rm_receive').select('Receive_ID,Supplier').in('Receive_ID', ids);
+    if (error) return;
+    (data || []).forEach(r => { supOf[r.Receive_ID] = (r.Supplier || '').trim(); });
+  }
+  lots.forEach(l => { const s = supOf[l.Receive_ID]; if (s && !/^[-–—.]+$/.test(s)) { const a = (_lotSupMap[l.RM_ID] ||= []); if (!a.includes(s)) a.push(s); } });
+}
 async function rmLotLoad() {
   const { data, error } = await _sb.from('stock_rm_lot').select('*');
   _rmLotCache = error ? [] : (data || []);
+  await _loadLotSuppliers();
   if (typeof qcLoadStatus === 'function') await qcLoadStatus();   // สถานะ QC ของล็อต (qc.js) — ใช้ขึ้นป้ายในหน้า Stock + เตือนตอนเบิก
 }
 // สถานที่เก็บวัตถุดิบ (2026-10-31 ผู้ใช้ขอ "เหมือน FG") — ใช้ตาราง storage_locations ร่วมกับ FG (ชื่อใช้ร่วมกันได้ทั้ง
@@ -11179,7 +11201,7 @@ function prepIssueTargetChanged(keepAll) {
   const srcSel = document.getElementById('prepi-source');
   if (_prepiEditP && t) {   // โหมดแก้ไข: ต้นทางล็อกเป็นตัวที่ใบนี้เบิกไว้ (เปลี่ยนต้นทาง/ปลายทางไม่ได้ — ยกเลิกใบแล้วเบิกใหม่)
     const s0 = _rmMasterCache.find(r => r.RM_ID === _prepiEditP.SourceRM_ID);
-    srcSel.innerHTML = `<option value="${esc(_prepiEditP.SourceRM_ID)}">${esc(s0?.RM_Name || _prepiEditP.SourceRM_ID)} · ${esc(_prepiEditP.SourceRM_ID)} · ${esc(s0?.Supplier || 'ไม่ระบุซัพ')}</option>`;
+    srcSel.innerHTML = `<option value="${esc(_prepiEditP.SourceRM_ID)}">${esc(s0?.RM_Name || _prepiEditP.SourceRM_ID)} · ${esc(_prepiEditP.SourceRM_ID)} · ${esc(_rmSupLabel(s0 || { RM_ID: _prepiEditP.SourceRM_ID }))}</option>`;
     srcSel.value = _prepiEditP.SourceRM_ID;
     document.getElementById('prepi-src-note').textContent = 'แก้ไขใบเตรียม — ต้นทาง/ปลายทางเปลี่ยนไม่ได้';
     prepIssueSourceChanged();
@@ -11210,7 +11232,7 @@ function prepIssueTargetChanged(keepAll) {
     return;
   }
   srcSel.innerHTML = candidates.map(r =>
-    `<option value="${esc(r.RM_ID)}">${esc(r.RM_Name)}${r.RM_ID === t.RM_ID ? ' (ตัวเดิม — เตรียมซ้ำ)' : ''} · ${esc(r.RM_ID)} · ${esc(r.Supplier || 'ไม่ระบุซัพ')} · เหลือ ${_rmFmtQty(r._stk)} ${esc(r.Unit)} · ${esc(catLabel(r.Category))}</option>`).join('');
+    `<option value="${esc(r.RM_ID)}">${esc(r.RM_Name)}${r.RM_ID === t.RM_ID ? ' (ตัวเดิม — เตรียมซ้ำ)' : ''} · ${esc(r.RM_ID)} · ${esc(_rmSupLabel(r))} · เหลือ ${_rmFmtQty(r._stk)} ${esc(r.Unit)} · ${esc(catLabel(r.Category))}</option>`).join('');
   // ตั้งต้นตามที่ Master ผูกไว้ (SourceRM_ID) ถ้ามีและยังเป็นตัวเลือกที่ถูกต้อง — ไม่งั้นถ้าปลายทางเป็น
   // วัตถุดิบแห้งที่ไม่มี SourceRM_ID (เตรียมซ้ำคงรหัสเดิม, 2026-09-29) ตั้งต้นเป็นตัวมันเองไปเลย — ไม่งั้นปล่อยว่างให้ผู้ใช้เลือกเอง
   srcSel.value = t.SourceRM_ID && candidates.some(c => c.RM_ID === t.SourceRM_ID) ? t.SourceRM_ID
@@ -11244,7 +11266,7 @@ function prepIssueSourceChanged() {
       </tbody></table></div><div class="small text-muted mt-1">ติ๊กล็อตที่จะหยิบ (ค่าตั้งต้น = คงเหลือทั้งล็อต แก้จำนวนได้) · หรือกรอกน้ำหนักด้านล่าง ระบบจะจัดล็อตให้ตามหมดอายุก่อน</div>`;
   document.getElementById('prepi-info').innerHTML =
     (src.RM_ID === t.RM_ID ? '<div class="text-primary fw-semibold mb-1"><i class="fa-solid fa-rotate me-1"></i>เตรียมซ้ำ — รับกลับเป็นรหัสเดิม แค่ได้ Lot ใหม่</div>' : '') +
-    `วัตถุดิบต้นทาง (${esc(catLabel(src?.Category))}): <b>${esc(src?.RM_Name)}</b> <code>${esc(src?.RM_ID)}</code> · ซัพ ${esc(src?.Supplier || 'ไม่ระบุ')} · คงเหลือ <b>${_rmFmtQty(stock)} ${esc(src?.Unit || '')}</b> ในล็อตที่มีของ ${lots.length} ล็อต<br>
+    `วัตถุดิบต้นทาง (${esc(catLabel(src?.Category))}): <b>${esc(src?.RM_Name)}</b> <code>${esc(src?.RM_ID)}</code> · ซัพ ${esc(_rmSupLabel(src || {}).replace('ไม่ระบุซัพ', 'ไม่ระบุ'))} · คงเหลือ <b>${_rmFmtQty(stock)} ${esc(src?.Unit || '')}</b> ในล็อตที่มีของ ${lots.length} ล็อต<br>
      ขั้นตอนมาตรฐาน: ${(t.PrepSteps || []).length ? t.PrepSteps.map(s => `${esc(s.step)} ${_bomFmtQty(s.pct)}%`).join(' → ') : '<span class="text-muted">ยังไม่ได้ตั้ง — เพิ่มขั้นตอนเองได้ตอนบันทึก/รับกลับ</span>'}
      · สูญเสียรวม <b>${_bomFmtQty(std)}%</b>${t.ShelfLifeDays != null ? ` · อายุหลังเตรียม ${t.ShelfLifeDays} วัน` : ''}
      ${lotsHtml}`;
@@ -12388,7 +12410,7 @@ async function issueOpenForm(moId) {
     <tr class="${multi ? 'table-warning' : ''}">
       <td><div class="fw-semibold">${esc(n.name)}${multi ? ' <i class="fa-solid fa-triangle-exclamation text-warning" title="มีหลายซัพพลายเออร์ให้เลือก — ตรวจสอบก่อนเบิก"></i>' : ''}</div>
         ${multi ? `<select class="form-select form-select-sm mt-1 border-warning" style="font-size:.78rem" onchange="issueSupplierChanged(${i}, this.value)">
-          ${n.candidates.map(c => `<option value="${esc(c.RM_ID)}" ${c.RM_ID === n.RM_ID ? 'selected' : ''}>${esc(c.RM_ID)} — ${esc(c.Supplier || 'ไม่ระบุซัพ')} (เหลือ ${_qtyFmtByCat(c._stock, n.category)})</option>`).join('')}
+          ${n.candidates.map(c => `<option value="${esc(c.RM_ID)}" ${c.RM_ID === n.RM_ID ? 'selected' : ''}>${esc(c.RM_ID)} — ${esc(_rmSupLabel(c))} (เหลือ ${_qtyFmtByCat(c._stock, n.category)})</option>`).join('')}
         </select>` : ''}
         <div>${_bomCatBadge(n.category)}</div></td>
       <td class="text-end fw-semibold" id="issue-base-${i}"></td>
@@ -12576,7 +12598,7 @@ function _issgenRowHTML(rmId, name, unit, stockQty, qtyPerUnit, qty, category, c
   // ไฮไลท์ทั้งแถวเมื่อมีมากกว่า 1 ซัพให้เลือก เหมือนหน้าเบิกเข้าไลน์ผลิต (ผู้ใช้ขอ 2026-10-11)
   const supplierSel = !cands ? '' : `<i class="fa-solid fa-triangle-exclamation text-warning ms-1" title="มีหลายซัพพลายเออร์ให้เลือก — ตรวจสอบก่อนเบิก"></i>
     <select class="form-select form-select-sm mt-1 issgen-supplier border-warning" style="font-size:.76rem" onchange="issgenSupplierChanged(this)">
-    ${cands.map(c => `<option value="${esc(c.RM_ID)}" ${c.RM_ID === rmId ? 'selected' : ''}>${esc(c.RM_ID)} — ${esc(c.Supplier || 'ไม่ระบุซัพ')} (เหลือ ${_rmFmtQty(c._stock)})</option>`).join('')}
+    ${cands.map(c => `<option value="${esc(c.RM_ID)}" ${c.RM_ID === rmId ? 'selected' : ''}>${esc(c.RM_ID)} — ${esc(_rmSupLabel(c))} (เหลือ ${_rmFmtQty(c._stock)})</option>`).join('')}
   </select>`;
   return `<tr class="issgen-row${cands ? ' table-warning' : ''}" data-rm="${esc(rmId)}" data-cat="${esc(category || '')}"${qtyPerUnit != null ? ` data-qtyperunit="${qtyPerUnit}"` : ''}>
     <td><code>${esc(rmId)}</code>${supplierSel}</td><td>${esc(name)}</td>
