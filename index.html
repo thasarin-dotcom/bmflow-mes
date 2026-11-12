@@ -13784,11 +13784,25 @@ async function prodRecordModalSave() {
   // บันทึกผลิต + ปรับสถานะ MO เป็น "ผลิตแล้ว" ในคำสั่งเดียวกันฝั่ง DB (migration_2026-10-11_atomic_prod_fg_
   // rpc.sql) — เดิมเป็น insert() แล้ว update() แยกกันคนละ request ถ้าเน็ตหลุดกลางทาง (ทดสอบผ่านมือถือ/
   // แท็บเล็ตหน้างานจริงเท่านั้น ไม่มี dev/staging) จะได้บันทึกผลิตที่สร้างแล้วแต่ MO ค้างสถานะเดิมตลอดไป
-  const { error } = await _sb.rpc('production_record_post', { p_row: payload });
-  if (error) { _rpcErr(error, 'บันทึกผลิตไม่สำเร็จ', 'migration_2026-10-11_atomic_prod_fg_rpc.sql'); return; }
-  const failedMsgs = await _rmUseApplyCorrections(rmCorrections);
-  if (failedMsgs.length) {
-    Swal.fire('บันทึกผลิตแล้ว แต่ปรับจำนวนวัตถุดิบบางรายการไม่สำเร็จ', failedMsgs.join('<br>'), 'warning');
+  // บันทึกผลิต + ปรับยอดวัตถุดิบที่ใช้จริง เป็นธุรกรรมเดียว (migration_2026-11-12_prod_record_atomic.sql) — ล้มขั้นไหนย้อนทั้งหมด
+  // ยังไม่ได้รัน SQL (PGRST202) → ใช้วิธีเดิมสองจังหวะ
+  const changedCorr = rmCorrections.filter(c => Math.abs(c.actual - c.original) > 1e-9);
+  let atomicDone = false;
+  if (changedCorr.length) {
+    const { error: aErr } = await _sb.rpc('production_record_post_corrected', {
+      p_row: payload,
+      p_corrections: changedCorr.map(c => ({ issue_id: c.issueId, new_qty: c.actual, return_qty: c.returnQty, waste_qty: c.wasteQty })),
+    });
+    if (!aErr) { atomicDone = true; _stockRmCache = []; _rmLotCache = []; }
+    else if (aErr.code !== 'PGRST202') { Swal.fire('บันทึกผลิตไม่สำเร็จ (ไม่ได้บันทึกอะไรเลย)', esc(aErr.message), 'error'); return; }
+  }
+  if (!atomicDone) {
+    const { error } = await _sb.rpc('production_record_post', { p_row: payload });
+    if (error) { _rpcErr(error, 'บันทึกผลิตไม่สำเร็จ', 'migration_2026-10-11_atomic_prod_fg_rpc.sql'); return; }
+    const failedMsgs = await _rmUseApplyCorrections(rmCorrections);
+    if (failedMsgs.length) {
+      Swal.fire('บันทึกผลิตแล้ว แต่ปรับจำนวนวัตถุดิบบางรายการไม่สำเร็จ', failedMsgs.join('<br>'), 'warning');
+    }
   }
   bootstrap.Modal.getInstance(document.getElementById('prodRecordModal')).hide();
   await planLoad();
