@@ -2454,7 +2454,7 @@ td.empty-cell { white-space: normal !important; }
               <input class="form-check-input" type="checkbox" id="rmm-cutpack">
               <label class="form-check-label" for="rmm-cutpack">ตัดตามวันแพ็คกล่อง</label>
             </div>
-            <div class="form-text" style="font-size:.72rem">ติ๊กสำหรับกล่องนาฬิกา / กล่องใส่ลูกประคบ — การ์ดสต็อกจะลงวันที่แพ็คกล่องแทนวันที่เบิกเข้าไลน์ (ยอดยังถูกตัดตอนเบิกเหมือนเดิม)</div>
+            <div class="form-text" style="font-size:.72rem">ติ๊กสำหรับกล่องนาฬิกา / กล่องใส่ลูกประคบ — ไม่อยู่ในใบเบิกเข้าไลน์ผลิต และตัดสต็อกตอนบันทึกแพ็คกล่อง (1 ชิ้นต่อ 1 กล่อง CT) · ต้องเป็นวัสดุที่อยู่ในสูตร (BOM) ของสินค้านั้น</div>
           </div>
           <div class="col-12">
             <label class="form-label">รหัสบัญชี (ใช้บนใบที่ส่งบัญชี)</label>
@@ -11975,6 +11975,7 @@ function prepPrintExec(id, setsPerDay, days) {
 // ISSUE PRODUCTION — เบิกเข้าไลน์ผลิต ตาม BOM × PlanQty
 // ═══════════════════════════════════════════════════════════
 async function issueLoad() {
+  await _packCutProbe();
   if (!_planCache.length) await planLoad();
   if (!_bomCache.length) await bomLoad();
   if (!_stockRmCache.length) await stockRmLoad();
@@ -12452,11 +12453,14 @@ async function _issueLoadLoss(fgId) {
 // เท่านั้น ซึ่ง issueLoad() โหลดให้ครบก่อนปุ่มจะโผล่อยู่แล้ว แต่ตอนนี้มีปุ่ม "เบิกเข้าไลน์ผลิต" บนการ์ด MO ของ
 // หน้า "คำสั่งผลิต (MO)" ด้วย (ผู้ใช้ขอ 2026-10-10) ซึ่งเข้าหน้านั้นตรงๆ ได้โดยไม่เคยแวะหน้าเบิกวัตถุดิบมาก่อน
 async function issueOpenForm(moId) {
+  await _packCutProbe();
   if (!_bomCache.length) await bomLoad();
   if (!_stockRmCache.length) await stockRmLoad();
   const mo = _planCache.find(p => p.MO_ID === moId);
   const fg = _fgMasterCache.find(f => f.FG_ID === mo.FG_ID);
-  const need = _bomCache.filter(b => b.FG_ID === mo.FG_ID).map(b => {
+  // วัสดุที่ติ๊ก "ตัดตามวันแพ็คกล่อง" (กล่อง) ไม่อยู่ในใบเบิกเข้าไลน์ — ตัดสต็อกตอนบันทึกแพ็คกล่องแทน (ต้องรัน migration_2026-11-14_pack_box_material_cut.sql
+  // ถ้ายังไม่รัน _packCutReady() เป็น false → ยังเบิกพร้อมวัตถุดิบอื่นเหมือนเดิม)
+  const need = _bomCache.filter(b => b.FG_ID === mo.FG_ID && !_isCutAtPack(b.RM_ID)).map(b => {
     // วัตถุดิบชื่อเดียวกันอาจมีหลายรหัส/ซัพพลายเออร์ — ตั้งต้นเลือกตัวที่สต็อกเหลือเยอะสุด (candidates เรียง
     // มาก→น้อยแล้ว) ผู้ใช้กดเปลี่ยนเป็นซัพอื่นได้ที่ดรอปดาวน์ (ดู issueSupplierChanged, _bomLineResolve)
     const { rm, candidates, chosen } = _bomLineResolve(b);
@@ -12510,6 +12514,15 @@ async function issueOpenForm(moId) {
 // แห้ง/เคมี (รวมพร้อมผลิต — เป็นของแปรรูปแล้วเหมือนกัน ไม่ใช่ของสดชั่งหยาบ) ทศนิยม 3 ตำแหน่ง, แพ็คเกจจิ้งปัดขึ้น
 // เป็นจำนวนเต็มเสมอ (ของนับเป็นชิ้น เศษไม่มีความหมาย ต้องปัดขึ้นไม่ใช่ปัดลงกันเบิกไม่พอ — ต่างจาก _issgenRound
 // ของหน้าเบิกเบ็ดเตล็ดที่ปัดลงตามปกติ) ใช้แค่ตั้งค่าเริ่มต้นในช่อง ผู้ใช้ยังแก้เป็นเลขอื่นเองได้อิสระเหมือนเดิม
+// "ตัดตามวันแพ็คกล่อง" ใช้จริงได้เมื่อรัน SQL ฟังก์ชันตัดกล่องแล้วเท่านั้น (ตรวจครั้งแรกที่โหลดหน้าแพ็คกล่อง/เบิก — ดู _packCutProbe)
+let _packCutOk = false, _packCutProbed = false;
+async function _packCutProbe() {
+  if (_packCutProbed) return;
+  const r = await _sb.rpc('pack_box_material_cut', { p_boxes: [] });
+  _packCutOk = !r.error;
+  _packCutProbed = !r.error || r.error.code === 'PGRST202';   // error อื่น (เน็ตหลุด) ลองใหม่รอบหน้า
+}
+const _isCutAtPack = rmId => _packCutOk && !!_rmMasterCache.find(r => r.RM_ID === rmId)?.CutAtPack;
 function _issueQtyRound(qty, category) {
   if (_isPkgLike(category)) return Math.ceil(qty);
   if (category === CAT_DRY || category === CAT_CHEM || category === CAT_PREP) return Math.round(qty * 1000) / 1000;
@@ -12666,7 +12679,7 @@ function issueGenFgChanged() {
   tbody.innerHTML = '';
   if (!fg) return;
   const planQty = parseFloat(document.getElementById('issgen-qty').value) || 0;
-  _bomCache.filter(b => b.FG_ID === fg.FG_ID).forEach(b => {
+  _bomCache.filter(b => b.FG_ID === fg.FG_ID && !_isCutAtPack(b.RM_ID)).forEach(b => {
     // ตรรกะ "หาซัพอื่นที่ชื่อเดียวกัน + เลือกตัวสต็อกเหลือมากสุด" รวมไว้ที่ _bomLineResolve จุดเดียว (ใช้ร่วมกับ
     // issueOpenForm) — แก้กฎการเลือกซัพเริ่มต้นที่เดียวพอ ไม่ต้องไล่แก้ทีละหน้า
     const { rm: m, candidates, chosen } = _bomLineResolve(b);
@@ -15381,6 +15394,7 @@ async function deliveryAdvance(deliveryId, newStatus) {
 // ═══════════════════════════════════════════════════════════
 let _packBoxCache = [];
 async function packboxLoad() {
+  _packCutProbe();
   if (!_fgMasterCache.length) await fgMasterLoad();
   if (!_stockFgCache.length) await stockFgLoad();
   _packBoxCache = await sbRun(_sb.from('pack_boxes').select('*').order('CreatedAt', { ascending: false }), 'โหลดข้อมูลกล่อง') || [];
@@ -15529,6 +15543,13 @@ async function packboxPrintQr(ids) {
   window.addEventListener('afterprint', done);
   window.print();
 }
+// ลบกล่องแล้ว คืนสต็อกกล่อง (วัสดุที่ตัดตอนแพ็ค) ของกล่องที่ถูกลบจริง — ยังไม่ได้รัน SQL = ข้าม
+async function _packRestoreMaterial(boxIds) {
+  if (!_packCutOk || !boxIds.length) return;
+  const { error } = await _sb.rpc('pack_box_material_restore', { p_box_ids: boxIds });
+  if (error) Swal.fire('ลบกล่องแล้ว แต่คืนสต็อกกล่องไม่สำเร็จ', esc(error.message), 'warning');
+  else { _stockRmCache = []; _rmLotCache = []; }
+}
 async function packboxBulkDelete() {
   const ids = [...document.querySelectorAll('.packbox-row-check:checked')].map(c => c.value);
   if (!ids.length) return;
@@ -15536,6 +15557,7 @@ async function packboxBulkDelete() {
   if (!c.isConfirmed) return;
   const { data, error } = await _sb.from('pack_boxes').delete().in('Box_ID', ids).select();
   if (error) { Swal.fire('ผิดพลาด', error.message, 'error'); return; }
+  await _packRestoreMaterial((data || []).map(r => r.Box_ID));
   if (!data || data.length < ids.length) {
     Swal.fire('ลบได้บางส่วน', `ลบได้ ${data?.length || 0}/${ids.length} รายการ (ที่เหลืออาจไม่มีสิทธิ์ลบ)`, 'warning');
   }
@@ -15685,6 +15707,7 @@ async function _nextBoxIds(n, dateStr) {
   return ids;
 }
 async function packboxModalSave() {
+  await _packCutProbe();
   _modalClearErrors(['pb-unitperbox']);
   const { fgId, unitPerBox, lotPicks, existingBox } = _packReadInputs();
   const packDate = document.getElementById('pb-packdate').value;
@@ -15726,14 +15749,27 @@ async function packboxModalSave() {
   }
   const saveBtn = document.querySelector('#packBoxModal .modal-footer .btn-brand, #packBoxModal .modal-footer .btn-success, #packBoxModal .modal-footer .btn-primary');
   if (saveBtn) saveBtn.disabled = true;
+  const newBoxIds = inserts.map(x => x.Box_ID);
+  let matCut = false;
   try {
+    // ตัดสต็อกกล่อง (วัสดุที่ติ๊ก "ตัดตามวันแพ็คกล่อง") 1 ชิ้น/กล่อง CT ใหม่ — ทำก่อนบันทึกกล่อง ถ้าตัดไม่ได้ (สต็อกกล่องไม่พอ ฯลฯ)
+    // ยังไม่ได้บันทึกอะไรเลย · ถ้าบันทึกกล่องล้มทีหลังจะคืนสต็อกกล่องให้ (pack_box_material_restore)
+    // ยังไม่ได้รัน SQL (PGRST202) = ข้าม (ไม่มีวัสดุที่ตัดตอนแพ็ค — กล่องยังตัดตอนเบิกเข้าไลน์เหมือนเดิม)
+    if (_packCutOk && inserts.length) {
+      const { error: cutErr } = await _sb.rpc('pack_box_material_cut', { p_boxes: inserts.map(x => ({ box_id: x.Box_ID, fg_id: fgId, lots: [...(x.LotAlloc || [])].sort((a, c) => (c.qty || 0) - (a.qty || 0)).map(l => l.lot), date: packDate })) });
+      if (cutErr) { Swal.fire('ตัดสต็อกกล่องไม่สำเร็จ (ไม่ได้บันทึกอะไรเลย)', esc(cutErr.message), 'error'); return; }
+      matCut = true;
+      _stockRmCache = []; _rmLotCache = [];   // สต็อกกล่องเปลี่ยนแล้ว ให้หน้าสต็อก/เบิกโหลดใหม่
+    }
+    const undoCut = async () => { if (matCut) await _sb.rpc('pack_box_material_restore', { p_box_ids: newBoxIds }); };
     if (updateBox) {
       const ok = await sbRun(_sb.from('pack_boxes').update(updateBox.payload).eq('Box_ID', updateBox.boxId), 'อัปเดตกล่องไม่สำเร็จ');
-      if (ok === null) return;
+      if (ok === null) { await undoCut(); return; }
     }
     if (inserts.length) {
       const ok = await sbRun(_sb.from('pack_boxes').insert(inserts), 'บันทึกกล่องไม่สำเร็จ (ไม่ได้บันทึกกล่องใหม่เลย)');
       if (ok === null) {
+        await undoCut();
         if (updateBox && existingBox) {
           const { Box_ID, CreatedAt, ...orig } = existingBox;
           await _sb.from('pack_boxes').update(orig).eq('Box_ID', Box_ID);
@@ -15758,6 +15794,7 @@ async function packboxDelete(boxId) {
   const c = await Swal.fire({ icon: 'warning', title: 'ลบกล่องนี้?', text: boxId, showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
   if (!await sbDelete('pack_boxes', 'Box_ID', boxId)) return;
+  await _packRestoreMaterial([boxId]);
   await packboxLoad();
 }
 
@@ -15952,10 +15989,24 @@ async function stockCardRender() {
       const pbRows = await _sb.from('pack_boxes').select('PackDate,LotAlloc').then(r => r.data || []);
       pbRows.forEach(b => (b.LotAlloc || []).forEach(l => { if (!packDateByLot[l.lot] || b.PackDate < packDateByLot[l.lot]) packDateByLot[l.lot] = b.PackDate; }));
     }
+    // ตัดกล่องตอนแพ็ค (pack_box_use) — รวมเป็น 1 แถวต่อวันที่แพ็ค (14 กล่อง CT = 1 แถว ตัด 14) ตารางยังไม่มี = ข้ามเงียบๆ
+    const packUseByDate = {};
+    // เฉพาะแถวที่ไม่ได้ลงเป็นรายการเบิกของ MO (Issue_ID ว่าง) — ที่ลงเป็นรายการเบิกแล้วจะขึ้นเป็นแถว "เบิกเข้าไลน์ผลิต" ในการ์ดอยู่แล้ว ไม่นับซ้ำ
+    (await _sb.from('pack_box_use').select('*').eq('RM_ID', id).gt('Qty', 0).then(r => r.data || [])).filter(u => !u.Issue_ID).forEach(u => {
+      const g = packUseByDate[u.UseDate] = packUseByDate[u.UseDate] || { date: u.UseDate, ts: u.CreatedAt, boxes: [], qty: 0, alloc: {} };
+      g.boxes.push(u.Box_ID); g.qty += Number(u.Qty) || 0;
+      (u.LotAlloc || []).forEach(a => { const k = a.lot_id || a.lot; g.alloc[k] = g.alloc[k] ? { ...g.alloc[k], qty: g.alloc[k].qty + Number(a.qty) } : { ...a, qty: Number(a.qty) }; });
+    });
+    const packUseEntries = Object.values(packUseByDate).map(g => {
+      const alloc = Object.values(g.alloc);
+      return { date: g.date, ts: g.ts, label: `ตัดตอนแพ็คกล่อง · ${g.boxes.length} กล่อง`, ref: g.boxes.length > 1 ? `${g.boxes[0]} … ${g.boxes[g.boxes.length - 1]}` : g.boxes[0],
+        lot: _scAllocLots(alloc), alloc, in: 0, out: g.qty };
+    });
     const missingIds = [...new Set((waste||[]).filter(r => !r.Lot).map(r => _wasteRefIssueId(r.Reason)).filter(rid => rid && !(iss||[]).some(i => i.Issue_ID === rid)))];
     const auditLotById = await _wasteLotFromDeletedIssue(missingIds);
     entries = [
       ...adj.map(_adjEntry),
+      ...packUseEntries,
       // ที่มาของการรับ (ผู้ใช้ขอ 2026-10-16): รับโอนย้ายจากคลังใหญ่ (SourceType) แสดงพร้อมเลขที่ใบโอน · รับปกติแสดงซัพพลายเออร์
       ...(recv||[]).map(r => ({ date: r.ReceiveDate, ts: r.CreatedAt,
         label: r.SourceType ? `รับโอนย้ายจากคลังใหญ่${r.TransferNo ? ` (ใบโอน ${r.TransferNo})` : ''}` : `รับเข้าปกติ${r.Supplier ? ` · ${r.Supplier}` : ''}`,
