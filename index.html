@@ -3380,7 +3380,7 @@ td.empty-cell { white-space: normal !important; }
       </div>
       <div class="modal-footer modal-footer-light">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-        <button type="button" class="btn btn-brand" onclick="prodRecordModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+        <button type="button" class="btn btn-brand" onclick="prodRecordModalSaveOnce(this)"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
       </div>
     </div>
   </div>
@@ -13554,12 +13554,14 @@ function _rmUseRowHTML(prefix, r, rm) {
   // QtyPerUnit ต่อแถว (จาก QtyBase/ForQty ที่ snapshot ไว้ตอนเบิกจริง) + ScrapPct — เก็บไว้เป็น data attribute
   // ให้ _rmUsePackagingRecalc ใช้คำนวณ "เบิกตั้งต้น" ของแพ็คเกจจิ้งใหม่ตอน "ได้ทั้งหมด" เปลี่ยน (ผู้ใช้ขอ
   // 2026-10-08) ไม่มีค่าถ้าแถวนี้ไม่มี ForQty/QtyBase (เช่น มาจาก "เบิกเบ็ดเตล็ด"/"เบิกเพิ่ม" ที่ไม่มีสูตรอ้างอิง)
-  const perUnit = (r.QtyBase != null && r.ForQty) ? parseFloat(r.QtyBase) / parseFloat(r.ForQty) : '';
+  // แถวกล่องที่ลงจากการแพ็ค (Issue_ID ..-PK-..) ยอดมาจากจำนวนกล่อง CT ที่แพ็คจริง — ไม่คำนวณตาม "ได้ทั้งหมด" และแก้ที่นี่ไม่ได้ (แก้ที่หน้าแพ็คกล่อง)
+  const isPk = /-PK-/.test(r.Issue_ID || '');
+  const perUnit = (!isPk && r.QtyBase != null && r.ForQty) ? parseFloat(r.QtyBase) / parseFloat(r.ForQty) : '';
   return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${orig}" data-saved="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}" data-perunit="${perUnit}" data-scrap="${r.ScrapPct ?? 0}">
     <td><code>${esc(r.RM_ID)}</code></td><td>${esc(rm?.RM_Name || r.RM_ID)}</td>
     <td class="text-end text-muted">${_rmFmtQty(orig)}</td>
     <td><div class="d-flex gap-1 align-items-center">
-      <input type="number" min="0" step="any" class="form-control form-control-sm ${prefix}-rm-qty${CAT_RAW_ALL.includes(rm?.Category) ? ' bg-warning-subtle' : ''}" value="${r.QtyIssued}" oninput="_rmUseRecalc('${prefix}')">
+      <input type="number" min="0" step="any" class="form-control form-control-sm ${prefix}-rm-qty${CAT_RAW_ALL.includes(rm?.Category) ? ' bg-warning-subtle' : ''}" value="${r.QtyIssued}" oninput="_rmUseRecalc('${prefix}')"${isPk ? ' readonly title="ยอดจากการแพ็คกล่อง — แก้ที่หน้าบันทึกแพ็คกล่อง"' : ''}>
       ${_rmUseLotBtn(prefix, r.Issue_ID)}
     </div></td>
     <td class="text-end small ${prefix}-rm-waste"></td>
@@ -13776,6 +13778,12 @@ async function _rmUseSubmitCorrections(corrections, reason) {
   }));
   _stockRmCache = []; _rmLotCache = [];
   return results.filter(Boolean);
+}
+// กันกดบันทึกซ้ำ (บันทึกผลิตซ้ำ = ยอดผลิตซ้ำ) — ล็อกปุ่มระหว่างบันทึก; ฝั่ง DB มีตัวกันสถานะ MO อีกชั้น (migration_2026-11-14_prod_record_guard.sql)
+async function prodRecordModalSaveOnce(btn) {
+  if (btn.disabled) return;
+  btn.disabled = true;
+  try { await prodRecordModalSave(); } finally { btn.disabled = false; }
 }
 async function prodRecordModalSave() {
   _modalClearErrors(['pr-qty-gross', 'pr-qty', 'pr-lot']);
