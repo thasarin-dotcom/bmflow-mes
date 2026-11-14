@@ -2390,7 +2390,7 @@ td.empty-cell { white-space: normal !important; }
           </div>
           <div class="col-6">
             <label class="form-label">ประเภท</label>
-            <select id="rmm-cat" class="form-select" onchange="rmMasterTogglePrep();_rmmIdSuggest();_rmmAcctSuggest()">
+            <select id="rmm-cat" class="form-select" onchange="rmMasterTogglePrep();_rmmIdSuggest();_rmmAcctSuggest();_rmmCutPackToggle()">
               <option value="วัตถุดิบ">วัตถุดิบสด</option><!-- ตัวเลือกเติมโดย _fillCategorySelects() -->
             </select>
           </div>
@@ -2448,6 +2448,13 @@ td.empty-cell { white-space: normal !important; }
           <div class="col-12">
             <label class="form-label">หมายเหตุ</label>
             <textarea id="rmm-note" class="form-control" rows="2"></textarea>
+          </div>
+          <div class="col-12 d-none" id="rmm-cutpack-wrap">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rmm-cutpack">
+              <label class="form-check-label" for="rmm-cutpack">ตัดตามวันแพ็คกล่อง</label>
+            </div>
+            <div class="form-text" style="font-size:.72rem">ติ๊กสำหรับกล่องนาฬิกา / กล่องใส่ลูกประคบ — การ์ดสต็อกจะลงวันที่แพ็คกล่องแทนวันที่เบิกเข้าไลน์ (ยอดยังถูกตัดตอนเบิกเหมือนเดิม)</div>
           </div>
           <div class="col-12">
             <label class="form-label">รหัสบัญชี (ใช้บนใบที่ส่งบัญชี)</label>
@@ -5767,6 +5774,15 @@ function _rmAcctPayload() {
   const v = document.getElementById('rmm-acct').value.trim() || null;
   return _rmMasterCache.some(r => 'AcctCode' in r) || v ? { AcctCode: v } : {};
 }
+// "ตัดตามวันแพ็คกล่อง" — ส่งเฉพาะเมื่อมีคอลัมน์แล้ว (ยังไม่รัน SQL = ไม่ส่ง กันบันทึกทั้งแถวพัง) และเป็นหมวดแพ็คเกจจิ้ง
+function _rmCutPackPayload() {
+  if (!_rmMasterCache.some(r => 'CutAtPack' in r)) return {};
+  return { CutAtPack: document.getElementById('rmm-cat').value === CAT_PKG && document.getElementById('rmm-cutpack').checked };
+}
+function _rmmCutPackToggle() {
+  const show = _rmMasterCache.some(r => 'CutAtPack' in r) && document.getElementById('rmm-cat').value === CAT_PKG;
+  document.getElementById('rmm-cutpack-wrap').classList.toggle('d-none', !show);
+}
 async function rmMasterLoad() {
   _rmMasterCache = await sbRun(_sb.from('rm_master').select('*').order('RM_Name'), 'โหลดวัตถุดิบ') || [];
   if (!_vendorCache.length) _vendorCache = await sbRun(_sb.from('vendors').select('*'), 'โหลดผู้ส่งมอบ') || [];
@@ -5833,6 +5849,8 @@ function rmMasterOpenForm(id) {
   document.getElementById('rmm-note').value = row?.Note || '';
   document.getElementById('rmm-acct').value = row?.AcctCode || '';
   document.getElementById('rmm-acct').dataset.auto = '';
+  document.getElementById('rmm-cutpack').checked = !!row?.CutAtPack;
+  _rmmCutPackToggle();
   idInput.dataset.auto = id ? '' : idInput.value; idInput.dataset.rand = id ? '' : idInput.value;   // รายการใหม่: ค่าเริ่มต้น = รหัสสุ่มเดิม แล้ว _rmmIdSuggest แทนที่ด้วยรหัสแนะนำตามหมวด
   _rmmIdSuggest();
   _rmmAcctSuggest();   // รายการใหม่: เติมรหัสบัญชีแนะนำตามหมวดให้เลย (แก้ได้) · แก้รายการเดิม: แสดงคำแนะนำเฉยๆ ไม่เติมทับ
@@ -5949,6 +5967,7 @@ async function rmMasterModalSave() {
     Unit: document.getElementById('rmm-unit').value || 'กรัม', MinStock: parseFloat(document.getElementById('rmm-min').value) || 0,
     Supplier: document.getElementById('rmm-supplier').value.trim() || null, Note: document.getElementById('rmm-note').value.trim() || null,
     ..._rmAcctPayload(),
+    ..._rmCutPackPayload(),
     ...prep,
   };
   const ok = await sbRun(_sb.from('rm_master').upsert(payload), 'บันทึกไม่สำเร็จ');
@@ -15104,7 +15123,7 @@ async function miscOutEdit(key) {
   const r = await Dlg.form({
     title: `<i class="fa-solid fa-pen me-2"></i>แก้ไข${tf ? 'ใบโอนย้าย' : 'ใบเบิกเบ็ดเตล็ด'} ${esc(s.docNo || '')}`, width: 480, confirmText: 'บันทึก',
     html: `<div class="small text-muted mb-2">แก้ได้เฉพาะข้อมูลหัวใบ — <b>ไม่เปลี่ยนสต็อก</b> · ถ้ารายการ/จำนวน/ล็อตผิด ให้ลบทั้งใบ (ระบบคืนสต็อกให้) แล้วสร้างใหม่ · ${s.lines.length} รายการในใบนี้</div>
-      <label class="form-label small mb-1">วันที่เบิก</label><input type="date" id="moe-date" class="form-control form-control-sm mb-1" value="${esc(String(s.date).slice(0, 10))}">
+      <label class="form-label small mb-1">วันที่เบิก</label><input type="date" id="moe-date" class="form-control form-control-sm mb-1" max="${todayStr()}" value="${esc(String(s.date).slice(0, 10))}">
       <div id="moe-renum-wrap" class="border rounded p-2 mb-2 small d-none" style="background:#fff8e1">
         <label class="d-flex align-items-start gap-2 mb-0"><input type="checkbox" class="form-check-input mt-1" id="moe-renum"><span>เปลี่ยนเลขที่ใบ <b>${esc(s.docNo || '')}</b> ให้ตรงเดือนของวันที่ใหม่ (<b id="moe-newprefix"></b>…)
           <span class="text-muted d-block">เลขที่ใบออกตามเดือนที่ "สร้าง/พิมพ์ใบ" ไม่ใช่เดือนของวันที่เบิก — การแก้วันที่จึงไม่เปลี่ยนเลข · ถ้าเลขเดิมถูกพิมพ์ส่งบัญชีไปแล้ว ไม่ควรเปลี่ยน</span></span></label></div>
@@ -15120,6 +15139,7 @@ async function miscOutEdit(key) {
     async preConfirm() {
       const g = id => document.getElementById(id), date = g('moe-date').value;
       if (!date) { Dlg.invalid('เลือกวันที่เบิก'); return false; }
+      if (date > todayStr()) { Dlg.invalid('วันที่เบิกเป็นวันในอนาคต — ตรวจปี/เดือนอีกครั้ง'); return false; }
       const patch = { WithdrawDate: date };
       let newDoc = null;
       if (g('moe-renum')?.checked) {   // เลขใหม่ = ลำดับถัดไปของเดือนใหม่ (นับจากทั้ง 2 ตาราง เหมือน _nextGenwdDocNo)
@@ -15843,7 +15863,7 @@ let _scLastRows = []; let _scLastLabel = '';
 let _scLastEntries = []; let _scLastUnit = ''; let _scLastFmt = _bomFmtQty;   // ไว้ให้ _scPrintHtml ใช้ตอนพิมพ์เลือกช่วงเดือน
 // ยอดดิบ "ทุกล็อตรวมกัน" ที่โหลดจาก DB แล้ว ยังไม่ผ่านตัวกรอง Lot (ผู้ใช้ขอ 2026-10-06 "เลือกดูแบบแยกล็อตได้")
 // เก็บแยกไว้ให้สลับตัวกรอง Lot ทำผ่าน _scRenderTable() ได้ทันทีโดยไม่ต้องยิง query ใหม่ทุกครั้ง
-let _scRawEntries = []; let _scRawUnit = ''; let _scRawFmt = _bomFmtQty; let _scRawLabel = '';
+let _scRawPending = []; let _scRawEntries = []; let _scRawUnit = ''; let _scRawFmt = _bomFmtQty; let _scRawLabel = '';
 let _scRawType = ''; let _scRawId = '';   // เก็บไว้คำนวณ "มูลค่าคงเหลือ" ตอนวาด KPI (ดู _scValueForBalance)
 // ล็อตที่ตัด/รับของแต่ละประเภทธุรกรรม — รวมเป็น string เดียวพอ (ProFlow-style ตาราง 1 แถว = 1 Lot pill,
 // แต่ issue/prep ของ BM Flow ตัดได้หลายล็อตต่อแถวจาก FEFO จึงรวมเป็น "lot1, lot2" ถ้ามีมากกว่า 1)
@@ -15887,6 +15907,7 @@ async function stockCardRender() {
     return;
   }
   let entries = [], unit = '';
+  const scPending = [];
   if (type === 'fg') {
     unit = _fgMasterCache.find(f => f.FG_ID === id)?.Unit || '';
     const [adj, recv, wd, waste] = await Promise.all([
@@ -15922,6 +15943,15 @@ async function stockCardRender() {
     // รายการเบิกที่อ้างอิงไว้ใน Reason มาโชว์แทนเหมือนกัน (ผู้ใช้ขอ 2026-10-05 "ในสต็อกของเสียไม่ขึ้น Lot ทั้งๆ
     // ที่ในมูฟเม้นมี Lot" — หน้านี้มี list `iss` ของ RM_ID นี้โดยเฉพาะอยู่แล้ว กรองง่ายกว่า stockMoveLoad ด้วยซ้ำ)
     // ถ้ารายการเบิกต้นทางถูกลบไปแล้วจริงๆ ลองหาใน audit_log แทนอีกที (เฉพาะแอดมินเห็น — ดู _wasteLotFromDeletedIssue)
+    // วัสดุที่ติ๊ก "ตัดตามวันแพ็คกล่อง" (กล่องนาฬิกา/กล่องใส่ลูกประคบ) — ลงวันที่ในการ์ดเป็นวันแพ็คกล่องแรกของ FG Lot ที่เบิกไปทำ
+    // แทนวันเบิกเข้าไลน์ (ใช้จริงตอนแพ็คซึ่งอาจช้ากว่า 1 วัน) · เปลี่ยนเฉพาะวันที่แสดง ยอดสต็อกยังตัดตอนเบิกเหมือนเดิม
+    // ถ้ายังไม่มีกล่องของล็อตนั้น (ยังไม่แพ็ค) หรือวันแพ็คมาก่อนวันเบิก ใช้วันเบิกตามเดิม
+    const packDateByLot = {};
+    const cutPack = !!_rmMasterCache.find(r => r.RM_ID === id)?.CutAtPack;
+    if (cutPack) {
+      const pbRows = await _sb.from('pack_boxes').select('PackDate,LotAlloc').then(r => r.data || []);
+      pbRows.forEach(b => (b.LotAlloc || []).forEach(l => { if (!packDateByLot[l.lot] || b.PackDate < packDateByLot[l.lot]) packDateByLot[l.lot] = b.PackDate; }));
+    }
     const missingIds = [...new Set((waste||[]).filter(r => !r.Lot).map(r => _wasteRefIssueId(r.Reason)).filter(rid => rid && !(iss||[]).some(i => i.Issue_ID === rid)))];
     const auditLotById = await _wasteLotFromDeletedIssue(missingIds);
     entries = [
@@ -15938,7 +15968,15 @@ async function stockCardRender() {
         ref: r.DocNo || r.Withdraw_ID, lot: r.Lot || '-', in: 0, out: r.Qty })),
       // ต่อท้าย "เบิกเข้าไลน์ผลิต" ด้วย Lot ของ MO ที่เบิกไป (= FG Lot ที่จะออกมาในที่สุด ดู MO.Lot) ให้ตามรอยได้
       // ว่าวัตถุดิบล็อตนี้ถูกเบิกไปทำสินค้าล็อตไหน (ผู้ใช้ขอ 2026-10-05 "เบิกเป็น FG Lot ไหน ใส่ด้วย")
-      ...(iss||[]).map(r => ({ date: r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (_planCache.find(p => p.MO_ID === r.MO_ID)?.Lot ? ` → FG Lot ${_planCache.find(p => p.MO_ID === r.MO_ID).Lot}` : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), alloc: r.LotAlloc, in: 0, out: r.QtyIssued })),
+      ...(iss||[]).flatMap(r => {
+        const moLot = _planCache.find(p => p.MO_ID === r.MO_ID)?.Lot;
+        const pd = moLot ? packDateByLot[moLot] : null;
+        const byPack = pd && pd >= r.IssueDate;
+        const e = { date: byPack ? pd : r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (moLot ? ` → FG Lot ${moLot}` : '') + (byPack ? ' · ตัดวันแพ็คกล่อง' : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), alloc: r.LotAlloc, in: 0, out: r.QtyIssued };
+        // วัสดุ "ตัดตามวันแพ็คกล่อง" ที่ FG Lot นั้นยังไม่มีการแพ็คกล่อง = ยังไม่ได้ใช้จริง → ไม่ลงยอดในการ์ด แสดงเป็นแถวสีเทา "รอแพ็คกล่อง" ท้ายตาราง
+        if (cutPack && moLot && !pd) { scPending.push({ ...e, label: e.label + ' · รอแพ็คกล่อง (ยังไม่นับในยอด)' }); return []; }
+        return [e];
+      }),
       // ของเสียที่เกิดจากแก้ "เบิกตั้งต้น" ลดจำนวน (StockAdjusted=false — ดู migration_2026-10-05_
       // issue_correct_to_waste.sql) ตัดออกจากการ์ดสต็อกไปเลย (ผู้ใช้ขอ 2026-10-07 รอบสอง "จะงง" — รอบแรกลอง
       // โชว์เป็นแถว "หมายเหตุ" ไม่กระทบยอดแล้ว แต่ยังรกตาอยู่ดี) ยอดนี้ไม่ใช่การตัดสต็อกจริง (ของถูกตัดเต็ม
@@ -15963,6 +16001,7 @@ async function stockCardRender() {
     || ((a.ts && b.ts) ? new Date(a.ts) - new Date(b.ts) : 0));
   // pkg (แพ็คเกจจิ้ง) นับเป็นชิ้น ไม่ใช่หมวดวัตถุดิบ (ชั่งน้ำหนัก) — ใช้ _bomFmtQty แบบผันแปรเหมือน FG
   const scFmt = (type === 'fg' || type === 'pkg') ? _bomFmtQty : _rmFmtQty;
+  _scRawPending = scPending;
   _scRawEntries = entries; _scRawUnit = unit; _scRawFmt = scFmt; _scRawType = type; _scRawId = id;
   // เติมตัวเลือก Lot จากล็อตที่พบจริงทั้งหมดของรายการนี้ (ผู้ใช้ขอ 2026-10-06 "เลือกดูแบบแยกล็อตได้") — แยก
   // สตริงรวม "lot1, lot2" ของแถวที่ตัดหลายล็อตออกเป็นรายตัวด้วย คงค่าที่เคยเลือกไว้ถ้ายังมีอยู่จริงในล็อตชุดใหม่
@@ -16041,7 +16080,13 @@ function _scRenderTable() {
       <td>${esc(unit)}</td>
       <td><small class="text-muted">${esc(e.label)}</small></td></tr>`;
   }).join('');
-  tbody.innerHTML = rowsHtml || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีการเคลื่อนไหว</td></tr>';
+  // แถวสีเทา "รอแพ็คกล่อง" — ไม่นับในยอดคงเหลือสะสม/KPI/ไฟล์ส่งออก/ใบพิมพ์ (ยังไม่ใช่การใช้จริง)
+  const pendHtml = (_scRawPending || []).map(e => {
+    const q = lot ? _scQtyForLot(e, lot) : e.out;
+    return q > 1e-9 ? `<tr class="text-muted" style="opacity:.6"><td>${fmtDate(e.date)}</td><td>${badge('รอแพ็ค', 'secondary')}</td><td>${esc(e.ref)}</td>
+      <td><span class="badge bg-light text-dark border">${esc(e.lot)}</span></td><td></td><td class="text-end">(${scFmt(q)})</td><td class="text-end">—</td><td>${esc(unit)}</td><td><small>${esc(e.label)}</small></td></tr>` : '';
+  }).join('');
+  tbody.innerHTML = (rowsHtml + pendHtml) || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีการเคลื่อนไหว</td></tr>';
   _scLastEntries = entries; _scLastUnit = unit; _scLastFmt = scFmt;
   // KPI สรุปของรายการ/ล็อตที่กำลังดูอยู่ (ผู้ใช้ขอ 2026-10-09) — คิดจากเฉพาะ entries ที่ผ่านตัวกรอง Lot ปัจจุบัน
   const totalIn = entries.reduce((s, e) => s + (e.in || 0), 0);
