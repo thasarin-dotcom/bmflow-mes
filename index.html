@@ -265,6 +265,9 @@ img.emp-avatar { cursor: zoom-in; }
 .mocal-chip.st-issued { background: #cffafe; color: #0e7490; border-color: #67e8f9; }
 .mocal-chip.st-produced { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
 .mocal-chip.st-closed { background: #dcfce7; color: #15803d; border-color: #86efac; }
+.mocal-chip.has-b { display: flex; align-items: baseline; gap: .3rem; }
+.mocal-chip .mc-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.mocal-chip .mc-b { flex-shrink: 0; font-weight: 700; color: #1e3a8a; }
 .mocal-chip.st-incoming { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
 .mocal-chip-more { font-size: .66rem; color: var(--primary-blue); font-weight: 600; }
 /* ── การ์ดประมาณการวัตถุดิบ (ปฏิทินผลิต → วางแผนการผลิต) ── */
@@ -10928,10 +10931,16 @@ function _moCalDatesOf(mo) {
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) out.push(_moCalDateStr(d));
   return out;
 }
+// จำนวนแบทของ MO = จำนวนที่วางแผน ÷ ขนาดแบทของสินค้า (ไม่ได้ตั้งขนาดแบท = ไม่แสดง) เช่น "7 แบท" / "1.5 แบท"
+function _moBatchText(mo, fg) {
+  const bs = parseFloat(fg?.BatchSize), q = parseFloat(mo.PlanQty);
+  return bs > 0 && q > 0 ? `${_bomFmtQty(Math.round(q / bs * 100) / 100)} แบท` : '';
+}
 function _moCalChipHTML(mo, fgMap) {
   const fg = fgMap[mo.FG_ID];
   const cls = MO_CAL_CHIP_CLS[mo.Status] || 'st-plan';
-  return `<div class="mocal-chip ${cls}" title="${esc(mo.MO_ID)} · ${esc(fg?.FG_Name || mo.FG_ID)} · ${_bomFmtQty(mo.PlanQty)} ${esc(fg?.Unit || '')}${mo.Lot ? ' · ' + esc(mo.Lot) : ''} · ${esc(mo.Status)}">${esc(fg?.FG_Name || mo.FG_ID)}${mo.Lot ? ` · ${esc(mo.Lot)}` : ''}</div>`;
+  const bt = _moBatchText(mo, fg);
+  return `<div class="mocal-chip ${cls}${bt ? ' has-b' : ''}" title="${esc(mo.MO_ID)} · ${esc(fg?.FG_Name || mo.FG_ID)} · ${bt ? esc(bt) + ' · ' : ''}${_bomFmtQty(mo.PlanQty)} ${esc(fg?.Unit || '')}${mo.Lot ? ' · ' + esc(mo.Lot) : ''} · ${esc(mo.Status)}"><span class="mc-n">${esc(fg?.FG_Name || mo.FG_ID)}${mo.Lot ? ` · ${esc(mo.Lot)}` : ''}</span>${bt ? `<b class="mc-b">(${esc(bt)})</b>` : ''}</div>`;
 }
 // ของรอเข้าที่ระบุวัน (rm_incoming_plan) ของวันนั้น — ชิปสีเหลือง 1 อันต่อวัน (≤2 รายการโชว์ชื่อ+จำนวน เกินนั้นโชว์จำนวนรายการ) · รายละเอียดทั้งหมดอยู่ใน title และป๊อบอัพวัน
 function _moCalIncEntries(dateStr) { return (_planSim.incDated || []).filter(e => e.ExpectedDate === dateStr); }
@@ -11441,7 +11450,7 @@ function moCalOpenDayModal(dateStr) {
   document.getElementById('moCalDayTitle').textContent = `แผนผลิตวันที่ ${fmtDateLong(dateStr)}`;
   document.getElementById('moCalDayBody').innerHTML = items.map(mo => `<tr>
       <td>${esc(mo.MO_ID)}</td><td>${esc(fgMap[mo.FG_ID]?.FG_Name || mo.FG_ID)}</td>
-      <td class="text-end">${_bomFmtQty(mo.PlanQty)} ${esc(fgMap[mo.FG_ID]?.Unit || '')}</td>
+      <td class="text-end">${_bomFmtQty(mo.PlanQty)} ${esc(fgMap[mo.FG_ID]?.Unit || '')}${_moBatchText(mo, fgMap[mo.FG_ID]) ? ` <b class="text-primary">(${_moBatchText(mo, fgMap[mo.FG_ID])})</b>` : ''}</td>
       <td>${esc(mo.Lot || '-')}</td><td>${badge(mo.Status, MO_STATUS_BADGE[mo.Status])}</td>
       <td class="text-nowrap">${_planActionsHtml(mo)}</td>
     </tr>`).join('') ;
