@@ -265,7 +265,38 @@ img.emp-avatar { cursor: zoom-in; }
 .mocal-chip.st-issued { background: #cffafe; color: #0e7490; border-color: #67e8f9; }
 .mocal-chip.st-produced { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
 .mocal-chip.st-closed { background: #dcfce7; color: #15803d; border-color: #86efac; }
+.mocal-chip.st-incoming { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
 .mocal-chip-more { font-size: .66rem; color: var(--primary-blue); font-weight: 600; }
+/* ── การ์ดประมาณการวัตถุดิบ (ปฏิทินผลิต → วางแผนการผลิต) ── */
+.psim-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: .6rem; margin-bottom: .6rem; }
+.psim-sub { font-size: .78rem; color: #64748b; }
+.psim-actions, .psim-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+.psim-toolbar { margin-bottom: .7rem; padding-bottom: .6rem; border-bottom: 1px solid #e2e8f0; }
+.psim-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .6rem; margin-bottom: .7rem; }
+.psim-kpi { border: 1px solid #e2e8f0; border-radius: 10px; padding: .55rem .85rem; background: #fff; }
+.psim-kpi .k-l { font-size: .72rem; font-weight: 600; color: #64748b; }
+.psim-kpi .k-n { font-size: 1.5rem; font-weight: 700; line-height: 1.25; color: #1e3a8a; }
+.psim-kpi .k-n small { font-size: .75rem; font-weight: 500; color: #64748b; }
+.psim-kpi .k-c { font-size: .72rem; color: #64748b; }
+.psim-kpi.ok .k-n { color: #15803d; } .psim-kpi.warn .k-n { color: #b45309; } .psim-kpi.bad .k-n { color: #b91c1c; }
+.psim-banner { border-radius: 10px; padding: .55rem .85rem; font-size: .85rem; margin-bottom: .6rem; }
+.psim-banner.bad { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+.psim-banner.ok { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+.psim-mos { margin-bottom: .6rem; font-size: .85rem; } .psim-mos summary { cursor: pointer; color: #475569; font-weight: 600; }
+.psim-mo { display: inline-block; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1px 7px; margin: 0 .3rem .3rem 0; font-size: .74rem; color: #334155; }
+.psim-mo.new { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+.psim-filter { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .5rem; }
+.psim-chip { border: 1px solid #cbd5e1; background: #fff; border-radius: 999px; padding: 2px 12px; font-size: .78rem; color: #475569; cursor: pointer; }
+.psim-chip.active { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
+.psim-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
+.psim-table th { font-size: .72rem; font-weight: 600; color: #64748b; background: #f8fafc; white-space: nowrap; padding: .5rem .65rem; }
+.psim-table td { padding: .55rem .65rem; vertical-align: top; border-color: #eef2f6; }
+.psim-table .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.psim-r.st3 td { background: #fef2f2; } .psim-r.st2 td { background: #fffbeb; } .psim-r.st1 td { background: #f0f9ff; }
+.psim-r.st3 td:first-child { box-shadow: inset 4px 0 0 #dc2626; } .psim-r.st2 td:first-child { box-shadow: inset 4px 0 0 #f59e0b; }
+.psim-r.st1 td:first-child { box-shadow: inset 4px 0 0 #38bdf8; } .psim-r.st0 td:first-child { box-shadow: inset 4px 0 0 #22c55e; }
+.psim-cov { margin-top: .3rem; padding-left: .6rem; border-left: 2px solid #cbd5e1; font-size: .72rem; color: #64748b; line-height: 1.5; }
+.psim-notes { margin-top: .6rem; font-size: .8rem; } .psim-notes summary { cursor: pointer; color: #64748b; }
 .bom-mat-dropdown { max-height: 220px; overflow-y: auto; display: none; width: calc(100% - 1.5rem); z-index: 1060; }
 .kpi-card.kpi-link { cursor: pointer; transition: transform .12s, box-shadow .12s; height: 100%; }
 .kpi-card.kpi-link:hover, .kpi-card.kpi-link:focus-visible { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.12); outline: none; }
@@ -1378,26 +1409,32 @@ td.empty-cell { white-space: normal !important; }
         <div class="mocal-grid" id="moCalBody"></div>
       </div>
       <!-- วางแผนการผลิต: เลือกวัน + สินค้า + จำนวนแบท → ตารางวัตถุดิบตามสูตร เทียบสต็อก/ของรอเข้า (ยังไม่สร้าง MO จนกว่าจะกดสร้าง) -->
-      <div class="glass-card mt-3" id="planSimCard">
-        <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
-          <h6 class="mb-0"><i class="fa-solid fa-clipboard-list me-2"></i>ประมาณการวัตถุดิบที่ต้องใช้</h6>
-          <span class="text-muted small">ตามแผนผลิตที่วางไว้ (กดวันในปฏิทิน → "วางแผนวันนี้") เทียบกับสต็อกและของที่รอเข้า — ยังไม่สร้าง MO จนกว่าจะกดสร้าง</span>
+      <div class="glass-card mt-3 psim" id="planSimCard">
+        <div class="psim-head">
+          <div>
+            <h6 class="mb-0"><i class="fa-solid fa-clipboard-list me-2"></i>ประมาณการวัตถุดิบที่ต้องใช้</h6>
+            <div class="psim-sub">เทียบแผนผลิตกับสต็อกและของรอเข้า · วางแผนวันใหม่: กดวันในปฏิทิน → "วางแผนวันนี้"</div>
+          </div>
+          <div class="psim-actions">
+            <button class="btn btn-sm btn-primary" onclick="planSimOpen()"><i class="fa-solid fa-pen-to-square me-1"></i>วางแผน / แก้แผน</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="planIncOpen()" title="ระบุวัตถุดิบที่สั่งไว้ว่าจะเข้าวันไหน เท่าไหร่ — เอาไปเทียบกับแผนผลิตว่าช็อตไหม"><i class="fa-solid fa-truck-ramp-box me-1"></i>ของรอเข้า <span class="badge text-bg-secondary" id="psim-inc-count">0</span></button>
+            <button class="btn btn-sm btn-success" onclick="planSimCreateMos()"><i class="fa-solid fa-calendar-plus me-1"></i>สร้าง MO ตามแผนนี้</button>
+          </div>
         </div>
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-          <button class="btn btn-sm btn-primary" onclick="planSimOpen()"><i class="fa-solid fa-pen-to-square me-1"></i>วางแผน / แก้แผน</button>
-          <button class="btn btn-sm btn-outline-secondary" onclick="planSimReload()" title="โหลดสต็อก/ของรอเข้าใหม่"><i class="fa-solid fa-rotate me-1"></i>รีเฟรชสต็อก</button>
+        <div class="psim-toolbar">
           <div class="btn-group btn-group-sm" role="group"><button type="button" id="psim-btn-formula" class="btn btn-outline-secondary active" onclick="planSimSetLoss(false)">ตามสูตร</button><button type="button" id="psim-btn-loss" class="btn btn-outline-primary" onclick="planSimSetLoss(true)" title="ยอดสูตร ÷ (1 − %Loss เฉลี่ยของรอบผลิตก่อนหน้า) เฉพาะวัตถุดิบ — แพ็คเกจจิ้งไม่คิด">รวม %Loss เฉลี่ย</button></div>
           <label class="form-check-label small d-flex align-items-center gap-1 mb-0" title="MO สถานะวางแผนที่วันที่ผ่านไปแล้วแต่ยังไม่ได้เบิก (มักเป็น MO ค้างเก่า)"><input type="checkbox" class="form-check-input mt-0" id="psim-overdue" onchange="planSimCalc()">รวม MO ที่เลยกำหนดแล้วยังไม่เบิก</label>
-          <button class="btn btn-sm btn-success ms-auto" onclick="planSimCreateMos()"><i class="fa-solid fa-calendar-plus me-1"></i>สร้าง MO ตามแผนนี้</button>
+          <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="planSimReload()" title="โหลดสต็อก/ของรอเข้าใหม่"><i class="fa-solid fa-rotate me-1"></i>รีเฟรชสต็อก</button>
         </div>
-        <div id="psim-plan-text" class="small mb-1"></div>
-        <div id="psim-output" class="small mb-1"></div>
-        <div id="psim-summary" class="small mb-2"></div>
-        <div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0">
-          <thead><tr><th>วัตถุดิบ</th><th class="text-end">MO ที่วางแผนไว้แล้ว</th><th class="text-end text-primary">แผนที่กำลังเพิ่ม</th><th class="text-end">ต้องใช้รวม</th><th class="text-end">สต็อกมี</th><th class="text-end">รอเข้า (PR)</th><th class="text-end">คงเหลือสุทธิ</th><th>สถานะ</th></tr></thead>
-          <tbody id="psim-body"><tr><td colspan="8" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
+        <div id="psim-kpis" class="psim-kpis"></div>
+        <div id="psim-summary"></div>
+        <details class="psim-mos" id="psim-mos"><summary id="psim-mos-sum">MO ที่วางแผนไว้แล้ว</summary><div id="psim-plan-text" class="small mt-2"></div></details>
+        <div class="psim-filter" id="psim-filter"></div>
+        <div class="psim-wrap"><table class="table table-sm align-middle mb-0 psim-table">
+          <thead><tr><th style="min-width:150px">วัตถุดิบ</th><th class="text-end">ต้องใช้</th><th class="text-end">สต็อกมี</th><th class="text-end" style="min-width:150px">รอเข้า</th><th class="text-end">คงเหลือสุทธิ</th><th style="min-width:260px">สถานะ</th></tr></thead>
+          <tbody id="psim-body"><tr><td colspan="6" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
         </table></div>
-        <div class="text-muted small mt-2" id="psim-note"></div>
+        <details class="psim-notes"><summary>วิธีคิด / หมายเหตุ</summary><div class="small text-muted mt-1" id="psim-note"></div></details>
       </div>
     </div>
   </div>
@@ -1443,6 +1480,43 @@ td.empty-cell { white-space: normal !important; }
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด (เก็บแผนไว้ดูประมาณการ)</button>
           <button type="button" class="btn btn-success" onclick="planSimCreateMos()"><i class="fa-solid fa-calendar-plus me-1"></i>สร้าง MO ตามแผนนี้</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: ของรอเข้า (ระบุวันที่/จำนวน) ═══════════════ -->
+  <div class="modal fade" id="planIncModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header modal-header-brand">
+          <h5 class="modal-title"><i class="fa-solid fa-truck-ramp-box me-2"></i>ของรอเข้า — ระบุวันที่เข้าและจำนวน</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="border rounded p-2 mb-3" style="background:#f8fafc">
+            <div class="small fw-semibold mb-1"><i class="fa-solid fa-file-invoice me-1"></i>ดึงจากใบขอซื้อ (PR) ที่อนุมัติแล้วและยังค้างรับ</div>
+            <div class="d-flex flex-wrap gap-2 align-items-end">
+              <select id="pinc-pr-pick" class="form-select form-select-sm" style="max-width:360px" onchange="planIncPrPreview()"></select>
+              <div><label class="form-label small mb-0">วันที่เข้า (ทุกรายการของใบ)</label><input type="date" id="pinc-pr-date" class="form-control form-control-sm"></div>
+              <button class="btn btn-sm btn-primary" onclick="planIncImportPr()"><i class="fa-solid fa-file-import me-1"></i>ดึงทั้งใบ</button>
+            </div>
+            <div class="small text-muted mt-1" id="pinc-pr-preview"></div>
+          </div>
+          <div class="row g-2 align-items-end mb-3">
+            <div class="col-md-4"><label class="form-label small mb-1">วัตถุดิบ / แพ็คเกจจิ้ง</label><select id="pinc-rm" class="form-select form-select-sm" onchange="planIncRmChanged()"></select></div>
+            <div class="col-6 col-md-2"><label class="form-label small mb-1">วันที่เข้า</label><input type="date" id="pinc-date" class="form-control form-control-sm"></div>
+            <div class="col-6 col-md-2"><label class="form-label small mb-1">จำนวน <span id="pinc-unit" class="text-muted"></span></label><input type="number" min="0" step="any" id="pinc-qty" class="form-control form-control-sm"></div>
+            <div class="col-md-4"><label class="form-label small mb-1">อ้างอิงใบขอซื้อ (ถ้ามี)</label><select id="pinc-pr" class="form-select form-select-sm"><option value="">— ไม่อ้างอิง —</option></select></div>
+            <div class="col-md-5"><label class="form-label small mb-1">ซัพพลายเออร์ / หมายเหตุ</label><input id="pinc-note" class="form-control form-control-sm" placeholder="เช่น อ่างทอง ส่งรอบเช้า"></div>
+            <div class="col-auto"><button class="btn btn-sm btn-success" onclick="planIncAdd()"><i class="fa-solid fa-plus me-1"></i>เพิ่มนัดของเข้า</button></div>
+          </div>
+          <div class="small text-muted mb-2">ข้อมูลนี้ใช้วางแผนเท่านั้น ไม่เพิ่มสต็อกจริง — ตอนของมาถึงให้ไปบันทึกรับเข้าตามปกติ แล้วกด "รับแล้ว" ที่นัดนี้ · ถ้าอ้างใบขอซื้อ ระบบจะหักยอดค้างรับของใบนั้นออกไม่ให้นับซ้ำ</div>
+          <div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0">
+            <thead><tr><th>วันที่เข้า</th><th>รายการ</th><th class="text-end">จำนวน</th><th>PR</th><th>หมายเหตุ</th><th></th></tr></thead>
+            <tbody id="pinc-body"></tbody>
+          </table></div>
+        </div>
+        <div class="modal-footer modal-footer-light"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button></div>
       </div>
     </div>
   </div>
@@ -9643,12 +9717,18 @@ async function prReopen(no) {
 }
 
 // ── พิมพ์: A4 แบ่งครึ่งบน/ล่าง ต้นฉบับ/สำเนา ใช้โครงเดียวกับใบขอเบิก (.reqo-*) เพิ่มคอลัมน์ซัพพลายเออร์/ราคา ──
+// มูลค่าของแถว = จำนวนขอซื้อ × ราคา/หน่วย (UnitCost ว่าง = ไม่มีราคา ไม่นับรวม)
+const _prLineValue = l => (parseFloat(l.RequestQty) || 0) * (parseFloat(l.UnitCost) || 0);
 function _prHalfHTML(p, copyLabel) {
   const n = p.lines.length, dense = n > 8, xd = n > 14, sups = _prSuppliers(p);
+  const money = v => v.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const total = p.lines.reduce((s, l) => s + (l.UnitCost != null ? _prLineValue(l) : 0), 0), noPrice = p.lines.filter(l => l.UnitCost == null).length;
   const trs = p.lines.map((l, i) => `<tr><td>${i + 1}</td><td class="reqo-item"><b>${esc(l.RM_ID)}</b> ${esc(l.RM_Name || '')}</td>
     <td>${_rmFmtQty(l.RequestQty)}</td><td>${esc(l.Unit || '')}</td><td class="reqo-item">${esc(l.Supplier || '')}</td>
-    <td>${l.UnitCost != null ? (parseFloat(l.UnitCost) || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 }) : ''}</td><td></td></tr>`).join('')
-    + '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'.repeat(n > 8 ? 1 : 2);
+    <td>${l.UnitCost != null ? (parseFloat(l.UnitCost) || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 }) : ''}</td>
+    <td>${l.UnitCost != null ? money(_prLineValue(l)) : ''}</td><td></td></tr>`).join('')
+    + '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'.repeat(n > 8 ? 1 : 2)
+    + `<tr><td colspan="6" style="text-align:right"><b>รวมมูลค่าทั้งสิ้น (บาท)</b>${noPrice ? ` <span style="font-weight:400;color:#64748b">(ไม่รวม ${noPrice} รายการที่ไม่มีราคา)</span>` : ''}</td><td><b>${money(total)}</b></td><td></td></tr>`;
   const date = d => d ? new Date(d).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '.......... / .......... / ..........';
   const sign = (role, name, dt) => `<div><div class="role">${role}</div><div class="sigspace"></div><div class="sigline">${name ? '(' + esc(name) + ')' : '(.....................................)'}</div><div class="dateline">วันที่ ${dt}</div></div>`;
   return `<div class="reqo-half${dense ? ' dense' : ''}">
@@ -9658,7 +9738,7 @@ function _prHalfHTML(p, copyLabel) {
     </div>
     <div class="reqo-meta"><div><span class="lbl">วันที่</span>${fmtDateLong(p.PRDate)}</div><div><span class="lbl">ผู้ขอซื้อ</span>${esc(p.RequestedBy || '-')}</div>${sups.length === 1 ? `<div><span class="lbl">Supplier</span>${esc(sups[0])}</div>` : ''}</div>
     <table class="reqo-table${dense ? ' dense' : ''}${xd ? ' xdense' : ''}">
-      <thead><tr><th style="width:5%">ลำดับ</th><th>รายการ</th><th style="width:11%">จำนวน</th><th style="width:8%">หน่วย</th><th style="width:20%">Supplier</th><th style="width:10%">ราคา/หน่วย</th><th style="width:12%">หมายเหตุ</th></tr></thead>
+      <thead><tr><th style="width:5%">ลำดับ</th><th>รายการ</th><th style="width:11%">จำนวน</th><th style="width:8%">หน่วย</th><th style="width:16%">Supplier</th><th style="width:9%">ราคา/หน่วย</th><th style="width:12%">มูลค่า (บาท)</th><th style="width:10%">หมายเหตุ</th></tr></thead>
       <tbody>${trs}</tbody>
     </table>
     <div class="reqo-note-box"><b>หมายเหตุ/คำแนะนำในการซื้อ:</b> ${esc(p.Note || '-')}</div>
@@ -10853,10 +10933,19 @@ function _moCalChipHTML(mo, fgMap) {
   const cls = MO_CAL_CHIP_CLS[mo.Status] || 'st-plan';
   return `<div class="mocal-chip ${cls}" title="${esc(mo.MO_ID)} · ${esc(fg?.FG_Name || mo.FG_ID)} · ${_bomFmtQty(mo.PlanQty)} ${esc(fg?.Unit || '')}${mo.Lot ? ' · ' + esc(mo.Lot) : ''} · ${esc(mo.Status)}">${esc(fg?.FG_Name || mo.FG_ID)}${mo.Lot ? ` · ${esc(mo.Lot)}` : ''}</div>`;
 }
-function _moCalCellBodyHTML(items, fgMap) {
+// ของรอเข้าที่ระบุวัน (rm_incoming_plan) ของวันนั้น — ชิปสีเหลือง 1 อันต่อวัน (≤2 รายการโชว์ชื่อ+จำนวน เกินนั้นโชว์จำนวนรายการ) · รายละเอียดทั้งหมดอยู่ใน title และป๊อบอัพวัน
+function _moCalIncEntries(dateStr) { return (_planSim.incDated || []).filter(e => e.ExpectedDate === dateStr); }
+function _moCalIncChipHTML(dateStr) {
+  const es = _moCalIncEntries(dateStr);
+  if (!es.length) return '';
+  const label = e => { const rm = _rmMasterCache.find(r => r.RM_ID === e.RM_ID); return `${rm?.RM_Name || e.RM_ID} +${_qtyFmtByCat(e.Qty, rm?.Category)}`; };
+  const title = es.map(e => label(e) + (e.PR_No ? ` (${e.PR_No})` : '')).join('\n');
+  return `<div class="mocal-chip st-incoming" title="${esc('ของรอเข้า\n' + title)}"><i class="fa-solid fa-truck-ramp-box me-1"></i>${es.length <= 2 ? esc(es.map(label).join(' · ')) : `ของเข้า ${es.length} รายการ`}</div>`;
+}
+function _moCalCellBodyHTML(items, fgMap, dateStr) {
   const chips = items.slice(0, 3).map(mo => _moCalChipHTML(mo, fgMap)).join('');
   const more = items.length > 3 ? `<div class="mocal-chip-more">+${items.length - 3} เพิ่มเติม</div>` : '';
-  return chips + more;
+  return chips + more + (dateStr ? _moCalIncChipHTML(dateStr) : '');
 }
 function moCalRender() {
   if (!document.getElementById('moCalBody')) return;
@@ -10875,21 +10964,21 @@ function moCalRender() {
   for (let i = 0; i < firstDow; i++) {
     const d = prevMonthLastDay - firstDow + 1 + i;
     const dateStr = _moCalDateStr(new Date(y, m - 1, d));
-    cells += `<div class="mocal-day mocal-outside"><div class="mocal-daynum">${d}</div>${_moCalCellBodyHTML(byDate[dateStr] || [], fgMap)}</div>`;
+    cells += `<div class="mocal-day mocal-outside"><div class="mocal-daynum">${d}</div>${_moCalCellBodyHTML(byDate[dateStr] || [], fgMap, dateStr)}</div>`;
   }
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const isToday = dateStr === todayStr2;
     const isSunday = new Date(y, m, d).getDay() === 0;
     cells += `<div class="mocal-day${isToday ? ' mocal-today' : ''}${isSunday ? ' mocal-sunday' : ''}" onclick="moCalOpenDayModal('${dateStr}')">
-      <div class="mocal-daynum">${d}</div>${isSunday ? '<div class="mocal-dayoff">Day Off</div>' : ''}${_moCalCellBodyHTML(byDate[dateStr] || [], fgMap)}
+      <div class="mocal-daynum">${d}</div>${isSunday ? '<div class="mocal-dayoff">Day Off</div>' : ''}${_moCalCellBodyHTML(byDate[dateStr] || [], fgMap, dateStr)}
     </div>`;
   }
   const trailing = (7 - ((firstDow + daysInMonth) % 7)) % 7;
   for (let i = 0; i < trailing; i++) {
     const d = i + 1;
     const dateStr = _moCalDateStr(new Date(y, m + 1, d));
-    cells += `<div class="mocal-day mocal-outside"><div class="mocal-daynum">${d}</div>${_moCalCellBodyHTML(byDate[dateStr] || [], fgMap)}</div>`;
+    cells += `<div class="mocal-day mocal-outside"><div class="mocal-daynum">${d}</div>${_moCalCellBodyHTML(byDate[dateStr] || [], fgMap, dateStr)}</div>`;
   }
   document.getElementById('moCalBody').innerHTML = cells;
 }
@@ -10897,7 +10986,24 @@ function moCalRender() {
 // เลือกวัน + สินค้า + จำนวนแบท (หลายสินค้าได้) → รวมวัตถุดิบตามสูตร (BOM) ต่อกลุ่ม "หมวด+ชื่อ" (ซัพ/รหัสต่างกันนับรวม เหมือนตอนเบิก)
 // เทียบกับ: สต็อกที่มี · ที่ MO อื่นจองไว้แล้วแต่ยังไม่เบิก (สถานะ "วางแผน") · ของที่รอเข้า (ใบขอซื้อ PR ที่อนุมัติแล้ว − ที่รับเข้าตามเลข PR แล้ว)
 // ปัดยอดต่อสินค้าแบบเดียวกับตอนเบิกเข้าไลน์ (_issueQtyRound — แพ็คเกจจิ้งปัดขึ้นเป็นชิ้น) ไม่เขียนข้อมูลใดๆ จนกว่าจะกด "สร้าง MO ตามแผนนี้"
-let _planSim = { lines: [{ fg: '', batches: '' }], incoming: null, ready: false, useLoss: false, loss: {}, lossLoading: false };
+let _planSim = { filter: 'all', lines: [{ fg: '', batches: '' }], incoming: null, incPr: {}, prList: [], incDated: null, ready: false, useLoss: false, loss: {}, lossLoading: false };
+// ═══ ของรอเข้า (ระบุวัน): ตาราง rm_incoming_plan (migration_2026-11-14_rm_incoming_plan.sql) — _planSim.incDated = null ถ้ายังไม่รัน SQL ═══
+async function planIncLoad() {
+  const r = await _sb.from('rm_incoming_plan').select('*').eq('Status', 'รอเข้า').order('ExpectedDate', { ascending: true });
+  _planSim.incDated = r.error ? null : (r.data || []);
+  moCalRender();   // ขึ้นชิปของรอเข้าในปฏิทิน
+}
+// นัดส่งที่ระบุวัน (เฉพาะที่ยังรอเข้า) + ยอด PR ค้างรับที่ยังไม่ระบุวัน (หักนัดส่งที่อ้าง PR นั้นแล้ว) แยกตามรหัสวัตถุดิบ
+function _planSimIncomingSplit() {
+  const dated = _planSim.incDated || [], undated = {};
+  const linked = {};
+  dated.forEach(e => { if (e.PR_No) { const k = `${e.PR_No}|${e.RM_ID}`; linked[k] = (linked[k] || 0) + (parseFloat(e.Qty) || 0); } });
+  Object.keys(_planSim.incPr || {}).forEach(k => {
+    const left = Math.max(0, _planSim.incPr[k] - (linked[k] || 0));
+    if (left > 1e-9) { const rm = k.slice(k.indexOf('|') + 1); undated[rm] = (undated[rm] || 0) + left; }
+  });
+  return { dated, undated };
+}
 // โหลด %Loss ของสินค้าที่เกี่ยวข้อง (MO ที่วางแผนไว้ + แผนที่กำลังเพิ่ม) ที่ยังไม่เคยโหลด — เรียกตอนเปิดโหมด "รวม %Loss"
 async function planSimEnsureLoss() {
   const ids = new Set([..._planCache.filter(m => m.Status === 'วางแผน').map(m => m.FG_ID), ..._planSim.lines.map(l => l.fg).filter(Boolean)]);
@@ -10908,6 +11014,7 @@ async function planSimEnsureLoss() {
   _planSim.lossLoading = false;
   return true;
 }
+function planSimSetFilter(k) { _planSim.filter = k; planSimCalc(); }
 async function planSimSetLoss(on) {
   _planSim.useLoss = !!on;
   document.getElementById('psim-btn-formula')?.classList.toggle('active', !on);
@@ -10926,6 +11033,7 @@ async function planSimLoad() {
   if (!_rmMasterCache.length) jobs.push(rmMasterLoad());
   jobs.push(stockRmLoad());
   jobs.push(_planSimLoadIncoming().then(r => { _planSim.incoming = r; }));
+  jobs.push(planIncLoad());
   await Promise.all(jobs);
   if (!document.getElementById('psim-date').value) document.getElementById('psim-date').value = todayStr();
   _planSim.ready = true;
@@ -10936,8 +11044,8 @@ async function planSimReload() { await planSimLoad(); }
 // ของรอเข้า = ต่อ (PR + รหัสวัตถุดิบ): ขอซื้อ − รับเข้าที่อ้างเลข PR นั้น (ไม่ติดลบ) เฉพาะ PR ที่อนุมัติแล้ว · ตารางยังไม่มี = null (ไม่โชว์รอเข้า)
 async function _planSimLoadIncoming() {
   const [prs, lines, recv] = await Promise.all([
-    _sb.from('purchase_requests').select('PR_No').eq('Status', 'อนุมัติแล้ว'),
-    _sb.from('purchase_request_lines').select('PR_No,RM_ID,RequestQty'),
+    _sb.from('purchase_requests').select('PR_No,PRDate').eq('Status', 'อนุมัติแล้ว'),
+    _sb.from('purchase_request_lines').select('PR_No,RM_ID,RequestQty,Supplier'),
     _sb.from('rm_receive').select('RM_ID,Qty,PR_No').not('PR_No', 'is', null),
   ]);
   if (prs.error || lines.error || recv.error) return null;
@@ -10945,8 +11053,15 @@ async function _planSimLoadIncoming() {
   const need = {}, got = {};
   (lines.data || []).filter(l => okPr.has(l.PR_No)).forEach(l => { const k = `${l.PR_No}|${l.RM_ID}`; need[k] = (need[k] || 0) + (parseFloat(l.RequestQty) || 0); });
   (recv.data || []).forEach(r => { const k = `${r.PR_No}|${r.RM_ID}`; got[k] = (got[k] || 0) + (parseFloat(r.Qty) || 0); });
+  const sup = {};
+  (lines.data || []).forEach(l => { const k = `${l.PR_No}|${l.RM_ID}`; if (l.Supplier && !sup[k]) sup[k] = l.Supplier; });
+  // รายการ PR ที่ยังมีของค้างรับ (ไว้ให้ป๊อบอัพ "ของรอเข้า" ดึงทั้งใบ)
+  _planSim.prList = (prs.data || []).map(p => ({ no: p.PR_No, date: p.PRDate,
+    lines: Object.keys(need).filter(k => k.startsWith(p.PR_No + '|')).map(k => ({ RM_ID: k.slice(k.indexOf('|') + 1), left: need[k] - (got[k] || 0), supplier: sup[k] || '' })).filter(l => l.left > 1e-9) }))
+    .filter(p => p.lines.length).sort((a, b) => a.no.localeCompare(b.no));
   const byRm = {};
-  Object.keys(need).forEach(k => { const left = need[k] - (got[k] || 0); if (left > 1e-9) { const rm = k.slice(k.indexOf('|') + 1); byRm[rm] = (byRm[rm] || 0) + left; } });
+  _planSim.incPr = {};   // PR|RM → ยอดค้างรับ (ไว้หักกับนัดส่งที่ระบุวันและอ้าง PR เดียวกัน ไม่ให้นับซ้ำ)
+  Object.keys(need).forEach(k => { const left = need[k] - (got[k] || 0); if (left > 1e-9) { _planSim.incPr[k] = left; const rm = k.slice(k.indexOf('|') + 1); byRm[rm] = (byRm[rm] || 0) + left; } });
   return byRm;
 }
 function planSimAddLine() { _planSim.lines.push({ fg: '', batches: '' }); planSimRenderLines(); }
@@ -11003,7 +11118,11 @@ function _planSimDates(ln, start) {
 const _planSimDatesText = ds => ds.length > 1 ? ds.map(d => fmtDate(d)).join(', ') : fmtDate(ds[0]);
 function planSimCalc() {
   if (!_planSim.ready) return;
-  const planNeeds = {}, parts = [], outDraft = {};
+  const incBadge = document.getElementById('psim-inc-count');
+  if (incBadge) incBadge.textContent = (_planSim.incDated || []).length;
+  const planNeeds = {}, parts = [], outDraft = {}, usage = {};   // usage[กลุ่มวัตถุดิบ][วันที่] = ยอดที่ MO วันนั้นใช้ (ไว้จำลองสต็อกรายวัน)
+  const today = todayStr();
+  const addUsage = (tmp, d) => Object.keys(tmp).forEach(k => { const dd = d < today ? today : d; (usage[k] ||= {})[dd] = ((usage[k] || {})[dd] || 0) + tmp[k].need; });
   let usable = 0, noBatch = [];
   _planSim.lines.forEach((ln, i) => {
     const fg = _fgMasterCache.find(f => f.FG_ID === ln.fg), b = parseFloat(ln.batches) || 0;
@@ -11014,53 +11133,102 @@ function planSimCalc() {
     const ds = _planSimDates(ln, document.getElementById('psim-date').value || todayStr());
     if (el) el.textContent = `= ${_bomFmtQty(units)} ${fg.Unit || 'หน่วย'}/วัน · ${ds.length} วัน รวม ${_bomFmtQty(b * ds.length)} แบท (${_bomFmtQty(units * ds.length)} ${fg.Unit || 'หน่วย'}) · ${_planSimDatesText(ds)}`;
     if (!_bomCache.some(x => x.FG_ID === fg.FG_ID)) { if (el) el.innerHTML += ' <span class="text-danger">· ยังไม่มีสูตร (BOM)</span>'; return; }
-    ds.forEach(() => _planSimNeeds(fg.FG_ID, units, planNeeds));   // 1 MO ต่อวัน ปัดยอดต่อ MO เหมือนตอนเบิกจริง
+    ds.forEach(d => { _planSimNeeds(fg.FG_ID, units, planNeeds); const tmp = {}; _planSimNeeds(fg.FG_ID, units, tmp); addUsage(tmp, d); });   // 1 MO ต่อวัน ปัดยอดต่อ MO เหมือนตอนเบิกจริง
     usable++;
     outDraft[fg.FG_ID] = (outDraft[fg.FG_ID] || 0) + units * ds.length;
     parts.push(`<b>${esc(fg.FG_Name)}</b> วันละ ${_bomFmtQty(b)} แบท × ${ds.length} วัน (${_planSimDatesText(ds)})`);
   });
   // MO ที่วางแผนไว้แล้วและยังไม่ได้เบิก (สถานะ "วางแผน") นับรวมเสมอ — วันที่เลยกำหนดแล้วยังไม่เบิก (มักเป็น MO ค้างเก่า) ไม่นับ เว้นแต่ติ๊ก "รวมที่เลยกำหนด"
-  const today = todayStr(), incOverdue = !!document.getElementById('psim-overdue')?.checked;
+  const incOverdue = !!document.getElementById('psim-overdue')?.checked;
   const planned = _planCache.filter(m => m.Status === 'วางแผน' && (incOverdue || !m.PlanDate || m.PlanDate >= today));
   const overdueN = _planCache.filter(m => m.Status === 'วางแผน' && m.PlanDate && m.PlanDate < today).length;
   const resv = {};
-  planned.forEach(m => _planSimNeeds(m.FG_ID, parseFloat(m.PlanQty) || 0, resv));
+  planned.forEach(m => { _planSimNeeds(m.FG_ID, parseFloat(m.PlanQty) || 0, resv); const tmp = {}; _planSimNeeds(m.FG_ID, parseFloat(m.PlanQty) || 0, tmp); addUsage(tmp, m.PlanDate || today); });
   const body = document.getElementById('psim-body'), sum = document.getElementById('psim-summary');
   const fgName = id => _fgMasterCache.find(f => f.FG_ID === id)?.FG_Name || id;
-  const moText = planned.length ? `<i class="fa-solid fa-calendar-check me-1"></i>MO ที่วางแผนไว้แล้ว ${planned.length} ใบ: ` + [...planned].sort((a, b) => String(a.PlanDate).localeCompare(String(b.PlanDate)))
-    .slice(0, 12).map(m => `${esc(fgName(m.FG_ID))} ${_bomFmtQty(m.PlanQty)} (${m.PlanDate ? fmtDate(m.PlanDate) : '-'})`).join(' · ') + (planned.length > 12 ? ` · +${planned.length - 12} ใบ` : '') : '';
-  document.getElementById('psim-plan-text').innerHTML = [moText,
-    parts.length ? `<i class="fa-solid fa-clipboard-list me-1"></i>แผนที่กำลังเพิ่ม: ${parts.join(' · ')} · Lot ${esc(_genLotForDate(document.getElementById('psim-date').value || todayStr()))}` : ''].filter(Boolean).join('<br>');
+  // รายการ MO ที่นับอยู่ — พับเก็บไว้ (กดดูได้) แทนข้อความยาวๆ
+  document.getElementById('psim-mos-sum').innerHTML = `<i class="fa-solid fa-calendar-check me-1"></i>MO ที่วางแผนไว้แล้ว ${planned.length} ใบ${parts.length ? ` + แผนที่กำลังเพิ่ม ${parts.length} รายการ` : ''} <span class="fw-normal text-muted">(กดดูรายการ)</span>`;
+  document.getElementById('psim-plan-text').innerHTML = [...planned].sort((a, b) => String(a.PlanDate).localeCompare(String(b.PlanDate)))
+    .map(m => `<span class="psim-mo">${m.PlanDate ? fmtDate(m.PlanDate) : '-'} · ${esc(fgName(m.FG_ID))} ${_bomFmtQty(m.PlanQty)}</span>`).join('')
+    + (parts.length ? `<div class="mt-1 text-primary"><i class="fa-solid fa-clipboard-list me-1"></i>แผนที่กำลังเพิ่ม: ${parts.join(' · ')} · Lot ${esc(_genLotForDate(document.getElementById('psim-date').value || todayStr()))}</div>` : '');
   const outExist = {};
   planned.forEach(m => { outExist[m.FG_ID] = (outExist[m.FG_ID] || 0) + (parseFloat(m.PlanQty) || 0); });
   const keys = new Set([...Object.keys(planNeeds), ...Object.keys(resv)]);
   if (!keys.size) {
-    document.getElementById('psim-output').innerHTML = '';
-    body.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มี MO ที่วางแผนไว้ — กดวันในปฏิทินแล้วเลือก "วางแผนวันนี้" หรือกดปุ่ม "วางแผน / แก้แผน"</td></tr>';
-    sum.innerHTML = overdueN ? `<span class="text-muted">มี MO เลยกำหนดที่ยังไม่เบิก ${overdueN} ใบ (ไม่นับ — ติ๊ก "รวมที่เลยกำหนด" ถ้าต้องการ)</span>` : '';
+    document.getElementById('psim-kpis').innerHTML = ''; document.getElementById('psim-filter').innerHTML = '';
+    body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">ยังไม่มี MO ที่วางแผนไว้ — กดวันในปฏิทินแล้วเลือก "วางแผนวันนี้" หรือกดปุ่ม "วางแผน / แก้แผน"</td></tr>';
+    sum.innerHTML = overdueN ? `<div class="small text-muted mb-2">มี MO เลยกำหนดที่ยังไม่เบิก ${overdueN} ใบ (ไม่นับ — ติ๊ก "รวมที่เลยกำหนด" ถ้าต้องการ)</div>` : '';
     document.getElementById('psim-note').textContent = '';
     return;
   }
   const sumRm = (set, getter) => [...set].reduce((s, id) => s + (getter(id) || 0), 0);
+  const incSplit = _planSimIncomingSplit();
   const rows = [...keys].map(k => {
     const g = planNeeds[k] || resv[k], draft = planNeeds[k]?.need || 0, exist = resv[k]?.need || 0, rmIds = new Set([...(planNeeds[k]?.rmIds || []), ...(resv[k]?.rmIds || [])]);
     const stock = sumRm(rmIds, id => parseFloat(_stockRmCache.find(s => s.RM_ID === id)?.Qty));
-    const incoming = _planSim.incoming ? sumRm(rmIds, id => _planSim.incoming[id]) : 0;
+    // ของรอเข้า = นัดส่งที่ระบุวัน (rm_incoming_plan) + PR ค้างรับที่ยังไม่ระบุวัน (ไม่นับเข้าไทม์ไลน์รายวัน เพราะไม่รู้วันเข้า)
+    const datedIn = incSplit.dated.filter(e => rmIds.has(e.RM_ID)).map(e => ({ date: e.ExpectedDate < today ? today : e.ExpectedDate, orig: e.ExpectedDate, qty: parseFloat(e.Qty) || 0 }));
+    const datedTotal = datedIn.reduce((s, e) => s + e.qty, 0);
+    const undated = sumRm(rmIds, id => incSplit.undated[id]);
+    const incoming = datedTotal + undated;
     const total = draft + exist, net = stock + incoming - total, avail = stock - total;
-    const st = avail >= -1e-9 ? 0 : (net >= -1e-9 ? 1 : 2);
+    // จำลองสต็อกรายวัน: วันเดียวกัน ของเข้าก่อนใช้ — ช็อต = ยอดคงเหลือติดลบ ณ วันใดวันหนึ่ง (นับเฉพาะของที่ระบุวัน)
+    const use = usage[k] || {}, inn = {};
+    datedIn.forEach(e => { inn[e.date] = (inn[e.date] || 0) + e.qty; });
+    let bal = stock, firstShort = null, shortMax = 0;
+    [...new Set([...Object.keys(use), ...Object.keys(inn)])].sort().forEach(d => {
+      bal += (inn[d] || 0) - (use[d] || 0);
+      if (bal < -1e-9) { if (!firstShort) firstShort = d; shortMax = Math.max(shortMax, -bal); }
+    });
+    // ใช้ได้ถึงวันไหน: สะสมยอดใช้รายวัน เทียบกับ "สต็อกที่มี" แล้วค่อยบวกของที่เข้าตามลำดับวัน — แต่ละช่วงบอกว่าเมื่อรวมถึงแหล่งนั้นแล้วพอใช้ถึงวันที่ใช้ครั้งสุดท้ายวันไหน
+    const uDates = Object.keys(use).sort(); let cumU = 0;
+    const cumAt = uDates.map(d => (cumU += use[d]));
+    let run = stock;
+    const sources = [{ label: 'สต็อกที่มี', supply: stock }, ...[...datedIn].sort((a, b) => a.date.localeCompare(b.date)).map(e => ({ label: `ของเข้า ${fmtDate(e.date)}`, supply: (run += e.qty) }))];
+    const cov = sources.map(s => {
+      const i = cumAt.findIndex(c => c > s.supply + 1e-9);
+      return { label: s.label, all: i < 0, to: i > 0 ? uDates[i - 1] : null };
+    });
+    const noIncShort = avail < -1e-9;
+    // 0 พอ (สต็อกพอทั้งแผน) · 1 ของเข้าทัน (ต้องรอของที่ระบุวัน แต่ไม่ช็อตเลย) · 2 จะช็อตบางวัน (รวมของรอเข้าแล้วยังพอเมื่อสิ้นแผน) · 3 ขาด (รวมของรอเข้าทั้งหมดแล้วยังไม่พอ)
+    const st = !noIncShort ? 0 : (!firstShort ? 1 : (net >= -1e-9 ? 2 : 3));
     const base = (planNeeds[k]?.base || 0) + (resv[k]?.base || 0);
-    return { name: g.name, cat: g.cat, unit: g.unit, draft, exist, need: total, base, stock, incoming, net, avail, st };
-  }).sort((a, b) => b.st - a.st || (_BOM_CAT_ORDER[a.cat] ?? 0) - (_BOM_CAT_ORDER[b.cat] ?? 0) || String(a.name).localeCompare(String(b.name), 'th'));
+    const nextIn = firstShort ? [...datedIn].filter(e => e.date > firstShort).sort((a, b) => a.date.localeCompare(b.date))[0] : null;
+    return { name: g.name, cat: g.cat, unit: g.unit, draft, exist, need: total, base, stock, incoming, datedIn, undated, net, avail, st, firstShort, shortMax, nextIn, cov };
+  }).sort((a, b) => b.st - a.st || String(a.firstShort || '9').localeCompare(String(b.firstShort || '9')) || (_BOM_CAT_ORDER[a.cat] ?? 0) - (_BOM_CAT_ORDER[b.cat] ?? 0) || String(a.name).localeCompare(String(b.name), 'th'));
   const f = (n, cat) => _qtyFmtByCat(n, cat);
-  body.innerHTML = rows.map(r => `<tr class="${r.st === 2 ? 'table-danger' : r.st === 1 ? 'table-warning' : ''}">
+  const incCell = r => {
+    const lines = [...r.datedIn].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4).map(e => `<div class="small">${fmtDate(e.date)}${e.orig < today ? ' <span class="text-danger" title="เลยวันที่นัดแล้วยังไม่รับ">⚠</span>' : ''} <b>+${f(e.qty, r.cat)}</b></div>`);
+    if (r.datedIn.length > 4) lines.push(`<div class="small text-muted">+${r.datedIn.length - 4} นัด</div>`);
+    if (r.undated > 1e-9) lines.push(`<div class="small text-muted" title="ใบขอซื้อที่อนุมัติแล้วแต่ยังไม่ได้ระบุวันที่ของเข้า — ไม่นับเข้าไทม์ไลน์รายวัน">PR ค้างรับ +${f(r.undated, r.cat)} (ไม่ระบุวัน)</div>`);
+    return lines.length ? lines.join('') : '—';
+  };
+  // ช่วงที่พอใช้: "สต็อกที่มี → ถึง 17 พ.ย. · ของเข้า 17 พ.ย. → ถึง 20 พ.ย." (สะสม: แต่ละบรรทัดรวมแหล่งก่อนหน้าด้วย) — แสดงเมื่อสต็อกไม่พอทั้งแผน
+  const covHTML = r => `<div class="psim-cov" title="แต่ละบรรทัดคือใช้ได้ถึงวันที่ใช้ครั้งสุดท้ายวันไหน เมื่อนับสต็อกที่มี + ของที่เข้าก่อนหน้าตามลำดับวัน (ใช้สต็อกก่อน แล้วค่อยใช้ของที่เข้า)">`
+    + r.cov.map(c => `${esc(c.label)} → ${c.all ? '<span class="text-success">พอตลอดแผน</span>' : c.to ? `พอใช้ถึง <b>${fmtDate(c.to)}</b>` : '<span class="text-danger">ไม่พอแม้วันแรก</span>'}`).join('<br>') + '</div>';
+  const stCell = r => {
+    const u = esc(r.unit || '');
+    if (r.st === 0) return badge('พอ', 'success');
+    if (r.st === 1) return `${badge('ของเข้าทัน', 'info')}<div class="small text-muted">สต็อกไม่พอทั้งแผน แต่ของที่นัดไว้เข้าก่อนใช้ทัน</div>${covHTML(r)}`;
+    const nx = r.nextIn ? ` · ของเข้า ${fmtDate(r.nextIn.date)}` : (r.undated > 1e-9 ? ' · รอ PR ที่ยังไม่ระบุวัน' : ' · ยังไม่มีนัดของเข้า');
+    if (r.st === 2) return `${badge('จะช็อต', 'warning')}<div class="small text-warning-emphasis">ช็อตวันที่ ${fmtDate(r.firstShort)} ขาดสูงสุด ${f(r.shortMax, r.cat)} ${u}${nx}</div>${covHTML(r)}`;
+    return `${badge('ขาด', 'danger')}<div class="small text-danger">ขาดรวม ${f(-r.net, r.cat)} ${u} แม้รวมของรอเข้า${r.firstShort ? ` · ช็อตตั้งแต่ ${fmtDate(r.firstShort)}` : ''}</div>${covHTML(r)}`;
+  };
+  const cnt = [0, 0, 0, 0]; rows.forEach(r => cnt[r.st]++);
+  // ตัวกรองรายการ: ทั้งหมด / ต้องดู (ขาด+จะช็อต) / พอ (พอ+ของเข้าทัน)
+  const flt = _planSim.filter || 'all', nBad = cnt[2] + cnt[3], nOk = cnt[0] + cnt[1];
+  document.getElementById('psim-filter').innerHTML = [['all', `ทั้งหมด ${rows.length}`], ['bad', `ต้องดู ${nBad}`], ['ok', `พอ ${nOk}`]]
+    .map(([k, t]) => `<button type="button" class="psim-chip${flt === k ? ' active' : ''}" onclick="planSimSetFilter('${k}')">${t}</button>`).join('');
+  const shown = rows.filter(r => flt === 'all' || (flt === 'bad' ? r.st >= 2 : r.st <= 1));
+  body.innerHTML = shown.map(r => `<tr class="psim-r st${r.st}">
     <td><div class="fw-semibold">${esc(r.name)}</div><div>${_bomCatBadge(r.cat)}</div></td>
-    <td class="text-end">${r.exist > 0 ? f(r.exist, r.cat) : '—'}</td>
-    <td class="text-end text-primary">${r.draft > 0 ? f(r.draft, r.cat) : '—'}</td>
-    <td class="text-end fw-bold">${f(r.need, r.cat)} <small class="text-muted fw-normal">${esc(r.unit || '')}</small>${_planSim.useLoss && r.need - r.base > 1e-6 ? `<div class="small fw-normal text-warning-emphasis">สูตร ${f(r.base, r.cat)} + Loss ${f(r.need - r.base, r.cat)}</div>` : ''}</td>
-    <td class="text-end">${f(r.stock, r.cat)}</td>
-    <td class="text-end">${r.incoming > 0 ? f(r.incoming, r.cat) : '—'}</td>
-    <td class="text-end fw-bold ${r.net < -1e-9 ? 'text-danger' : ''}">${f(r.net, r.cat)}</td>
-    <td>${r.st === 0 ? badge('พอ', 'success') : r.st === 1 ? `${badge('พอเมื่อของรอเข้ามา', 'warning')}<div class="small text-muted">ต้องรอ ${f(-r.avail, r.cat)}</div>` : `${badge('ขาด', 'danger')}<div class="small text-danger">ขาด ${f(-r.net, r.cat)} ${esc(r.unit || '')}</div>`}</td></tr>`).join('');
+    <td class="text-end num"><div class="fw-bold">${f(r.need, r.cat)} <small class="text-muted fw-normal">${esc(r.unit || '')}</small></div>
+      <div class="small text-muted">${r.exist > 0 ? `แผนเดิม ${f(r.exist, r.cat)}` : ''}${r.draft > 0 ? `${r.exist > 0 ? ' + ' : ''}<span class="text-primary">เพิ่ม ${f(r.draft, r.cat)}</span>` : ''}</div>
+      ${_planSim.useLoss && r.need - r.base > 1e-6 ? `<div class="small text-warning-emphasis">สูตร ${f(r.base, r.cat)} + Loss ${f(r.need - r.base, r.cat)}</div>` : ''}</td>
+    <td class="text-end num">${f(r.stock, r.cat)}</td>
+    <td class="text-end num">${incCell(r)}</td>
+    <td class="text-end num fw-bold ${r.net < -1e-9 ? 'text-danger' : 'text-success'}">${r.net > 1e-9 ? '+' : ''}${f(r.net, r.cat)}</td>
+    <td>${stCell(r)}</td></tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีรายการในตัวกรองนี้</td></tr>';
   // ประมาณการผลผลิต: ตามแผน (MO เดิม + แผนที่เพิ่ม) · และ "ผลิตได้จริง" ตามวัตถุดิบ = สัดส่วนของวัตถุดิบที่ขาดสุด × ยอดตามแผน
   // (ประมาณแบบสัดส่วนเท่ากันทุกสินค้า · ไม่นับวัสดุสิ้นเปลือง) — ทั้งแบบใช้เฉพาะสต็อกที่มี และรวมของรอเข้า
   const ratioOf = withIncoming => {
@@ -11074,18 +11242,155 @@ function planSimCalc() {
   const rs = ratioOf(false), ra = ratioOf(true);
   const fgIds = [...new Set([...Object.keys(outExist), ...Object.keys(outDraft)])];
   const fmtU = (n, fg) => `<b>${_bomFmtQty(Math.round(n))}</b> ${esc(fg?.Unit || 'ลูก')}`;
-  document.getElementById('psim-output').innerHTML = fgIds.map(id => {
-    const fg = _fgMasterCache.find(f => f.FG_ID === id), e = outExist[id] || 0, d = outDraft[id] || 0, t = e + d;
-    return `<i class="fa-solid fa-cubes me-1"></i>${esc(fg?.FG_Name || id)}: ตามแผน ${fmtU(t, fg)}` + (d > 0 && e > 0 ? ` <span class="text-muted">(MO เดิม ${_bomFmtQty(Math.round(e))} + เพิ่ม ${_bomFmtQty(Math.round(d))})</span>` : '') +
-      (rs.r >= 1 ? ` · วัตถุดิบ${ra.r >= 1 && rs.r >= 1 ? 'พอผลิตตามแผน' : ''}` : ` · ผลิตได้ประมาณ ${fmtU(t * rs.r, fg)} ตามสต็อกที่มี${rs.lim ? ` <span class="text-muted">(ติดที่ ${esc(rs.lim)})</span>` : ''}` +
-        (ra.r > rs.r ? (ra.r >= 1 ? ' · พอผลิตครบตามแผนเมื่อของรอเข้ามา' : ` · ${fmtU(t * ra.r, fg)} ถ้ารวมของรอเข้า${ra.lim ? ` <span class="text-muted">(ติดที่ ${esc(ra.lim)})</span>` : ''}`) : ''));
-  }).join('<br>');
-  const cnt = [0, 0, 0]; rows.forEach(r => cnt[r.st]++);
-  sum.innerHTML = `${badge('พอ', 'success')} ${cnt[0]} · ${badge('พอเมื่อรอเข้า', 'warning')} ${cnt[1]} · ${badge('ขาด', 'danger')} ${cnt[2]} รายการ` +
-    (overdueN && !incOverdue ? ` · <span class="text-muted">ไม่นับ MO เลยกำหนดที่ยังไม่เบิก ${overdueN} ใบ</span>` : '') +
-    (noBatch.length ? ` · <span class="text-danger">ข้าม ${esc(noBatch.join(', '))} (ไม่มีขนาดแบท)</span>` : '');
-  document.getElementById('psim-note').innerHTML = 'ต้องใช้รวม = MO ที่วางแผนไว้แล้ว (ยังไม่เบิก) + แผนที่กำลังเพิ่ม' + (_planSim.useLoss ? ` · <b>รวม %Loss เฉลี่ยแล้ว</b> (เฉพาะวัตถุดิบที่เคยผลิตและมีประวัติเบิก${_planSim.lossLoading ? ' — กำลังโหลด...' : ''})` : ' · ตามสูตร ยังไม่รวม %Loss') + ' · คงเหลือสุทธิ = สต็อกมี + รอเข้า − ต้องใช้รวม · ' +
-    (_planSim.incoming ? 'รอเข้า = ใบขอซื้อที่อนุมัติแล้ว ลบยอดที่รับเข้าตามเลข PR แล้ว' : '<span class="text-warning">ยังไม่มีข้อมูลใบขอซื้อ จึงไม่แสดงของรอเข้า</span>');
+  // การ์ดสรุป 4 ช่อง: ตามแผน · ผลิตได้ตามสต็อกที่มี · ผลิตได้ถ้ารวมของรอเข้า · วัตถุดิบที่ต้องดู
+  const totPlan = fgIds.reduce((s, id) => s + (outExist[id] || 0) + (outDraft[id] || 0), 0);
+  const unit0 = esc(_fgMasterCache.find(x => x.FG_ID === fgIds[0])?.Unit || 'ลูก');
+  const tile = (cls, label, big, cap) => `<div class="psim-kpi ${cls}"><div class="k-l">${label}</div><div class="k-n">${big}</div><div class="k-c">${cap}</div></div>`;
+  const bigU = n => `${_bomFmtQty(Math.round(n))} <small>${unit0}</small>`;
+  const capPlan = fgIds.map(id => { const fg = _fgMasterCache.find(x => x.FG_ID === id), e = outExist[id] || 0, d = outDraft[id] || 0;
+    return `${esc(fg?.FG_Name || id)}${d > 0 && e > 0 ? ` (เดิม ${_bomFmtQty(Math.round(e))} + เพิ่ม ${_bomFmtQty(Math.round(d))})` : ''}`; }).join(' · ');
+  document.getElementById('psim-kpis').innerHTML =
+    tile('', 'ผลิตตามแผน', bigU(totPlan), capPlan || '&nbsp;') +
+    tile(rs.r >= 1 ? 'ok' : rs.r >= 0.5 ? 'warn' : 'bad', 'ผลิตได้ตามสต็อกที่มี', rs.r >= 1 ? `${bigU(totPlan)} ✓` : bigU(totPlan * rs.r), rs.r >= 1 ? 'วัตถุดิบพอทั้งแผน' : `ติดที่ ${esc(rs.lim || '-')}`) +
+    tile(ra.r >= 1 ? 'ok' : ra.r >= 0.5 ? 'warn' : 'bad', 'ผลิตได้ถ้ารวมของรอเข้า', ra.r >= 1 ? `${bigU(totPlan)} ✓` : bigU(totPlan * ra.r), ra.r >= 1 ? 'พอผลิตครบตามแผนเมื่อของเข้า' : `ติดที่ ${esc(ra.lim || '-')}`) +
+    tile(nBad ? 'bad' : 'ok', 'วัตถุดิบที่ต้องดู', nBad ? `${nBad} <small>รายการ</small>` : '0 ✓', `พอ ${cnt[0]} · ของเข้าทัน ${cnt[1]} · จะช็อต ${cnt[2]} · ขาด ${cnt[3]}`);
+  // งานจะช็อตไหม: รายการที่ช็อตกลางแผน เรียงตามวันที่ช็อตก่อนสุด
+  const shorts = rows.filter(r => r.firstShort).sort((a, b) => a.firstShort.localeCompare(b.firstShort));
+  const shortLine = shorts.length
+    ? `<div class="psim-banner bad"><i class="fa-solid fa-triangle-exclamation me-1"></i><b>งานจะช็อต ${shorts.length} รายการ</b> — เร็วสุดวันที่ ${fmtDate(shorts[0].firstShort)}<div class="small mt-1">` +
+      shorts.slice(0, 6).map(r => `${esc(r.name)} <span class="opacity-75">(${fmtDate(r.firstShort)} · ขาด ${f(r.shortMax, r.cat)})</span>`).join(' &nbsp;·&nbsp; ') + (shorts.length > 6 ? ` &nbsp;·&nbsp; +${shorts.length - 6}` : '') + '</div></div>'
+    : `<div class="psim-banner ok"><i class="fa-solid fa-circle-check me-1"></i><b>ตามแผนนี้ ${_planSim.incDated?.length ? 'และนัดของรอเข้าที่ระบุวัน ' : ''}ไม่ช็อตตลอดช่วง</b></div>`;
+  const subNotes = (overdueN && !incOverdue ? `ไม่นับ MO เลยกำหนดที่ยังไม่เบิก ${overdueN} ใบ` : '') + (noBatch.length ? ` <span class="text-danger">· ข้าม ${esc(noBatch.join(', '))} (ไม่มีขนาดแบท)</span>` : '');
+  sum.innerHTML = shortLine + (subNotes ? `<div class="small text-muted mb-2">${subNotes}</div>` : '');
+  document.getElementById('psim-note').innerHTML = 'ต้องใช้รวม = MO ที่วางแผนไว้แล้ว (ยังไม่เบิก) + แผนที่กำลังเพิ่ม' + (_planSim.useLoss ? ` · <b>รวม %Loss เฉลี่ยแล้ว</b> (เฉพาะวัตถุดิบที่เคยผลิตและมีประวัติเบิก${_planSim.lossLoading ? ' — กำลังโหลด...' : ''})` : ' · ตามสูตร ยังไม่รวม %Loss') + ' · คงเหลือสุทธิ = สต็อกมี + รอเข้า − ต้องใช้รวม · ไทม์ไลน์: ไล่ตามวัน (ของเข้าก่อนใช้ในวันเดียวกัน) ใช้เฉพาะของรอเข้าที่ระบุวัน · ' +
+    (_planSim.incDated === null ? '<span class="text-warning">ยังไม่ได้รัน SQL ตารางของรอเข้า (migration_2026-11-14_rm_incoming_plan.sql) จึงเพิ่มนัดของรอเข้าไม่ได้ · </span>' : '') +
+    (_planSim.incoming ? 'รอเข้า = นัดส่งที่ระบุวัน + ใบขอซื้อที่อนุมัติแล้วลบยอดที่รับตามเลข PR (ไม่ระบุวัน)' : '<span class="text-warning">ยังไม่มีข้อมูลใบขอซื้อ</span>');
+}
+// ── ป๊อบอัพ "ของรอเข้า": เพิ่ม/ดู/ปิดนัดของเข้า (rm_incoming_plan) ──
+function planIncNoTable() {
+  Swal.fire('ยังใช้ไม่ได้', 'แอดมินต้องรัน <code>migration_2026-11-14_rm_incoming_plan.sql</code> ใน Supabase ก่อน', 'info');
+}
+async function planIncOpen() {
+  if (!_planSim.ready) await planSimLoad();
+  if (_planSim.incDated === null) { planIncNoTable(); return; }
+  const rms = [..._rmMasterCache].sort((a, b) => (_BOM_CAT_ORDER[a.Category] ?? 9) - (_BOM_CAT_ORDER[b.Category] ?? 9) || String(a.RM_Name).localeCompare(String(b.RM_Name), 'th') || a.RM_ID.localeCompare(b.RM_ID, undefined, { numeric: true }));
+  document.getElementById('pinc-rm').innerHTML = '<option value="">— เลือกรายการ —</option>' + rms.map(r => `<option value="${esc(r.RM_ID)}">${esc(r.RM_ID)} — ${esc(r.RM_Name)}${r.Supplier ? ' · ' + esc(r.Supplier) : ''}</option>`).join('');
+  document.getElementById('pinc-date').value = '';
+  document.getElementById('pinc-qty').value = '';
+  document.getElementById('pinc-note').value = '';
+  planIncRmChanged();
+  document.getElementById('pinc-pr-date').value = '';
+  planIncPrRefresh();
+  planIncRender();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('planIncModal')).show();
+}
+function planIncRmChanged() {
+  const id = document.getElementById('pinc-rm').value, rm = _rmMasterCache.find(r => r.RM_ID === id);
+  document.getElementById('pinc-unit').textContent = rm ? `(${rm.Unit || ''})` : '';
+  const prs = Object.keys(_planSim.incPr || {}).filter(k => k.slice(k.indexOf('|') + 1) === id);
+  document.getElementById('pinc-pr').innerHTML = '<option value="">— ไม่อ้างอิง —</option>' + prs.map(k => { const no = k.slice(0, k.indexOf('|')); return `<option value="${esc(no)}">${esc(no)} · ค้างรับ ${_rmFmtQty(_planSim.incPr[k])}</option>`; }).join('');
+  if (rm && !document.getElementById('pinc-note').value && rm.Supplier) document.getElementById('pinc-note').placeholder = rm.Supplier;
+}
+// ยอดค้างรับของแต่ละบรรทัด PR หลังหักนัดส่งที่ระบุวันและอ้าง PR+วัตถุดิบเดียวกันไปแล้ว (ไม่ให้ดึงซ้ำ)
+function _planIncPrLines(pr) {
+  const linked = {};
+  (_planSim.incDated || []).forEach(e => { if (e.PR_No) { const k = `${e.PR_No}|${e.RM_ID}`; linked[k] = (linked[k] || 0) + (parseFloat(e.Qty) || 0); } });
+  return pr.lines.map(l => ({ ...l, left: l.left - (linked[`${pr.no}|${l.RM_ID}`] || 0) })).filter(l => l.left > 1e-9);
+}
+function planIncPrRefresh() {
+  const sel = document.getElementById('pinc-pr-pick'), keep = sel.value;
+  const prs = (_planSim.prList || []).map(p => ({ p, ls: _planIncPrLines(p) })).filter(x => x.ls.length);
+  sel.innerHTML = '<option value="">— เลือกใบขอซื้อ —</option>' + prs.map(({ p, ls }) => {
+    const sups = [...new Set(ls.map(l => l.supplier).filter(Boolean))].join(', ');
+    return `<option value="${esc(p.no)}">${esc(p.no)} · ${ls.length} รายการ${sups ? ' · ' + esc(sups) : ''}</option>`;
+  }).join('');
+  if (keep && prs.some(x => x.p.no === keep)) sel.value = keep;
+  planIncPrPreview();
+}
+function planIncPrPreview() {
+  const no = document.getElementById('pinc-pr-pick').value, pr = (_planSim.prList || []).find(p => p.no === no), el = document.getElementById('pinc-pr-preview');
+  if (!pr) { el.textContent = (_planSim.prList || []).length ? '' : 'ไม่มีใบขอซื้อที่อนุมัติแล้วและยังค้างรับ'; return; }
+  el.textContent = _planIncPrLines(pr).map(l => { const rm = _rmMasterCache.find(r => r.RM_ID === l.RM_ID); return `${rm?.RM_Name || l.RM_ID} ${_qtyFmtByCat(l.left, rm?.Category)} ${rm?.Unit || ''}`; }).join(' · ');
+}
+async function planIncImportPr() {
+  const no = document.getElementById('pinc-pr-pick').value, date = document.getElementById('pinc-pr-date').value;
+  const pr = (_planSim.prList || []).find(p => p.no === no);
+  if (!pr) { Swal.fire('เลือกใบขอซื้อ', '', 'warning'); return; }
+  if (!date) { Swal.fire('ระบุวันที่เข้า', 'ใช้วันที่เดียวกันทุกรายการของใบ แก้แยกรายการได้ในตารางด้านล่างหลังดึง', 'warning'); return; }
+  const rows = _planIncPrLines(pr).map(l => ({ RM_ID: l.RM_ID, ExpectedDate: date, Qty: l.left, PR_No: pr.no, Note: l.supplier || null, CreatedByName: _currentUser?.name || _currentUser?.email || null }));
+  if (!rows.length) { Swal.fire('ไม่มีรายการค้างรับ', 'ใบนี้ถูกดึงเป็นนัดของเข้าครบแล้ว', 'info'); return; }
+  const { error } = await _sb.from('rm_incoming_plan').insert(rows);
+  if (error) { Swal.fire('ดึงไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await planIncLoad(); planIncPrRefresh(); planIncRender(); planSimCalc();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: `ดึง ${rows.length} รายการจาก ${pr.no} แล้ว` });
+}
+// แก้จำนวนของนัดเดียว — ถ้าลดจำนวนและอ้าง PR ส่วนที่เหลือจะกลับไปเป็น PR ค้างรับแบบไม่ระบุวัน (จัดนัดเพิ่มได้ด้วย "แบ่ง" หรือเพิ่มนัดใหม่)
+async function planIncSetQty(id, val) {
+  const q = parseFloat(val);
+  if (!(q > 0)) { Swal.fire('จำนวนไม่ถูกต้อง', 'ต้องมากกว่า 0 (ถ้าไม่เข้าแล้วให้กด ✕ ยกเลิกนัด)', 'warning'); planIncRender(); return; }
+  const { error } = await _sb.from('rm_incoming_plan').update({ Qty: q }).eq('Inc_ID', id);
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await planIncLoad(); planIncPrRefresh(); planIncRender(); planSimCalc();
+}
+// แบ่งส่ง: แยกบางส่วนของนัดนี้ไปเข้าอีกวัน (ยอดรวมเท่าเดิม) — ทำซ้ำได้หลายรอบเพื่อแบ่งเป็นหลายวัน
+async function planIncSplit(id) {
+  const e = (_planSim.incDated || []).find(x => x.Inc_ID === id);
+  if (!e) return;
+  const rm = _rmMasterCache.find(r => r.RM_ID === e.RM_ID), q = parseFloat(e.Qty) || 0, u = rm?.Unit || '';
+  const r = await Swal.fire({ title: 'แบ่งนัดส่ง', confirmButtonText: 'แบ่ง', showCancelButton: true, cancelButtonText: 'ยกเลิก',
+    html: `<div class="text-start small mb-2"><b>${esc(rm?.RM_Name || e.RM_ID)}</b> นัดเข้า ${fmtDate(e.ExpectedDate)} จำนวน <b>${_qtyFmtByCat(q, rm?.Category)} ${esc(u)}</b></div>
+      <div class="text-start"><label class="form-label small mb-1">แยกไปเข้าอีกวัน จำนวน (${esc(u)})</label><input id="psp-q" type="number" min="0" step="any" class="form-control form-control-sm mb-2" placeholder="น้อยกว่า ${_qtyFmtByCat(q, rm?.Category)}">
+      <label class="form-label small mb-1">วันที่เข้าของส่วนที่แยก</label><input id="psp-d" type="date" class="form-control form-control-sm"></div>`,
+    preConfirm: () => {
+      const q2 = parseFloat(document.getElementById('psp-q').value), d = document.getElementById('psp-d').value;
+      if (!(q2 > 0) || q2 >= q - 1e-9) { Swal.showValidationMessage(`จำนวนที่แยกต้องมากกว่า 0 และน้อยกว่า ${_qtyFmtByCat(q, rm?.Category)}`); return false; }
+      if (!d) { Swal.showValidationMessage('ระบุวันที่เข้าของส่วนที่แยก'); return false; }
+      return { q2, d };
+    } });
+  if (!r.isConfirmed) return;
+  const ins = await _sb.from('rm_incoming_plan').insert({ RM_ID: e.RM_ID, ExpectedDate: r.value.d, Qty: r.value.q2, Supplier: e.Supplier || null, PR_No: e.PR_No || null, Note: e.Note || null,
+    CreatedByName: _currentUser?.name || _currentUser?.email || null }).select();
+  if (ins.error) { Swal.fire('แบ่งไม่สำเร็จ', esc(ins.error.message), 'error'); return; }
+  const upd = await _sb.from('rm_incoming_plan').update({ Qty: q - r.value.q2 }).eq('Inc_ID', id);
+  if (upd.error) {   // ลดจำนวนนัดเดิมไม่สำเร็จ → ลบนัดใหม่ที่เพิ่งเพิ่ม ไม่ให้ยอดเบิ้ล
+    if (ins.data?.[0]) await _sb.from('rm_incoming_plan').delete().eq('Inc_ID', ins.data[0].Inc_ID);
+    Swal.fire('แบ่งไม่สำเร็จ', esc(upd.error.message), 'error'); return;
+  }
+  await planIncLoad(); planIncPrRefresh(); planIncRender(); planSimCalc();
+}
+async function planIncSetDate(id, date) {
+  if (!date) return;
+  const { error } = await _sb.from('rm_incoming_plan').update({ ExpectedDate: date }).eq('Inc_ID', id);
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await planIncLoad(); planIncRender(); planSimCalc();
+}
+function planIncRender() {
+  const rows = _planSim.incDated || [], today = todayStr();
+  document.getElementById('pinc-body').innerHTML = rows.length ? rows.map(e => {
+    const rm = _rmMasterCache.find(r => r.RM_ID === e.RM_ID), over = e.ExpectedDate < today;
+    return `<tr><td class="text-nowrap"><input type="date" class="form-control form-control-sm d-inline-block${over ? ' border-danger' : ''}" style="width:150px" value="${esc(e.ExpectedDate)}" onchange="planIncSetDate(${e.Inc_ID}, this.value)">${over ? ' <span class="text-danger small" title="เลยวันที่นัดแล้วยังไม่รับ">⚠</span>' : ''}</td>
+      <td>${esc(rm?.RM_Name || e.RM_ID)} <small class="text-muted">${esc(e.RM_ID)}</small></td>
+      <td class="text-end text-nowrap"><input type="number" min="0" step="any" class="form-control form-control-sm text-end d-inline-block" style="width:105px" value="${e.Qty}" onchange="planIncSetQty(${e.Inc_ID}, this.value)" title="แก้จำนวนของนัดนี้ได้"> <small class="text-muted">${esc(rm?.Unit || '')}</small></td>
+      <td>${esc(e.PR_No || '')}${e.PR_No ? (() => { const k = `${e.PR_No}|${e.RM_ID}`, tot = (_planSim.incPr || {})[k], sch = rows.filter(x => x.PR_No === e.PR_No && x.RM_ID === e.RM_ID).reduce((s, x) => s + (parseFloat(x.Qty) || 0), 0);
+        return tot != null ? `<div class="small ${sch + 1e-9 < tot ? 'text-warning-emphasis' : 'text-muted'}" title="ยอดที่จัดนัดแล้ว / ยอดค้างรับของ PR นี้ (ส่วนที่ยังไม่จัดนัดนับเป็น PR ค้างรับไม่ระบุวัน)">นัดแล้ว ${_qtyFmtByCat(sch, rm?.Category)} / ${_qtyFmtByCat(tot, rm?.Category)}</div>` : ''; })() : ''}</td><td class="small">${esc(e.Note || '')}</td>
+      <td class="text-nowrap"><button class="btn btn-sm btn-outline-primary me-1" onclick="planIncSplit(${e.Inc_ID})" title="แบ่งส่ง — แยกบางส่วนไปเข้าอีกวัน"><i class="fa-solid fa-code-branch me-1"></i>แบ่ง</button><button class="btn btn-sm btn-outline-success me-1" onclick="planIncSetStatus(${e.Inc_ID},'รับแล้ว')" title="ของมาถึงแล้ว (ไปบันทึกรับเข้าตามปกติ)">รับแล้ว</button><button class="btn btn-sm btn-outline-danger" onclick="planIncSetStatus(${e.Inc_ID},'ยกเลิก')" title="ยกเลิกนัดนี้"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
+  }).join('') : '<tr><td colspan="6" class="text-center text-muted py-3">ยังไม่มีนัดของรอเข้า</td></tr>';
+}
+async function planIncAdd() {
+  const rm = document.getElementById('pinc-rm').value, date = document.getElementById('pinc-date').value, qty = parseFloat(document.getElementById('pinc-qty').value);
+  if (!rm) { Swal.fire('เลือกรายการ', '', 'warning'); return; }
+  if (!date) { Swal.fire('ระบุวันที่เข้า', '', 'warning'); return; }
+  if (!(qty > 0)) { Swal.fire('ระบุจำนวน', 'จำนวนต้องมากกว่า 0', 'warning'); return; }
+  const { error } = await _sb.from('rm_incoming_plan').insert({ RM_ID: rm, ExpectedDate: date, Qty: qty, PR_No: document.getElementById('pinc-pr').value || null,
+    Note: document.getElementById('pinc-note').value.trim() || null, CreatedByName: _currentUser?.name || _currentUser?.email || null });
+  if (error) { Swal.fire('บันทึกไม่สำเร็จ', esc(error.message), 'error'); return; }
+  document.getElementById('pinc-qty').value = ''; document.getElementById('pinc-note').value = '';
+  await planIncLoad(); planIncPrRefresh(); planIncRender(); planSimCalc();
+}
+async function planIncSetStatus(id, status) {
+  const { error } = await _sb.from('rm_incoming_plan').update({ Status: status }).eq('Inc_ID', id);
+  if (error) { Swal.fire('ไม่สำเร็จ', esc(error.message), 'error'); return; }
+  await planIncLoad(); planIncPrRefresh(); planIncRender(); planSimCalc();
 }
 // เปิดป๊อบอัพวางแผน (ใส่สินค้า/แบทต่อวัน/จำนวนวัน) — ตารางประมาณการวัตถุดิบอยู่ที่การ์ดด้านล่างปฏิทิน อัปเดตตามทันที
 async function planSimOpen() {
@@ -11139,7 +11444,13 @@ function moCalOpenDayModal(dateStr) {
       <td class="text-end">${_bomFmtQty(mo.PlanQty)} ${esc(fgMap[mo.FG_ID]?.Unit || '')}</td>
       <td>${esc(mo.Lot || '-')}</td><td>${badge(mo.Status, MO_STATUS_BADGE[mo.Status])}</td>
       <td class="text-nowrap">${_planActionsHtml(mo)}</td>
-    </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีแผนผลิตวันนี้</td></tr>';
+    </tr>`).join('') ;
+  const incs = _moCalIncEntries(dateStr);
+  document.getElementById('moCalDayBody').innerHTML += incs.map(e => {
+    const rm = _rmMasterCache.find(r => r.RM_ID === e.RM_ID);
+    return `<tr class="table-warning"><td colspan="6"><i class="fa-solid fa-truck-ramp-box me-1"></i>ของรอเข้า: <b>${esc(rm?.RM_Name || e.RM_ID)}</b> +${_qtyFmtByCat(e.Qty, rm?.Category)} ${esc(rm?.Unit || '')}${e.PR_No ? ` <span class="text-muted">· ${esc(e.PR_No)}</span>` : ''}${e.Note ? ` <span class="text-muted">· ${esc(e.Note)}</span>` : ''}</td></tr>`;
+  }).join('');
+  if (!items.length && !incs.length) document.getElementById('moCalDayBody').innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มีแผนผลิตวันนี้</td></tr>';
   bootstrap.Modal.getOrCreateInstance(document.getElementById('moCalDayModal')).show();
 }
 // ปุ่มจัดการในหน้าต่างรายละเอียดวัน (ปุ่มชุดเดียวกับตาราง MO — _planActionsHtml) หลายปุ่มเปิดหน้าต่างอื่นต่อ
