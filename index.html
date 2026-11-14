@@ -1505,11 +1505,12 @@ td.empty-cell { white-space: normal !important; }
         <option value="ค้าง">ค้าง (ยังไม่เต็ม)</option>
         <option value="ปิด">ปิดแล้ว</option>
       </select>
+      <button class="btn btn-warning" id="packboxOpenChip" style="display:none" onclick="packboxToggleOpenFilter()" title="แสดงเฉพาะกล่องที่ยังไม่เต็ม"><i class="fa-solid fa-box-open me-1"></i>กล่องค้าง <span class="cnt">0</span></button>
       <div class="form-check ms-1" id="packboxSelectAllWrap" style="display:none">
         <input class="form-check-input" type="checkbox" id="packboxSelectAll" onchange="packboxToggleAll(this)">
         <label class="form-check-label small" for="packboxSelectAll">เลือกทั้งหมด</label>
       </div>
-      <button class="btn btn-outline-secondary" onclick="packboxExportCsv()"><i class="fa-solid fa-file-csv me-1"></i>CSV</button>
+      <button class="btn btn-outline-light" onclick="packboxExportCsv()"><i class="fa-solid fa-file-csv me-1"></i>CSV</button>
       <button class="btn btn-brand" id="packboxBulkQrBtn" style="display:none" onclick="packboxPrintQr([...document.querySelectorAll('.packbox-row-check:checked')].map(c=>c.value))"><i class="fa-solid fa-qrcode me-1"></i>พิมพ์ QR ที่เลือก (<span class="cnt">0</span>)</button>
       <button class="btn btn-outline-danger" id="packboxBulkDeleteBtn" style="display:none" onclick="packboxBulkDelete()"><i class="fa-solid fa-trash me-1"></i>ลบที่เลือก (<span class="cnt">0</span>)</button>
     </div></div>
@@ -15388,30 +15389,82 @@ function packboxRenderTable() {
   Object.values(groups).forEach(arr => arr.sort((a, b) => _pbSeqNum(a.Box_ID) - _pbSeqNum(b.Box_ID)));
   const dates = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a));
   document.getElementById('packboxSelectAllWrap').style.display = rows.length ? '' : 'none';
-  document.getElementById('packboxCardsWrap').innerHTML = dates.length ? dates.map(d => `
+  // 3 วันล่าสุดเปิดไว้ วันเก่ากว่าพับไว้ (ถ้ากำลังค้นหา/กรองอยู่ เปิดหมด) — ผู้ใช้กดหัวการ์ดเพื่อสลับได้ และจำไว้ตอนรีเฟรชตาราง
+  const autoOpen = !!(q || statusF);
+  const daySummary = arr => {
+    const by = {};
+    arr.forEach(b => { const k = _fgName(b.FG_ID); (by[k] = by[k] || { n: 0, qty: 0 }); by[k].n++; by[k].qty += Number(b.Qty) || 0; });
+    return Object.entries(by).map(([k, v]) => `${esc(k)} · ${v.n} กล่อง · ${_bomFmtQty(v.qty)} ลูก`).join(' | ');
+  };
+  document.getElementById('packboxCardsWrap').innerHTML = dates.length ? dates.map((d, di) => {
+    const open = _pbDayOpen[d] !== undefined ? _pbDayOpen[d] : (autoOpen || di < 3);
+    const nOpenBox = groups[d].filter(b => b.Status === 'ค้าง').length;
+    return `
     <div class="glass-card">
-      <h6 class="mb-3">${fmtDate(d)} <span class="text-muted small fw-normal">(${groups[d].length} กล่อง)</span></h6>
-      <div class="table-responsive"><table class="table table-hover table-sm mb-0">
+      <div class="d-flex flex-wrap align-items-center gap-2 ${open ? 'mb-3' : ''}" data-day="${esc(d)}">
+        <input type="checkbox" class="form-check-input mt-0" title="เลือกทั้งวันนี้" onchange="packboxToggleDay('${esc(d)}', this.checked)">
+        <div class="d-flex flex-wrap align-items-baseline gap-2" style="cursor:pointer;flex:1;min-width:0" onclick="packboxToggleDayOpen('${esc(d)}')">
+          <i class="fa-solid ${open ? 'fa-chevron-down' : 'fa-chevron-right'} small pb-chev"></i>
+          <h6 class="mb-0">${fmtDate(d)} <span class="text-muted small fw-normal">(${groups[d].length} กล่อง)</span></h6>
+          <span class="text-muted small">${daySummary(groups[d])}</span>
+          ${nOpenBox ? `<span class="badge bg-warning text-dark">ค้าง ${nOpenBox}</span>` : ''}
+        </div>
+        <button class="btn btn-sm btn-outline-primary" onclick="packboxPrintQr(${esc(JSON.stringify(groups[d].map(b => b.Box_ID)))})"><i class="fa-solid fa-qrcode me-1"></i>พิมพ์ QR ทั้งวัน</button>
+      </div>
+      <div class="table-responsive pb-day-body" ${open ? '' : 'style="display:none"'}><table class="table table-hover table-sm mb-0">
         <thead><tr><th style="width:28px"></th><th>เลขที่กล่อง</th><th>สินค้า</th><th>ลูก/กล่อง</th><th>จำนวนในกล่อง</th><th>สถานะ</th><th>ล็อตที่ประกอบ</th><th class="text-center">จัดการ</th></tr></thead>
         <tbody>${groups[d].map(b => `<tr>
           <td><input type="checkbox" class="form-check-input packbox-row-check" value="${esc(b.Box_ID)}" onchange="packboxUpdateBulkBtn()"></td>
           <td>${esc(b.Box_ID)}</td><td>${esc(_fgName(b.FG_ID))}</td><td>${_bomFmtQty(b.UnitPerBox)}</td>
           <td>${_bomFmtQty(b.Qty)}</td><td>${badge(b.Status, b.Status === 'ปิด' ? 'success' : 'warning')}</td>
           <td class="small text-muted">${_pbLotsText(b.LotAlloc)}</td>
-          <td class="text-center">
-            ${b.Status === 'ค้าง' ? `<button class="btn btn-sm btn-outline-success me-1" onclick="packboxCloseBox('${esc(b.Box_ID)}')" title="ปิดกล่องเลย (ไม่เต็ม)"><i class="fa-solid fa-box-archive"></i></button>` : ''}
-            <button class="btn btn-sm btn-outline-secondary me-1" onclick="packboxEditOpen('${esc(b.Box_ID)}')" title="แก้ไข Lot/ยอด"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn btn-sm btn-outline-primary me-1" onclick="packboxPrintQr(['${esc(b.Box_ID)}'])" title="พิมพ์ QR"><i class="fa-solid fa-qrcode"></i></button>
-            ${canDelete ? `<button class="btn btn-sm btn-outline-danger" onclick="packboxDelete('${esc(b.Box_ID)}')" title="ลบ"><i class="fa-solid fa-trash"></i></button>` : ''}
+          <td class="text-center text-nowrap">
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="packboxPrintQr(['${esc(b.Box_ID)}'])" title="พิมพ์ QR"><i class="fa-solid fa-qrcode me-1"></i>QR</button>
+            <div class="dropdown d-inline-block">
+              <button class="btn btn-sm btn-outline-secondary pb-dd" data-bs-toggle="dropdown" title="เมนู"><i class="fa-solid fa-ellipsis"></i></button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                ${b.Status === 'ค้าง' ? `<li><a class="dropdown-item" href="#" onclick="packboxCloseBox('${esc(b.Box_ID)}');return false"><i class="fa-solid fa-box-archive me-2 text-success"></i>ปิดกล่อง (ไม่เต็ม)</a></li>` : ''}
+                <li><a class="dropdown-item" href="#" onclick="packboxEditOpen('${esc(b.Box_ID)}');return false"><i class="fa-solid fa-pen me-2"></i>แก้ไข Lot/ยอด</a></li>
+                ${canDelete ? `<li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#" onclick="packboxDelete('${esc(b.Box_ID)}');return false"><i class="fa-solid fa-trash me-2"></i>ลบกล่อง</a></li>` : ''}
+              </ul>
+            </div>
           </td>
         </tr>`).join('')}</tbody>
       </table></div>
-    </div>`).join('') : '<div class="text-center text-muted py-4">ไม่มีข้อมูล</div>';
+    </div>`; }).join('') : '<div class="text-center text-muted py-4">ไม่มีข้อมูล</div>';
+  // เมนู ⋯ อยู่ในกล่องที่เลื่อนได้ (table-responsive) — ใช้ตำแหน่ง fixed ไม่ให้เมนูโดนตัด
+  document.querySelectorAll('#packboxCardsWrap .pb-dd').forEach(el => new bootstrap.Dropdown(el, { popperConfig: { strategy: 'fixed' } }));
+  const nOpenAll = _packBoxCache.filter(b => b.Status === 'ค้าง').length;
+  const chip = document.getElementById('packboxOpenChip');
+  chip.style.display = nOpenAll ? '' : 'none';
+  chip.querySelector('.cnt').textContent = nOpenAll;
+  chip.classList.toggle('active', statusF === 'ค้าง');
   document.getElementById('packboxSelectAll').checked = false;
   packboxUpdateBulkBtn();
 }
+let _pbDayOpen = {};
+function packboxToggleDayOpen(d) {
+  const hdr = document.querySelector(`#packboxCardsWrap [data-day="${CSS.escape(d)}"]`);
+  const body = hdr?.parentElement.querySelector('.pb-day-body');
+  if (!body) return;
+  const open = body.style.display === 'none';
+  _pbDayOpen[d] = open;
+  body.style.display = open ? '' : 'none';
+  hdr.classList.toggle('mb-3', open);
+  hdr.querySelector('.pb-chev').className = `fa-solid ${open ? 'fa-chevron-down' : 'fa-chevron-right'} small pb-chev`;
+}
+function packboxToggleOpenFilter() {
+  const sel = document.getElementById('packboxFilterStatus');
+  sel.value = sel.value === 'ค้าง' ? '' : 'ค้าง';
+  packboxRenderTable();
+}
 function packboxToggleAll(cb) {
   document.querySelectorAll('.packbox-row-check').forEach(el => el.checked = cb.checked);
+  packboxUpdateBulkBtn();
+}
+function packboxToggleDay(d, on) {
+  const ids = new Set(_packBoxCache.filter(b => b.PackDate === d).map(b => b.Box_ID));
+  document.querySelectorAll('.packbox-row-check').forEach(el => { if (ids.has(el.value)) el.checked = on; });
   packboxUpdateBulkBtn();
 }
 function packboxUpdateBulkBtn() {
@@ -15515,9 +15568,21 @@ function packboxFgChange() {
   document.getElementById('pb-lot-empty').style.display = lots.length ? 'none' : '';
   document.getElementById('pb-lot-rows').innerHTML = lots.map(l => `<tr data-lot="${esc(l.Lot)}" data-remain="${l._remain}">
     <td>${esc(l.Lot)}</td><td>${fmtDate(l.ExpDate)}</td><td>${_bomFmtQty(l._remain)}</td>
-    <td><input type="number" step="any" min="0" max="${l._remain}" class="form-control form-control-sm pb-lot-qty" oninput="packboxRecalc()"></td>
+    <td><div class="input-group input-group-sm"><input type="number" step="any" min="0" max="${l._remain}" class="form-control pb-lot-qty" oninput="packboxRecalc()">
+      <button type="button" class="btn btn-outline-secondary" title="ใส่ทั้งหมดที่เหลือ" onclick="packboxFillLot(this)">ทั้งหมด</button></div></td>
   </tr>`).join('');
+  // จำ "ลูกต่อกล่อง" ล่าสุดของสินค้านี้ (จากกล่องล่าสุดที่เคยแพ็ค) — ไม่ทับค่าที่กรอกไว้แล้ว/ที่ล็อกจากกล่องค้าง
+  const upb = document.getElementById('pb-unitperbox');
+  if (fgId && !upb.value && !upb.disabled) {
+    const last = _packBoxCache.find(b => b.FG_ID === fgId && Number(b.UnitPerBox) > 0);
+    if (last) upb.value = last.UnitPerBox;
+  }
   packboxContinueChange();
+}
+function packboxFillLot(btn) {
+  const tr = btn.closest('tr');
+  tr.querySelector('.pb-lot-qty').value = tr.dataset.remain;
+  packboxRecalc();
 }
 // รวมจำนวนของล็อตนี้ที่เคยถูกแพ็คลงกล่องไปแล้ว (นับทุกกล่องไม่ว่าสถานะค้าง/ปิด — ถือว่าถูกกันไว้แล้วจริง)
 function _pbPackedQty(fgId, lot) {
@@ -15624,19 +15689,43 @@ async function packboxModalSave() {
   const newNeeded = closedBoxes.filter(b => b.isNew).length + (remainderBox?.isNew ? 1 : 0);
   const newIds = newNeeded ? await _nextBoxIds(newNeeded, packDate) : [];
   let idx = 0;
+  const savedIds = [];
   const now = new Date().toISOString();
   const allBoxes = [...sortedClosedBoxes.map(b => ({ ...b, status: 'ปิด', closedAt: now })),
     ...(remainderBox ? [{ ...remainderBox, status: remainderStatus, closedAt: remainderStatus === 'ปิด' ? now : null }] : [])];
+  // ส่งทีเดียวเป็นชุด: กล่องใหม่ทั้งหมด insert ใน request เดียว (สำเร็จ/ล้มพร้อมกัน ไม่เหลือกล่องครึ่งๆ กลางๆ และเร็วกว่าทีละกล่อง)
+  // กล่องค้างเดิมที่ต่อเติม (มีได้ไม่เกิน 1) อัปเดตก่อน ถ้าขั้น insert ล้มจะคืนค่ากล่องเดิมกลับ
+  const note = document.getElementById('pb-note').value || null;
+  const inserts = [];
+  let updateBox = null;
   for (const b of allBoxes) {
     const boxId = b.isNew ? newIds[idx++] : b.Box_ID;
-    const payload = { FG_ID: fgId, UnitPerBox: unitPerBox, Qty: b.qty, Status: b.status, LotAlloc: b.lotAlloc, PackDate: packDate, Note: document.getElementById('pb-note').value || null, UpdatedAt: now, ClosedAt: b.closedAt };
-    const ok = b.isNew
-      ? await sbRun(_sb.from('pack_boxes').insert({ Box_ID: boxId, CreatedAt: now, ...payload }), 'บันทึกกล่องไม่สำเร็จ')
-      : await sbRun(_sb.from('pack_boxes').update(payload).eq('Box_ID', boxId), 'อัปเดตกล่องไม่สำเร็จ');
-    if (ok === null) return;
+    const payload = { FG_ID: fgId, UnitPerBox: unitPerBox, Qty: b.qty, Status: b.status, LotAlloc: b.lotAlloc, PackDate: packDate, Note: note, UpdatedAt: now, ClosedAt: b.closedAt };
+    if (b.isNew) inserts.push({ Box_ID: boxId, CreatedAt: now, ...payload }); else updateBox = { boxId, payload };
+    savedIds.push(boxId);
   }
+  const saveBtn = document.querySelector('#packBoxModal .modal-footer .btn-brand, #packBoxModal .modal-footer .btn-success, #packBoxModal .modal-footer .btn-primary');
+  if (saveBtn) saveBtn.disabled = true;
+  try {
+    if (updateBox) {
+      const ok = await sbRun(_sb.from('pack_boxes').update(updateBox.payload).eq('Box_ID', updateBox.boxId), 'อัปเดตกล่องไม่สำเร็จ');
+      if (ok === null) return;
+    }
+    if (inserts.length) {
+      const ok = await sbRun(_sb.from('pack_boxes').insert(inserts), 'บันทึกกล่องไม่สำเร็จ (ไม่ได้บันทึกกล่องใหม่เลย)');
+      if (ok === null) {
+        if (updateBox && existingBox) {
+          const { Box_ID, CreatedAt, ...orig } = existingBox;
+          await _sb.from('pack_boxes').update(orig).eq('Box_ID', Box_ID);
+        }
+        return;
+      }
+    }
+  } finally { if (saveBtn) saveBtn.disabled = false; }
   bootstrap.Modal.getInstance(document.getElementById('packBoxModal')).hide();
   await packboxLoad();
+  const r = await Swal.fire({ icon: 'success', title: `บันทึก ${savedIds.length} กล่องแล้ว`, text: 'พิมพ์ป้าย QR แปะกล่องเลยไหม?', showCancelButton: true, confirmButtonText: 'พิมพ์ QR', cancelButtonText: 'ไว้ก่อน' });
+  if (r.isConfirmed) packboxPrintQr(savedIds);
 }
 async function packboxCloseBox(boxId) {
   const c = await Swal.fire({ icon: 'question', title: 'ปิดกล่องนี้เลย?', text: 'จะไม่สามารถแพ็คเติมกล่องนี้ได้อีก', showCancelButton: true, confirmButtonText: 'ปิดกล่อง', cancelButtonText: 'ยกเลิก' });
