@@ -1377,6 +1377,28 @@ td.empty-cell { white-space: normal !important; }
         </div>
         <div class="mocal-grid" id="moCalBody"></div>
       </div>
+      <!-- วางแผนการผลิต: เลือกวัน + สินค้า + จำนวนแบท → ตารางวัตถุดิบตามสูตร เทียบสต็อก/ของรอเข้า (ยังไม่สร้าง MO จนกว่าจะกดสร้าง) -->
+      <div class="glass-card mt-3" id="planSimCard">
+        <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
+          <h6 class="mb-0"><i class="fa-solid fa-clipboard-list me-2"></i>ประมาณการวัตถุดิบที่ต้องใช้</h6>
+          <span class="text-muted small">ตามแผนผลิตที่วางไว้ (กดวันในปฏิทิน → "วางแผนวันนี้") เทียบกับสต็อกและของที่รอเข้า — ยังไม่สร้าง MO จนกว่าจะกดสร้าง</span>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <button class="btn btn-sm btn-primary" onclick="planSimOpen()"><i class="fa-solid fa-pen-to-square me-1"></i>วางแผน / แก้แผน</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="planSimReload()" title="โหลดสต็อก/ของรอเข้าใหม่"><i class="fa-solid fa-rotate me-1"></i>รีเฟรชสต็อก</button>
+          <div class="btn-group btn-group-sm" role="group"><button type="button" id="psim-btn-formula" class="btn btn-outline-secondary active" onclick="planSimSetLoss(false)">ตามสูตร</button><button type="button" id="psim-btn-loss" class="btn btn-outline-primary" onclick="planSimSetLoss(true)" title="ยอดสูตร ÷ (1 − %Loss เฉลี่ยของรอบผลิตก่อนหน้า) เฉพาะวัตถุดิบ — แพ็คเกจจิ้งไม่คิด">รวม %Loss เฉลี่ย</button></div>
+          <label class="form-check-label small d-flex align-items-center gap-1 mb-0" title="MO สถานะวางแผนที่วันที่ผ่านไปแล้วแต่ยังไม่ได้เบิก (มักเป็น MO ค้างเก่า)"><input type="checkbox" class="form-check-input mt-0" id="psim-overdue" onchange="planSimCalc()">รวม MO ที่เลยกำหนดแล้วยังไม่เบิก</label>
+          <button class="btn btn-sm btn-success ms-auto" onclick="planSimCreateMos()"><i class="fa-solid fa-calendar-plus me-1"></i>สร้าง MO ตามแผนนี้</button>
+        </div>
+        <div id="psim-plan-text" class="small mb-1"></div>
+        <div id="psim-output" class="small mb-1"></div>
+        <div id="psim-summary" class="small mb-2"></div>
+        <div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0">
+          <thead><tr><th>วัตถุดิบ</th><th class="text-end">MO ที่วางแผนไว้แล้ว</th><th class="text-end text-primary">แผนที่กำลังเพิ่ม</th><th class="text-end">ต้องใช้รวม</th><th class="text-end">สต็อกมี</th><th class="text-end">รอเข้า (PR)</th><th class="text-end">คงเหลือสุทธิ</th><th>สถานะ</th></tr></thead>
+          <tbody id="psim-body"><tr><td colspan="8" class="text-center text-muted py-3">กำลังโหลด...</td></tr></tbody>
+        </table></div>
+        <div class="text-muted small mt-2" id="psim-note"></div>
+      </div>
     </div>
   </div>
 
@@ -1396,7 +1418,30 @@ td.empty-cell { white-space: normal !important; }
         </div>
         <div class="modal-footer modal-footer-light">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด</button>
+          <button type="button" class="btn btn-outline-primary" onclick="planSimFromDay()"><i class="fa-solid fa-clipboard-list me-1"></i>วางแผนวันนี้</button>
           <button type="button" class="btn btn-brand" onclick="bootstrap.Modal.getInstance(document.getElementById('moCalDayModal')).hide();planOpenForm()"><i class="fa-solid fa-plus me-1"></i>สร้าง MO</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: วางแผนการผลิต (ปฏิทินผลิต) ═══════════════ -->
+  <div class="modal fade" id="planSimModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header modal-header-brand">
+          <h5 class="modal-title"><i class="fa-solid fa-clipboard-list me-2"></i>วางแผนการผลิต</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3" style="max-width:220px"><label class="form-label small mb-1">วันเริ่มผลิต</label><input type="date" id="psim-date" class="form-control form-control-sm" onchange="planSimCalc()"></div>
+          <div id="psim-lines" class="mb-2"></div>
+          <button class="btn btn-sm btn-outline-primary" onclick="planSimAddLine()"><i class="fa-solid fa-plus me-1"></i>เพิ่มสินค้า</button>
+          <div class="text-muted small mt-3">ใส่ <b>แบท/วัน</b> และ <b>จำนวนวัน</b> — แต่ละวันเป็น MO แยก ทุกวันใช้ Lot เดียวกันคือ Lot ของวันเริ่ม (ข้ามวันอาทิตย์) · ประมาณการวัตถุดิบอัปเดตในตารางด้านล่างหน้าปฏิทินทันที</div>
+        </div>
+        <div class="modal-footer modal-footer-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ปิด (เก็บแผนไว้ดูประมาณการ)</button>
+          <button type="button" class="btn btn-success" onclick="planSimCreateMos()"><i class="fa-solid fa-calendar-plus me-1"></i>สร้าง MO ตามแผนนี้</button>
         </div>
       </div>
     </div>
@@ -3444,7 +3489,7 @@ td.empty-cell { white-space: normal !important; }
       </div>
       <div class="modal-footer modal-footer-light">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-        <button type="button" class="btn btn-brand" onclick="fgReceiveModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
+        <button type="button" class="btn btn-brand" onclick="fgReceiveModalSaveOnce(this)"><i class="fa-solid fa-floppy-disk me-1"></i>บันทึก</button>
       </div>
     </div>
   </div>
@@ -4099,7 +4144,7 @@ _sb.auth.onAuthStateChange((event, session) => {
 function toggleNavGroup(el) { el.classList.toggle('collapsed'); el.nextElementSibling.classList.toggle('collapsed'); }
 const PAGE_LOADERS = {
   dashboard: dashboardLoad, received: receivedLoad, stockrm: stockRmLoad, stockpkg: stockPkgLoad,
-  plan: planLoad, calendar: planLoad, issue: issueLoad, prodrecord: prodRecordLoad, prodcost: prodCostLoad,
+  plan: planLoad, calendar: calendarLoad, issue: issueLoad, prodrecord: prodRecordLoad, prodcost: prodCostLoad,
   fgreceive: fgReceiveLoad, stockfg: stockFgLoad, stockcard: stockCardLoad,
   co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
   rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad, employee: employeeLoad, auditlog: auditLoad, prep: prepLoad, vendor: vendorLoad,
@@ -10848,7 +10893,244 @@ function moCalRender() {
   }
   document.getElementById('moCalBody').innerHTML = cells;
 }
+// ═══ วางแผนการผลิต (ปฏิทินผลิต) ═══
+// เลือกวัน + สินค้า + จำนวนแบท (หลายสินค้าได้) → รวมวัตถุดิบตามสูตร (BOM) ต่อกลุ่ม "หมวด+ชื่อ" (ซัพ/รหัสต่างกันนับรวม เหมือนตอนเบิก)
+// เทียบกับ: สต็อกที่มี · ที่ MO อื่นจองไว้แล้วแต่ยังไม่เบิก (สถานะ "วางแผน") · ของที่รอเข้า (ใบขอซื้อ PR ที่อนุมัติแล้ว − ที่รับเข้าตามเลข PR แล้ว)
+// ปัดยอดต่อสินค้าแบบเดียวกับตอนเบิกเข้าไลน์ (_issueQtyRound — แพ็คเกจจิ้งปัดขึ้นเป็นชิ้น) ไม่เขียนข้อมูลใดๆ จนกว่าจะกด "สร้าง MO ตามแผนนี้"
+let _planSim = { lines: [{ fg: '', batches: '' }], incoming: null, ready: false, useLoss: false, loss: {}, lossLoading: false };
+// โหลด %Loss ของสินค้าที่เกี่ยวข้อง (MO ที่วางแผนไว้ + แผนที่กำลังเพิ่ม) ที่ยังไม่เคยโหลด — เรียกตอนเปิดโหมด "รวม %Loss"
+async function planSimEnsureLoss() {
+  const ids = new Set([..._planCache.filter(m => m.Status === 'วางแผน').map(m => m.FG_ID), ..._planSim.lines.map(l => l.fg).filter(Boolean)]);
+  const missing = [...ids].filter(id => !_planSim.loss[id]);
+  if (!missing.length) return false;
+  _planSim.lossLoading = true;
+  await Promise.all(missing.map(async id => { _planSim.loss[id] = await _issueLoadLoss(id); }));
+  _planSim.lossLoading = false;
+  return true;
+}
+async function planSimSetLoss(on) {
+  _planSim.useLoss = !!on;
+  document.getElementById('psim-btn-formula')?.classList.toggle('active', !on);
+  document.getElementById('psim-btn-loss')?.classList.toggle('active', !!on);
+  planSimCalc();
+  if (on && await planSimEnsureLoss()) planSimCalc();
+}
+async function calendarLoad() {
+  await planLoad();
+  await planSimLoad();
+}
+async function planSimLoad() {
+  if (!document.getElementById('psim-lines')) return;
+  const jobs = [];
+  if (!_bomCache.length) jobs.push(bomLoad());
+  if (!_rmMasterCache.length) jobs.push(rmMasterLoad());
+  jobs.push(stockRmLoad());
+  jobs.push(_planSimLoadIncoming().then(r => { _planSim.incoming = r; }));
+  await Promise.all(jobs);
+  if (!document.getElementById('psim-date').value) document.getElementById('psim-date').value = todayStr();
+  _planSim.ready = true;
+  planSimRenderLines();
+  planSimCalc();
+}
+async function planSimReload() { await planSimLoad(); }
+// ของรอเข้า = ต่อ (PR + รหัสวัตถุดิบ): ขอซื้อ − รับเข้าที่อ้างเลข PR นั้น (ไม่ติดลบ) เฉพาะ PR ที่อนุมัติแล้ว · ตารางยังไม่มี = null (ไม่โชว์รอเข้า)
+async function _planSimLoadIncoming() {
+  const [prs, lines, recv] = await Promise.all([
+    _sb.from('purchase_requests').select('PR_No').eq('Status', 'อนุมัติแล้ว'),
+    _sb.from('purchase_request_lines').select('PR_No,RM_ID,RequestQty'),
+    _sb.from('rm_receive').select('RM_ID,Qty,PR_No').not('PR_No', 'is', null),
+  ]);
+  if (prs.error || lines.error || recv.error) return null;
+  const okPr = new Set((prs.data || []).map(p => p.PR_No));
+  const need = {}, got = {};
+  (lines.data || []).filter(l => okPr.has(l.PR_No)).forEach(l => { const k = `${l.PR_No}|${l.RM_ID}`; need[k] = (need[k] || 0) + (parseFloat(l.RequestQty) || 0); });
+  (recv.data || []).forEach(r => { const k = `${r.PR_No}|${r.RM_ID}`; got[k] = (got[k] || 0) + (parseFloat(r.Qty) || 0); });
+  const byRm = {};
+  Object.keys(need).forEach(k => { const left = need[k] - (got[k] || 0); if (left > 1e-9) { const rm = k.slice(k.indexOf('|') + 1); byRm[rm] = (byRm[rm] || 0) + left; } });
+  return byRm;
+}
+function planSimAddLine() { _planSim.lines.push({ fg: '', batches: '' }); planSimRenderLines(); }
+function planSimRemoveLine(i) { _planSim.lines.splice(i, 1); if (!_planSim.lines.length) _planSim.lines.push({ fg: '', batches: '' }); planSimRenderLines(); planSimCalc(); }
+async function planSimLineChanged(i, key, el) {
+  _planSim.lines[i][key] = el.value; planSimCalc();
+  if (key === 'fg' && _planSim.useLoss && await planSimEnsureLoss()) planSimCalc();
+}
+function planSimRenderLines() {
+  const box = document.getElementById('psim-lines');
+  if (!box) return;
+  box.innerHTML = _planSim.lines.map((ln, i) => `<div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+    <select class="form-select form-select-sm" style="max-width:280px" onchange="planSimLineChanged(${i},'fg',this)">
+      <option value="">— เลือกสินค้า —</option>${_fgMasterCache.map(f => `<option value="${esc(f.FG_ID)}" ${f.FG_ID === ln.fg ? 'selected' : ''}>${esc(f.FG_Name)}</option>`).join('')}
+    </select>
+    <div class="input-group input-group-sm" style="max-width:150px"><input type="number" min="0" step="any" class="form-control" placeholder="จำนวน" value="${esc(ln.batches)}" oninput="planSimLineChanged(${i},'batches',this)"><span class="input-group-text">แบท/วัน</span></div>
+    <div class="input-group input-group-sm" style="max-width:130px" title="ผลิตกี่วัน (เว้นว่าง = 1 วัน) — แต่ละวันเป็น MO แยก ใช้ Lot เดียวกันคือ Lot ของวันเริ่ม · ข้ามวันอาทิตย์ (Day Off)"><input type="number" min="1" step="1" class="form-control" placeholder="1" value="${esc(ln.days || '')}" oninput="planSimLineChanged(${i},'days',this)"><span class="input-group-text">วัน</span></div>
+    <span class="small text-muted" id="psim-units-${i}"></span>
+    <button type="button" class="btn btn-sm btn-outline-danger" onclick="planSimRemoveLine(${i})" title="เอาออก"><i class="fa-solid fa-xmark"></i></button>
+  </div>`).join('');
+}
+const _planSimKey = rmId => { const rm = _rmMasterCache.find(r => r.RM_ID === rmId); return rm ? `${rm.Category}|${(rm.RM_Name || '').trim()}` : `?|${rmId}`; };
+// %Loss เฉลี่ยของวัตถุดิบในสูตรของสินค้านี้ = (เบิกจริงรวม − ยอดสูตรรวม) ÷ เบิกจริงรวม ของรอบผลิตก่อนหน้า (รวมรหัสซัพที่ชื่อเดียวกัน)
+// สูตรเดียวกับหน้าเบิกเข้าไลน์ — เฉพาะวัตถุดิบ (สด/แห้ง/เคมี/พร้อมผลิต) ไม่คิดแพ็คเกจจิ้ง · ไม่มีประวัติ = null (ใช้ยอดสูตร)
+function _planSimLossPct(fgId, rmId, cat) {
+  if (!CAT_RAW_ALL.includes(cat || 'วัตถุดิบ')) return null;
+  const lm = _planSim.loss[fgId];
+  if (!lm) return null;
+  let used = 0, base = 0;
+  _rmSiblings(rmId).forEach(c => { const o = lm[c.RM_ID]; if (o) { used += o.used; base += o.base; } });
+  return (used > 0 && base > 0) ? (used - base) / used * 100 : null;
+}
+function _planSimNeeds(fgId, units, into) {
+  _bomCache.filter(b => b.FG_ID === fgId).forEach(b => {
+    const rm = _rmMasterCache.find(r => r.RM_ID === b.RM_ID);
+    if (!rm) return;
+    const key = _planSimKey(b.RM_ID);
+    const g = into[key] = into[key] || { key, name: rm.RM_Name, cat: rm.Category, unit: b.Unit || rm.Unit, need: 0, base: 0, rmIds: new Set() };
+    const raw = (parseFloat(b.QtyPerUnit) || 0) * units, pct = _planSim.useLoss ? _planSimLossPct(fgId, b.RM_ID, rm.Category) : null;
+    g.base += _issueQtyRound(raw, rm.Category);
+    if (pct != null && pct < 99) { g.need += _issueQtyRound(raw / (1 - pct / 100), rm.Category); _rmSiblings(b.RM_ID).forEach(s => g.rmIds.add(s.RM_ID)); g.rmIds.add(b.RM_ID); return; }
+    g.need += _issueQtyRound(raw, rm.Category);
+    _rmSiblings(b.RM_ID).forEach(s => g.rmIds.add(s.RM_ID)); g.rmIds.add(b.RM_ID);
+  });
+}
+// วันผลิตของรายการ: เริ่มวันที่เลือก ผลิตวันละ "แบท/วัน" ต่อเนื่อง N วัน (เว้นว่าง = 1) — ข้ามวันอาทิตย์ (Day Off ตามปฏิทิน) หลังวันแรก
+// แต่ละวันเป็น MO แยกกัน ทุกวันใช้ Lot เดียวกัน = Lot ของวันเริ่ม
+function _planSimDates(ln, start) {
+  const n = Math.max(1, Math.ceil(parseFloat(ln.days) || 0) || 1), out = [start];
+  let d = start;
+  while (out.length < n) { d = addDays(d, 1); if (new Date(d + 'T00:00:00').getDay() !== 0) out.push(d); }
+  return out;
+}
+const _planSimDatesText = ds => ds.length > 1 ? ds.map(d => fmtDate(d)).join(', ') : fmtDate(ds[0]);
+function planSimCalc() {
+  if (!_planSim.ready) return;
+  const planNeeds = {}, parts = [], outDraft = {};
+  let usable = 0, noBatch = [];
+  _planSim.lines.forEach((ln, i) => {
+    const fg = _fgMasterCache.find(f => f.FG_ID === ln.fg), b = parseFloat(ln.batches) || 0;
+    const el = document.getElementById(`psim-units-${i}`);
+    if (!fg || !(b > 0)) { if (el) el.textContent = ''; return; }
+    if (!(fg.BatchSize > 0)) { if (el) el.innerHTML = '<span class="text-danger">ยังไม่ได้ตั้งขนาดแบท (ตั้งที่ "สูตรแม่บท")</span>'; noBatch.push(fg.FG_Name); return; }
+    const units = Math.round(b * fg.BatchSize * 10000) / 10000;   // ต่อวัน
+    const ds = _planSimDates(ln, document.getElementById('psim-date').value || todayStr());
+    if (el) el.textContent = `= ${_bomFmtQty(units)} ${fg.Unit || 'หน่วย'}/วัน · ${ds.length} วัน รวม ${_bomFmtQty(b * ds.length)} แบท (${_bomFmtQty(units * ds.length)} ${fg.Unit || 'หน่วย'}) · ${_planSimDatesText(ds)}`;
+    if (!_bomCache.some(x => x.FG_ID === fg.FG_ID)) { if (el) el.innerHTML += ' <span class="text-danger">· ยังไม่มีสูตร (BOM)</span>'; return; }
+    ds.forEach(() => _planSimNeeds(fg.FG_ID, units, planNeeds));   // 1 MO ต่อวัน ปัดยอดต่อ MO เหมือนตอนเบิกจริง
+    usable++;
+    outDraft[fg.FG_ID] = (outDraft[fg.FG_ID] || 0) + units * ds.length;
+    parts.push(`<b>${esc(fg.FG_Name)}</b> วันละ ${_bomFmtQty(b)} แบท × ${ds.length} วัน (${_planSimDatesText(ds)})`);
+  });
+  // MO ที่วางแผนไว้แล้วและยังไม่ได้เบิก (สถานะ "วางแผน") นับรวมเสมอ — วันที่เลยกำหนดแล้วยังไม่เบิก (มักเป็น MO ค้างเก่า) ไม่นับ เว้นแต่ติ๊ก "รวมที่เลยกำหนด"
+  const today = todayStr(), incOverdue = !!document.getElementById('psim-overdue')?.checked;
+  const planned = _planCache.filter(m => m.Status === 'วางแผน' && (incOverdue || !m.PlanDate || m.PlanDate >= today));
+  const overdueN = _planCache.filter(m => m.Status === 'วางแผน' && m.PlanDate && m.PlanDate < today).length;
+  const resv = {};
+  planned.forEach(m => _planSimNeeds(m.FG_ID, parseFloat(m.PlanQty) || 0, resv));
+  const body = document.getElementById('psim-body'), sum = document.getElementById('psim-summary');
+  const fgName = id => _fgMasterCache.find(f => f.FG_ID === id)?.FG_Name || id;
+  const moText = planned.length ? `<i class="fa-solid fa-calendar-check me-1"></i>MO ที่วางแผนไว้แล้ว ${planned.length} ใบ: ` + [...planned].sort((a, b) => String(a.PlanDate).localeCompare(String(b.PlanDate)))
+    .slice(0, 12).map(m => `${esc(fgName(m.FG_ID))} ${_bomFmtQty(m.PlanQty)} (${m.PlanDate ? fmtDate(m.PlanDate) : '-'})`).join(' · ') + (planned.length > 12 ? ` · +${planned.length - 12} ใบ` : '') : '';
+  document.getElementById('psim-plan-text').innerHTML = [moText,
+    parts.length ? `<i class="fa-solid fa-clipboard-list me-1"></i>แผนที่กำลังเพิ่ม: ${parts.join(' · ')} · Lot ${esc(_genLotForDate(document.getElementById('psim-date').value || todayStr()))}` : ''].filter(Boolean).join('<br>');
+  const outExist = {};
+  planned.forEach(m => { outExist[m.FG_ID] = (outExist[m.FG_ID] || 0) + (parseFloat(m.PlanQty) || 0); });
+  const keys = new Set([...Object.keys(planNeeds), ...Object.keys(resv)]);
+  if (!keys.size) {
+    document.getElementById('psim-output').innerHTML = '';
+    body.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">ยังไม่มี MO ที่วางแผนไว้ — กดวันในปฏิทินแล้วเลือก "วางแผนวันนี้" หรือกดปุ่ม "วางแผน / แก้แผน"</td></tr>';
+    sum.innerHTML = overdueN ? `<span class="text-muted">มี MO เลยกำหนดที่ยังไม่เบิก ${overdueN} ใบ (ไม่นับ — ติ๊ก "รวมที่เลยกำหนด" ถ้าต้องการ)</span>` : '';
+    document.getElementById('psim-note').textContent = '';
+    return;
+  }
+  const sumRm = (set, getter) => [...set].reduce((s, id) => s + (getter(id) || 0), 0);
+  const rows = [...keys].map(k => {
+    const g = planNeeds[k] || resv[k], draft = planNeeds[k]?.need || 0, exist = resv[k]?.need || 0, rmIds = new Set([...(planNeeds[k]?.rmIds || []), ...(resv[k]?.rmIds || [])]);
+    const stock = sumRm(rmIds, id => parseFloat(_stockRmCache.find(s => s.RM_ID === id)?.Qty));
+    const incoming = _planSim.incoming ? sumRm(rmIds, id => _planSim.incoming[id]) : 0;
+    const total = draft + exist, net = stock + incoming - total, avail = stock - total;
+    const st = avail >= -1e-9 ? 0 : (net >= -1e-9 ? 1 : 2);
+    const base = (planNeeds[k]?.base || 0) + (resv[k]?.base || 0);
+    return { name: g.name, cat: g.cat, unit: g.unit, draft, exist, need: total, base, stock, incoming, net, avail, st };
+  }).sort((a, b) => b.st - a.st || (_BOM_CAT_ORDER[a.cat] ?? 0) - (_BOM_CAT_ORDER[b.cat] ?? 0) || String(a.name).localeCompare(String(b.name), 'th'));
+  const f = (n, cat) => _qtyFmtByCat(n, cat);
+  body.innerHTML = rows.map(r => `<tr class="${r.st === 2 ? 'table-danger' : r.st === 1 ? 'table-warning' : ''}">
+    <td><div class="fw-semibold">${esc(r.name)}</div><div>${_bomCatBadge(r.cat)}</div></td>
+    <td class="text-end">${r.exist > 0 ? f(r.exist, r.cat) : '—'}</td>
+    <td class="text-end text-primary">${r.draft > 0 ? f(r.draft, r.cat) : '—'}</td>
+    <td class="text-end fw-bold">${f(r.need, r.cat)} <small class="text-muted fw-normal">${esc(r.unit || '')}</small>${_planSim.useLoss && r.need - r.base > 1e-6 ? `<div class="small fw-normal text-warning-emphasis">สูตร ${f(r.base, r.cat)} + Loss ${f(r.need - r.base, r.cat)}</div>` : ''}</td>
+    <td class="text-end">${f(r.stock, r.cat)}</td>
+    <td class="text-end">${r.incoming > 0 ? f(r.incoming, r.cat) : '—'}</td>
+    <td class="text-end fw-bold ${r.net < -1e-9 ? 'text-danger' : ''}">${f(r.net, r.cat)}</td>
+    <td>${r.st === 0 ? badge('พอ', 'success') : r.st === 1 ? `${badge('พอเมื่อของรอเข้ามา', 'warning')}<div class="small text-muted">ต้องรอ ${f(-r.avail, r.cat)}</div>` : `${badge('ขาด', 'danger')}<div class="small text-danger">ขาด ${f(-r.net, r.cat)} ${esc(r.unit || '')}</div>`}</td></tr>`).join('');
+  // ประมาณการผลผลิต: ตามแผน (MO เดิม + แผนที่เพิ่ม) · และ "ผลิตได้จริง" ตามวัตถุดิบ = สัดส่วนของวัตถุดิบที่ขาดสุด × ยอดตามแผน
+  // (ประมาณแบบสัดส่วนเท่ากันทุกสินค้า · ไม่นับวัสดุสิ้นเปลือง) — ทั้งแบบใช้เฉพาะสต็อกที่มี และรวมของรอเข้า
+  const ratioOf = withIncoming => {
+    let r = 1, lim = null;
+    rows.filter(x => x.cat !== CAT_CONS && x.need > 1e-9).forEach(x => {
+      const q = Math.max(0, x.stock + (withIncoming ? x.incoming : 0)) / x.need;
+      if (q < r) { r = q; lim = x.name; }
+    });
+    return { r, lim };
+  };
+  const rs = ratioOf(false), ra = ratioOf(true);
+  const fgIds = [...new Set([...Object.keys(outExist), ...Object.keys(outDraft)])];
+  const fmtU = (n, fg) => `<b>${_bomFmtQty(Math.round(n))}</b> ${esc(fg?.Unit || 'ลูก')}`;
+  document.getElementById('psim-output').innerHTML = fgIds.map(id => {
+    const fg = _fgMasterCache.find(f => f.FG_ID === id), e = outExist[id] || 0, d = outDraft[id] || 0, t = e + d;
+    return `<i class="fa-solid fa-cubes me-1"></i>${esc(fg?.FG_Name || id)}: ตามแผน ${fmtU(t, fg)}` + (d > 0 && e > 0 ? ` <span class="text-muted">(MO เดิม ${_bomFmtQty(Math.round(e))} + เพิ่ม ${_bomFmtQty(Math.round(d))})</span>` : '') +
+      (rs.r >= 1 ? ` · วัตถุดิบ${ra.r >= 1 && rs.r >= 1 ? 'พอผลิตตามแผน' : ''}` : ` · ผลิตได้ประมาณ ${fmtU(t * rs.r, fg)} ตามสต็อกที่มี${rs.lim ? ` <span class="text-muted">(ติดที่ ${esc(rs.lim)})</span>` : ''}` +
+        (ra.r > rs.r ? (ra.r >= 1 ? ' · พอผลิตครบตามแผนเมื่อของรอเข้ามา' : ` · ${fmtU(t * ra.r, fg)} ถ้ารวมของรอเข้า${ra.lim ? ` <span class="text-muted">(ติดที่ ${esc(ra.lim)})</span>` : ''}`) : ''));
+  }).join('<br>');
+  const cnt = [0, 0, 0]; rows.forEach(r => cnt[r.st]++);
+  sum.innerHTML = `${badge('พอ', 'success')} ${cnt[0]} · ${badge('พอเมื่อรอเข้า', 'warning')} ${cnt[1]} · ${badge('ขาด', 'danger')} ${cnt[2]} รายการ` +
+    (overdueN && !incOverdue ? ` · <span class="text-muted">ไม่นับ MO เลยกำหนดที่ยังไม่เบิก ${overdueN} ใบ</span>` : '') +
+    (noBatch.length ? ` · <span class="text-danger">ข้าม ${esc(noBatch.join(', '))} (ไม่มีขนาดแบท)</span>` : '');
+  document.getElementById('psim-note').innerHTML = 'ต้องใช้รวม = MO ที่วางแผนไว้แล้ว (ยังไม่เบิก) + แผนที่กำลังเพิ่ม' + (_planSim.useLoss ? ` · <b>รวม %Loss เฉลี่ยแล้ว</b> (เฉพาะวัตถุดิบที่เคยผลิตและมีประวัติเบิก${_planSim.lossLoading ? ' — กำลังโหลด...' : ''})` : ' · ตามสูตร ยังไม่รวม %Loss') + ' · คงเหลือสุทธิ = สต็อกมี + รอเข้า − ต้องใช้รวม · ' +
+    (_planSim.incoming ? 'รอเข้า = ใบขอซื้อที่อนุมัติแล้ว ลบยอดที่รับเข้าตามเลข PR แล้ว' : '<span class="text-warning">ยังไม่มีข้อมูลใบขอซื้อ จึงไม่แสดงของรอเข้า</span>');
+}
+// เปิดป๊อบอัพวางแผน (ใส่สินค้า/แบทต่อวัน/จำนวนวัน) — ตารางประมาณการวัตถุดิบอยู่ที่การ์ดด้านล่างปฏิทิน อัปเดตตามทันที
+async function planSimOpen() {
+  if (!_planSim.ready) await planSimLoad();
+  planSimRenderLines();
+  planSimCalc();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('planSimModal')).show();
+}
+function planSimFromDay() {
+  if (window._moCalDayStr) document.getElementById('psim-date').value = window._moCalDayStr;
+  const el = document.getElementById('moCalDayModal'), m = bootstrap.Modal.getInstance(el);
+  if (m) { el.addEventListener('hidden.bs.modal', () => planSimOpen(), { once: true }); m.hide(); }   // รอป๊อบอัพวันปิดสนิทก่อนค่อยเปิดอันใหม่
+  else planSimOpen();
+}
+async function planSimCreateMos() {
+  const date = document.getElementById('psim-date').value || todayStr();
+  const valid = _planSim.lines.map(ln => ({ ln, fg: _fgMasterCache.find(f => f.FG_ID === ln.fg), b: parseFloat(ln.batches) || 0 }))
+    .filter(x => x.fg && x.b > 0 && x.fg.BatchSize > 0);
+  valid.forEach(x => { x.units = Math.round(x.b * x.fg.BatchSize * 10000) / 10000; x.dates = _planSimDates(x.ln, date); });
+  const moCount = valid.reduce((s, x) => s + x.dates.length, 0);
+  if (!valid.length) { Swal.fire('ยังไม่มีรายการ', 'เลือกสินค้าและจำนวนแบท (สินค้าต้องตั้งขนาดแบทแล้ว) อย่างน้อย 1 รายการ', 'info'); return; }
+  if (!_planCache.some(r => 'Lot' in r) && _planCache.length) { Swal.fire('ยังใส่ Lot ไม่ได้', 'แอดมินต้องรัน <code>migration_2026-09-28_mo_lot.sql</code> ใน Supabase ก่อน', 'error'); return; }
+  const lot = _genLotForDate(date);   // ทุกวันของแผนใช้ Lot เดียวกัน = Lot ของวันเริ่ม
+  const c = await Swal.fire({ icon: 'question', title: `สร้าง ${moCount} MO ตามแผน?`,
+    html: `<div class="small text-start">Lot <b>${esc(lot)}</b> (ทุกวันใช้ Lot เดียวกัน)<br>${valid.map(x => `• ${esc(x.fg.FG_Name)} — วันละ ${_bomFmtQty(x.b)} แบท (${_bomFmtQty(x.units)} ${esc(x.fg.Unit || '')}) × ${x.dates.length} วัน<br><span class="text-muted ms-3">${_planSimDatesText(x.dates)}</span>`).join('<br>')}</div>`,
+    showCancelButton: true, confirmButtonText: 'สร้าง MO', cancelButtonText: 'ยกเลิก' });
+  if (!c.isConfirmed) return;
+  let made = 0;
+  for (const x of valid) {
+    for (const d of x.dates) {
+      const payload = { FG_ID: x.fg.FG_ID, Order_ID: null, PlanQty: x.units, PlanDate: d, PlanEndDate: d, Lot: lot, MO_ID: await _nextMoId(), Status: 'วางแผน' };
+      if (_planCache.some(r => 'CreatedBy' in r)) payload.CreatedBy = _currentUser?.name || _currentUser?.email || null;
+      const ok = await sbRun(_sb.from('manufacturing_orders').insert(payload), `สร้าง MO ของ ${x.fg.FG_Name} วันที่ ${fmtDate(d)} ไม่สำเร็จ (สร้างไปแล้ว ${made} MO ไม่ย้อนกลับ)`);
+      if (ok === null) { await planLoad(); planSimCalc(); return; }
+      made++;
+    }
+  }
+  _planSim.lines = [{ fg: '', batches: '', days: '' }];
+  bootstrap.Modal.getInstance(document.getElementById('planSimModal'))?.hide();
+  await planLoad();
+  planSimRenderLines(); planSimCalc();
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: `สร้าง ${made} MO แล้ว` });
+}
 function moCalOpenDayModal(dateStr) {
+  window._moCalDayStr = dateStr;
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const items = _planCache.filter(mo => mo.PlanDate && _moCalDatesOf(mo).includes(dateStr));
   document.getElementById('moCalDayTitle').textContent = `แผนผลิตวันที่ ${fmtDateLong(dateStr)}`;
@@ -13586,7 +13868,10 @@ function _rmUseRowHTML(prefix, r, rm) {
 // (เช่น มาจาก "เบิกเบ็ดเตล็ด"/"เบิกเพิ่ม" ที่ไม่มีสูตรอ้างอิงให้คำนวณ) ไม่กระทบวัตถุดิบสด/แห้ง/เคมีเลย
 function _rmUsePackagingRecalc(prefix, grossQty) {
   if (!(grossQty > 0)) return;
-  document.querySelectorAll(`#${prefix}-rm-rows tr[data-cat="${CAT_PKG}"]`).forEach(tr => {
+  // แพ็คเกจจิ้ง "และวัสดุสิ้นเปลือง" (เชือก ถุงมือ ฯลฯ — จัดการเหมือนแพ็คเกจจิ้ง ดู _isPkgLike) ปรับตามยอดที่ได้ทั้งหมดเหมือนกัน
+  // (เดิมเลือกเฉพาะ CAT_PKG ทำให้วัสดุสิ้นเปลืองอย่างเชือกไม่เปลี่ยนตามยอด 2026-11-14)
+  document.querySelectorAll(`#${prefix}-rm-rows tr[data-cat]`).forEach(tr => {
+    if (!_isPkgLike(tr.dataset.cat)) return;
     const perUnit = parseFloat(tr.dataset.perunit);
     if (!(perUnit > 0)) return;
     const scrapPct = parseFloat(tr.dataset.scrap) || 0;
@@ -14188,6 +14473,12 @@ async function _fgrPrintPrompt() {
   const r = await Swal.fire({ icon: 'success', title: `รับเข้าคลัง ${esc(id)} แล้ว`, text: 'ออกเอกสารรับ FG เข้าคลัง 13 ให้อัตโนมัติแล้ว',
     showCancelButton: true, confirmButtonText: '<i class="fa-solid fa-print me-1"></i>พิมพ์เอกสารรับ', cancelButtonText: 'ปิด' });
   if (r.isConfirmed) await fgReceivePrint(id);
+}
+// กันกดรับ FG ซ้ำ (รับซ้ำ = สต็อก FG ซ้ำ) — ล็อกปุ่มระหว่างบันทึก; ฝั่ง DB เช็คยอดรับสะสมเทียบยอดผลิตอีกชั้น (migration_2026-11-14_fg_receive_guard.sql)
+async function fgReceiveModalSaveOnce(btn) {
+  if (btn.disabled) return;
+  btn.disabled = true;
+  try { await fgReceiveModalSave(); } finally { btn.disabled = false; }
 }
 async function fgReceiveModalSave() {
   if (_fgReceiveMode === 'general') return fgReceiveGeneralSave();
