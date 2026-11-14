@@ -13831,7 +13831,7 @@ function _rmUseOrigQty(r) {
   const sum = alloc.reduce((s, a) => s + (parseFloat(a.qty) || 0), 0);
   return sum > 1e-9 ? sum : (parseFloat(r.QtyIssued) || 0);
 }
-function _rmUseRowHTML(prefix, r, rm) {
+function _rmUseRowHTML(prefix, r, rm, note) {
   const orig = _rmUseOrigQty(r);
   // QtyPerUnit ต่อแถว (จาก QtyBase/ForQty ที่ snapshot ไว้ตอนเบิกจริง) + ScrapPct — เก็บไว้เป็น data attribute
   // ให้ _rmUsePackagingRecalc ใช้คำนวณ "เบิกตั้งต้น" ของแพ็คเกจจิ้งใหม่ตอน "ได้ทั้งหมด" เปลี่ยน (ผู้ใช้ขอ
@@ -13840,7 +13840,7 @@ function _rmUseRowHTML(prefix, r, rm) {
   const isPk = /-PK-/.test(r.Issue_ID || '');
   const perUnit = (!isPk && r.QtyBase != null && r.ForQty) ? parseFloat(r.QtyBase) / parseFloat(r.ForQty) : '';
   return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${orig}" data-saved="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}" data-perunit="${perUnit}" data-scrap="${r.ScrapPct ?? 0}">
-    <td><code>${esc(r.RM_ID)}</code></td><td>${esc(rm?.RM_Name || r.RM_ID)}</td>
+    <td><code>${esc(r.RM_ID)}</code></td><td>${esc(rm?.RM_Name || r.RM_ID)}${note ? `<div class="small text-warning-emphasis"><i class="fa-solid fa-hourglass-half me-1"></i>${note}</div>` : ''}</td>
     <td class="text-end text-muted">${_rmFmtQty(orig)}</td>
     <td><div class="d-flex gap-1 align-items-center">
       <input type="number" min="0" step="any" class="form-control form-control-sm ${prefix}-rm-qty${CAT_RAW_ALL.includes(rm?.Category) ? ' bg-warning-subtle' : ''}" value="${r.QtyIssued}" oninput="_rmUseRecalc('${prefix}')"${isPk ? ' readonly title="ยอดจากการแพ็คกล่อง — แก้ที่หน้าบันทึกแพ็คกล่อง"' : ''}>
@@ -13925,8 +13925,34 @@ async function _rmUseLoadRows(prefix, moId) {
     const catA = _rmMasterCache.find(x => x.RM_ID === a.RM_ID)?.Category, catB = _rmMasterCache.find(x => x.RM_ID === b.RM_ID)?.Category;
     return ((_BOM_CAT_ORDER[catA] ?? 9) - (_BOM_CAT_ORDER[catB] ?? 9)) || a.RM_ID.localeCompare(b.RM_ID, undefined, { numeric: true });
   });
-  document.getElementById(`${prefix}-rm-rows`).innerHTML = issRows.length
-    ? issRows.map(r => _rmUseRowHTML(prefix, r, _rmMasterCache.find(x => x.RM_ID === r.RM_ID))).join('')
+  // กล่องที่ตัดตอนแพ็คกล่อง (วัสดุที่ติ๊ก "ตัดตามวันแพ็คกล่อง") — ยังไม่มียอดในใบเบิกของ MO จนกว่าจะแพ็ค ขึ้นแถว "รอยอดตอนแพ็คกล่อง"
+  // แถวเก่าที่เบิกเข้าไลน์ไปแล้วแต่ล็อตนี้ยังไม่ได้แพ็คกล่อง ติดป้ายเดียวกันกำกับไว้
+  await _packCutProbe();
+  if (!_bomCache.length) await bomLoad();
+  const mo = _planCache.find(p => p.MO_ID === moId);
+  const have = new Set(issRows.map(r => _planSimKey(r.RM_ID)));
+  const pending = [], seen = new Set();
+  if (mo) _bomCache.filter(b => b.FG_ID === mo.FG_ID && _isCutAtPack(b.RM_ID)).forEach(b => {
+    const k = _planSimKey(b.RM_ID);
+    if (!have.has(k) && !seen.has(k)) { seen.add(k); pending.push(b); }
+  });
+  let lotPacked = true;
+  if (mo?.Lot && issRows.some(r => _isCutAtPack(r.RM_ID) && !/-PK-/.test(r.Issue_ID || ''))) {
+    const pb = await _sb.from('pack_boxes').select('LotAlloc').then(r => r.data || []);
+    lotPacked = pb.some(b => (b.LotAlloc || []).some(l => l.lot === mo.Lot));
+  }
+  // แถวรอยอด: ไม่มีช่องกรอก ไม่เข้าการปรับยอด/ของเสีย (ไม่มี data-issue) — ยอดจริงจะขึ้นตอนแพ็คกล่อง แล้วเห็นในฟอร์ม/ใบเบิกที่พิมพ์ทีหลัง
+  const waitRow = (rmId, unit, extra) => {
+    const rm = _rmMasterCache.find(x => x.RM_ID === rmId);
+    return `<tr class="table-light"><td><code>${esc(rmId)}</code></td><td>${esc(rm?.RM_Name || rmId)}</td>
+      <td class="text-end text-muted">—</td><td colspan="3" class="small text-warning-emphasis"><i class="fa-solid fa-hourglass-half me-1"></i>รอยอดตอนแพ็คกล่อง${extra ? ` <span class="text-muted">${extra}</span>` : ''}</td><td class="small text-muted">${esc(unit || rm?.Unit || '')}</td></tr>`;
+  };
+  const pendingRows = pending.map(b => waitRow(b.RM_ID, b.Unit)).join('');
+  // แถวเก่าที่เบิกเข้าไลน์ไปแล้ว (ตัดสต็อกไปแล้ว) แต่ล็อตนี้ยังไม่ได้แพ็คกล่อง ก็แสดงเป็นรอยอดเช่นกัน — แพ็คแล้วจึงกลับมาเป็นแถวยอดตามปกติ
+  const isWaitLegacy = r => !lotPacked && _isCutAtPack(r.RM_ID) && !/-PK-/.test(r.Issue_ID || '');
+  document.getElementById(`${prefix}-rm-rows`).innerHTML = (issRows.length || pendingRows)
+    ? issRows.map(r => isWaitLegacy(r) ? waitRow(r.RM_ID, r.Unit, `(เบิกไว้ ${_bomFmtQty(r.QtyIssued)} ตอนเข้าไลน์)`)
+        : _rmUseRowHTML(prefix, r, _rmMasterCache.find(x => x.RM_ID === r.RM_ID))).join('') + pendingRows
     : '<tr><td colspan="7" class="text-center text-muted py-2">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>';
   _rmUseRecalc(prefix);
 }
