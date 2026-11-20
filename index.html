@@ -300,7 +300,7 @@ img.emp-avatar { cursor: zoom-in; }
 .psim-r.st1 td:first-child { box-shadow: inset 4px 0 0 #38bdf8; } .psim-r.st0 td:first-child { box-shadow: inset 4px 0 0 #22c55e; }
 .psim-cov { margin-top: .3rem; padding-left: .6rem; border-left: 2px solid #cbd5e1; font-size: .72rem; color: #64748b; line-height: 1.5; }
 .psim-notes { margin-top: .6rem; font-size: .8rem; } .psim-notes summary { cursor: pointer; color: #64748b; }
-/* ── ผังตู้อบ (บันทึกเข้าเครื่องอบ): Top view ถังแนวนอน 2 ตู้ (ฝาประตูเปิดได้) + ภาพตัดหน้าตัดวงกลม 6 ชั้น × 2 ถาด ── */
+/* ── ผังตู้อบ (บันทึกเข้าเครื่องอบ): Top view ถังแนวนอน 2 ตู้ (ฝาประตูเปิดได้) + ภาพตัดหน้าตัดวงกลม 4 ชั้น × 2 ถาด ── */
 .ov-stage { display: grid; grid-template-columns: minmax(320px, 6fr) 5fr; gap: 1rem; align-items: start; }
 @media (max-width: 991px) { .ov-stage { grid-template-columns: 1fr; } }
 .ov-top-svg { width: 100%; height: auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; display: block; }
@@ -320,6 +320,23 @@ img.emp-avatar { cursor: zoom-in; }
 .ov-3d-pills { position: absolute; left: 8px; bottom: 8px; display: flex; gap: 6px; flex-wrap: wrap; pointer-events: none; }
 .ov-3d-pills span { background: rgba(255,255,255,.92); border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px 10px; font-size: .78rem; font-weight: 600; color: #334155; }
 .ov-3d-pills span.on { border-color: #16a34a; color: #15803d; }
+.ov-day { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; overflow: hidden; } .ov-day[open] { border-color: #93c5fd; box-shadow: 0 2px 8px rgba(37,99,235,.08); }
+.ov-day-h { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; padding: 10px 14px; cursor: pointer; list-style: none; } .ov-day-h::-webkit-details-marker { display: none; } .ov-day-h:hover { background: #f8fafc; }
+.ov-day-chev { color: #94a3b8; font-size: .8rem; transition: transform .2s; } .ov-day[open] .ov-day-chev { transform: rotate(90deg); }
+.ov-day-date b { display: block; font-size: 1rem; line-height: 1.1; } .ov-day-date small { color: #64748b; font-size: .72rem; }
+.ov-day-lots { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 120px; } .ov-lot { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; border-radius: 999px; padding: 2px 10px; font-size: .8rem; font-weight: 600; }
+.ov-day-stats { display: flex; gap: 8px; margin-left: auto; } .ov-st { display: flex; flex-direction: column; align-items: center; min-width: 72px; background: #f1f5f9; border-radius: 10px; padding: 3px 10px; line-height: 1.15; } .ov-st small { font-size: .65rem; color: #64748b; } .ov-st b { font-size: .95rem; color: #1e293b; }
+.ov-st.tot { background: #dcfce7; } .ov-st.tot b { color: #15803d; }
+.pl-card { border: 1px solid #e2e8f0; border-left: 5px solid #16a34a; box-shadow: 0 1px 2px rgba(15,23,42,.04); transition: box-shadow .15s, transform .15s; } .pl-card:hover { box-shadow: 0 6px 16px rgba(15,23,42,.1); } .pl-card[open] { border-color: #86efac; border-left-color: #16a34a; }
+.pl-h { display: flex; align-items: center; gap: 14px; padding: 12px 16px; cursor: pointer; list-style: none; } .pl-h::-webkit-details-marker { display: none; }
+.pl-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.pl-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; } .pl-name { font-size: 1.08rem; font-weight: 700; color: #0f172a; line-height: 1.2; }
+.pl-lot { background: #0f172a; color: #fff; border-radius: 8px; padding: 2px 10px; font-size: .78rem; font-weight: 700; letter-spacing: .04em; }
+.pl-meta { display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: .78rem; color: #64748b; } .pl-meta i { color: #94a3b8; }
+.pl-total { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; min-width: 120px; padding: 6px 16px; border-radius: 12px; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; line-height: 1.05; box-shadow: 0 3px 8px rgba(22,163,74,.3); }
+.pl-total small { font-size: .68rem; opacity: .85; letter-spacing: .03em; } .pl-total b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+@media (max-width: 575px) { .pl-h { flex-wrap: wrap; } .pl-total { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; } }
+.ov-day-b { border-top: 1px solid #e2e8f0; padding: 6px 10px 10px; background: #fcfdff; }
 .ov-sect { border: 1px solid #cbd5e1; border-radius: 14px; background: #f1f5f9; padding: 12px; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
 .ov-sect-top { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .ov-sect-title { display: flex; align-items: center; gap: .55rem; margin-right: auto; }
@@ -1598,14 +1615,11 @@ td.empty-cell { white-space: normal !important; }
       <div class="glass-card"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <h6 class="mb-0">ประวัติการเข้าเครื่องอบ</h6>
         <div class="search-wrap"><input class="form-control form-control-sm search-input" id="ovenSearch" placeholder="ค้นหา MO / สินค้า / เครื่อง / Lot..." style="width:260px" oninput="ovenRenderHist()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('ovenSearch').value='';ovenRenderHist()"></i></div>
-      </div><div class="table-responsive"><table class="table table-hover mb-0 align-middle">
-        <thead><tr><th>วัน-เวลาเข้า</th><th>MO</th><th>สินค้า</th><th>Lot</th><th>เครื่อง/ตู้อบ</th><th class="text-end">จำนวน</th><th>หมายเหตุ</th><th>บันทึกโดย</th><th></th></tr></thead>
-        <tbody id="ovenHistBody"></tbody>
-      </table></div></div>
+      </div><div id="ovenHistBody" class="d-flex flex-column gap-2"></div></div>
     </div>
   </div>
 
-  <!-- ═══════════════ MODAL: บันทึกเข้าเครื่องอบ (ผังตู้อบ 2 ตู้ · 6 ชั้น · 2 ถาด) ═══════════════ -->
+  <!-- ═══════════════ MODAL: บันทึกเข้าเครื่องอบ (ผังตู้อบ 2 ตู้ · 4 ชั้น · 2 ถาด) ═══════════════ -->
   <div class="modal fade" id="ovenModal" tabindex="-1">
     <div class="modal-dialog modal-xl"><div class="modal-content">
       <div class="modal-header modal-header-brand"><h5 class="modal-title"><i class="fa-solid fa-fire-burner me-2"></i><span id="ov-title">บันทึกเข้าเครื่องอบ</span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
@@ -1613,8 +1627,9 @@ td.empty-cell { white-space: normal !important; }
         <div class="small text-muted mb-3" id="ov-info"></div>
         <div class="row g-3 mb-3" id="ov-form-row">
           <div class="col-6 col-md-3"><label class="form-label mb-1">วันที่เข้า<span class="text-danger">*</span></label><input id="ov-date" type="date" class="form-control form-control-sm" oninput="ovenDateHint()"><div class="form-text" id="ov-date-hint"></div></div>
-          <div class="col-6 col-md-3"><label class="form-label mb-1">เวลาเข้า<span class="text-danger">*</span></label><input id="ov-time" type="time" class="form-control form-control-sm"></div>
-          <div class="col-md-6"><label class="form-label mb-1">หมายเหตุ</label><input id="ov-note" class="form-control form-control-sm"></div>
+          <div class="col-6 col-md-2"><label class="form-label mb-1">เวลาเข้า ตู้ 1<span class="text-danger">*</span></label><input id="ov-time-1" type="time" class="form-control form-control-sm" oninput="const t2=document.getElementById('ov-time-2'); if(!t2.dataset.dirty) t2.value=this.value"></div>
+          <div class="col-6 col-md-2"><label class="form-label mb-1">เวลาเข้า ตู้ 2<span class="text-danger">*</span></label><input id="ov-time-2" type="time" class="form-control form-control-sm" oninput="this.dataset.dirty=1"></div>
+          <div class="col-md-5"><label class="form-label mb-1">หมายเหตุ</label><input id="ov-note" class="form-control form-control-sm"></div>
         </div>
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
           <div class="btn-group btn-group-sm"><button type="button" id="ov-m3d" class="btn btn-outline-primary active" onclick="ovenSetMode('3d')"><i class="fa-solid fa-cube me-1"></i>3D</button><button type="button" id="ov-m2d" class="btn btn-outline-secondary" onclick="ovenSetMode('2d')"><i class="fa-regular fa-square me-1"></i>2D</button></div>
@@ -1637,16 +1652,13 @@ td.empty-cell { white-space: normal !important; }
   <div class="page-view" id="page-prodrecord">
     <div class="page-header"><h4 class="mb-0 text-white"><i class="fa-solid fa-industry me-2"></i>บันทึกผลิต</h4><div class="text-white-50 small">บันทึกผลการผลิตจริง ออก Lot / วันผลิต / วันหมดอายุ</div></div>
     <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>จัดการ</th></tr></thead>
+      <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวน <span class="small fw-normal text-muted">(เข้าอบจริง / แผน)</span></th><th>วันที่ผลิต</th><th>จัดการ</th></tr></thead>
       <tbody id="prodReadyTableBody"></tbody>
     </table></div></div>
     <div class="glass-card"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
       <h6 class="mb-0">ประวัติการบันทึกผลิต</h6>
       <div class="search-wrap"><input class="form-control form-control-sm search-input" id="prodHistSearch" placeholder="ค้นหา เลขที่ผลิต / MO / สินค้า / Lot..." style="width:260px" oninput="_prodHistRenderTable()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('prodHistSearch').value='';_prodHistRenderTable()"></i></div>
-    </div><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th>เลขที่ผลิต</th><th>สินค้า</th><th>จำนวนที่ผลิตได้</th><th>Lot</th><th>วันผลิต</th><th>วันหมดอายุ</th><th>จัดการ</th></tr></thead>
-      <tbody id="prodHistTableBody"></tbody>
-    </table></div></div></div>
+    </div><div id="prodHistTableBody" class="d-flex flex-column gap-2"></div></div></div>
   </div>
 
   <!-- ═══════════════ PRODUCTION COST (เฉพาะแอดมิน) ═══════════════ -->
@@ -13633,7 +13645,16 @@ let _ovenCache = [], _ovenOk = false, _ovenIssueDate = {}, _ovenMoId = null;
 async function ovenCacheLoad() {
   const r = await _sb.from('oven_records').select('*').order('InAt', { ascending: false }).limit(1000);
   _ovenOk = !r.error; _ovenCache = r.data || [];
+  // รวมจำนวนแพ็คคู่ (ถุง) / แพ็คเศษ ต่อ 1 บันทึก จากรายถาด
+  _ovenBagAgg = {};
+  const ids = _ovenCache.map(o => o.Oven_ID);
+  for (let i = 0; i < ids.length; i += 50) {
+    const t = await _sb.from('oven_trays').select('Oven_ID,Bags,OddBags').in('Oven_ID', ids.slice(i, i + 50));
+    (t.data || []).forEach(x => { const a = _ovenBagAgg[x.Oven_ID] || (_ovenBagAgg[x.Oven_ID] = { b: 0, o: 0 }); a.b += x.Bags || 0; a.o += x.OddBags || 0; });
+  }
 }
+let _ovenBagAgg = {}, _ovenOpenDays = {};
+const _ovBagsOf = o => _ovenBagAgg[o.Oven_ID] || { b: Math.floor((parseFloat(o.Qty) || 0) / OVEN_BAG), o: (parseFloat(o.Qty) || 0) % OVEN_BAG };
 // สินค้านี้ต้องเข้าเครื่องอบฆ่าเชื้อไหม — ตามช่อง NeedOven ในข้อมูลหลักสินค้า (ติ๊กเฉพาะลูกประคบ) · ยังไม่รัน SQL (ไม่มีคอลัมน์) ใช้ชื่อที่มีคำว่า "ลูกประคบ" แทนไปก่อน
 function _needOven(fgId) {
   const f = _fgMasterCache.find(x => x.FG_ID === fgId);
@@ -13648,6 +13669,8 @@ async function _ovenLoadIssueDates(moIds) {
   (r.data || []).forEach(x => { if (x.IssueDate && (!_ovenIssueDate[x.MO_ID] || x.IssueDate < _ovenIssueDate[x.MO_ID])) _ovenIssueDate[x.MO_ID] = x.IssueDate; });
 }
 const _ovenAt = o => { const d = new Date(o.InAt); return `${fmtDate(d.toLocaleDateString('sv-SE'))} ${d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`; };
+// "เข้าครบ" = ยอดเข้าอบ ≥ 97% ของแผน (เผื่อเศษ/ถุงเศษ ± เล็กน้อย) · เกินแผนก็ครบ
+const _ovenIsFull = (q, plan) => q > 0 && q >= plan * 0.97 - 0.5;
 async function ovenLoad() {
   if (!_planCache.length) await planLoad();
   if (!_fgMasterCache.length) await fgMasterLoad();
@@ -13662,12 +13685,12 @@ async function ovenLoad() {
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   rb.innerHTML = ready.map(p => {
     const fg = fgMap[p.FG_ID], os = _ovenOfMo(p.MO_ID), q = _ovenQtyOfMo(p.MO_ID), plan = parseFloat(p.PlanQty) || 0;
-    const full = q >= plan - 0.5 && q > 0;
+    const full = _ovenIsFull(q, plan);
     const state = !os.length ? '<span class="badge text-bg-warning">ยังไม่เข้าเครื่องอบ</span>'
       : `<span class="badge text-bg-${full ? 'success' : 'info'}">${full ? 'เข้าครบ' : 'เข้าบางส่วน'}</span> <span class="small">${_bomFmtQty(Math.round(q))} ลูก · ${os.length} รอบ · ${esc([...new Set(os.map(o => o.Machine))].join(', '))}</span>`;
     return `<tr><td><b>${esc(p.MO_ID)}</b></td><td>${esc(fg?.FG_Name || p.FG_ID)}</td><td>${esc(p.Lot || '-')}</td><td>${_ovenIssueDate[p.MO_ID] ? fmtDate(_ovenIssueDate[p.MO_ID]) : '-'}</td>
       <td class="text-end">${_bomFmtQty(plan)}${_moBatchText(p, fg) ? ` <b class="text-primary">(${_moBatchText(p, fg)})</b>` : ''}</td><td>${state}</td>
-      <td><button class="btn btn-sm btn-warning" onclick="ovenOpenForm('${esc(p.MO_ID)}')"><i class="fa-solid fa-fire-burner me-1"></i>บันทึกเข้าเครื่องอบ</button></td></tr>`;
+      <td>${full ? '<span class="text-success small fw-semibold"><i class="fa-solid fa-circle-check me-1"></i>ครบแล้ว — ไปบันทึกผลิตได้</span>' : `<button class="btn btn-sm btn-warning" onclick="ovenOpenForm('${esc(p.MO_ID)}')"><i class="fa-solid fa-fire-burner me-1"></i>${os.length ? 'บันทึกเพิ่ม (ส่วนที่เหลือ)' : 'บันทึกเข้าเครื่องอบ'}</button>`}</td></tr>`;
   }).join('') || '<tr><td colspan="7" class="text-center text-muted py-3">ไม่มี MO ที่รอเข้าเครื่องอบ</td></tr>';
   ovenRenderHist();
 }
@@ -13679,17 +13702,31 @@ function ovenRenderHist() {
     const mo = _planCache.find(m => m.MO_ID === o.MO_ID);
     return !q || [o.MO_ID, o.Machine, o.Note, o.CreatedByName, mo && fgName(mo.FG_ID), mo?.Lot].filter(Boolean).join(' ').toLowerCase().includes(q);
   });
-  document.getElementById('ovenHistBody').innerHTML = rows.map(o => {
-    const mo = _planCache.find(m => m.MO_ID === o.MO_ID), canDel = mo?.Status === 'เบิกวัตถุดิบแล้ว';
-    return `<tr><td class="text-nowrap">${_ovenAt(o)}</td><td>${esc(o.MO_ID)}</td><td>${esc(mo ? fgName(mo.FG_ID) : '-')}</td><td>${esc(mo?.Lot || '-')}</td><td>${esc(o.Machine)}</td>
-      <td class="text-end">${_bomFmtQty(o.Qty)}</td><td class="small">${esc(o.Note || '')}</td><td class="small">${esc(o.CreatedByName || '')}</td>
-      <td class="text-nowrap"><button class="btn btn-sm btn-outline-primary me-1" onclick="ovenViewRecord(${o.Oven_ID})" title="ดูผังตู้อบ (ชั้น/ถาด)"><i class="fa-solid fa-table-cells-large"></i></button>${canDel ? `<button class="btn btn-sm btn-outline-danger" onclick="ovenDelete(${o.Oven_ID})" title="ลบ"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-muted small" title="บันทึกผลิตไปแล้ว ลบไม่ได้"><i class="fa-solid fa-lock"></i></span>'}</td></tr>`;
-  }).join('') || '<tr><td colspan="9" class="text-center text-muted py-3">ยังไม่มีบันทึกเข้าเครื่องอบ</td></tr>';
+  // รวมเป็นการ์ดรายวัน (วันที่เข้าอบ) — หัวการ์ด: Lot · แพ็คคู่ · แพ็คเศษ · รวมกี่ลูก · กดขยายดูรายตู้/รอบ
+  const days = new Map();
+  rows.forEach(o => { const k = new Date(o.InAt).toLocaleDateString('sv-SE'); (days.get(k) || days.set(k, []).get(k)).push(o); });
+  document.getElementById('ovenHistBody').innerHTML = [...days].map(([k, recs]) => {
+    const bag = recs.reduce((s, o) => { const a = _ovBagsOf(o); return { b: s.b + a.b, o: s.o + a.o }; }, { b: 0, o: 0 });
+    const qty = recs.reduce((s, o) => s + (parseFloat(o.Qty) || 0), 0);
+    const lots = [...new Set(recs.map(o => _planCache.find(m => m.MO_ID === o.MO_ID)?.Lot || o.MO_ID))];
+    const tr = recs.map(o => {
+      const mo = _planCache.find(m => m.MO_ID === o.MO_ID), canDel = mo?.Status === 'เบิกวัตถุดิบแล้ว', a = _ovBagsOf(o);
+      return `<tr><td class="text-nowrap">${new Date(o.InAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</td><td>${esc(o.MO_ID)}</td><td>${esc(mo ? fgName(mo.FG_ID) : '-')}</td><td>${esc(mo?.Lot || '-')}</td><td><b>${esc(o.Machine)}</b></td>
+        <td class="text-end">${_bomFmtQty(a.b)}</td><td class="text-end">${_bomFmtQty(a.o)}</td><td class="text-end fw-semibold">${_bomFmtQty(o.Qty)}</td><td class="small">${esc(o.Note || '')}</td><td class="small">${esc(o.CreatedByName || '')}</td>
+        <td class="text-nowrap"><button class="btn btn-sm btn-outline-primary me-1" onclick="ovenViewRecord(${o.Oven_ID})" title="ดูผังตู้อบ (ชั้น/ถาด)"><i class="fa-solid fa-table-cells-large"></i></button>${canDel ? `<button class="btn btn-sm btn-outline-danger" onclick="ovenDelete(${o.Oven_ID})" title="ลบ"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-muted small" title="บันทึกผลิตไปแล้ว ลบไม่ได้"><i class="fa-solid fa-lock"></i></span>'}</td></tr>`;
+    }).join('');
+    return `<details class="ov-day" data-k="${k}" ${_ovenOpenDays[k] ? 'open' : ''} ontoggle="_ovenOpenDays[this.dataset.k]=this.open">
+      <summary class="ov-day-h"><i class="fa-solid fa-chevron-right ov-day-chev"></i>
+        <div class="ov-day-date"><b>${fmtDate(k)}</b><small>${recs.length} รอบ</small></div>
+        <div class="ov-day-lots">${lots.map(l => `<span class="ov-lot"><i class="fa-solid fa-barcode me-1"></i>${esc(l)}</span>`).join('')}</div>
+        <div class="ov-day-stats"><span class="ov-st"><small>แพ็คคู่</small><b>${_bomFmtQty(bag.b)}</b></span><span class="ov-st"><small>แพ็คเศษ</small><b>${_bomFmtQty(bag.o)}</b></span><span class="ov-st tot"><small>รวม</small><b>${_bomFmtQty(qty)} ลูก</b></span></div></summary>
+      <div class="table-responsive ov-day-b"><table class="table table-sm mb-0 align-middle"><thead><tr><th>เวลา</th><th>MO</th><th>สินค้า</th><th>Lot</th><th>ตู้อบ</th><th class="text-end">แพ็คคู่</th><th class="text-end">แพ็คเศษ</th><th class="text-end">ลูก</th><th>หมายเหตุ</th><th>บันทึกโดย</th><th></th></tr></thead><tbody>${tr}</tbody></table></div></details>`;
+  }).join('') || '<div class="text-center text-muted py-3">ยังไม่มีบันทึกเข้าเครื่องอบ</div>';
 }
-// ── ผังตู้อบ: 2 ตู้ · แต่ละตู้ 6 ชั้น · ชั้นละ 2 ถาด · ใส่จำนวนถุงต่อถาด (1 ถุง = 2 ลูก · ถุงเศษ = 1 ลูก) ──
-// ภาพจากด้านบน (Top view) 2 ตู้ กดที่ตู้ → ประตูเปิด → ภาพตัด (Section) แสดง 6 ชั้น × 2 ถาด ให้กรอกทีละถาด
+// ── ผังตู้อบ: 2 ตู้ · แต่ละตู้ 4 ชั้น · ชั้นละ 2 ถาด · ใส่จำนวนถุงต่อถาด (1 ถุง = 2 ลูก · ถุงเศษ = 1 ลูก) ──
+// ภาพจากด้านบน (Top view) 2 ตู้ กดที่ตู้ → ประตูเปิด → ภาพตัด (Section) แสดง 4 ชั้น × 2 ถาด ให้กรอกทีละถาด
 // 1 ตู้ที่มียอด = 1 แถวใน oven_records (Machine "ตู้อบ N", Qty = ยอดรวมของตู้) + รายละเอียดรายถาดใน oven_trays
-const OVEN_CABS = [1, 2], OVEN_LAYERS = 6, OVEN_BAG = 2;
+const OVEN_CABS = [1, 2], OVEN_LAYERS = 4, OVEN_BAG = 2;
 let _ovenDraft = { 1: {}, 2: {} }, _ovenCab = null, _ovenView = false;
 const _ovTrayQty = x => x ? (parseInt(x.b) || 0) * OVEN_BAG + (x.o ? 1 : 0) : 0;
 const _ovCabQty = n => Object.values(_ovenDraft[n] || {}).reduce((s, x) => s + _ovTrayQty(x), 0);
@@ -13749,10 +13786,10 @@ function ovenPickCab(n) {
   if (_ovenMode === '3d') { ov3Focus(); ov3Update(); ovenRenderSect(false); }   // 3D: กล้องเข้าใกล้ + ฝาเปิดเอง (ใน ov3Loop)
   else setTimeout(() => ovenRenderSect(true), 280);   // 2D: รอฝาประตูเปิดก่อน แล้วค่อยโชว์ภาพตัดด้านใน
 }
-// ภาพตัด (Section): หน้าตัดวงกลมของถัง มีรถเข็น 6 ชั้น ชั้นละ 2 ถาด — กดที่ถาดแล้วใส่จำนวนถุงในแผงด้านล่าง
+// ภาพตัด (Section): หน้าตัดวงกลมของถัง มีรถเข็น 4 ชั้น ชั้นละ 2 ถาด — กดที่ถาดแล้วใส่จำนวนถุงในแผงด้านล่าง
 let _ovenSel = { l: OVEN_LAYERS, t: 1 };
 function ovenSectionSVG(n) {
-  const d = _ovenDraft[n], cx = 210, cy = 210, ys = { 6: -105, 5: -63, 4: -21, 3: 21, 2: 63, 1: 105 };
+  const d = _ovenDraft[n], cx = 210, cy = 210, ys = { 4: -84, 3: -28, 2: 28, 1: 84 };
   const tray = (l, t) => {
     const x = d[`${l}-${t}`], q = _ovTrayQty(x), sel = !_ovenView && _ovenSel.l === l && _ovenSel.t === t, rx = cx + (t === 1 ? -100 : 4), ry = cy + ys[l] - 15;
     return `<g class="ov-trayg" onclick="ovenSelTray(${l},${t})" style="cursor:${_ovenView ? 'default' : 'pointer'}">
@@ -13766,15 +13803,15 @@ function ovenSectionSVG(n) {
     <circle cx="${cx}" cy="${cy}" r="182" fill="#e8eef5" stroke="#1e3a8a" stroke-width="2"/>
     <line x1="${cx - 150}" y1="${cy + 128}" x2="${cx + 150}" y2="${cy + 128}" stroke="#64748b" stroke-width="5"/><line x1="${cx - 150}" y1="${cy - 128}" x2="${cx + 150}" y2="${cy - 128}" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 4"/>
     <rect x="${cx - 108}" y="${cy - 124}" width="5" height="250" fill="#475569"/><rect x="${cx + 105}" y="${cy - 124}" width="5" height="250" fill="#475569"/>
-    ${[6, 5, 4, 3, 2, 1].map(l => `<line x1="${cx - 108}" y1="${cy + ys[l] + 17}" x2="${cx + 110}" y2="${cy + ys[l] + 17}" stroke="#475569" stroke-width="4"/>
+    ${[4, 3, 2, 1].map(l => `<line x1="${cx - 108}" y1="${cy + ys[l] + 17}" x2="${cx + 110}" y2="${cy + ys[l] + 17}" stroke="#475569" stroke-width="4"/>
       <text x="${cx - 140}" y="${cy + ys[l] + 4}" font-size="11" font-weight="700" fill="#334155">ชั้น ${l}</text>${tray(l, 1)}${tray(l, 2)}`).join('')}
     </svg>`;
 }
 function ovenRenderSect(animate) {
   const box = document.getElementById('ov-sect');
-  if (!_ovenCab) { box.innerHTML = '<div class="text-muted small text-center py-5"><i class="fa-solid fa-hand-pointer fa-lg mb-2 d-block"></i>กดที่ตู้อบทางซ้าย — ฝาประตูจะเปิด และแสดงภาพตัดด้านใน 6 ชั้น ให้ใส่จำนวนถุงของแต่ละถาด</div>'; return; }
+  if (!_ovenCab) { box.innerHTML = '<div class="text-muted small text-center py-5"><i class="fa-solid fa-hand-pointer fa-lg mb-2 d-block"></i>กดที่ตู้อบทางซ้าย — ฝาประตูจะเปิด และแสดงภาพตัดด้านใน 4 ชั้น ให้ใส่จำนวนถุงของแต่ละถาด</div>'; return; }
   const n = _ovenCab;
-  box.innerHTML = `<div class="ov-sect-top"><div class="ov-sect-title"><span class="ov-sect-ico"><i class="fa-solid fa-door-open"></i></span><div><b>ตู้อบ ${n}</b><small>ภาพตัด · ประตูเปิด · 6 ชั้น × 2 ถาด</small></div><span class="badge rounded-pill text-bg-success" id="ov-sect-total"></span></div>
+  box.innerHTML = `<div class="ov-sect-top"><div class="ov-sect-title"><span class="ov-sect-ico"><i class="fa-solid fa-door-open"></i></span><div><b>ตู้อบ ${n}</b><small>ภาพตัด · ประตูเปิด · 4 ชั้น × 2 ถาด</small></div><span class="badge rounded-pill text-bg-success" id="ov-sect-total"></span></div>
     <span class="d-flex gap-1">${OVEN_CABS.filter(c => c !== n).map(c => `<button class="btn btn-sm btn-outline-primary" onclick="ovenPickCab(${c})"><i class="fa-solid fa-arrow-right-arrow-left me-1"></i>ไปตู้ ${c}</button>`).join('')}<button class="btn btn-sm btn-dark" onclick="ovenCloseCab()"><i class="fa-solid fa-door-closed me-1"></i>ปิดประตู</button></span></div>
     ${_ovenView ? '<div class="mb-2"></div>' : `<div class="ov-sect-tools"><i class="fa-solid fa-wand-magic-sparkles"></i><span>เติมทุกถาด</span><input id="ov-fill" type="number" min="0" step="1" class="form-control form-control-sm" style="width:72px" placeholder="ถุง"><button class="btn btn-sm btn-outline-secondary" onclick="ovenFillAll()">เติม</button><button class="btn btn-sm btn-outline-danger ms-auto" onclick="ovenClearCab()" title="ล้างตู้นี้"><i class="fa-solid fa-eraser me-1"></i>ล้าง</button></div>`}
     <div class="ov-sect-fig${animate ? ' ov-enter' : ''}${_ovenMode === '3d' ? ' ov-gridwrap' : ''}" id="ov-sect-fig">${_ovenMode === '3d' ? ovenGridHTML(n) : ovenSectionSVG(n)}</div>
@@ -13831,11 +13868,11 @@ function ovenRefreshTotals() {
   ovenQtyHint();
 }
 // ═══ มุมมอง 3D ของตู้อบ (Three.js) — โมเดลตาม "KM Compact Retort" ในแบบ KM.pdf (ถังนอนทรงกระบอก ฝาประตูโดมกลมพร้อมแกนล็อก ตู้ควบคุมซ้าย ปั๊ม/ท่อขวา โครงเหล็ก) ═══
-// ลากเมาส์หมุนมุมมอง · กดที่ตู้ → กล้องเข้าใกล้ ฝาประตูเปิด เปลือกถังโปร่งแสงเห็นรถเข็น 6 ชั้น × 2 ถาดด้านใน · กดที่ถาด (หรือในตารางด้านขวา) เพื่อใส่ข้อมูล
+// ลากเมาส์หมุนมุมมอง · กดที่ตู้ → กล้องเข้าใกล้ ฝาประตูเปิด เปลือกถังโปร่งแสงเห็นรถเข็น 4 ชั้น × 2 ถาดด้านใน · กดที่ถาด (หรือในตารางด้านขวา) เพื่อใส่ข้อมูล
 // โหลด Three.js เมื่อเปิดโหมดนี้ครั้งแรกเท่านั้น — โหลดไม่ได้/ไม่รองรับ WebGL = ใช้ภาพ 2D แทนอัตโนมัติ
 let _ovenMode = '3d', _ov3 = null, _ov3p = null, _ov3Bound = false;
 const OV3_HOME = { pos: { x: -10, y: 5, z: 14 }, target: { x: -0.3, y: 1.1, z: 0 } };   // แปลงเป็น Vector3 ตอนใช้งาน (THREE โหลดทีหลัง)
-const OV3_X = { 1: -2.8, 2: 2.8 }, OV3_VY = 1.55, OV3_YS = l => -0.55 + (l - 1) * 0.22;
+const OV3_X = { 1: -2.8, 2: 2.8 }, OV3_VY = 1.55, OV3_YS = l => -0.42 + (l - 1) * 0.3;
 function ov3Supported() { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { return false; } }
 function ov3Load() {
   if (window.THREE && THREE.OrbitControls) return Promise.resolve();
@@ -13884,9 +13921,9 @@ function ov3Machine(n) {
   add(new THREE.BoxGeometry(1.55, .17, .1), blue, -1.08, 0, .34, pivot);
   const hub = add(new THREE.CylinderGeometry(.17, .17, .12, 24), dark, -1.08, 0, .36, pivot); hub.rotation.x = Math.PI / 2;
   add(new THREE.BoxGeometry(.18, .3, .12), dark, .02, 0, 0, pivot);
-  // รถเข็นในตู้: 6 ชั้น × 2 ถาด
+  // รถเข็นในตู้: 4 ชั้น × 2 ถาด
   const rack = new THREE.Group(); rack.position.set(0, OV3_VY, 0); g.add(rack);
-  [[-.66, -.85], [.66, -.85], [-.66, .85], [.66, .85]].forEach(([x, z]) => add(new THREE.BoxGeometry(.04, 1.3, .04), dark, x, 0, z, rack));
+  [[-.66, -.85], [.66, -.85], [-.66, .85], [.66, .85]].forEach(([x, z]) => add(new THREE.BoxGeometry(.04, 1.05, .04), dark, x, .03, z, rack));
   const trays = [];
   for (let l = 1; l <= OVEN_LAYERS; l++) {
     add(new THREE.BoxGeometry(1.4, .02, 1.8), dark, 0, OV3_YS(l) - .05, 0, rack);
@@ -13974,14 +14011,14 @@ function ov3Resize() {
   const w = el.clientWidth, h = Math.round(Math.max(380, w * .9)); s.renderer.setSize(w, h); s.camera.aspect = w / h; s.camera.updateProjectionMatrix();
 }
 function ov3Stop() { if (_ov3) { cancelAnimationFrame(_ov3.raf); _ov3.raf = 0; } }
-// ตารางถาด (คู่กับภาพ 3D): 6 ชั้น × 2 ถาด กดเลือกถาดเพื่อใส่ข้อมูลได้ด้วย
+// ตารางถาด (คู่กับภาพ 3D): 4 ชั้น × 2 ถาด กดเลือกถาดเพื่อใส่ข้อมูลได้ด้วย
 function ovenGridHTML(n) {
   const d = _ovenDraft[n];
   const cell = (l, t) => {
     const x = d[`${l}-${t}`], q = _ovTrayQty(x), sel = !_ovenView && _ovenSel.l === l && _ovenSel.t === t;
     return `<button type="button" class="ov-gcell${q ? ' has' : ''}${sel ? ' sel' : ''}" onclick="ovenSelTray(${l},${t})"${_ovenView ? ' disabled' : ''}><span class="ov-gt">ถาด ${t === 1 ? 'A' : 'B'}</span><b class="ov-gb">${q ? `${x.b || 0}<small> ถุง${x.o ? ' + เศษ' : ''}</small>` : '—'}</b><span class="ov-gq">${q ? `${_bomFmtQty(q)} ลูก` : 'ว่าง'}</span></button>`;
   };
-  return `<div class="ov-grid">${[6, 5, 4, 3, 2, 1].map(l => `<div class="ov-glbl"><small>ชั้น</small><b>${l}</b></div>${cell(l, 1)}${cell(l, 2)}`).join('')}</div>`;
+  return `<div class="ov-grid">${[4, 3, 2, 1].map(l => `<div class="ov-glbl"><small>ชั้น</small><b>${l}</b></div>${cell(l, 1)}${cell(l, 2)}`).join('')}</div>`;
 }
 // สลับ 3D / 2D
 async function ovenSetMode(m, silent) {
@@ -14024,11 +14061,13 @@ async function ovenOpenForm(moId) {
   await _ovenLoadIssueDates([moId]);
   _ovenMoId = moId; _ovenDraft = { 1: {}, 2: {} }; _ovenCab = null; _ovenView = false;
   const done = _ovenQtyOfMo(moId), plan = parseFloat(mo.PlanQty) || 0;
+  if (_ovenIsFull(done, plan)) { Swal.fire('เข้าเครื่องอบครบแล้ว', `เข้าอบแล้ว ${_bomFmtQty(Math.round(done))} ลูก จากแผน ${_bomFmtQty(plan)} ลูก — ไปบันทึกผลิตได้เลย`, 'success'); return; }
   document.getElementById('ov-title').textContent = `บันทึกเข้าเครื่องอบ — ${moId}`;
   document.getElementById('ov-info').innerHTML = `<b>${esc(fg?.FG_Name || mo.FG_ID)}</b> · Lot ${esc(mo.Lot || '-')} · แผน ${_bomFmtQty(plan)} ลูก${_moBatchText(mo, fg) ? ` (${_moBatchText(mo, fg)})` : ''}`
     + `<br>เบิกเข้าไลน์ผลิตวันที่ ${_ovenIssueDate[moId] ? fmtDate(_ovenIssueDate[moId]) : '-'} · เข้าเครื่องอบแล้ว ${_bomFmtQty(Math.round(done))} ลูก (${_ovenOfMo(moId).length} รอบ)`;
   document.getElementById('ov-date').value = _ovenIssueDate[moId] || todayStr();
-  const now = new Date(); document.getElementById('ov-time').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const now = new Date(), hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  OVEN_CABS.forEach(n => { const el = document.getElementById(`ov-time-${n}`); el.value = hm; delete el.dataset.dirty; });
   document.getElementById('ov-note').value = '';
   document.getElementById('ov-form-row').style.display = ''; document.getElementById('ov-save-btn').style.display = '';
   ovenDateHint(); ovenQtyHint(); ovenRenderSect(false);
@@ -14040,14 +14079,16 @@ function ovenDateHint() {
   document.getElementById('ov-date-hint').innerHTML = iss && d && d !== iss ? `<span class="text-warning-emphasis">ไม่ตรงกับวันที่เบิกเข้าไลน์ (${fmtDate(iss)})</span>` : (iss ? 'ตรงกับวันที่เบิกเข้าไลน์' : '');
 }
 async function ovenSave(btn) {
-  const date = document.getElementById('ov-date').value, time = document.getElementById('ov-time').value;
-  if (!date || !time) { Swal.fire('ระบุวันที่และเวลาเข้า', '', 'warning'); return; }
+  const date = document.getElementById('ov-date').value;
   const cabs = OVEN_CABS.filter(n => _ovCabQty(n) > 0);
   if (!cabs.length) { Swal.fire('ยังไม่ได้ใส่จำนวน', 'กดที่ตู้อบ แล้วใส่จำนวนถุงของถาดที่เข้าอบอย่างน้อย 1 ถาด', 'warning'); return; }
+  const times = {}; cabs.forEach(n => { times[n] = document.getElementById(`ov-time-${n}`).value; });
+  if (!date || cabs.some(n => !times[n])) { Swal.fire('ระบุวันที่และเวลาเข้า', `กรอกเวลาเข้าของ ${cabs.map(n => 'ตู้ ' + n).join(' และ ')}`, 'warning'); return; }
   btn.disabled = true;
   try {
-    const inAt = new Date(`${date}T${time}:00`).toISOString(), note = document.getElementById('ov-note').value.trim() || null, by = _currentUser?.name || _currentUser?.email || null;
+    const note = document.getElementById('ov-note').value.trim() || null, by = _currentUser?.name || _currentUser?.email || null;
     for (const n of cabs) {
+      const inAt = new Date(`${date}T${times[n]}:00`).toISOString();   // เวลาเข้าแยกต่อตู้
       const ins = await _sb.from('oven_records').insert({ MO_ID: _ovenMoId, Machine: `ตู้อบ ${n}`, InAt: inAt, Qty: _ovCabQty(n), Note: note, CreatedByName: by }).select();
       if (ins.error || !ins.data?.[0]) { Swal.fire('บันทึกไม่สำเร็จ', esc(ins.error?.message || 'ไม่มีสิทธิ์'), 'error'); await ovenCacheLoad(); return; }
       const id = ins.data[0].Oven_ID;
@@ -14100,7 +14141,7 @@ async function prodRecordLoad() {
   const okRows = ready.filter(p => !needGate(p) || _ovenQtyOfMo(p.MO_ID) > 0);
   const waitRows = ready.filter(p => needGate(p) && !(_ovenQtyOfMo(p.MO_ID) > 0));
   document.getElementById('prodReadyTableBody').innerHTML = okRows.map(p => `
-    <tr><td>${esc(p.MO_ID)}${needGate(p) ? `<div class="small text-muted"><i class="fa-solid fa-fire-burner me-1"></i>เข้าเครื่องอบ ${_bomFmtQty(Math.round(_ovenQtyOfMo(p.MO_ID)))} ลูก</div>` : ''}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td><td>${fmtDate(p.PlanDate)}</td>
+    <tr><td>${esc(p.MO_ID)}${needGate(p) ? `<div class="small text-muted"><i class="fa-solid fa-fire-burner me-1"></i>เข้าเครื่องอบ ${_bomFmtQty(Math.round(_ovenQtyOfMo(p.MO_ID)))} ลูก</div>` : ''}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${needGate(p) ? `<b>${_bomFmtQty(Math.round(_ovenQtyOfMo(p.MO_ID)))}</b> <span class="small text-muted">(แผน ${_bomFmtQty(p.PlanQty)})</span>` : _bomFmtQty(p.PlanQty)}</td><td>${fmtDate(p.PlanDate)}</td>
     <td><button class="btn btn-sm btn-success" onclick="prodRecordOpenForm('${p.MO_ID}')"><i class="fa-solid fa-industry me-1"></i>บันทึกผลิต</button></td></tr>`).join('')
     + waitRows.map(p => `
     <tr class="table-light text-muted"><td>${esc(p.MO_ID)}<div class="small"><i class="fa-solid fa-hourglass-half me-1"></i>ยังไม่ได้บันทึกเข้าเครื่องอบ</div></td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td><td>${fmtDate(p.PlanDate)}</td>
@@ -14123,12 +14164,30 @@ function _prodHistRenderTable() {
     || [h.Prod_ID, h.MO_ID, fgMap[h.FG_ID]?.FG_Name, h.ProdLot].filter(Boolean).join(' ').toLowerCase().includes(q));
   // ป้าย Lot/วันหมดอายุแบบเดียวกับหน้าอื่นๆ ในระบบ (badge pill / _expBadge) — เดิมเป็นตัวหนังสือเปล่าล้วน
   // ต่างจากหน้า "เบิกเข้าไลน์ผลิต"/Stock Card ที่ใช้ badge มาตลอด (ผู้ใช้ขอ 2026-10-31 "ปรับให้เหมือนกัน")
-  document.getElementById('prodHistTableBody').innerHTML = hist.map(h => `
+  const rowOf = h => `
     <tr><td>${esc(h.Prod_ID)}</td><td>${esc(fgMap[h.FG_ID]?.FG_Name || h.FG_ID)}</td><td>${_bomFmtQty(h.QtyProduced)}</td>
     <td><span class="badge bg-light text-dark border">${esc(h.ProdLot || '-')}</span></td><td>${fmtDate(h.MfgDate)}</td><td>${h.ExpDate ? _expBadge(h.ExpDate) : '<span class="text-muted">—</span>'}</td>
-    <td class="text-nowrap">${_editBtn('production_records', h.Prod_ID)}<button class="btn btn-sm btn-outline-secondary" onclick="prodRecordPrint('${h.Prod_ID}')" title="พิมพ์ใบบันทึกผลิต (ส่งบัญชี)"><i class="fa-solid fa-print"></i></button><button class="btn btn-sm btn-outline-primary" onclick="prodRecordPrint('${h.Prod_ID}', true)" title="พิมพ์รวมส่งบัญชี — ครึ่งบน: เอกสารบันทึกผลิต · ครึ่งล่าง: เอกสารรับ FG เข้าคลัง 13 (สรุปรวม) ในแผ่นเดียว"><i class="fa-solid fa-print"></i><i class="fa-solid fa-plus mx-1" style="font-size:.6em"></i><i class="fa-solid fa-box-open"></i></button><button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')" title="ลบ"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')
-    || `<tr><td colspan="7" class="text-center text-muted py-3">${q ? 'ไม่พบรายการที่ค้นหา' : 'ยังไม่มีประวัติ'}</td></tr>`;
+    <td class="text-nowrap">${_editBtn('production_records', h.Prod_ID)}<button class="btn btn-sm btn-outline-secondary" onclick="prodRecordPrint('${h.Prod_ID}')" title="พิมพ์ใบบันทึกผลิต (ส่งบัญชี)"><i class="fa-solid fa-print"></i></button><button class="btn btn-sm btn-outline-primary" onclick="prodRecordPrint('${h.Prod_ID}', true)" title="พิมพ์รวมส่งบัญชี — ครึ่งบน: เอกสารบันทึกผลิต · ครึ่งล่าง: เอกสารรับ FG เข้าคลัง 13 (สรุปรวม) ในแผ่นเดียว"><i class="fa-solid fa-print"></i><i class="fa-solid fa-plus mx-1" style="font-size:.6em"></i><i class="fa-solid fa-box-open"></i></button><button class="btn btn-sm btn-outline-danger" onclick="prodRecordDelete('${h.Prod_ID}')" title="ลบ"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+  // รวมเป็นการ์ดต่อ Lot: จำนวนรวม · ผลิตกี่วัน (วันผลิตไม่ซ้ำ) · กี่รอบ — กดขยายดูรายการ (ผู้ใช้ขอ 2026-11-20)
+  const lots = new Map();
+  hist.forEach(h => { const k = h.ProdLot || '-'; (lots.get(k) || lots.set(k, []).get(k)).push(h); });
+  document.getElementById('prodHistTableBody').innerHTML = [...lots].map(([lot, recs]) => {
+    const qty = recs.reduce((s, h) => s + (parseFloat(h.QtyProduced) || 0), 0);
+    const dates = [...new Set(recs.map(h => h.MfgDate).filter(Boolean))].sort();
+    const exps = recs.map(h => h.ExpDate).filter(Boolean).sort();
+    const names = [...new Set(recs.map(h => fgMap[h.FG_ID]?.FG_Name || h.FG_ID))];
+    const range = dates.length > 1 ? `${fmtDate(dates[0])} – ${fmtDate(dates[dates.length - 1])}` : (dates[0] ? fmtDate(dates[0]) : '-');
+    return `<details class="ov-day pl-card" data-k="${esc(lot)}" ${_prodLotOpen[lot] ? 'open' : ''} ontoggle="_prodLotOpen[this.dataset.k]=this.open">
+      <summary class="pl-h"><i class="fa-solid fa-chevron-right ov-day-chev"></i>
+        <div class="pl-main">
+          <div class="pl-top"><span class="pl-lot"><i class="fa-solid fa-barcode me-1"></i>${esc(lot)}</span><span class="pl-name">${esc(names.join(', '))}</span></div>
+          <div class="pl-meta"><span><i class="fa-regular fa-calendar me-1"></i>ผลิต ${range}</span>${exps.length ? `<span><i class="fa-regular fa-hourglass-half me-1"></i>หมดอายุ ${fmtDate(exps[0])}</span>` : ''}<span><i class="fa-solid fa-sun me-1"></i>${dates.length} วัน</span><span><i class="fa-solid fa-clipboard-list me-1"></i>${recs.length} ครั้ง</span></div>
+        </div>
+        <div class="pl-total"><small>รวมผลิตได้</small><b>${_bomFmtQty(qty)}</b></div></summary>
+      <div class="table-responsive ov-day-b"><table class="table table-sm mb-0 align-middle"><thead><tr><th>เลขที่ผลิต</th><th>สินค้า</th><th>จำนวนที่ผลิตได้</th><th>Lot</th><th>วันผลิต</th><th>วันหมดอายุ</th><th>จัดการ</th></tr></thead><tbody>${recs.map(rowOf).join('')}</tbody></table></div></details>`;
+  }).join('') || `<div class="text-center text-muted py-3">${q ? 'ไม่พบรายการที่ค้นหา' : 'ยังไม่มีประวัติ'}</div>`;
 }
+let _prodLotOpen = {};
 // ═══════════════════════════════════════════════════════════
 // PRODUCTION COST (เฉพาะหัวหน้างานขึ้นไป — ดู navlink-prodcost-wrap/_applyRolePermissions)
 // ต้นทุนจริงต่อรอบผลิต: ใช้ LotAlloc ที่บันทึกไว้ตอนเบิกวัตถุดิบจริง (ตัด Lot ไหนไปเท่าไหร่) จับคู่กับราคา/
@@ -14779,10 +14838,12 @@ async function prodRecordOpenForm(moId) {
   const expDefault = addDays(mfgDefault, fg?.ShelfLifeDays ?? 5);
   _prodMoId = moId;
   window._prShelfDays = fg?.ShelfLifeDays ?? 5;
-  window._prGrossTouched = false; window._prGrossPlan = parseFloat(mo.PlanQty) || 0;
+  // ยอดตั้งต้น: ถ้าผ่านเครื่องอบแล้วใช้ "ยอดที่เข้าเครื่องอบจริง" แทนยอดตามแผน
+  const ovenQ = _ovenOk && _needOven(mo.FG_ID) ? Math.round(_ovenQtyOfMo(moId)) : 0, grossDefault = ovenQ > 0 ? ovenQ : mo.PlanQty;
+  window._prGrossTouched = false; window._prGrossPlan = parseFloat(grossDefault) || 0;
   _modalClearErrors(['pr-qty-gross', 'pr-qty', 'pr-lot']);
   document.getElementById('pr-title').textContent = `บันทึกผลิต ${moId}`;
-  document.getElementById('pr-qty-gross').value = mo.PlanQty;
+  document.getElementById('pr-qty-gross').value = grossDefault;
   document.getElementById('pr-qty-defect').value = 0;
   prQtyRecalc();
   // Lot ตั้งไว้ตั้งแต่ตอนวางแผน (MO.Lot) ให้ใช้ต่อเนื่องกันเป็นค่าเริ่มต้น — ยังแก้ได้ถ้าผลิตจริงต้องแยก Lot
