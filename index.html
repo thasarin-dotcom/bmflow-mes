@@ -930,21 +930,21 @@ table.genwd-table tbody.rcr-t td { padding: 1px 7px; font-size: 11px; line-heigh
 }
 
 /* ป้าย QR แปะกล่อง — ตาราง 2 คอลัมน์ × 7 แถว = 14 ดวง/A4 พอดี เว้นขอบกระดาษปกติ 10mm รอบด้าน
-   (พื้นที่พิมพ์จริง 190×277mm, 277÷7=39.57mm/แถว, 190÷2=95mm/คอลัมน์ — ต้องลดขนาด .pbqr-page ลงตามขอบ
+   (พื้นที่พิมพ์จริง 190×277mm, 277÷8=34.6mm/แถว, 190÷2=95mm/คอลัมน์ — ต้องลดขนาด .pbqr-page ลงตามขอบ
    ไม่งั้นเนื้อหาจะเกิน 1 หน้าไปโผล่หน้าเปล่าๆ หน้าที่ 2 เหมือนบั๊กเดิมที่เคยเจอใน rrpt/prtp/reqo/ihist) */
 #pbqr-print-root { display: none; }
-.pbqr-page { width: 190mm; height: 277mm; box-sizing: border-box; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(7, 1fr); page-break-after: always; break-after: page; }
+.pbqr-page { width: 190mm; height: 277mm; box-sizing: border-box; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(8, 1fr); page-break-after: always; break-after: page; }
 /* แถวกว้าง 95mm แต่สูงแค่ 39.57mm — เรียง QR กับข้อความซ้อนกันแนวตั้งไม่พอที่ ต้องวางคู่กันแนวนอนแทน
    แล้วเซนเตอร์ "กลุ่ม QR+ข้อความ" ทั้งก้อนไว้กลางกรอบด้วย justify-content (ไม่ใช่ยืดข้อความเต็มช่องแบบเดิม) */
-.pbqr-item { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 5mm; padding: 2mm 4mm; border: 1px dashed #94a3b8; overflow: hidden; }
-.pbqr-item .qr { width: 24mm; height: 24mm; flex: none; }
+.pbqr-item { box-sizing: border-box; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 5mm; padding: 1.5mm 4mm; border: 1px dashed #94a3b8; overflow: hidden; }
+.pbqr-item .qr { width: 22mm; height: 22mm; flex: none; }
 .pbqr-item .qr svg { width: 100%; height: 100%; display: block; }
 .pbqr-item .txt { flex: 0 1 auto; max-width: 62mm; min-width: 0; text-align: left; font-size: 14px; line-height: 1.25; overflow: hidden; }
-.pbqr-item .txt .id { font-weight: 700; font-size: 17px; }
-.pbqr-item .txt .fg { color: #64748b; font-size: 13px; margin-bottom: 2mm; }
+.pbqr-item .txt .id { font-weight: 700; font-size: 16px; }
+.pbqr-item .txt .fg { color: #64748b; font-size: 13px; margin-bottom: 1mm; }
 /* "จำนวนลูก" คือจุดที่ต้องเน้นที่สุดบนป้าย (ผู้ใช้ขอย้ำ) — ใหญ่/หนา/สีน้ำเงินแบรนด์ เด่นกว่าทุกบรรทัดอื่น */
-.pbqr-item .txt .qty { font-size: 26px; font-weight: 800; color: var(--primary-blue); line-height: 1.1; }
-.pbqr-item .txt .lots { font-size: 14px; color: #64748b; margin-top: 1.5mm; }
+.pbqr-item .txt .qty { font-size: 24px; font-weight: 800; color: var(--primary-blue); line-height: 1.1; }
+.pbqr-item .txt .lots { font-size: 13px; color: #64748b; margin-top: 1mm; }
 .pbqr-item .txt .lots .lotline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media print {
   body.print-pbqr { background: #fff !important; display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
@@ -1000,7 +1000,8 @@ table.scp-table tr.scp-summary td { background: #e2e8f0; font-weight: 800; borde
 .mocal-dayoff { font-size: .68rem; }
 /* (7) หัวตารางติดบนเวลาเลื่อน: ตารางในหน้า (ไม่รวม modal/Swal) สูงไม่เกิน 65% ของจอแล้วเลื่อนในกรอบตัวเอง — sticky ต้องมีกรอบที่เลื่อนแนวตั้งจริง
    ตารางที่กำหนดความสูงเอง (inline max-height / flex-grow-1) ไม่โดนทับ */
-.page-view .table-responsive:not(.flex-grow-1) { max-height: 65vh; overflow: auto; }
+.page-view .table-responsive:not(.flex-grow-1):not(.no-inner-scroll) { max-height: 65vh; overflow: auto; }   /* .no-inner-scroll = การ์ดรายวัน/รายล็อต ห้ามมีสกอลล์ภายในการ์ด */
+.page-view .table-responsive.no-inner-scroll { overflow-x: auto; overflow-y: hidden; }
 .page-view .table-responsive > .table > thead > tr > th { position: sticky; top: 0; z-index: 3; background-color: #eef3f8; color: #1e293b; box-shadow: 0 1px 0 #cbd5e1; }   /* หัวตารางจริงในแอปพื้นอ่อน+ตัวหนังสือเข้ม (th ทับสีน้ำเงินของ thead) ต้องทึบเพื่อบังแถวที่เลื่อนผ่านใต้ */
 /* (3) สัญญาณโหลด: แถบบางๆ บนสุดเวลาเปลี่ยนหน้า/รีเฟรช + แถว "กำลังโหลด" ในตารางที่ยังว่าง */
 .load-bar { position: fixed; top: 0; left: var(--sidebar-width); right: 0; height: 3px; z-index: 1100; overflow: hidden; opacity: 0; transition: opacity .15s; pointer-events: none; }
@@ -1146,7 +1147,6 @@ td.empty-cell { white-space: normal !important; }
     <ul class="nav flex-column nav-group-body">
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('pr');return false;" id="navlink-pr"><i class="fa-solid fa-cart-shopping me-2"></i>ใบขอซื้อ (PR)</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('received');return false;" id="navlink-received"><i class="fa-solid fa-inbox me-2"></i>รับวัตถุดิบเข้าคลัง</a></li>
-      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('fgreceive');return false;" id="navlink-fgreceive"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('reqorder');return false;" id="navlink-reqorder"><i class="fa-solid fa-file-signature me-2"></i>ใบขอเบิก</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('miscout');return false;" id="navlink-miscout"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>เบิกเบ็ดเตล็ด / โอนย้าย</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockmove');return false;" id="navlink-stockmove"><i class="fa-solid fa-right-left me-2"></i>ความเคลื่อนไหวสต็อก</a></li>    </ul>
@@ -1161,6 +1161,7 @@ td.empty-cell { white-space: normal !important; }
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('issue');return false;" id="navlink-issue"><i class="fa-solid fa-dolly me-2"></i>เบิกเข้าไลน์ผลิต</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('oven');return false;" id="navlink-oven"><i class="fa-solid fa-fire-burner me-2"></i>บันทึกเข้าเครื่องอบ</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('prodrecord');return false;" id="navlink-prodrecord"><i class="fa-solid fa-industry me-2"></i>บันทึกผลิต</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('fgreceive');return false;" id="navlink-fgreceive"><i class="fa-solid fa-box-open me-2"></i>รับ FG เข้าคลัง</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('packbox');return false;" id="navlink-packbox"><i class="fa-solid fa-box me-2"></i>บันทึกแพ็คกล่อง</a></li>
       <!-- เฉพาะแอดมิน (ซ่อน/แสดงใน _applyRolePermissions) — ข้อมูลต้นทุน/ราคาซื้อวัตถุดิบถือเป็นข้อมูลอ่อนไหว
            (ผู้ใช้เลือก "หัวหน้างานขึ้นไป" 2026-10-11 แล้วปรับเป็น "แอดมินเท่านั้น" 2026-10-12) -->
@@ -4373,7 +4374,7 @@ function _fitTables() {
   const page = document.querySelector('.page-view.active');
   if (!page) return;
   const sc = page.querySelector('.scroll-content');
-  page.querySelectorAll('.table-responsive:not(.flex-grow-1)').forEach(w => {
+  page.querySelectorAll('.table-responsive:not(.flex-grow-1):not(.no-inner-scroll)').forEach(w => {
     if (!w.offsetParent || (w.style.maxHeight && !w.dataset.fit)) return;   // ซ่อนอยู่ / มี max-height กำหนดเองใน HTML
     const top = w.getBoundingClientRect().top + (sc ? sc.scrollTop : 0);
     w.style.maxHeight = Math.max(260, Math.round(innerHeight - top - 24)) + 'px';
@@ -13720,7 +13721,7 @@ function ovenRenderHist() {
         <div class="ov-day-date"><b>${fmtDate(k)}</b><small>${recs.length} รอบ</small></div>
         <div class="ov-day-lots">${lots.map(l => `<span class="ov-lot"><i class="fa-solid fa-barcode me-1"></i>${esc(l)}</span>`).join('')}</div>
         <div class="ov-day-stats"><span class="ov-st"><small>แพ็คคู่</small><b>${_bomFmtQty(bag.b)}</b></span><span class="ov-st"><small>แพ็คเศษ</small><b>${_bomFmtQty(bag.o)}</b></span><span class="ov-st tot"><small>รวม</small><b>${_bomFmtQty(qty)} ลูก</b></span></div></summary>
-      <div class="table-responsive ov-day-b"><table class="table table-sm mb-0 align-middle"><thead><tr><th>เวลา</th><th>MO</th><th>สินค้า</th><th>Lot</th><th>ตู้อบ</th><th class="text-end">แพ็คคู่</th><th class="text-end">แพ็คเศษ</th><th class="text-end">ลูก</th><th>หมายเหตุ</th><th>บันทึกโดย</th><th></th></tr></thead><tbody>${tr}</tbody></table></div></details>`;
+      <div class="table-responsive ov-day-b no-inner-scroll"><table class="table table-sm mb-0 align-middle" style="table-layout:fixed;width:100%;min-width:1200px"><colgroup><col style="width:70px"><col style="width:100px"><col><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:80px"><col style="width:120px"><col style="width:120px"><col style="width:110px"></colgroup><thead><tr><th>เวลา</th><th>MO</th><th>สินค้า</th><th>Lot</th><th>ตู้อบ</th><th class="text-end">แพ็คคู่</th><th class="text-end">แพ็คเศษ</th><th class="text-end">ลูก</th><th>หมายเหตุ</th><th>บันทึกโดย</th><th></th></tr></thead><tbody>${tr}</tbody></table></div></details>`;
   }).join('') || '<div class="text-center text-muted py-3">ยังไม่มีบันทึกเข้าเครื่องอบ</div>';
 }
 // ── ผังตู้อบ: 2 ตู้ · แต่ละตู้ 4 ชั้น · ชั้นละ 2 ถาด · ใส่จำนวนถุงต่อถาด (1 ถุง = 2 ลูก · ถุงเศษ = 1 ลูก) ──
@@ -14184,7 +14185,7 @@ function _prodHistRenderTable() {
           <div class="pl-meta"><span><i class="fa-regular fa-calendar me-1"></i>ผลิต ${range}</span>${exps.length ? `<span><i class="fa-regular fa-hourglass-half me-1"></i>หมดอายุ ${fmtDate(exps[0])}</span>` : ''}<span><i class="fa-solid fa-sun me-1"></i>${dates.length} วัน</span><span><i class="fa-solid fa-clipboard-list me-1"></i>${recs.length} ครั้ง</span></div>
         </div>
         <div class="pl-total"><small>รวมผลิตได้</small><b>${_bomFmtQty(qty)}</b></div></summary>
-      <div class="table-responsive ov-day-b"><table class="table table-sm mb-0 align-middle"><thead><tr><th>เลขที่ผลิต</th><th>สินค้า</th><th>จำนวนที่ผลิตได้</th><th>Lot</th><th>วันผลิต</th><th>วันหมดอายุ</th><th>จัดการ</th></tr></thead><tbody>${recs.map(rowOf).join('')}</tbody></table></div></details>`;
+      <div class="table-responsive ov-day-b no-inner-scroll"><table class="table table-sm mb-0 align-middle" style="table-layout:fixed;width:100%;min-width:1000px"><colgroup><col style="width:170px"><col><col style="width:130px"><col style="width:120px"><col style="width:140px"><col style="width:170px"></colgroup><thead><tr><th>เลขที่ผลิต</th><th>สินค้า</th><th>จำนวนที่ผลิตได้</th><th>Lot</th><th>วันผลิต</th><th>วันหมดอายุ</th><th>จัดการ</th></tr></thead><tbody>${recs.map(rowOf).join('')}</tbody></table></div></details>`;
   }).join('') || `<div class="text-center text-muted py-3">${q ? 'ไม่พบรายการที่ค้นหา' : 'ยังไม่มีประวัติ'}</div>`;
 }
 let _prodLotOpen = {};
@@ -16821,8 +16822,9 @@ function packboxRenderTable() {
         </div>
         <button class="btn btn-sm btn-outline-primary" onclick="packboxPrintQr(${esc(JSON.stringify(groups[d].map(b => b.Box_ID)))})"><i class="fa-solid fa-qrcode me-1"></i>พิมพ์ QR ทั้งวัน</button>
       </div>
-      <div class="table-responsive pb-day-body" ${open ? '' : 'style="display:none"'}><table class="table table-hover table-sm mb-0">
-        <thead><tr><th style="width:28px"></th><th>เลขที่กล่อง</th><th>สินค้า</th><th>ลูก/กล่อง</th><th>จำนวนในกล่อง</th><th>สถานะ</th><th>ล็อตที่ประกอบ</th><th class="text-center">จัดการ</th></tr></thead>
+      <div class="table-responsive pb-day-body no-inner-scroll" data-x="1" ${open ? '' : 'style="display:none"'}><table class="table table-hover table-sm mb-0" style="table-layout:fixed;width:100%;min-width:1000px">
+        <colgroup><col style="width:34px"><col style="width:140px"><col><col style="width:100px"><col style="width:120px"><col style="width:80px"><col style="width:170px"><col style="width:130px"></colgroup>
+        <thead><tr><th></th><th>เลขที่กล่อง</th><th>สินค้า</th><th>ลูก/กล่อง</th><th>จำนวนในกล่อง</th><th>สถานะ</th><th>ล็อตที่ประกอบ</th><th class="text-center">จัดการ</th></tr></thead>
         <tbody>${groups[d].map(b => `<tr>
           <td><input type="checkbox" class="form-check-input packbox-row-check" value="${esc(b.Box_ID)}" onchange="packboxUpdateBulkBtn()"></td>
           <td>${esc(b.Box_ID)}</td><td>${esc(_fgName(b.FG_ID))}</td><td>${_bomFmtQty(b.UnitPerBox)}</td>
@@ -16887,7 +16889,7 @@ function packboxUpdateBulkBtn() {
   qrBtn.querySelector('.cnt').textContent = n;
 }
 // ป้าย QR แปะหน้ากล่อง — สแกนแล้วได้เลขที่กล่องไปค้นดูย้อนหลังในระบบ (ไม่ได้ฝังลิงก์ เพราะแอปนี้ต้องล็อกอินอยู่แล้ว)
-// จัดเป็นตาราง 2 คอลัมน์ × 7 แถว = 14 ดวง/A4 พอดี (ดู .pbqr-page ใน <style>) กล่องที่มีหลาย Lot จะมีบรรทัด
+// จัดเป็นตาราง 2 คอลัมน์ × 8 แถว = 16 ดวง/A4 พอดี (ดู .pbqr-page ใน <style>) กล่องที่มีหลาย Lot จะมีบรรทัด
 // Lot เพิ่มลงมาในช่องเดิม (ช่องสูงพอรองรับ 2-3 Lot โดยไม่ล้น)
 async function _pbQrSvg(text) {
   return await QRCode.toString(text, { type: 'svg', margin: 0, errorCorrectionLevel: 'M' });
@@ -16900,7 +16902,7 @@ async function packboxPrintQr(ids) {
     boxes = ids.map(id => _packBoxCache.find(b => b.Box_ID === id)).filter(Boolean);
     svgs = await Promise.all(boxes.map(b => _pbQrSvg(b.Box_ID)));
   } catch (e) { console.error(e); Swal.fire('สร้าง QR ไม่สำเร็จ', e.message || String(e), 'error'); return; }
-  // ตาราง 2 คอลัมน์ × 7 แถว = 14 ดวง/หน้า A4 พอดี (ดู .pbqr-page ใน <style>) — หั่นทีละ 14 กล่อง/หน้า
+  // ตาราง 2 คอลัมน์ × 8 แถว = 16 ดวง/หน้า A4 พอดี (ดู .pbqr-page ใน <style>) — หั่นทีละ 16 กล่อง/หน้า
   const itemHtml = (b, svg) => `<div class="pbqr-item"><div class="qr">${svg}</div><div class="txt">
       <div class="id">${esc(b.Box_ID)}</div>
       <div class="fg">${esc(_fgName(b.FG_ID))}</div>
@@ -16908,7 +16910,7 @@ async function packboxPrintQr(ids) {
       <div class="lots">${(b.LotAlloc || []).map(l => `<div class="lotline">Lot: ${esc(l.lot)} × ${_bomFmtQty(l.qty)}</div>`).join('') || '<div class="lotline">-</div>'}</div>
     </div></div>`;
   const pages = [];
-  for (let i = 0; i < boxes.length; i += 14) pages.push(boxes.slice(i, i + 14).map((b, j) => itemHtml(b, svgs[i + j])).join(''));
+  for (let i = 0; i < boxes.length; i += 16) pages.push(boxes.slice(i, i + 16).map((b, j) => itemHtml(b, svgs[i + j])).join(''));
   document.getElementById('pbqr-print-root').innerHTML = pages.map(p => `<div class="pbqr-page">${p}</div>`).join('');
   document.body.classList.add('print-pbqr');
   const done = () => {
@@ -17399,7 +17401,7 @@ async function stockCardRender() {
         const moLot = _planCache.find(p => p.MO_ID === r.MO_ID)?.Lot;
         const pd = moLot ? packDateByLot[moLot] : null;
         const byPack = pd && pd >= r.IssueDate;
-        const e = { date: byPack ? pd : r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (moLot ? ` → FG Lot ${moLot}` : '') + (byPack ? ' · ตัดวันแพ็คกล่อง' : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), alloc: r.LotAlloc, in: 0, out: r.QtyIssued };
+        const e = { pk: /-PK-/.test(r.Issue_ID || ''), fgLot: moLot || '', date: byPack ? pd : r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (moLot ? ` → FG Lot ${moLot}` : '') + (byPack ? ' · ตัดวันแพ็คกล่อง' : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), alloc: r.LotAlloc, in: 0, out: r.QtyIssued };
         // วัสดุ "ตัดตามวันแพ็คกล่อง" ที่ FG Lot นั้นยังไม่มีการแพ็คกล่อง = ยังไม่ได้ใช้จริง → ไม่ลงยอดในการ์ด แสดงเป็นแถวสีเทา "รอแพ็คกล่อง" ท้ายตาราง
         if (cutPack && moLot && !pd) { scPending.push({ ...e, label: e.label + ' · รอแพ็คกล่อง (ยังไม่นับในยอด)' }); return []; }
         return [e];
@@ -17419,6 +17421,36 @@ async function stockCardRender() {
       ...prepOut.map(r => ({ date: r.PrepDate, ts: r.CreatedAt, label: 'เบิกไปเตรียม', ref: r.Prep_ID, lot: _scAllocLots(r.SourceAlloc), alloc: r.SourceAlloc, in: 0, out: r.QtyOut })),
       ...prepIn.map(r => ({ date: r.ReceivedAt ? new Date(r.ReceivedAt).toLocaleDateString('sv-SE') : r.PrepDate, ts: r.ReceivedAt, label: `รับกลับจากการเตรียม ← ${_rmName(r.SourceRM_ID)} (${r.SourceRM_ID})${_prepSrcLotText(r)}`, ref: r.Prep_ID, lot: _lotLabel(_rmLotCache.find(l => l.Lot_ID === r.BackLotID) || { Lot_ID: r.BackLotID }), in: r.QtyBack, out: 0 })),
     ];
+  }
+  // รวมแถวตัดกล่องตอนแพ็ค (Issue_ID ..-PK-..) ที่ "วันเดียวกัน + FG Lot เดียวกัน" เป็นแถวเดียว — เดิมแยกเป็นแถวละ MO (2026-11-20 ผู้ใช้ขอ) ยอดรวมเท่าเดิม
+  {
+    const keep = [], grp = new Map();
+    entries.forEach(e => {
+      if (!e.pk) { keep.push(e); return; }
+      const k = e.date + '|' + e.fgLot;   // รวมเฉพาะ "วันเดียวกัน + FG Lot (ที่เบิกไปทำ) เดียวกัน" — คนละ FG Lot แยกบรรทัด แล้วค่อยแยกตามล็อตวัตถุดิบด้านล่าง
+      const g = grp.get(k) || grp.set(k, { ...e, refs: [], fgLots: [], allocMap: {}, out: 0 }).get(k);
+      g.refs.push(e.ref); g.out += Number(e.out) || 0;
+      if (e.fgLot && !g.fgLots.includes(e.fgLot)) g.fgLots.push(e.fgLot);
+      if (e.ts && (!g.ts || e.ts < g.ts)) g.ts = e.ts;
+      (e.alloc || []).forEach(x => { const kk = x.lot_id || x.lot; g.allocMap[kk] = g.allocMap[kk] ? { ...g.allocMap[kk], qty: g.allocMap[kk].qty + Number(x.qty) } : { ...x, qty: Number(x.qty) }; });
+    });
+    grp.forEach(g => {
+      if (g.refs.length > 1) {
+        g.alloc = Object.values(g.allocMap); g.lot = _scAllocLots(g.alloc);
+        g.ref = g.refs[0] + ' (+' + (g.refs.length - 1) + ' เอกสาร)';
+      }
+      g.label = 'เบิกเข้าไลน์ผลิต' + (g.fgLots.length ? ` → FG Lot ${g.fgLots.join(', ')}` : '') + ' · ตัดวันแพ็คกล่อง';
+      delete g.refs; delete g.fgLots; delete g.allocMap; keep.push(g);
+    });
+    // แถวที่ตัดหลายล็อตวัตถุดิบ → แยกเป็นบรรทัดละ 1 ล็อต (ผู้ใช้ขอ 2026-11-20) ยอดรวมเท่าเดิม · แยกเฉพาะเมื่อยอดตามล็อตรวมตรงกับยอดแถว
+    entries = keep.flatMap(e => {
+      if (!(e.out > 0) || e.in || !Array.isArray(e.alloc) || e.alloc.length < 2) return [e];
+      const byLot = new Map();
+      e.alloc.forEach(x => { const k = x.lot || x.lot_id; byLot.set(k, (byLot.get(k) || 0) + (Number(x.qty) || 0)); });
+      const sum = [...byLot.values()].reduce((s, v) => s + v, 0);
+      if (byLot.size < 2 || Math.abs(sum - e.out) > 0.001) return [e];
+      return [...byLot].map(([lot, q]) => ({ ...e, lot, alloc: [{ lot, qty: q }], out: q }));
+    });
   }
   // เรียงตามวันที่ → วันเดียวกัน "รับเข้าก่อนจ่ายออก" เสมอ → แล้วจึงตามเวลาบันทึกจริง (2026-10-22 ผู้ใช้ขอ: รับเข้า/จ่ายออกวันเดียวกัน
   // เดิมเรียงตามเวลาบันทึก ใบรับที่คีย์ย้อนหลังทีหลังใบเบิกเลยไปอยู่ใต้การเบิก ยอดคงเหลือสะสมติดลบหลอก — ของต้องเข้าก่อนถึงจ่ายออกได้)
