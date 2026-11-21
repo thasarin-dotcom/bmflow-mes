@@ -325,6 +325,8 @@ img.emp-avatar { cursor: zoom-in; }
 .ov-day-chev { color: #94a3b8; font-size: .8rem; transition: transform .2s; } .ov-day[open] .ov-day-chev { transform: rotate(90deg); }
 .ov-day-date b { display: block; font-size: 1rem; line-height: 1.1; } .ov-day-date small { color: #64748b; font-size: .72rem; }
 .ov-day-lots { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 120px; } .ov-lot { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; border-radius: 999px; padding: 2px 10px; font-size: .8rem; font-weight: 600; }
+/* ของเสียสะสมของ Lot นี้ ต่อท้าย badge Lot ในหัวการ์ดวัน (ผู้ใช้ขอ 2026-11-21) — สีแดงให้ต่างจากตัว Lot เอง เห็นชัดว่าเป็นเรื่องของเสีย */
+.ov-lot-waste { color: #b91c1c; font-weight: 700; margin-left: 6px; padding-left: 6px; border-left: 1px solid #bfdbfe; }
 .ov-day-stats { display: flex; gap: 8px; margin-left: auto; } .ov-st { display: flex; flex-direction: column; align-items: center; min-width: 72px; background: #f1f5f9; border-radius: 10px; padding: 3px 10px; line-height: 1.15; } .ov-st small { font-size: .65rem; color: #64748b; } .ov-st b { font-size: .95rem; color: #1e293b; }
 .ov-st.tot { background: #dcfce7; } .ov-st.tot b { color: #15803d; }
 .pl-card { border: 1px solid #e2e8f0; border-left: 5px solid #16a34a; box-shadow: 0 1px 2px rgba(15,23,42,.04); transition: box-shadow .15s, transform .15s; } .pl-card:hover { box-shadow: 0 6px 16px rgba(15,23,42,.1); } .pl-card[open] { border-color: #86efac; border-left-color: #16a34a; }
@@ -335,7 +337,16 @@ img.emp-avatar { cursor: zoom-in; }
 .pl-meta { display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: .78rem; color: #64748b; } .pl-meta i { color: #94a3b8; }
 .pl-total { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; min-width: 120px; padding: 6px 16px; border-radius: 12px; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; line-height: 1.05; box-shadow: 0 3px 8px rgba(22,163,74,.3); }
 .pl-total small { font-size: .68rem; opacity: .85; letter-spacing: .03em; } .pl-total b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-@media (max-width: 575px) { .pl-h { flex-wrap: wrap; } .pl-total { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; } }
+/* หัวการ์ด Lot ของหน้าบันทึกผลิต: ผลิตได้ทั้งหมด (gross, ฟ้า) / เสีย (scrap, แดง) / ของดี (net, เขียวเดิม) เรียง 3
+   ป้ายคู่กัน (ผู้ใช้ขอ 2026-11-21 "แสดงที่การ์ด ผลิตได้ทั้งหมด เสีย ของดี") — ย่อขนาดเฉพาะตอนอยู่ใน .pl-stats
+   (3 ป้ายพร้อมกัน) ไม่แตะขนาดมาตรฐานของ .pl-total ที่ใช้เดี่ยวๆ ที่อื่น (%เสียเฉลี่ย/มูลค่ารวม ฯลฯ)        */
+.pl-stats { display: flex; gap: 8px; }
+.pl-stats .pl-total { min-width: 92px; padding: 5px 12px; }
+.pl-stats .pl-total b { font-size: 1.35rem; }
+.pl-total.pl-gross { background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 3px 8px rgba(14,165,233,.3); }
+.pl-total.pl-waste { background: linear-gradient(135deg, #dc2626, #b91c1c); box-shadow: 0 3px 8px rgba(220,38,38,.3); }
+@media (max-width: 575px) { .pl-h { flex-wrap: wrap; } .pl-total { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }
+  .pl-stats { width: 100%; flex-wrap: wrap; } .pl-stats .pl-total { width: auto; flex: 1 1 28%; } }
 .ov-day-b { border-top: 1px solid #e2e8f0; padding: 6px 10px 10px; background: #fcfdff; }
 .ov-sect { border: 1px solid #cbd5e1; border-radius: 14px; background: #f1f5f9; padding: 12px; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
 .ov-sect-top { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
@@ -864,6 +875,14 @@ table.prp-table.xdense td { padding: 0 4px; font-size: 9.5px; line-height: 1.15;
   background: #fff; margin: 0 auto 16px; box-shadow: 0 2px 10px rgba(0,0,0,.4);
   display: flex; flex-direction: column; page-break-after: always; }
 .genwd-page:last-child { page-break-after: auto; margin-bottom: 0; }
+/* ใบจัดของย้ายที่เก็บ (fgLocMovePrint): กะทัดรัดให้ลง A4 หน้าเดียว · ไหลต่อหน้าถัดไปเองถ้ารายการเยอะ · ลายเซ็นไม่ถูกตัดกลาง */
+.genwd-page.fgmv { min-height: 296mm; padding: 9mm 11mm; page-break-after: auto; }   /* เต็มหน้า → ลายเซ็นชิดล่างเสมอ (margin-top:auto) · เนื้อหายาวจะไหลต่อหน้าถัดไป */
+.fgmv .genwd-head { padding-bottom: 5px; margin-bottom: 5px; } .fgmv .genwd-brand img { height: 30px; } .fgmv .genwd-company { font-size: 9.5px; line-height: 1.3; }
+.fgmv .genwd-title { padding: 3px 0; margin-bottom: 6px; font-size: 14px; } .fgmv .genwd-infobox { padding: 4px 12px; margin-bottom: 6px; } .fgmv .genwd-infobox-row { font-size: 11.5px; }
+.fgmv table.genwd-table { font-size: 11px; } .fgmv table.genwd-table th { padding: 2px 6px; } .fgmv table.genwd-table td { padding: 2px 6px; line-height: 1.25; }
+.fgmv .fgmv-sec { font-weight: 700; margin: 8px 0 3px; } .fgmv table.genwd-table tr { page-break-inside: avoid; }
+.fgmv table.fgmv-roomy td { padding: 5px 6px; } .fgmv table.fgmv-roomy th { padding: 4px 6px; }
+.fgmv .fgmv-sign { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: auto; padding-top: 18px; font-size: 11px; text-align: center; page-break-inside: avoid; break-inside: avoid; }
 .genwd-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary-blue); padding-bottom: 7px; margin-bottom: 7px; }
 .genwd-brand { display: flex; align-items: center; gap: 10px; }
 .genwd-brand img { height: 36px; width: auto; }
@@ -1177,6 +1196,7 @@ td.empty-cell { white-space: normal !important; }
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockfg');return false;" id="navlink-stockfg"><i class="fa-solid fa-warehouse me-2"></i>สต็อกสินค้าสำเร็จรูป (FG)</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('waste');return false;" id="navlink-waste"><i class="fa-solid fa-trash me-2"></i>ของเสีย</a></li>
       <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('stockcard');return false;" id="navlink-stockcard"><i class="fa-solid fa-clipboard-list me-2"></i>สต็อกการ์ด</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('freshan');return false;" id="navlink-freshan"><i class="fa-solid fa-seedling me-2"></i>วิเคราะห์สมุนไพรสด</a></li>
       <li class="nav-item" id="navlink-integrity-wrap" style="display:none"><a class="nav-link" href="#" onclick="showPage('integrity');return false;" id="navlink-integrity"><i class="fa-solid fa-shield-halved me-2"></i>ตรวจความถูกต้อง</a></li>
       <li class="nav-item" id="navlink-stockcount-wrap" style="display:none"><a class="nav-link" href="#" onclick="showPage('stockcount');return false;" id="navlink-stockcount"><i class="fa-solid fa-list-check me-2"></i>ตรวจนับสต็อก</a></li>
     </ul>
@@ -1745,6 +1765,26 @@ td.empty-cell { white-space: normal !important; }
     <div class="scroll-content" id="packboxCardsWrap"></div>
   </div>
 
+  <!-- ═══════════════ วิเคราะห์สมุนไพรสด ═══════════════ -->
+  <div class="page-view" id="page-freshan">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-seedling me-2"></i>วิเคราะห์สมุนไพรสด</h4><div class="text-white-50 small">สมุนไพรสดทุกตัวในหน้าเดียว — ใช้ผลิตกี่วัน กี่ Lot และ %เสียของแต่ละวันหลังรับเข้า (ของสดอยู่นานยิ่งเหี่ยว)</div></div>
+      <button class="btn btn-outline-light btn-sm" onclick="freshAnRun()"><i class="fa-solid fa-rotate me-1"></i>รีเฟรช</button>
+    </div>
+    <div class="scroll-content">
+      <div class="glass-card mb-3"><div class="row g-2 align-items-end">
+        
+        <div class="col-6 col-md-3"><label class="form-label small mb-1">รับเข้าตั้งแต่</label><input id="faFrom" type="date" class="form-control form-control-sm" onchange="freshAnRun()"></div>
+        <div class="col-6 col-md-3"><label class="form-label small mb-1">ถึง</label><input id="faTo" type="date" class="form-control form-control-sm" onchange="freshAnRun()"></div>
+        <div class="col-md-3"><label class="form-label small mb-1">ตัดการใช้ที่อายุเกิน</label><select id="faCut" class="form-select form-select-sm" onchange="freshAnRun()"><option value="">ไม่ตัด (ดูทั้งหมด)</option><option value="4">4 วัน</option><option value="5">5 วัน</option><option value="7">7 วัน</option></select></div>
+      </div></div>
+      <div class="row g-2 mb-3" id="faKpis"></div>
+      <div class="glass-card mb-3"><h6 class="mb-3"><i class="fa-solid fa-table-cells me-2"></i>เทียบสมุนไพรสดทุกตัว — %เสีย ตามอายุของ (วันหลังรับเข้า)</h6><div id="faMatrix"></div></div>
+      <div class="glass-card mb-3"><h6 class="mb-3"><i class="fa-solid fa-list-ol me-2"></i>มุมมองที่ 2 — %เสีย ตาม "วันผลิตที่ N ของรอบ" (ครั้งที่ใช้ 1, 2, 3 ...)</h6><div id="faMatrixSeq"></div></div>
+      <div class="glass-card mb-3" id="faAnomaly"></div>
+      <div class="glass-card"><h6 class="mb-3"><i class="fa-solid fa-layer-group me-2"></i>รายสมุนไพร → รายรอบรับเข้า <span class="text-muted small fw-normal">(กดการ์ดสมุนไพรเพื่อดูแต่ละรอบ แล้วกดรอบเพื่อดูรายวัน)</span></h6><div id="faBody" class="d-flex flex-column gap-2"></div></div>
+    </div>
+  </div>
   <!-- ═══════════════ FG RECEIVE ═══════════════ -->
   <div class="page-view" id="page-fgreceive">
     <div class="page-header d-flex justify-content-between align-items-start">
@@ -4332,7 +4372,7 @@ const PAGE_LOADERS = {
   fgreceive: fgReceiveLoad, stockfg: stockFgLoad, stockcard: stockCardLoad,
   co: coLoad, fgout: fgoutLoad, waste: wasteLoad,
   rmmaster: rmMasterLoad, bom: bomLoad, userroles: userrolesLoad, signupreq: signupreqLoad, employee: employeeLoad, auditlog: auditLoad, prep: prepLoad, vendor: vendorLoad,
-  rcvedit: rcvEditLoad, integrity: integrityShow, backup: backupLoad, stockcount: stockCountLoad, reqorder: reqOrderLoad, pr: prLoad, packbox: packboxLoad, stockmove: stockMoveLoad, miscout: miscOutLoad,
+  rcvedit: rcvEditLoad, integrity: integrityShow, backup: backupLoad, stockcount: stockCountLoad, reqorder: reqOrderLoad, pr: prLoad, packbox: packboxLoad, stockmove: stockMoveLoad, miscout: miscOutLoad, freshan: freshAnLoad,
 };
 let _currentPage = 'dashboard';
 async function showPage(name) {
@@ -13651,6 +13691,30 @@ async function ovenCacheLoad() {
     (t.data || []).forEach(x => { const a = _ovenBagAgg[x.Oven_ID] || (_ovenBagAgg[x.Oven_ID] = { b: 0, o: 0 }); a.b += x.Bags || 0; a.o += x.OddBags || 0; });
   }
 }
+// ของเสีย (สินค้าสำเร็จรูป) สะสมของแต่ละ MO — ผู้ใช้ขอ 2026-11-21 "Lot แต่ละวันเสียเท่าไหร่ เอามาใส่ไว้ด้วย" ในประวัติ
+// เข้าเครื่องอบ ใช้ waste_log ตัวเดียวกับหน้า "ของเสีย" (ItemType='FG') เป็นยอดสะสมทั้งหมด ไม่ใช่เฉพาะวันที่เข้าอบ
+// เพราะของเสียมักถูกบันทึกทีหลัง (ตอนแพ็ค/ตรวจ QC) คนละวันกับวันเข้าอบ (ยืนยันแล้วว่าโอเค ไม่ต้องจำกัดแค่วันเดียวกัน)
+// สำคัญ: waste_log (FG) คีย์ด้วย production_records.ProdLot (ดู fg_receive_post เรียกด้วย p_lot: p.ProdLot) ซึ่ง
+// เป็นคนละคอลัมน์กับ manufacturing_orders.Lot ที่หน้านี้ใช้โชว์เป็น badge — ถึงปกติจะตั้งค่าให้เท่ากันตอนบันทึก
+// ผลิตครั้งแรก แต่ ProdLot แก้เองได้อิสระ (ช่อง "Lot ผลิต" ในฟอร์มบันทึกผลิต) จึงจับคู่ตรงๆ ด้วยข้อความ Lot ไม่ได้
+// เสมอไป (ลองแล้วไม่ขึ้น — ผู้ใช้ยืนยันว่า Lot นั้นมีของเสียบันทึกไว้จริง) ต้องเดินทางผ่าน MO_ID แทน:
+// waste_log.Lot → (join production_records.ProdLot=waste.Lot) → production_records.MO_ID → เทียบกับ MO_ID ของ
+// บันทึกเข้าเครื่องอบแถวนั้นโดยตรง ไม่ใช่เทียบข้อความ Lot เลย
+let _ovenWasteByMo = {};
+async function _ovenLoadWaste() {
+  const [wasteR, prodR] = await Promise.all([
+    _sb.from('waste_log').select('Lot,Qty').eq('ItemType', 'FG'),
+    _sb.from('production_records').select('MO_ID,ProdLot'),
+  ]);
+  const wasteByProdLot = {};
+  (wasteR.data || []).forEach(w => { if (w.Lot) wasteByProdLot[w.Lot] = (wasteByProdLot[w.Lot] || 0) + (parseFloat(w.Qty) || 0); });
+  const prodLotsByMo = {};   // 1 MO อาจมีหลายรอบผลิต (partial batch) — เก็บ ProdLot ไม่ซ้ำต่อ MO กันนับของเสียซ้ำถ้า 2 รอบใช้ Lot เดียวกัน
+  (prodR.data || []).forEach(p => { if (p.ProdLot) (prodLotsByMo[p.MO_ID] ||= new Set()).add(p.ProdLot); });
+  _ovenWasteByMo = {};
+  Object.entries(prodLotsByMo).forEach(([moId, lotSet]) => {
+    _ovenWasteByMo[moId] = [...lotSet].reduce((s, l) => s + (wasteByProdLot[l] || 0), 0);
+  });
+}
 let _ovenBagAgg = {}, _ovenOpenDays = {};
 const _ovBagsOf = o => _ovenBagAgg[o.Oven_ID] || { b: Math.floor((parseFloat(o.Qty) || 0) / OVEN_BAG), o: (parseFloat(o.Qty) || 0) % OVEN_BAG };
 // สินค้านี้ต้องเข้าเครื่องอบฆ่าเชื้อไหม — ตามช่อง NeedOven ในข้อมูลหลักสินค้า (ติ๊กเฉพาะลูกประคบ) · ยังไม่รัน SQL (ไม่มีคอลัมน์) ใช้ชื่อที่มีคำว่า "ลูกประคบ" แทนไปก่อน
@@ -13672,7 +13736,7 @@ const _ovenIsFull = (q, plan) => q > 0 && q >= plan * 0.97 - 0.5;
 async function ovenLoad() {
   if (!_planCache.length) await planLoad();
   if (!_fgMasterCache.length) await fgMasterLoad();
-  await ovenCacheLoad();
+  await Promise.all([ovenCacheLoad(), _ovenLoadWaste()]);
   const rb = document.getElementById('ovenReadyBody'), hb = document.getElementById('ovenHistBody');
   if (!_ovenOk) {
     const msg = '<tr><td colspan="9" class="text-center py-4 text-muted">ยังใช้ไม่ได้ — แอดมินต้องรัน <code>migration_2026-11-19_oven_records.sql</code> ใน Supabase ก่อน</td></tr>';
@@ -13706,7 +13770,13 @@ function ovenRenderHist() {
   document.getElementById('ovenHistBody').innerHTML = [...days].map(([k, recs]) => {
     const bag = recs.reduce((s, o) => { const a = _ovBagsOf(o); return { b: s.b + a.b, o: s.o + a.o }; }, { b: 0, o: 0 });
     const qty = recs.reduce((s, o) => s + (parseFloat(o.Qty) || 0), 0);
-    const lots = [...new Set(recs.map(o => _planCache.find(m => m.MO_ID === o.MO_ID)?.Lot || o.MO_ID))];
+    const moIdsToday = [...new Set(recs.map(o => o.MO_ID))];
+    const lots = [...new Set(moIdsToday.map(id => _planCache.find(m => m.MO_ID === id)?.Lot || id))];
+    // ของเสียของ Lot ที่โชว์ = รวมของเสียของทุก MO ที่วันนี้แสดงเป็น Lot นั้น (ปกติ 1 Lot = 1 MO แต่กันกรณี MO
+    // ต่างกันตั้งชื่อ Lot ซ้ำกันเอง) — จับคู่ผ่าน MO_ID ไม่ใช่ข้อความ Lot เพราะ waste_log อ้างอิง ProdLot
+    // (production_records) ซึ่งเป็นคนละคอลัมน์กับ MO.Lot (ดูคอมเมนต์ที่ _ovenLoadWaste)
+    const wasteOfLot = l => moIdsToday.filter(id => (_planCache.find(m => m.MO_ID === id)?.Lot || id) === l)
+      .reduce((s, id) => s + (_ovenWasteByMo[id] || 0), 0);
     const tr = recs.map(o => {
       const mo = _planCache.find(m => m.MO_ID === o.MO_ID), canDel = mo?.Status === 'เบิกวัตถุดิบแล้ว', a = _ovBagsOf(o);
       return `<tr><td class="text-nowrap">${new Date(o.InAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</td><td>${esc(o.MO_ID)}</td><td>${esc(mo ? fgName(mo.FG_ID) : '-')}</td><td>${esc(mo?.Lot || '-')}</td><td><b>${esc(o.Machine)}</b></td>
@@ -13716,7 +13786,10 @@ function ovenRenderHist() {
     return `<details class="ov-day" data-k="${k}" ${_ovenOpenDays[k] ? 'open' : ''} ontoggle="_ovenOpenDays[this.dataset.k]=this.open">
       <summary class="ov-day-h"><i class="fa-solid fa-chevron-right ov-day-chev"></i>
         <div class="ov-day-date"><b>${fmtDate(k)}</b><small>${recs.length} รอบ</small></div>
-        <div class="ov-day-lots">${lots.map(l => `<span class="ov-lot"><i class="fa-solid fa-barcode me-1"></i>${esc(l)}</span>`).join('')}</div>
+        <div class="ov-day-lots">${lots.map(l => {
+          const w = wasteOfLot(l);
+          return `<span class="ov-lot"><i class="fa-solid fa-barcode me-1"></i>${esc(l)}${w > 0 ? `<span class="ov-lot-waste" title="ของเสียสะสมของ Lot นี้ทั้งหมด (จากหน้า &quot;ของเสีย&quot;) — ไม่จำกัดเฉพาะวันนี้ เพราะของเสียมักบันทึกทีหลังวันเข้าอบ"><i class="fa-solid fa-trash me-1"></i>เสีย ${_bomFmtQty(w)} ลูก</span>` : ''}</span>`;
+        }).join('')}</div>
         <div class="ov-day-stats"><span class="ov-st"><small>แพ็คคู่</small><b>${_bomFmtQty(bag.b)}</b></span><span class="ov-st"><small>แพ็คเศษ</small><b>${_bomFmtQty(bag.o)}</b></span><span class="ov-st tot"><small>รวม</small><b>${_bomFmtQty(qty)} ลูก</b></span></div></summary>
       <div class="table-responsive ov-day-b no-inner-scroll"><table class="table table-sm mb-0 align-middle" style="table-layout:fixed;width:100%;min-width:1200px"><colgroup><col style="width:70px"><col style="width:100px"><col><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:90px"><col style="width:80px"><col style="width:120px"><col style="width:120px"><col style="width:110px"></colgroup><thead><tr><th>เวลา</th><th>MO</th><th>สินค้า</th><th>Lot</th><th>ตู้อบ</th><th class="text-end">แพ็คคู่</th><th class="text-end">แพ็คเศษ</th><th class="text-end">ลูก</th><th>หมายเหตุ</th><th>บันทึกโดย</th><th></th></tr></thead><tbody>${tr}</tbody></table></div></details>`;
   }).join('') || '<div class="text-center text-muted py-3">ยังไม่มีบันทึกเข้าเครื่องอบ</div>';
@@ -14170,7 +14243,16 @@ function _prodHistRenderTable() {
   const lots = new Map();
   hist.forEach(h => { const k = h.ProdLot || '-'; (lots.get(k) || lots.set(k, []).get(k)).push(h); });
   document.getElementById('prodHistTableBody').innerHTML = [...lots].map(([lot, recs]) => {
-    const qty = recs.reduce((s, h) => s + (parseFloat(h.QtyProduced) || 0), 0);
+    // ผลิตได้ทั้งหมด (gross) / เสีย (scrap) / ของดี (net) ของ Lot นี้ — ผู้ใช้ขอ 2026-11-21 "แสดงที่การ์ด
+    // ผลิตได้ทั้งหมด เสีย ของดี" (หัวการ์ดเดิมมีแค่ "รวมผลิตได้" ซึ่งจริงๆ คือของดีสุทธิ ไม่ได้แยกเสียออกมาให้เห็น)
+    // ของดี = QtyProduced (สุทธิ, เดิมคือค่าที่ใช้อยู่แล้ว) · เสีย = QtyDefect (กรอกไว้ตอนบันทึก/แก้ไขผลิตแต่ละ
+    // รอบอยู่แล้ว เห็นในฟอร์มแก้ไข แค่ยังไม่เคยรวมโชว์ที่หัวการ์ด) · ผลิตได้ทั้งหมด = QtyGross ถ้ามี (ฟิลด์ใหม่
+    // กว่า อาจว่างในแถวเก่า) ไม่งั้นคำนวณสำรองจากของดี+เสีย — ไม่ใช่ waste_log (ของเสียหลังผลิต/ตอนแพ็ค ที่คนละ
+    // ก้อนกับ scrap ตอนผลิต — แยกกันตามความหมาย ถ้าอยากรวมของเสียหลังผลิตด้วยบอกได้)
+    const good = recs.reduce((s, h) => s + (parseFloat(h.QtyProduced) || 0), 0);
+    const defect = recs.reduce((s, h) => s + (parseFloat(h.QtyDefect) || 0), 0);
+    const gross = recs.reduce((s, h) => s + (h.QtyGross != null ? (parseFloat(h.QtyGross) || 0) : (parseFloat(h.QtyProduced) || 0) + (parseFloat(h.QtyDefect) || 0)), 0);
+    const qty = good;
     const dates = [...new Set(recs.map(h => h.MfgDate).filter(Boolean))].sort();
     const exps = recs.map(h => h.ExpDate).filter(Boolean).sort();
     const names = [...new Set(recs.map(h => fgMap[h.FG_ID]?.FG_Name || h.FG_ID))];
@@ -14181,7 +14263,11 @@ function _prodHistRenderTable() {
           <div class="pl-top"><span class="pl-lot"><i class="fa-solid fa-barcode me-1"></i>${esc(lot)}</span><span class="pl-name">${esc(names.join(', '))}</span></div>
           <div class="pl-meta"><span><i class="fa-regular fa-calendar me-1"></i>ผลิต ${range}</span>${exps.length ? `<span><i class="fa-regular fa-hourglass-half me-1"></i>หมดอายุ ${fmtDate(exps[0])}</span>` : ''}<span><i class="fa-solid fa-sun me-1"></i>${dates.length} วัน</span><span><i class="fa-solid fa-clipboard-list me-1"></i>${recs.length} ครั้ง</span></div>
         </div>
-        <div class="pl-total"><small>รวมผลิตได้</small><b>${_bomFmtQty(qty)}</b></div></summary>
+        <div class="pl-stats">
+          <div class="pl-total pl-gross"><small>ผลิตได้ทั้งหมด</small><b>${_bomFmtQty(gross)}</b></div>
+          ${defect > 0 ? `<div class="pl-total pl-waste"><small>เสีย</small><b>${_bomFmtQty(defect)}</b></div>` : ''}
+          <div class="pl-total"><small>ของดี</small><b>${_bomFmtQty(good)}</b></div>
+        </div></summary>
       <div class="table-responsive ov-day-b no-inner-scroll"><table class="table table-sm mb-0 align-middle" style="table-layout:fixed;width:100%;min-width:1000px"><colgroup><col style="width:170px"><col><col style="width:130px"><col style="width:120px"><col style="width:140px"><col style="width:170px"></colgroup><thead><tr><th>เลขที่ผลิต</th><th>สินค้า</th><th>จำนวนที่ผลิตได้</th><th>Lot</th><th>วันผลิต</th><th>วันหมดอายุ</th><th>จัดการ</th></tr></thead><tbody>${recs.map(rowOf).join('')}</tbody></table></div></details>`;
   }).join('') || `<div class="text-center text-muted py-3">${q ? 'ไม่พบรายการที่ค้นหา' : 'ยังไม่มีประวัติ'}</div>`;
 }
@@ -15687,6 +15773,7 @@ function stockFgRenderTable() {
         ${locSumHtml ? `<span class="d-inline-flex flex-wrap gap-1 align-items-center">${locSumHtml}</span>` : ''}
         ${statusHtml}
         ${_refHeadBadge(refN, lots.length)}
+        ${lots.length ? `<button class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.72rem" data-fg="${esc(id)}" onclick="event.stopPropagation();fgLocMoveFifoOpen(this.dataset.fg)" title="ย้ายที่เก็บทั้งสินค้า — ใส่จำนวน เลือกที่เก็บ ระบบแบ่งตามล็อตเก่าสุดก่อน (FIFO)"><i class="fa-solid fa-right-left me-1"></i>ย้ายเก็บ</button>` : ''}
         <button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:.72rem" onclick="event.stopPropagation();goStockCard('fg','${esc(id)}')" title="ดูการ์ดสต็อก"><i class="fa-solid fa-clipboard-list"></i></button>
         ${lots.length ? '<i class="fa-solid fa-chevron-down chevron"></i>' : '<span class="chevron"></span>'}
       </div>
@@ -15695,6 +15782,324 @@ function stockFgRenderTable() {
   }).join('') || '<div class="glass-card text-center text-muted py-4">ยังไม่มีสต็อก</div>';
 }
 
+// ═══════════════════════════════════════════════════════════
+// วิเคราะห์สมุนไพรสด (2026-11-21 ผู้ใช้ขอ) — หน้าเดียวเห็นสมุนไพรสดทุกตัว: ตารางเทียบ %เสีย ตามอายุของ (วันหลังรับเข้า) + กดขยายแต่ละตัวดูรายรอบรับเข้า (1 ล็อต) ใช้ผลิตกี่วัน กี่ FG Lot และ %เสียรายวัน
+// อ่านอย่างเดียว ไม่ต้องรัน SQL · ข้อมูลจาก stock_rm_lot (รอบรับ) · issue_production (เบิกตรง) · prep_orders (เตรียมวัตถุดิบ) · waste_log (ของเสียทิ้ง)
+// นิยาม: "ใช้" = ยอดที่ล็อตนี้ถูกตัดไปใช้ในวันนั้น · "ได้ใช้จริง" = เบิกตรง: ยอดตามสูตร (QtyBase) ส่วนของล็อตนี้ / เตรียม: ยอดรับกลับ (QtyBack) ส่วนของล็อตนี้
+//   %เสีย = (ใช้ − ได้ใช้จริง) ÷ ใช้ — คิดเฉพาะแถวที่รู้ยอดเทียบ (เบิกตรงที่มี QtyBase · ใบเตรียมที่รับกลับแล้ว) · ของเสียทิ้ง (waste_log) แสดงแยก ไม่รวมใน %เสีย
+// อายุ (วัน) = วันที่ใช้ − วันที่รับเข้า · FG Lot ของใบเตรียม = ล็อตที่ตามไปเบิกผลิตต่อจากล็อตพร้อมผลิตที่รับกลับมา
+// ═══════════════════════════════════════════════════════════
+let _faOpen = {};
+const _faDayNo = d => { const x = String(d || '').slice(0, 10).split('-').map(Number); return Date.UTC(x[0], x[1] - 1, x[2]) / 86400000; };
+const _faCls = p => p == null ? 'text-muted' : (p < 5 ? 'text-success' : (p < 10 ? 'text-warning-emphasis' : 'text-danger'));
+const _faBg = p => p == null ? '#94a3b8' : (p < 5 ? '#16a34a' : (p < 10 ? '#f59e0b' : '#dc2626'));
+const _FA_MAXSEQ = 6;   // คอลัมน์สุดท้ายของมุมมอง "วันผลิตที่ N" = N ขึ้นไป
+const _FA_MAXAGE = 10;   // คอลัมน์สุดท้ายของตารางเทียบ = "10 วันขึ้นไป"
+// ตารางเทียบ: แถว = สมุนไพร · คอลัมน์ = อายุของ (วันหลังรับเข้า) · 2 โหมด: "เสียเพิ่มเพราะเหี่ยว" (หัก %เสียฐาน = อายุแรกที่มีข้อมูล ปกติวัน 0 ซึ่งคือของเสียจากการเตรียม/ตัดแต่ง) หรือ "%เสียรวม" (2026-11-21 ผู้ใช้ขอ "ลบค่าวัน 0 เป็นฐาน แยกเสียเพิ่มเพราะเหี่ยว")
+let _faMode = 'inc', _faHerbs = [];
+const _faFmt = x => _rmFmtQty(Math.round(x * 1000) / 1000), _faPc = x => x == null ? '-' : `${x.toFixed(1)}%`, _faSgn = x => x == null ? '-' : `${x >= 0 ? '+' : ''}${x.toFixed(1)}%`;
+const _faIncCls = d => d == null ? 'text-muted' : (d < 3 ? 'text-success' : (d < 8 ? 'text-warning-emphasis' : 'text-danger'));
+const _faIncBg = d => d == null ? '#94a3b8' : (d < 3 ? '#16a34a' : (d < 8 ? '#f59e0b' : '#dc2626'));
+// มุมมองที่ 2: %เสีย ตาม "วันผลิตที่ N ของรอบ" (วันที่ใช้ครั้งที่ 1, 2, 3 ... ของแต่ละรอบรับเข้า) ควบคู่กับ "หลังรับกี่วัน" · ตามโหมด เสียเพิ่ม/รวม เดียวกับตารางแรก (ฐาน = วันผลิตที่ 1)
+function _faRenderSeq() {
+  const el = document.getElementById('faMatrixSeq'); if (!el) return;
+  const inc = _faMode === 'inc', fmt = _faFmt, list = _faHerbs;
+  if (!list.length) { el.innerHTML = '<div class="text-center text-muted py-3">ไม่มีข้อมูล</div>'; return; }
+  const cols = Array.from({ length: _FA_MAXSEQ }, (_, i) => i + 1).filter(i => list.some(h => h.bySeq[i]));
+  const lossOf = g => g && g.ku > 0 ? (g.ku - g.ky) / g.ku * 100 : null;
+  const cell = (g, h, sq) => {
+    if (!g || !(g.used > 0)) return '<td class="text-center text-muted">·</td>';
+    const p = lossOf(g), avgAge = g.ageW / g.used, sub = `<div class="text-muted" style="font-size:.62rem">ใช้ ${fmt(g.used)} · อายุ≈${avgAge.toFixed(1)} วัน</div>`, tip = `title="ใช้ ${fmt(g.used)} กก. · ล็อต: ${esc([...g.lots].join(', '))}"`;
+    if (!inc) return `<td class="text-center" style="background:${p == null ? '#f1f5f9' : _faBg(p) + '26'};line-height:1.15" ${tip}><b class="${_faCls(p)}">${_faPc(p)}</b>${sub}</td>`;
+    if (sq === h.baseSeq) return `<td class="text-center" style="background:#f1f5f9;line-height:1.15" ${tip}><span class="text-muted small">ฐาน</span> <b>${_faPc(p)}</b>${sub}</td>`;
+    const d = p != null && h.seqBase != null ? p - h.seqBase : null;
+    return `<td class="text-center" style="background:${d == null ? '#f1f5f9' : _faIncBg(d) + '26'};line-height:1.15" ${tip}><b class="${_faIncCls(d)}">${_faSgn(d)}</b>${sub}</td>`;
+  };
+  el.innerHTML = `<div class="table-responsive no-inner-scroll"><table class="table table-sm align-middle mb-1"><thead><tr class="small"><th>สมุนไพรสด</th><th class="text-end">รอบ</th><th class="text-end">ใช้ผลิตเฉลี่ย (วัน/รอบ)</th>${cols.map(i => `<th class="text-center" style="line-height:1.15"><span class="fw-normal text-muted" style="font-size:.66rem">วันผลิตที่</span><br>${i}${i >= _FA_MAXSEQ ? '+' : ''}</th>`).join('')}</tr></thead><tbody>
+    ${list.map(h => `<tr><td><b>${esc(h.name)}</b></td><td class="text-end">${h.lots.length}</td><td class="text-end">${(h.days / h.lots.length).toFixed(1)}</td>${cols.map(i => cell(h.bySeq[i], h, i)).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="small text-muted"><i class="fa-solid fa-circle-info me-1"></i>"วันผลิตที่ N" = ครั้งที่ N ที่ใช้ของรอบรับเข้านั้น (นับเฉพาะวันที่มีการใช้ เช่น รับ 12 พ.ย. ใช้ 14, 16, 17, 19 → วันผลิตที่ 1–4) · ตัวเล็กใต้ค่า = ยอดใช้และ <b>อายุเฉลี่ย</b> (วันหลังรับเข้า) ของวันผลิตนั้น · ${inc ? 'ฐาน = วันผลิตที่ 1 · แสดงส่วนที่เสียเพิ่มจากฐาน' : 'แสดง %เสียรวม'} · ใช้สวิตช์โหมดของตารางแรกสลับได้</div>`;
+}function faSetMode(m) { _faMode = m; _faRenderMatrix(); _faRenderSeq(); }
+function _faRenderMatrix() {
+  const el = document.getElementById('faMatrix'), inc = _faMode === 'inc', fmt = _faFmt;
+  const list = _faHerbs;
+  if (!list.length) { el.innerHTML = '<div class="text-center text-muted py-3">ไม่มีรอบรับเข้าในช่วงวันที่ที่เลือก</div>'; return; }
+  const ageCols = Array.from({ length: _FA_MAXAGE + 1 }, (_, i) => i).filter(i => list.some(h => h.byAge[i]));
+  const lossOf = g => g && g.ku > 0 ? (g.ku - g.ky) / g.ku * 100 : null;
+  const cell = (g, h, age) => {
+    if (!g || !(g.used > 0)) return '<td class="text-center text-muted">·</td>';
+    const p = lossOf(g), tip = `title="ใช้ ${fmt(g.used)} กก. · ล็อต: ${esc([...g.lots].join(', '))}"`;
+    if (!inc) return `<td class="text-center" style="background:${p == null ? '#f1f5f9' : _faBg(p) + '26'};line-height:1.15" ${tip}><b class="${_faCls(p)}">${_faPc(p)}</b><div class="text-muted" style="font-size:.62rem">${fmt(g.used)}</div></td>`;
+    if (age === h.baseAge) return `<td class="text-center" style="background:#f1f5f9;line-height:1.15" ${tip}><span class="text-muted small">ฐาน</span> <b>${_faPc(p)}</b><div class="text-muted" style="font-size:.62rem">${fmt(g.used)}</div></td>`;
+    const d = p != null && h.base != null ? p - h.base : null;
+    return `<td class="text-center" style="background:${d == null ? '#f1f5f9' : _faIncBg(d) + '26'};line-height:1.15" ${tip}><b class="${_faIncCls(d)}">${_faSgn(d)}</b><div class="text-muted" style="font-size:.62rem">${fmt(g.used)}</div></td>`;
+  };
+  el.innerHTML = `<div class="btn-group btn-group-sm mb-2" role="group"><button class="btn ${inc ? 'btn-primary' : 'btn-outline-primary'}" onclick="faSetMode('inc')">เสียเพิ่มเพราะเหี่ยว (หักฐานวัน 0)</button><button class="btn ${inc ? 'btn-outline-primary' : 'btn-primary'}" onclick="faSetMode('tot')">%เสียรวม</button></div>
+    <div class="table-responsive no-inner-scroll"><table class="table table-sm align-middle mb-1"><thead><tr class="small"><th>สมุนไพรสด</th><th class="text-end">รอบ</th><th class="text-end">รับเข้า</th><th class="text-end">ใช้แล้ว</th><th class="text-end">ใช้ผลิตเฉลี่ย (วัน/รอบ)</th>${inc ? '<th class="text-center">ฐาน (วัน 0)</th>' : ''}${ageCols.map(i => `<th class="text-center" style="line-height:1.15">${i === 0 ? 'วันรับเข้า' : `<span class="fw-normal text-muted" style="font-size:.66rem">หลังรับ</span><br>${i}${i >= _FA_MAXAGE ? '+' : ''} วัน`}</th>`).join('')}<th class="text-center">${inc ? 'เสียเพิ่มเฉลี่ย' : 'เฉลี่ยรวม'}</th></tr></thead><tbody>
+    ${list.map(h => { const incAvg = h.loss != null && h.base != null ? h.loss - h.base : null;
+      return `<tr><td><b>${esc(h.name)}</b></td><td class="text-end">${h.lots.length}</td><td class="text-end">${fmt(h.recv)}</td><td class="text-end">${fmt(h.used)}</td><td class="text-end">${(h.days / h.lots.length).toFixed(1)}</td>${inc ? `<td class="text-center fw-semibold" title="%เสียของอายุ ${h.baseAge ?? '-'} วัน (ค่าฐาน)">${_faPc(h.base)}${h.baseAge > 0 ? `<div class="text-muted" style="font-size:.62rem">วัน ${h.baseAge}</div>` : ''}</td>` : ''}${ageCols.map(i => cell(h.byAge[i], h, i)).join('')}<td class="text-center fw-bold ${inc ? _faIncCls(incAvg) : _faCls(h.loss)}">${inc ? _faSgn(incAvg) : _faPc(h.loss)}</td></tr>`; }).join('')}</tbody></table></div>
+    <div class="small text-muted"><i class="fa-solid fa-circle-info me-1"></i>${inc
+      ? 'โหมดนี้ <b>หัก %เสียฐาน</b> ของแต่ละตัว (= %เสียวัน 0 คือของเสียจากการเตรียม/ตัดแต่งที่เกิดอยู่แล้วแม้ของสด) ออก เหลือ <b>ส่วนที่เสียเพิ่มเพราะเหี่ยว</b> · ตัวเล็กใต้ค่า = ยอดใช้ (กก.) · เขียว &lt; +3 · เหลือง +3–8 · แดง ≥ +8 จุด % · ถ้าวัน 0 ไม่มีข้อมูล ใช้อายุแรกที่มีเป็นฐาน (ระบุใต้ค่าฐาน)'
+      : '%เสียรวมของแต่ละวันหลังรับเข้า (วัน 0 = วันที่รับเข้า) · ตัวเล็กใต้ % = ยอดใช้ (กก.) · เขียว &lt; 5% · เหลือง 5–10% · แดง ≥ 10%'} · "·" = ไม่มีการใช้ในอายุนั้น · ชี้เมาส์ที่ช่องเพื่อดูล็อต<br><b>หัวคอลัมน์ = จำนวนวันนับจาก "วันรับเข้า" (ปฏิทิน) ไม่ใช่ลำดับวันผลิต</b> — เช่น ไพลสดรับ 12 พ.ย. ใช้ผลิต 4 วัน (14, 16, 17, 19 พ.ย.) = ตรงกับ "หลังรับ 2, 4, 5, 7 วัน" · จำนวนวันที่ใช้ผลิตต่อรอบดูที่คอลัมน์ "ใช้ผลิตเฉลี่ย (วัน/รอบ)"</div>`;
+}
+
+async function freshAnLoad() {
+  if (!_rmMasterCache.length) await rmMasterLoad();
+  if (!_planCache.length) await planLoad();
+  const fromEl = document.getElementById('faFrom'), toEl = document.getElementById('faTo');
+  if (!fromEl.value) fromEl.value = addDays(todayStr(), -120);
+  if (!toEl.value) toEl.value = todayStr();
+  await freshAnRun();
+}
+async function freshAnRun() {
+  const box = document.getElementById('faBody'), from = document.getElementById('faFrom').value, to = document.getElementById('faTo').value;
+  const fresh = _rmMasterCache.filter(r => r.Category === 'วัตถุดิบ'), ids = fresh.map(r => r.RM_ID), nameOf = Object.fromEntries(fresh.map(r => [r.RM_ID, r.RM_Name]));
+  const clear = () => { document.getElementById('faKpis').innerHTML = ''; document.getElementById('faMatrix').innerHTML = ''; };
+  if (!ids.length) { clear(); box.innerHTML = '<div class="text-center text-muted py-4">ยังไม่มีวัตถุดิบสดในระบบ</div>'; return; }
+  box.innerHTML = '<div class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-1"></i>กำลังวิเคราะห์...</div>';
+  const [lotsR, issR, prepR, wasteR] = await Promise.all([
+    _sb.from('stock_rm_lot').select('*').in('RM_ID', ids).gte('ReceiveDate', from).lte('ReceiveDate', to).order('ReceiveDate', { ascending: false }),
+    _sb.from('issue_production').select('Issue_ID,MO_ID,RM_ID,QtyIssued,QtyBase,IssueDate,LotAlloc').in('RM_ID', ids).limit(10000),
+    _sb.from('prep_orders').select('Prep_ID,PrepDate,SourceRM_ID,TargetRM_ID,QtyOut,QtyBack,Status,SourceAlloc,BackLotID').in('SourceRM_ID', ids).neq('Status', 'ยกเลิก').limit(10000),
+    _sb.from('waste_log').select('Waste_ID,RM_ID,Lot,Qty,WasteDate').in('RM_ID', ids).eq('ItemType', 'MATERIAL').limit(10000),
+  ]);
+  if (lotsR.error) { clear(); box.innerHTML = `<div class="text-danger text-center py-4">โหลดไม่สำเร็จ: ${esc(lotsR.error.message)}</div>`; return; }
+  const preps = prepR.data || [], targets = [...new Set(preps.map(p => p.TargetRM_ID).filter(Boolean))];
+  const down = targets.length ? ((await _sb.from('issue_production').select('MO_ID,RM_ID,LotAlloc').in('RM_ID', targets).limit(10000)).data || []) : [];
+  const moLot = Object.fromEntries(_planCache.map(p => [p.MO_ID, p.Lot]));
+  const backFg = {};   // ล็อตพร้อมผลิตที่รับกลับ → FG Lot ที่เบิกไปผลิต
+  down.forEach(r => (r.LotAlloc || []).forEach(a => { if (a.lot_id && moLot[r.MO_ID]) (backFg[a.lot_id] ||= new Set()).add(moLot[r.MO_ID]); }));
+  const lots = {}; (lotsR.data || []).forEach(l => { lots[l.Lot_ID] = { id: l.Lot_ID, rm: l.RM_ID, name: nameOf[l.RM_ID] || l.RM_ID, lot: l.Lot || l.Lot_ID, recv: l.ReceiveDate, recvQty: parseFloat(l.QtyReceived) || 0, remain: parseFloat(l.Qty) || 0, unit: l.Unit || '', exp: l.ExpDate, ages: {}, fg: new Set() }; });
+  const cut = parseInt(document.getElementById('faCut').value) || null, events = [], evMin = cut ?? 4;   // cut = ตัดการใช้ที่อายุเกิน N วันออกจากการคิด · events = รายการใช้ที่อายุเกิน (ไว้ตรวจข้อมูลผิดปกติ)
+  const ageOf = (L, date) => Math.round(_faDayNo(date) - _faDayNo(L.recv));
+  const node = (L, date) => { const age = ageOf(L, date); if (cut != null && age > cut) return { _cut: true, used: 0, kUsed: 0, kYield: 0, waste: 0, fg: new Set(), src: new Set() }; return L.ages[age] ||= { age, date, used: 0, kUsed: 0, kYield: 0, waste: 0, fg: new Set(), src: new Set() }; };
+  // วันที่ใช้จาก 2 ล็อตขึ้นไป (สมุนไพรตัวเดียวกัน วันเดียวกัน) แยกไม่ได้ว่าเสียของล็อตไหน/อายุเท่าไหร่ → ไม่นำมาคิด %เสีย (ยังนับยอดใช้/จำนวนวัน) (2026-11-21 ผู้ใช้ขอ)
+  const daySets = {};
+  const seen = (rm, date, lotId) => { if (lotId && date) (daySets[(nameOf[rm] || rm) + '|' + String(date).slice(0, 10)] ||= new Set()).add(lotId); };
+  (issR.data || []).forEach(r => (r.LotAlloc || []).forEach(a => seen(r.RM_ID, r.IssueDate, a.lot_id)));
+  preps.forEach(p => (p.SourceAlloc || []).forEach(a => seen(p.SourceRM_ID, p.PrepDate, a.lot_id)));
+  const isMixed = (L, date) => (daySets[L.name + '|' + String(date).slice(0, 10)]?.size || 0) > 1;
+  (issR.data || []).forEach(r => {
+    const qi = parseFloat(r.QtyIssued) || 0, qb = parseFloat(r.QtyBase);
+    (r.LotAlloc || []).forEach(a => {
+      const L = lots[a.lot_id]; if (!L) return;
+      const share = parseFloat(a.qty) || 0, n = node(L, r.IssueDate), mixed = isMixed(L, r.IssueDate);
+      { const ag = ageOf(L, r.IssueDate); if (ag > evMin) events.push({ name: L.name, lot: L.lot, recv: L.recv, date: r.IssueDate, age: ag, qty: share, doc: r.Issue_ID, src: 'เบิกตรง' }); }
+      if (n._cut) return;
+      n.used += share; n.src.add('เบิกตรง'); if (mixed) n.mixed = true;
+      if (!mixed && qi > 0 && qb > 0) { n.kUsed += share; n.kYield += qb * share / qi; }
+      if (moLot[r.MO_ID]) { n.fg.add(moLot[r.MO_ID]); L.fg.add(moLot[r.MO_ID]); }
+    });
+  });
+  preps.forEach(p => {
+    const out = parseFloat(p.QtyOut) || 0, back = parseFloat(p.QtyBack);
+    (p.SourceAlloc || []).forEach(a => {
+      const L = lots[a.lot_id]; if (!L) return;
+      const share = parseFloat(a.qty) || 0, n = node(L, p.PrepDate), mixed = isMixed(L, p.PrepDate);
+      { const ag = ageOf(L, p.PrepDate); if (ag > evMin) events.push({ name: L.name, lot: L.lot, recv: L.recv, date: p.PrepDate, age: ag, qty: share, doc: p.Prep_ID, src: 'เตรียม' }); }
+      if (n._cut) return;
+      n.used += share; n.src.add('เตรียม'); if (mixed) n.mixed = true;
+      if (!mixed && p.Status === 'รับกลับแล้ว' && out > 0 && back >= 0) { n.kUsed += share; n.kYield += back * share / out; }
+      (backFg[p.BackLotID] || []).forEach(f => { n.fg.add(f); L.fg.add(f); });
+    });
+  });
+  const byLabel = {}; Object.values(lots).forEach(L => { (byLabel[L.rm + '|' + L.lot] ||= []).push(L); });
+  (wasteR.data || []).forEach(w => (byLabel[w.RM_ID + '|' + w.Lot] || []).forEach(L => { if (w.WasteDate) node(L, w.WasteDate).waste += parseFloat(w.Qty) || 0; }));
+  const lotList = Object.values(lots).map(L => {
+    const ns = Object.values(L.ages).sort((a, b) => a.age - b.age), used = ns.reduce((s, n) => s + n.used, 0);
+    const ku = ns.reduce((s, n) => s + n.kUsed, 0), ky = ns.reduce((s, n) => s + n.kYield, 0), useNs = ns.filter(n => n.used > 0);
+    useNs.forEach((n, i) => { n.seq = i + 1; });   // วันผลิตที่ N ของรอบ (นับเฉพาะวันที่มีการใช้ เรียงตามวันที่)
+    return { ...L, ns, used, loss: ku > 0 ? (ku - ky) / ku * 100 : null, ku, ky, days: useNs.length, a0: useNs[0]?.age, a1: useNs[useNs.length - 1]?.age, waste: ns.reduce((s, n) => s + n.waste, 0) };
+  }).sort((a, b) => String(b.recv).localeCompare(String(a.recv)));
+  // รวมต่อสมุนไพร (ชื่อ) + แยกตามอายุ (คอลัมน์ 0.._FA_MAXAGE)
+  const herbs = {};
+  lotList.forEach(L => {
+    const h = herbs[L.name] ||= { name: L.name, unit: L.unit, lots: [], recv: 0, used: 0, ku: 0, ky: 0, days: 0, waste: 0, byAge: {}, bySeq: {} };
+    h.lots.push(L); h.recv += L.recvQty; h.used += L.used; h.ku += L.ku; h.ky += L.ky; h.days += L.days; h.waste += L.waste;
+    L.ns.forEach(n => { if (!n.mixed && (n.used > 0 || n.kUsed > 0)) { const a = Math.min(Math.max(n.age, 0), _FA_MAXAGE), g = h.byAge[a] ||= { ku: 0, ky: 0, used: 0, lots: new Set() }; g.ku += n.kUsed; g.ky += n.kYield; g.used += n.used; g.lots.add(L.lot + ' (รับ ' + fmtDate(L.recv) + ')'); } });
+    L.ns.forEach(n => { if (!n.mixed && n.seq && n.used > 0) { const s = Math.min(n.seq, _FA_MAXSEQ), g = h.bySeq[s] ||= { ku: 0, ky: 0, used: 0, ageW: 0, lots: new Set() }; g.ku += n.kUsed; g.ky += n.kYield; g.used += n.used; g.ageW += Math.max(n.age, 0) * n.used; g.lots.add(L.lot + ' (รับ ' + fmtDate(L.recv) + ')'); } });
+  });
+  const herbList = Object.values(herbs).map(h => ({ ...h, loss: h.ku > 0 ? (h.ku - h.ky) / h.ku * 100 : null })).sort((a, b) => (b.loss ?? -1) - (a.loss ?? -1) || a.name.localeCompare(b.name, 'th'));
+  herbList.forEach(h => {   // ค่าฐาน = %เสียของอายุแรกที่มีข้อมูลเทียบ (ปกติวัน 0 = ของเสียจากการเตรียม/ตัดแต่ง) — ส่วนที่เกินจากฐานคือเสียเพิ่มเพราะเหี่ยว
+    const k = Object.keys(h.byAge).map(Number).filter(x => h.byAge[x].ku > 0).sort((p, q) => p - q)[0];
+    h.baseAge = k ?? null; h.base = k != null ? (h.byAge[k].ku - h.byAge[k].ky) / h.byAge[k].ku * 100 : null;
+    const ks = Object.keys(h.bySeq).map(Number).filter(x => h.bySeq[x].ku > 0).sort((p, q) => p - q)[0];   // ฐานของมุมมอง "วันผลิตที่ N" = วันผลิตแรกที่มีข้อมูล
+    h.baseSeq = ks ?? null; h.seqBase = ks != null ? (h.bySeq[ks].ku - h.bySeq[ks].ky) / h.bySeq[ks].ku * 100 : null;
+  });
+  const fmt = x => _rmFmtQty(Math.round(x * 1000) / 1000), pc = x => x == null ? '-' : `${x.toFixed(1)}%`;
+  const tot = herbList.reduce((o, h) => ({ lots: o.lots + h.lots.length, recv: o.recv + h.recv, used: o.used + h.used, ku: o.ku + h.ku, ky: o.ky + h.ky }), { lots: 0, recv: 0, used: 0, ku: 0, ky: 0 });
+  const avgLoss = tot.ku > 0 ? (tot.ku - tot.ky) / tot.ku * 100 : null;
+  const kpi = (n, l) => `<div class="col-6 col-md"><div class="kpi-card"><div class="kpi-num">${n}</div><div class="kpi-label">${l}</div></div></div>`;
+  document.getElementById('faKpis').innerHTML = [kpi(herbList.length, 'สมุนไพรสดที่มีรับเข้า'), kpi(tot.lots, 'รอบรับเข้า (ล็อต)'), kpi(`${fmt(tot.recv)} <small class="fw-normal text-muted">กก.</small>`, 'รับเข้ารวม'), kpi(`${fmt(tot.used)} <small class="fw-normal text-muted">กก.</small>`, 'ใช้ไปแล้ว'), kpi(`<span class="${_faCls(avgLoss)}">${pc(avgLoss)}</span>`, '%เสียเฉลี่ยรวม (ถ่วงน้ำหนัก)')].join('');
+  _faHerbs = herbList; _faRenderMatrix(); _faRenderSeq();
+  // ตรวจรายการใช้ที่อายุเกิน (ผิดปกติ?) — บอกเอกสาร/ล็อต/วันรับเข้า เพื่อไล่ดูว่าวันรับเข้าผิด หรือล็อตเก่าค้างแล้วถูกเบิกทีหลัง
+  const evTop = events.sort((a, b) => b.age - a.age || String(b.date).localeCompare(String(a.date)));
+  document.getElementById('faAnomaly').innerHTML = `<h6 class="mb-1"><i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>รายการใช้ที่อายุเกิน ${evMin} วัน <span class="badge text-bg-${events.length ? 'warning' : 'success'}">${events.length}</span></h6>
+    <div class="small text-muted mb-2">${cut != null ? `กำลัง<b>ตัดออกจากการคิด</b>ทั้งหมดนี้ (เลือก "ตัดอายุเกิน ${cut} วัน" ด้านบน) — ` : ''}ไล่ดูเลขเอกสาร/วันรับเข้าของล็อต ว่าวันรับเข้าในระบบผิด หรือเป็นล็อตเก่าที่เหลือค้างแล้วถูกหยิบทีหลัง</div>
+    ${events.length ? `<div class="table-responsive no-inner-scroll"><table class="table table-sm align-middle mb-0"><thead><tr class="small text-muted"><th>สมุนไพร</th><th>Lot</th><th>รับเข้า</th><th>วันที่ใช้</th><th class="text-end">อายุ (วัน)</th><th class="text-end">ยอด</th><th>เอกสาร</th><th>ที่มา</th></tr></thead><tbody>${evTop.slice(0, 150).map(e => `<tr><td>${esc(e.name)}</td><td><span class="badge bg-light text-dark border">${esc(e.lot)}</span></td><td>${fmtDate(e.recv)}</td><td>${fmtDate(e.date)}</td><td class="text-end fw-bold text-danger">${e.age}</td><td class="text-end">${fmt(e.qty)}</td><td class="small"><code>${esc(e.doc || '-')}</code></td><td class="small">${e.src}</td></tr>`).join('')}</tbody></table></div>${events.length > 150 ? `<div class="small text-muted mt-1">แสดง 150 รายการแรก (อายุมากสุดก่อน) จากทั้งหมด ${events.length}</div>` : ''}` : '<div class="text-success small">ไม่มีรายการอายุเกินเกณฑ์</div>'}`;
+  const lotCard = (L, h) => {
+    const key = L.id, share = L.recvQty > 0 ? L.used / L.recvQty * 100 : null;
+    const rows = L.ns.map(n => { const p = n.kUsed > 0 ? (n.kUsed - n.kYield) / n.kUsed * 100 : null;
+      return `<tr><td class="text-center text-muted">${n.seq ? `ที่ ${n.seq}` : '-'}</td><td class="text-center fw-semibold">${n.age}</td><td>${fmtDate(n.date)}${n.mixed ? ' <span class="badge text-bg-light border text-muted" title="วันนี้ใช้สมุนไพรตัวนี้จากหลายล็อต แยกไม่ได้ว่าเสียของล็อตไหน — ไม่นำมาคิด %เสีย">ใช้ปนหลายล็อต · ไม่นับ %</span>' : ''}</td><td class="text-end">${n.used ? fmt(n.used) : '-'}</td><td class="text-end">${n.kUsed > 0 ? fmt(n.kYield) : '-'}</td><td class="text-end">${n.kUsed > 0 ? fmt(n.kUsed - n.kYield) : '-'}</td><td class="text-end fw-bold ${_faCls(p)}">${pc(p)}</td><td class="text-end fw-semibold ${n.age === h.baseAge ? 'text-muted' : _faIncCls(p != null && h.base != null ? p - h.base : null)}">${n.age === h.baseAge && p != null ? 'ฐาน' : (p != null && h.base != null ? _faSgn(p - h.base) : '-')}</td><td class="text-end">${n.waste ? `<span class="text-danger">${fmt(n.waste)}</span>` : '-'}</td><td class="small">${[...n.src].join(' + ') || '-'}</td><td class="small">${[...n.fg].sort().join(', ') || '-'}</td></tr>`; }).join('');
+    return `<details class="ov-day pl-card" style="border-left-color:${_faBg(L.loss)}" data-k="${esc(key)}" ${_faOpen[key] ? 'open' : ''} ontoggle="_faOpen[this.dataset.k]=this.open">
+      <summary class="pl-h"><i class="fa-solid fa-chevron-right ov-day-chev"></i>
+        <div class="pl-main"><div class="pl-top"><span class="pl-lot"><i class="fa-solid fa-barcode me-1"></i>${esc(L.lot)}</span><span class="pl-name" style="font-size:1rem">รับเข้า ${fmtDate(L.recv)} · ${fmt(L.recvQty)} ${esc(L.unit)}</span></div>
+          <div class="pl-meta"><span>ใช้ไป <b class="text-body">${fmt(L.used)}</b> (${share != null ? share.toFixed(0) : '-'}%)</span><span><i class="fa-regular fa-calendar me-1"></i>ใช้ผลิต <b class="text-body">${L.days}</b> วัน${L.days ? ` (อายุของ ${L.a0}–${L.a1} วัน)` : ''}</span><span><i class="fa-solid fa-boxes-stacked me-1"></i>FG <b class="text-body">${L.fg.size}</b> Lot</span><span>คงเหลือ ${fmt(L.remain)}</span>${L.waste ? `<span class="text-danger">ของเสียทิ้ง ${fmt(L.waste)}</span>` : ''}</div></div>
+        <div class="pl-total" style="background:${_faBg(L.loss)};min-width:96px"><small>%เสียรวม</small><b>${pc(L.loss)}</b></div></summary>
+      <div class="table-responsive ov-day-b no-inner-scroll"><table class="table table-sm mb-0 align-middle"><thead><tr><th class="text-center" style="width:80px">วันผลิตที่</th><th class="text-center" style="width:80px">หลังรับ (วัน)</th><th>วันที่</th><th class="text-end">ใช้ (${esc(L.unit)})</th><th class="text-end">ได้ใช้จริง</th><th class="text-end">เสีย</th><th class="text-end">%เสีย</th><th class="text-end" title="หัก %เสียฐานของสมุนไพรตัวนี้ (วัน 0)">เสียเพิ่มจากเหี่ยว</th><th class="text-end">ของเสียทิ้ง</th><th>ที่มา</th><th>FG Lot</th></tr></thead><tbody>${rows || '<tr><td colspan="11" class="text-center text-muted">ยังไม่มีการใช้</td></tr>'}</tbody></table></div></details>`;
+  };
+  box.innerHTML = herbList.map(h => `<details class="ov-day" data-k="H:${esc(h.name)}" ${_faOpen['H:' + h.name] ? 'open' : ''} ontoggle="_faOpen[this.dataset.k]=this.open" style="border-left:5px solid ${_faBg(h.loss)}">
+    <summary class="pl-h"><i class="fa-solid fa-chevron-right ov-day-chev"></i>
+      <div class="pl-main"><div class="pl-top"><span class="pl-name" style="font-size:1.12rem"><i class="fa-solid fa-seedling me-1 text-success"></i>${esc(h.name)}</span></div>
+        <div class="pl-meta"><span><b class="text-body">${h.lots.length}</b> รอบรับเข้า</span><span>รับ <b class="text-body">${fmt(h.recv)}</b> ${esc(h.unit)}</span><span>ใช้ <b class="text-body">${fmt(h.used)}</b></span><span>ใช้ผลิตเฉลี่ย <b class="text-body">${(h.days / h.lots.length).toFixed(1)}</b> วัน/รอบ</span><span title="%เสียของอายุแรกที่มีข้อมูล (ปกติวัน 0) = ของเสียจากการเตรียม/ตัดแต่ง">ฐาน${h.baseAge > 0 ? `วัน ${h.baseAge}` : ''} <b class="text-body">${pc(h.base)}</b></span>${h.loss != null && h.base != null ? `<span>เสียเพิ่มเพราะเหี่ยวเฉลี่ย <b class="${_faIncCls(h.loss - h.base)}">${_faSgn(h.loss - h.base)}</b></span>` : ''}${h.waste ? `<span class="text-danger">ของเสียทิ้ง ${fmt(h.waste)}</span>` : ''}</div></div>
+      <div class="pl-total" style="background:${_faBg(h.loss)};min-width:96px"><small>%เสียเฉลี่ย</small><b>${pc(h.loss)}</b></div></summary>
+    <div class="ov-day-b d-flex flex-column gap-2" style="padding:10px">${h.lots.map(L => lotCard(L, h)).join('')}</div></details>`).join('') || '<div class="text-center text-muted py-4">ไม่มีรอบรับเข้าในช่วงวันที่ที่เลือก</div>';
+}
+
+// ย้ายที่เก็บทั้งสินค้า แบบ FIFO (2026-11-21 ผู้ใช้ขอ "ใส่จำนวน เลือกสถานที่ เลือกยอดจากชั้น 3 ว่าล็อตไหนไปเท่าไหร่ เรียงตาม FIFO")
+// เลือกที่เก็บต้นทาง + ปลายทาง + จำนวน → ระบบแบ่งยอดจากล็อตเก่าสุดก่อน (วันผลิตเก่า→ใหม่) โชว์ตารางล็อตละเท่าไหร่
+// ล็อตที่ผู้ใช้แก้เลข/ลบเลขเอง ("ล็อกไว้") ระบบไม่แตะ แล้วเติมจากล็อตถัดไปให้ครบจำนวนที่ต้องการ · มีใบจัดของพิมพ์ (กี่ลัง / พาเลทละกี่ลัง) · เรียก fg_loc_move ทีละล็อต
+async function fgLocMoveFifoOpen(fgId) {
+  await Promise.all([fgLocLoad(), stockFgLoad()]);
+  const fg = _fgMasterCache.find(f => f.FG_ID === fgId), unit = fg?.Unit || '';
+  const lots = _stockFgCache.filter(l => l.FG_ID === fgId && l.Qty > 0)
+    .sort((a, b) => String(a.MfgDate || '9999').localeCompare(String(b.MfgDate || '9999')) || String(a.Lot).localeCompare(String(b.Lot), undefined, { numeric: true }));
+  const at = {};   // ที่เก็บ → [{ lot, mfg, q }] เรียง FIFO
+  lots.forEach(l => fgLotLocs(fgId, l.Lot).forEach(x => { const q = parseFloat(x.Qty) || 0; if (q > 0) (at[x.Location] ||= []).push({ lot: l.Lot, mfg: l.MfgDate, q }); }));
+  const srcs = Object.keys(at);
+  if (!srcs.length) { Swal.fire('ไม่มียอดให้ย้าย', 'สินค้านี้ยังไม่มียอดคงเหลือที่ระบุที่เก็บ', 'info'); return; }
+  const sum = k => (at[k] || []).reduce((s, r) => s + r.q, 0);
+  const srcOpts = srcs.map(k => `<option value="${esc(k)}">${esc(k)} (รวม ${_bomFmtQty(sum(k))})</option>`).join('');
+  const lastBox = (typeof _packBoxCache !== 'undefined' ? _packBoxCache : []).find(b => b.FG_ID === fgId && Number(b.UnitPerBox) > 0);
+  let perPalletDef = 20; try { perPalletDef = parseInt(localStorage.getItem('fgMovePerPallet')) || 20; } catch (e) { /* ใช้ค่าเริ่มต้น */ }
+  const res = await Dlg.form({
+    title: '<i class="fa-solid fa-right-left me-2"></i>ย้ายที่เก็บ (FIFO)', width: 900, confirmText: 'ย้าย',
+    html: `<div class="text-start small"><div class="mb-2 text-muted">${esc(fg?.FG_Name || fgId)} · หยิบจากล็อตเก่าสุดก่อน (FIFO) · ล็อตที่แก้เลขเอง/กด ✕ ระบบจะไม่แตะ และเติมจากล็อตถัดไปให้ครบ</div>
+      <div class="row g-2 mb-2">
+        <div class="col-md-4"><label class="form-label mb-1">ย้ายจาก</label><select id="lf-from" class="form-select form-select-sm">${srcOpts}</select></div>
+        <div class="col-md-4"><label class="form-label mb-1">ไปที่</label><select id="lf-to" class="form-select form-select-sm"></select></div>
+        <div class="col-md-4"><label class="form-label mb-1">จำนวนที่ย้าย (${esc(unit)})</label>
+          <div class="input-group input-group-sm"><input id="lf-qty" type="number" step="any" min="0" class="form-control"><button type="button" class="btn btn-outline-secondary" id="lf-all">ทั้งหมด</button></div></div>
+      </div>
+      <div class="border rounded" style="max-height:min(52vh,520px);overflow:auto"><table class="table table-sm mb-0 align-middle"><thead style="position:sticky;top:0;background:#f1f5f9;z-index:2"><tr class="small text-muted"><th style="width:60px">ลำดับ</th><th>Lot</th><th>วันผลิต</th><th class="text-end">มีที่ต้นทาง</th><th style="width:150px">ย้าย</th><th style="width:48px"></th></tr></thead><tbody id="lf-rows"></tbody></table></div>
+      <div class="d-flex flex-wrap align-items-end gap-3 mt-2">
+        <div id="lf-sum" class="me-auto"></div>
+        <div><label class="form-label mb-0" style="font-size:.72rem">ลูก/ลัง</label><input id="lf-perbox" type="number" min="1" class="form-control form-control-sm" style="width:80px" value="${lastBox ? Number(lastBox.UnitPerBox) : 80}"></div>
+        <div><label class="form-label mb-0" style="font-size:.72rem">ลัง/พาเลท</label><input id="lf-perpallet" type="number" min="1" class="form-control form-control-sm" style="width:80px" value="${perPalletDef}"></div>
+        <button type="button" class="btn btn-sm btn-outline-dark" id="lf-print"><i class="fa-solid fa-print me-1"></i>พิมพ์ใบจัดของ</button>
+      </div></div>`,
+    didOpen: el => {
+      const g = id => el.querySelector('#' + id), from = g('lf-from'), to = g('lf-to'), qty = g('lf-qty'), rows = g('lf-rows');
+      const inputs = () => [...rows.querySelectorAll('input')];
+      const fill = () => {   // ล็อตที่ล็อกไว้ (pin) คงค่า · ที่เหลือแบ่งตาม FIFO จากส่วนที่ยังขาด
+        const want = parseFloat(qty.value) || 0;
+        let left = want - inputs().filter(i => i.dataset.pin).reduce((s, i) => s + (parseFloat(i.value) || 0), 0);
+        inputs().filter(i => !i.dataset.pin).forEach(i => { const take = Math.max(0, Math.min(left, parseFloat(i.max) || 0)); i.value = take > 0 ? Math.round(take * 1000) / 1000 : ''; left -= take; });
+        total();
+      };
+      const total = () => {
+        const sumv = inputs().reduce((s, i) => s + (parseFloat(i.value) || 0), 0), want = parseFloat(qty.value) || 0;
+        g('lf-sum').innerHTML = `รวมที่จะย้าย <b class="text-success fs-6">${_bomFmtQty(Math.round(sumv * 1000) / 1000)}</b> ${esc(unit)}${want && Math.abs(want - sumv) > 0.0005 ? ` <span class="text-danger">· ไม่ตรงกับจำนวนที่กรอก (${_bomFmtQty(want)}) — ที่ต้นทางมีไม่พอ</span>` : ''}`;
+        rows.querySelectorAll('tr').forEach(tr => { const i = tr.querySelector('input'), b = tr.querySelector('button'); b.innerHTML = i.dataset.pin ? '<i class="fa-solid fa-rotate-left"></i>' : '<i class="fa-solid fa-xmark"></i>'; b.title = i.dataset.pin ? 'ให้ระบบจัดให้ตาม FIFO' : 'ไม่เอาล็อตนี้ (เติมจากล็อตถัดไป)'; tr.classList.toggle('table-warning', !!i.dataset.pin); });
+      };
+      const build = () => {
+        rows.innerHTML = at[from.value].map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.lot)}</td><td>${fmtDate(r.mfg)}</td><td class="text-end">${_bomFmtQty(r.q)}</td>
+          <td><input type="number" step="any" min="0" max="${r.q}" data-lot="${esc(r.lot)}" data-mfg="${esc(r.mfg || '')}" class="form-control form-control-sm text-end"></td>
+          <td><button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"></button></td></tr>`).join('');
+        rows.querySelectorAll('tr').forEach(tr => {
+          const i = tr.querySelector('input'), b = tr.querySelector('button');
+          i.addEventListener('input', () => { const mx = parseFloat(i.max); if ((parseFloat(i.value) || 0) > mx) i.value = mx; i.dataset.pin = '1'; fill(); });
+          b.onclick = () => { if (i.dataset.pin) delete i.dataset.pin; else { i.dataset.pin = '1'; i.value = ''; } fill(); };
+        });
+        to.innerHTML = _fgLocList.filter(l => l !== from.value).map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+        qty.value = ''; total();
+      };
+      from.onchange = build; qty.oninput = fill;
+      g('lf-all').onclick = () => { qty.value = Math.round(sum(from.value) * 1000) / 1000; inputs().forEach(i => delete i.dataset.pin); fill(); };
+      g('lf-print').onclick = () => {
+        const items = collect();
+        if (!items.length) { Dlg.invalid('กรอกจำนวนที่ย้ายก่อนพิมพ์'); return; }
+        Dlg.invalid(''); fgLocMovePrint({ fgName: fg?.FG_Name || fgId, unit, from: from.value, to: to.value, items, perBox: parseFloat(g('lf-perbox').value) || 80, perPallet: parseInt(g('lf-perpallet').value) || 20 });
+      };
+      const collect = () => inputs().map(i => ({ lot: i.dataset.lot, mfg: i.dataset.mfg, q: parseFloat(i.value) || 0 })).filter(x => x.q > 0);
+      el._lf = { collect, from, to, g }; Dlg._cur = el;
+      build();
+    },
+    preConfirm: () => {
+      const el = Dlg._cur, { collect, from, to, g } = el._lf;
+      const items = collect();
+      if (!items.length) { Dlg.invalid('กรอกจำนวนที่ย้าย'); return false; }
+      if (!to.value || to.value === from.value) { Dlg.invalid('เลือกที่เก็บปลายทางให้ต่างจากต้นทาง'); return false; }
+      const perPallet = parseInt(g('lf-perpallet').value) || 20; try { localStorage.setItem('fgMovePerPallet', perPallet); } catch (e) { /* ไม่จำค่า */ }
+      return { from: from.value, to: to.value, items, perBox: parseFloat(g('lf-perbox').value) || 80, perPallet };
+    },
+  });
+  if (!res.isConfirmed) return;
+  let done = 0, moved = 0;
+  for (const it of res.value.items) {
+    const { error } = await _sb.rpc('fg_loc_move', { p_fg_id: fgId, p_lot: it.lot, p_from: res.value.from, p_to: res.value.to, p_qty: it.q });
+    if (error) {
+      await stockFgLoad();
+      _rpcErr(error, `ย้ายไม่สำเร็จที่ Lot ${it.lot} (ย้ายสำเร็จแล้ว ${done} ล็อต ${_bomFmtQty(moved)} ${unit} — ที่เหลือยังไม่ได้ย้าย)`, 'migration_2026-10-18_fg_locations.sql'); return;
+    }
+    done++; moved += it.q;
+  }
+  await stockFgLoad();
+  const r = await Swal.fire({ icon: 'success', title: `ย้าย ${_bomFmtQty(Math.round(moved * 1000) / 1000)} ${unit} (${done} ล็อต) ไป ${res.value.to} แล้ว`, showCancelButton: true, confirmButtonText: 'พิมพ์ใบจัดของ', cancelButtonText: 'ปิด' });
+  if (r.isConfirmed) fgLocMovePrint({ fgName: fg?.FG_Name || fgId, unit, from: res.value.from, to: res.value.to, items: res.value.items, perBox: res.value.perBox, perPallet: res.value.perPallet });
+}
+// ใบจัดของย้ายที่เก็บ (ให้คลังจัดของ): ต่อล็อต = ลังเต็มกี่ลัง + เศษกี่ลูก · "ลูกเศษ" ของทุกล็อตรวมกันเป็น "ลังรวมเศษ" (ลังละ ลูก/ลัง ลูก ระบุว่าแต่ละลังมี Lot ไหนกี่ลูก) · แผนวางพาเลท · ลายเซ็นผู้จัด/ผู้ตรวจ/ผู้รับ
+// ลัง = จำนวนลูกต่อลังที่กรอก (ค่าเริ่มต้นจากกล่องที่แพ็คล่าสุดของสินค้านี้) · วางลังเต็มลงพาเลทตามลำดับ FIFO ก่อน แล้วค่อยวางลังรวมเศษท้ายสุด (2026-11-21 ผู้ใช้ขอ "ลูกเศษรวมกับลังอื่นๆ แสดง")
+function fgLocMovePrint(d) {
+  const per = d.perBox > 0 ? d.perBox : 80, pal = d.perPallet > 0 ? d.perPallet : 20, r3 = x => Math.round(x * 1000) / 1000;
+  const lots = d.items.map(it => { const full = Math.floor(it.q / per + 1e-9); return { ...it, full, rem: r3(it.q - full * per) }; });
+  // รวมเศษทุกล็อต (เรียงล็อตเก่าก่อน) เทลงลังละ per ลูก: [{ parts: [{ lot, q }], q }]
+  const mix = []; let mc = { parts: [], q: 0 };
+  lots.forEach(l => {
+    let r = l.rem;
+    while (r > 1e-9) {
+      const t = Math.min(per - mc.q, r);
+      mc.parts.push({ lot: l.lot, q: r3(t) }); mc.q = r3(mc.q + t); r = r3(r - t);
+      if (mc.q >= per - 1e-9) { mix.push(mc); mc = { parts: [], q: 0 }; }
+    }
+  });
+  if (mc.q > 0) mix.push(mc);
+  const totQ = lots.reduce((s, l) => s + l.q, 0), totFull = lots.reduce((s, l) => s + l.full, 0), totRem = lots.reduce((s, l) => s + l.rem, 0), totBoxes = totFull + mix.length;
+  // วางลงพาเลท: ลังเต็มตามล็อต แล้วลังรวมเศษ — pallets: [{ segs, boxes, qty }]
+  const pallets = []; let cur = null;
+  const put = (seg, qtyOne) => {
+    if (!cur || cur.boxes >= pal) { cur = { segs: [], boxes: 0, qty: 0 }; pallets.push(cur); }
+    const last = cur.segs[cur.segs.length - 1];
+    if (last && last.key === seg.key) { last.n++; last.to = seg.from; } else cur.segs.push({ ...seg, n: 1, to: seg.from });
+    cur.boxes++; cur.qty += qtyOne;
+  };
+  lots.forEach(l => { for (let i = 0; i < l.full; i++) put({ key: 'L' + l.lot, label: `Lot ${esc(l.lot)}` }, per); });
+  mix.forEach((m, i) => put({ key: 'MIX', label: 'ลังรวมเศษ', from: i + 1 }, m.q));
+  const segText = s => s.key === 'MIX' ? `<span style="color:#b45309">ลังรวมเศษ #${s.from}${s.to > s.from ? `–#${s.to}` : ''}</span> × <b>${_bomFmtQty(s.n)}</b> ลัง` : `${s.label} × <b>${_bomFmtQty(s.n)}</b> ลัง`;
+  const trs = lots.map((l, i) => `<tr><td class="num">${i + 1}</td><td>${esc(l.lot)}</td><td>${fmtDate(l.mfg)}</td><td class="qty">${_bomFmtQty(l.q)}</td><td class="qty"><b>${_bomFmtQty(l.full)}</b></td><td class="qty">${l.rem > 0 ? _bomFmtQty(l.rem) : '-'}</td></tr>`).join('');
+  const mtrs = mix.map((m, i) => `<tr><td class="num"><b>${i + 1}</b></td><td>${m.parts.map(p => `Lot ${esc(p.lot)} <b>${_bomFmtQty(p.q)}</b> ${esc(d.unit)}`).join(' &nbsp;+&nbsp; ')}</td><td class="qty"><b>${_bomFmtQty(m.q)}</b>${m.q < per - 1e-9 ? ' <span style="color:#b45309">(ไม่เต็มลัง)</span>' : ''}</td><td style="width:14%"></td></tr>`).join('');
+  const ptrs = pallets.map((p, i) => `<tr><td class="num"><b>${i + 1}</b></td><td>${p.segs.map(segText).join('<br>')}</td><td class="qty"><b>${_bomFmtQty(p.boxes)}</b></td><td class="qty">${_bomFmtQty(r3(p.qty))}</td><td style="width:16%"></td></tr>`).join('');
+  _genwdPrint(`<div class="genwd-page fgmv">
+    ${_genwdHeadHTML('ใบจัดของ', '', fmtDateLong(todayStr()), false)}
+    <div class="genwd-title">ใบจัดของย้ายที่เก็บสินค้า / Storage Relocation Pick List</div>
+    <div class="genwd-infobox">
+      <div class="genwd-infobox-row"><span class="lbl">สินค้า (Product)</span><span><b>${esc(d.fgName)}</b></span></div>
+      <div class="genwd-infobox-row"><span class="lbl">ย้ายจาก → ไปที่</span><span><b>${esc(d.from)}</b> &nbsp;→&nbsp; <b>${esc(d.to)}</b></span></div>
+      <div class="genwd-infobox-row"><span class="lbl">รวมทั้งหมด</span><span><b style="font-size:14px">${_bomFmtQty(r3(totQ))} ${esc(d.unit)}</b> · <b style="font-size:14px">${_bomFmtQty(totBoxes)} ลัง</b> (ลังเต็ม ${_bomFmtQty(totFull)}${mix.length ? ` + ลังรวมเศษ ${_bomFmtQty(mix.length)}` : ''}) · <b style="font-size:14px">${_bomFmtQty(pallets.length)} พาเลท</b></span></div>
+      <div class="genwd-infobox-row"><span class="lbl">เกณฑ์การจัด</span><span>${_bomFmtQty(per)} ${esc(d.unit)}/ลัง · ${_bomFmtQty(pal)} ลัง/พาเลท · หยิบล็อตเก่าก่อน (FIFO) · เศษทุกล็อตรวมลงลังเศษ</span></div>
+    </div>
+    <div class="fgmv-sec">1) รายการที่ต้องหยิบ (เรียงตามล็อตเก่า → ใหม่)</div>
+    <table class="genwd-table fgmv-roomy"><thead><tr><th style="width:6%">ลำดับ</th><th>Lot</th><th>วันผลิต</th><th style="width:16%">จำนวน (${esc(d.unit)})</th><th style="width:14%">ลังเต็ม</th><th style="width:16%">ลูกเศษ (${esc(d.unit)})</th></tr></thead>
+      <tbody>${trs}<tr style="background:#f1f5f9;font-weight:700"><td colspan="3" style="text-align:right">รวม</td><td class="qty">${_bomFmtQty(r3(totQ))}</td><td class="qty">${_bomFmtQty(totFull)}</td><td class="qty">${totRem > 0 ? _bomFmtQty(r3(totRem)) : '-'}</td></tr></tbody></table>
+    ${mix.length ? `<div class="fgmv-sec">2) ลังรวมเศษ (เก็บลูกเศษจากหลายล็อตใส่ลังเดียวกัน — ${_bomFmtQty(mix.length)} ลัง)</div>
+    <table class="genwd-table"><thead><tr><th style="width:9%">ลังเศษ #</th><th>ประกอบด้วย (Lot × ลูก)</th><th style="width:20%">รวม (${esc(d.unit)})</th><th>ตรวจแล้ว ✓</th></tr></thead><tbody>${mtrs}</tbody></table>` : ''}
+    <div class="fgmv-sec">${mix.length ? '3' : '2'}) แผนวางพาเลท (พาเลทละ ${_bomFmtQty(pal)} ลัง · ลังเต็มก่อน ลังรวมเศษท้ายสุด)</div>
+    <table class="genwd-table fgmv-roomy"><thead><tr><th style="width:9%">พาเลท</th><th>ประกอบด้วย</th><th style="width:11%">รวมลัง</th><th style="width:14%">รวม (${esc(d.unit)})</th><th>ตรวจแล้ว ✓</th></tr></thead><tbody>${ptrs}</tbody></table>
+    <div class="fgmv-sign">
+      <div>ผู้จัดของ ................................<br>วันที่ ........ / ........ / ........</div>
+      <div>ผู้ตรวจสอบ ................................<br>วันที่ ........ / ........ / ........</div>
+      <div>ผู้รับ ณ ที่เก็บใหม่ ................................<br>วันที่ ........ / ........ / ........</div></div>
+  </div>`);
+}
 // ย้ายที่เก็บของล็อต FG (ภายในล็อตเดียวกัน) — fg_loc_move ฝั่ง DB ตรวจยอดต้นทางให้ (2026-10-18)
 async function fgLocMoveOpen(fgId, lot) {
   await fgLocLoad();
@@ -17657,7 +18062,12 @@ function _scRenderTable() {
 // ไม่ใช่ข้อความ Lot ที่พิมพ์) แล้วรวมยอดของที่เก็บเดียวกันจากหลายล็อตเข้าด้วยกัน (เวลาไม่ได้กรองล็อตเดียว)
 function _scLocBreakdown(type, id, lot) {
   if (!id) return [];
-  if (type === 'fg') return lot ? fgLotLocs(id, lot) : _stockFgLocCache.filter(r => r.FG_ID === id && (parseFloat(r.Qty) || 0) > 0);
+  if (type === 'fg') {
+    const rows = lot ? fgLotLocs(id, lot) : _stockFgLocCache.filter(r => r.FG_ID === id && (parseFloat(r.Qty) || 0) > 0);
+    const m = {};   // รวมยอดต่อที่เก็บ (ไม่แยกตาม Lot) — เช่น คลังชั้น 3 รวมเท่าไหร่ / คลังชั้น 6 รวมเท่าไหร่
+    rows.forEach(r => { m[r.Location] = (m[r.Location] || 0) + (parseFloat(r.Qty) || 0); });
+    return Object.entries(m).map(([Location, Qty]) => ({ Location, Qty }));
+  }
   const lotIds = (lot ? _rmLotCache.filter(l => l.RM_ID === id && _lotLabel(l) === lot) : _rmLotCache.filter(l => l.RM_ID === id)).map(l => l.Lot_ID);
   const merged = {};
   _stockRmLocCache.filter(r => lotIds.includes(r.Lot_ID) && (parseFloat(r.Qty) || 0) > 0)
