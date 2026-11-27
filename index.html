@@ -1522,7 +1522,7 @@ td.empty-cell { white-space: normal !important; }
   </div>
 
   <!-- ═══════════════ MODAL: รายละเอียดแผนผลิตวันที่เลือก (ปฏิทิน) ═══════════════ -->
-  <div class="modal fade" id="moCalDayModal" tabindex="-1">
+  <div class="modal fade" id="moCalDayModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header modal-header-brand">
@@ -1545,7 +1545,7 @@ td.empty-cell { white-space: normal !important; }
   </div>
 
   <!-- ═══════════════ MODAL: วางแผนการผลิต (ปฏิทินผลิต) ═══════════════ -->
-  <div class="modal fade" id="planSimModal" tabindex="-1">
+  <div class="modal fade" id="planSimModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header modal-header-brand">
@@ -1567,7 +1567,7 @@ td.empty-cell { white-space: normal !important; }
   </div>
 
   <!-- ═══════════════ MODAL: ของรอเข้า (ระบุวันที่/จำนวน) ═══════════════ -->
-  <div class="modal fade" id="planIncModal" tabindex="-1">
+  <div class="modal fade" id="planIncModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header modal-header-brand">
@@ -1606,11 +1606,14 @@ td.empty-cell { white-space: normal !important; }
   <!-- ═══════════════ ISSUE PRODUCTION ═══════════════ -->
   <div class="page-view" id="page-issue">
     <div class="page-header d-flex justify-content-between align-items-start">
-      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-dolly me-2"></i>เบิกเข้าไลน์ผลิต</h4><div class="text-white-50 small">เลือก MO ที่ยังไม่เบิก ระบบคำนวณตามสูตร และตัดล็อตแบบหมดอายุก่อนใช้ก่อนให้อัตโนมัติ</div></div>
-      <button class="btn btn-light" onclick="issueGenOpenForm()"><i class="fa-solid fa-boxes-stacked me-1"></i>เบิกเบ็ดเตล็ด</button>
+      <div><h4 class="mb-0 text-white"><i class="fa-solid fa-dolly me-2"></i>เบิกเข้าไลน์ผลิต</h4><div class="text-white-50 small">เลือก MO ที่ยังไม่เบิก ระบบคำนวณตามสูตร และตัดล็อตแบบหมดอายุก่อนใช้ก่อนให้อัตโนมัติ — ติ๊กเลือกตั้งแต่ 2 MO ขึ้นไปเพื่อ "เบิกรวม" วัตถุดิบที่ใช้ร่วมกันครั้งเดียว</div></div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-warning" id="issueBulkBtn" style="display:none" onclick="issueBulkOpenForm()"><i class="fa-solid fa-layer-group me-1"></i>เบิกรวม (<span class="cnt">0</span>)</button>
+        <button class="btn btn-light" onclick="issueGenOpenForm()"><i class="fa-solid fa-boxes-stacked me-1"></i>เบิกเบ็ดเตล็ด</button>
+      </div>
     </div>
     <div class="scroll-content"><div class="glass-card"><div class="table-responsive"><table class="table table-hover mb-0">
-      <thead><tr><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>จัดการ</th></tr></thead>
+      <thead><tr><th style="width:36px"></th><th>MO</th><th>สินค้า</th><th>จำนวนแผน</th><th>วันที่ผลิต</th><th>จัดการ</th></tr></thead>
       <tbody id="issueMoTableBody"></tbody>
     </table></div></div>
     <div class="glass-card"><div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
@@ -1641,7 +1644,7 @@ td.empty-cell { white-space: normal !important; }
   </div>
 
   <!-- ═══════════════ MODAL: บันทึกเข้าเครื่องอบ (ผังตู้อบ 2 ตู้ · 4 ชั้น · 2 ถาด) ═══════════════ -->
-  <div class="modal fade" id="ovenModal" tabindex="-1">
+  <div class="modal fade" id="ovenModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl"><div class="modal-content">
       <div class="modal-header modal-header-brand"><h5 class="modal-title"><i class="fa-solid fa-fire-burner me-2"></i><span id="ov-title">บันทึกเข้าเครื่องอบ</span></h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
@@ -1701,7 +1704,7 @@ td.empty-cell { white-space: normal !important; }
   </div>
 
   <!-- ═══════════════ MODAL: ตั้งค่าโอเวอร์เฮดรายเดือน (แอดมิน) — ตาราง overhead_costs ═══════════════ -->
-  <div class="modal fade" id="ohModal" tabindex="-1">
+  <div class="modal fade" id="ohModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header modal-header-brand">
@@ -1781,7 +1784,10 @@ td.empty-cell { white-space: normal !important; }
       <div class="row g-2 mb-3" id="faKpis"></div>
       <div class="glass-card mb-3"><h6 class="mb-3"><i class="fa-solid fa-table-cells me-2"></i>เทียบสมุนไพรสดทุกตัว — %เสีย ตามอายุของ (วันหลังรับเข้า)</h6><div id="faMatrix"></div></div>
       <div class="glass-card mb-3"><h6 class="mb-3"><i class="fa-solid fa-list-ol me-2"></i>มุมมองที่ 2 — %เสีย ตาม "วันผลิตที่ N ของรอบ" (ครั้งที่ใช้ 1, 2, 3 ...)</h6><div id="faMatrixSeq"></div></div>
-      <div class="glass-card mb-3" id="faAnomaly"></div>
+      <div class="glass-card mb-3"><div class="d-flex flex-wrap align-items-center gap-2 mb-2"><h6 class="mb-0"><i class="fa-solid fa-truck-ramp-box me-2"></i>มุมมองที่ 3 — รายรอบรับเข้า: %เสีย และใช้ผลิตกี่วัน/รอบ</h6><select id="faRoundHerb" class="form-select form-select-sm ms-auto" style="max-width:220px" onchange="_faRenderRounds()"><option value="">ทุกสมุนไพร</option></select><select id="faRoundSort" class="form-select form-select-sm" style="max-width:200px" onchange="_faRenderRounds()"><option value="recv">เรียง: รับเข้าล่าสุดก่อน</option><option value="loss">เรียง: %เสียมากสุดก่อน</option><option value="days">เรียง: ใช้นานสุดก่อน</option></select></div><div id="faRounds"></div></div>
+      <!-- ซ่อนไว้ก่อน (ผู้ใช้ขอ 2026-11-21 "รายการใช้ที่อายุเกิน 4 วัน เอาตารางนี้ออกก่อน") — ของเดิมยังคำนวณอยู่
+           (ดู freshAnRun()) แค่ไม่โชว์ผล เอา class d-none ออกเพื่อเอากลับมาได้ทันทีถ้าต้องการอีก -->
+      <div class="glass-card mb-3 d-none" id="faAnomaly"></div>
       <div class="glass-card"><h6 class="mb-3"><i class="fa-solid fa-layer-group me-2"></i>รายสมุนไพร → รายรอบรับเข้า <span class="text-muted small fw-normal">(กดการ์ดสมุนไพรเพื่อดูแต่ละรอบ แล้วกดรอบเพื่อดูรายวัน)</span></h6><div id="faBody" class="d-flex flex-column gap-2"></div></div>
     </div>
   </div>
@@ -1938,12 +1944,13 @@ td.empty-cell { white-space: normal !important; }
       <span class="text-white-50 small">ถึง</span>
       <input type="date" class="form-control w-auto" id="moTo" onchange="miscOutLoad()" title="ถึงวันที่">
       <div class="search-wrap" style="width:260px;max-width:100%"><input class="form-control search-input" id="moSearch" placeholder="ค้นหา เลขที่ใบ / รายการ / ปลายทาง..." oninput="miscOutRender()"><i class="fa-solid fa-xmark search-clear-icon" onclick="document.getElementById('moSearch').value='';miscOutRender()"></i></div>
+      <button class="btn btn-outline-dark ms-auto" id="moBulkDnBtn" style="display:none" onclick="miscOutPrintDelBulk()" title="รวมใบขายลูกค้าที่ติ๊กไว้ (ลูกค้าเดียวกัน) เป็นใบส่งสินค้าใบเดียว"><i class="fa-solid fa-truck me-1"></i>ออกใบส่งรวม (<span class="cnt">0</span>)</button>
     </div></div>
     <div class="scroll-content"><div class="glass-card"><div id="miscOutBody" class="d-flex flex-column gap-2"></div><div class="small text-muted mt-2" id="miscOutFooter"></div></div></div>
   </div>
 
   <!-- ═══════════════ MODAL: ใบเบิกเบ็ดเตล็ด / โอนย้าย (หลายรายการ) — migration_2026-10-15_misc_out.sql ═══════════════ -->
-  <div class="modal fade" id="miscOutModal" tabindex="-1">
+  <div class="modal fade" id="miscOutModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header modal-header-brand">
@@ -2343,7 +2350,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: พนักงาน ═══════════════ -->
-<div class="modal fade" id="employeeModal" tabindex="-1">
+<div class="modal fade" id="employeeModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2404,7 +2411,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: เบิกวัตถุดิบสดไปเตรียม ═══════════════ -->
-<div class="modal fade" id="prepIssueModal" tabindex="-1">
+<div class="modal fade" id="prepIssueModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2457,7 +2464,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: บันทึกน้ำหนักแต่ละขั้น / รับกลับเป็นพร้อมผลิต ═══════════════ -->
-<div class="modal fade" id="prepStepModal" tabindex="-1">
+<div class="modal fade" id="prepStepModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2501,7 +2508,7 @@ td.empty-cell { white-space: normal !important; }
 <datalist id="prepStepList"><option value="คัด"><option value="ล้าง"><option value="อบ"><option value="บด"><option value="ย่อย"><option value="ย่อยขนาด"><option value="ปอกเปลือก"><option value="หั่น"><option value="ตาก"><option value="ร่อน"></datalist>
 
 <!-- ═══════════════ MODAL: ใบขอเบิก (สร้าง/แก้ไข) ═══════════════ -->
-<div class="modal fade" id="reqOrderModal" tabindex="-1">
+<div class="modal fade" id="reqOrderModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2539,7 +2546,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: สร้าง/แก้ไขใบขอซื้อ (PR) ═══════════════ -->
-<div class="modal fade" id="prModal" tabindex="-1">
+<div class="modal fade" id="prModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2573,7 +2580,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: ตัวอย่างใบขอซื้อ — ตรวจสอบก่อนพิมพ์ ═══════════════ -->
-<div class="modal fade" id="prPrintModal" tabindex="-1">
+<div class="modal fade" id="prPrintModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2590,7 +2597,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: ตัวอย่างใบขอเบิก — ตรวจสอบก่อนพิมพ์ ═══════════════ -->
-<div class="modal fade" id="reqOrderPrintModal" tabindex="-1">
+<div class="modal fade" id="reqOrderPrintModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2609,7 +2616,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: รายงานรหัสวัตถุดิบ / แพ็คเกจจิ้ง (ส่งบัญชี) ═══════════════ -->
-<div class="modal fade" id="rmCodeReportModal" tabindex="-1">
+<div class="modal fade" id="rmCodeReportModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2638,7 +2645,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: วัตถุดิบ / แพ็คเกจจิ้ง (Master) ═══════════════ -->
-<div class="modal fade" id="rmMasterModal" tabindex="-1">
+<div class="modal fade" id="rmMasterModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2655,7 +2662,7 @@ td.empty-cell { white-space: normal !important; }
           </div>
           <div class="col-6">
             <label class="form-label">ประเภท</label>
-            <select id="rmm-cat" class="form-select" onchange="rmMasterTogglePrep();_rmmIdSuggest();_rmmAcctSuggest();_rmmCutPackToggle()">
+            <select id="rmm-cat" class="form-select" onchange="rmMasterTogglePrep();_rmmIdSuggest();_rmmAcctSuggest();_rmmCutPackToggle();_rmmDeductProdToggle();_rmmBufferPctToggle()">
               <option value="วัตถุดิบ">วัตถุดิบสด</option><!-- ตัวเลือกเติมโดย _fillCategorySelects() -->
             </select>
           </div>
@@ -2721,6 +2728,21 @@ td.empty-cell { white-space: normal !important; }
             </div>
             <div class="form-text" style="font-size:.72rem">ติ๊กสำหรับกล่องนาฬิกา / กล่องใส่ลูกประคบ — ไม่อยู่ในใบเบิกเข้าไลน์ผลิต และตัดสต็อกตอนบันทึกแพ็คกล่อง (1 ชิ้นต่อ 1 กล่อง CT) · ต้องเป็นวัสดุที่อยู่ในสูตร (BOM) ของสินค้านั้น</div>
           </div>
+          <div class="col-12 d-none" id="rmm-deductprod-wrap">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rmm-deductprod">
+              <label class="form-check-label" for="rmm-deductprod">ตัดตอนบันทึกผลิต (ตามจำนวนจริงที่ได้)</label>
+            </div>
+            <div class="form-text" style="font-size:.72rem">ใช้เมื่อสินค้าหลายรหัสผสมเตรียมร่วมกันแต่ใช้วัสดุชิ้นนี้ต่างกันต่อรหัส (เช่น เคสซิลิโคนที่ต่างสี/ลาย) — ไม่อยู่ในใบเบิกเข้าไลน์ผลิต และตัดสต็อกตอนกด "บันทึกผลิต" คูณตามจำนวนที่ได้จริง (ไม่ใช่จำนวนตามแผน) · ต้องเป็นวัสดุที่อยู่ในสูตร (BOM) ของสินค้านั้น</div>
+          </div>
+          <div class="col-12 d-none" id="rmm-bufferpct-wrap">
+            <label class="form-label">% เผื่อเพิ่ม (Buffer)</label>
+            <div class="input-group" style="max-width:160px">
+              <input id="rmm-bufferpct" type="number" min="0" step="any" class="form-control">
+              <span class="input-group-text">%</span>
+            </div>
+            <div class="form-text" style="font-size:.72rem">ระบบจะบวกเพิ่มให้อัตโนมัติตอนคำนวณ "เบิกตั้งต้น" แนะนำ (เช่น ถุงตาข่ายเผื่อฉีกขาด/ของเสียระหว่างบรรจุ) — 0 = ไม่เผื่อ ยังแก้ยอดเองตอนเบิก/บันทึกผลิตได้เสมอ</div>
+          </div>
           <div class="col-12">
             <label class="form-label">รหัสบัญชี (ใช้บนใบที่ส่งบัญชี)</label>
             <input id="rmm-acct" class="form-control" placeholder="เช่น SPF005 — ว่าง = ใช้รหัสของรายการนี้" oninput="this.dataset.auto=''">
@@ -2738,7 +2760,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: ผู้ส่งมอบ (Vendor Master) + รายการที่ส่งมอบได้ ═══════════════ -->
-<div class="modal fade" id="vendorModal" tabindex="-1">
+<div class="modal fade" id="vendorModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2790,7 +2812,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: เปรียบเทียบ/ประเมินผู้ส่งมอบใหม่ (FM-QA-12) ═══════════════ -->
-<div class="modal fade" id="vendorEvalNewModal" tabindex="-1">
+<div class="modal fade" id="vendorEvalNewModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2831,7 +2853,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: ประเมินผู้ส่งมอบประจำปี (FM-QA-13) ═══════════════ -->
-<div class="modal fade" id="vendorEvalAnnualModal" tabindex="-1">
+<div class="modal fade" id="vendorEvalAnnualModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2888,7 +2910,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: สินค้า (Master) ═══════════════ -->
-<div class="modal fade" id="fgMasterModal" tabindex="-1">
+<div class="modal fade" id="fgMasterModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -2965,7 +2987,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: สูตรการผลิต (BOM) — เพิ่มสินค้าใหม่ / เพิ่มวัตถุดิบหลายแถว / แก้ไข 1 แถว (แบบ ProFlow) ═══════════════ -->
-<div class="modal fade" id="bomModal" tabindex="-1">
+<div class="modal fade" id="bomModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3011,7 +3033,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: รับเข้าคลัง ═══════════════ -->
-<div class="modal fade" id="receivedModal" tabindex="-1">
+<div class="modal fade" id="receivedModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3136,7 +3158,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- รับจากโอนย้ายคลังใหญ่ (หลายรายการในใบโอนเดียว) — migration_2026-10-15_receive_transfer.sql -->
-<div class="modal fade" id="transferModal" tabindex="-1">
+<div class="modal fade" id="transferModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:min(1400px,96vw)">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3174,7 +3196,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ฟอร์มขอแก้ไขกลาง (เบิกเข้าไลน์ผลิต / บันทึกผลิต / รับ FG / ของเสีย) — ช่องสร้างจาก EDIT_TYPES[type].form -->
-<div class="modal fade" id="editReqModal" tabindex="-1">
+<div class="modal fade" id="editReqModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg" id="erq-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3213,7 +3235,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ใบเบิกไปเตรียม (PI): เลือกวันที่เบิก → ยืนยันเลข PI No → พิมพ์ (migration_2026-10-29_prep_issue_report.sql) — ใช้หน้าตา/ที่พิมพ์ร่วมกับใบรายงานรับ (.rrpt-*) -->
-<div class="modal fade" id="prepIssueReportModal" tabindex="-1">
+<div class="modal fade" id="prepIssueReportModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3261,7 +3283,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ใบรายงานรับ (แบบ ProFlow): เลือกวันที่/ซัพพลายเออร์ → ยืนยันเลข RC No → พิมพ์ -->
-<div class="modal fade" id="rcvReportModal" tabindex="-1">
+<div class="modal fade" id="rcvReportModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3311,7 +3333,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: คำสั่งซื้อลูกค้า (รายละเอียดครบแบบ ProFlow — migration_2026-10-17_co_details.sql) ═══════════════ -->
-<div class="modal fade" id="coModal" tabindex="-1">
+<div class="modal fade" id="coModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3387,7 +3409,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: สร้างคำสั่งผลิต (MO) ═══════════════ -->
-<div class="modal fade" id="planModal" tabindex="-1">
+<div class="modal fade" id="planModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3440,7 +3462,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: เบิกเข้าไลน์ผลิต ═══════════════ -->
-<div class="modal fade" id="issueModal" tabindex="-1">
+<div class="modal fade" id="issueModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3472,8 +3494,31 @@ td.empty-cell { white-space: normal !important; }
   </div>
 </div>
 
+<!-- ═══════════════ MODAL: เบิกรวมหลาย MO (วัตถุดิบที่ใช้ร่วมกันหลายรหัส เบิกครั้งเดียว, 2026-11-24) ═══════════════ -->
+<div class="modal fade" id="issueBulkModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header modal-header-brand">
+        <h5 class="modal-title"><i class="fa-solid fa-layer-group me-2"></i>เบิกรวมหลาย MO</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="small text-muted mb-3" id="issue-bulk-info"></div>
+        <div class="table-responsive"><table class="table table-sm mb-0 align-middle">
+          <thead><tr><th>วัตถุดิบ / แพ็คเกจจิ้ง</th><th class="text-end">ตามสูตร (รวมทุก MO)</th><th class="text-end">คงเหลือในคลัง</th><th style="width:170px">เบิกจริง</th></tr></thead>
+          <tbody id="issue-bulk-rows"></tbody>
+        </table></div>
+      </div>
+      <div class="modal-footer modal-footer-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-brand" onclick="issueBulkModalSave()"><i class="fa-solid fa-floppy-disk me-1"></i>ยืนยันเบิกรวม</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════ MODAL: เบิกเข้าไลน์ผลิต — เบ็ดเตล็ด (ไม่อ้างอิง MO ที่มีอยู่, 2026-10-03) ═══════════════ -->
-<div class="modal fade" id="issueGenModal" tabindex="-1">
+<div class="modal fade" id="issueGenModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3529,7 +3574,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: เพิ่มรายการเบิกให้ MO ที่เบิกไปแล้ว (2026-10-04) ═══════════════ -->
-<div class="modal fade" id="issueAddModal" tabindex="-1">
+<div class="modal fade" id="issueAddModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3564,7 +3609,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: แก้ไขล็อตวัตถุดิบที่เบิก (2026-10-03) ═══════════════ -->
-<div class="modal fade" id="issueLotModal" tabindex="-1">
+<div class="modal fade" id="issueLotModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3595,7 +3640,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: บันทึกผลิต ═══════════════ -->
-<div class="modal fade" id="prodRecordModal" tabindex="-1">
+<div class="modal fade" id="prodRecordModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-xl rm-wide">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3607,25 +3652,6 @@ td.empty-cell { white-space: normal !important; }
           <div class="col-lg-4">
             <div class="row g-3">
               <div class="col-6">
-                <label class="form-label">ได้ทั้งหมด<span class="text-danger">*</span></label>
-                <input id="pr-qty-gross" type="number" min="0" step="any" class="form-control" oninput="window._prGrossTouched = true; prQtyRecalc()">
-                <div class="invalid-feedback" id="pr-qty-gross-err"></div>
-              </div>
-              <div class="col-6">
-                <label class="form-label">เสีย (Scrap)</label>
-                <input id="pr-qty-defect" type="number" min="0" step="any" class="form-control" oninput="prQtyRecalc()">
-              </div>
-              <div class="col-6">
-                <label class="form-label">สุทธิ<span class="text-danger">*</span></label>
-                <input id="pr-qty" type="number" step="any" class="form-control" readonly style="background:#f1f5f9">
-                <div class="invalid-feedback" id="pr-qty-err"></div>
-              </div>
-              <div class="col-6">
-                <label class="form-label">Lot<span class="text-danger">*</span></label>
-                <input id="pr-lot" class="form-control">
-                <div class="invalid-feedback" id="pr-lot-err"></div>
-              </div>
-              <div class="col-6">
                 <label class="form-label">วันผลิต</label>
                 <input id="pr-mfg" type="date" class="form-control" onchange="document.getElementById('pr-exp').value = addDays(this.value, window._prShelfDays ?? 5)">
               </div>
@@ -3633,6 +3659,12 @@ td.empty-cell { white-space: normal !important; }
                 <label class="form-label">วันหมดอายุ</label>
                 <input id="pr-exp" type="date" class="form-control">
               </div>
+              <div class="col-12 d-flex justify-content-between align-items-center mt-1">
+                <span class="small text-muted fw-semibold">ผลิตได้ — ใส่ของดี/ของเสียแต่ละรหัสพร้อมกัน</span>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="prAddExtraRow()"><i class="fa-solid fa-plus me-1"></i>เพิ่มรหัส</button>
+              </div>
+              <div class="col-12" id="pr-main-row"></div>
+              <div class="col-12" id="pr-extra-rows"></div>
             </div>
           </div>
           <div class="col-lg-8 d-flex flex-column">
@@ -3640,10 +3672,11 @@ td.empty-cell { white-space: normal !important; }
               <span>วัตถุดิบที่ใช้จริง <span class="text-muted fw-normal small">(แก้ไขได้ถ้าใช้ไม่เท่ากับที่เบิกไป — ใช้มากกว่าเดิมจะตัดสต็อกเพิ่ม, ใช้น้อยกว่าเดิมส่วนต่างจะบันทึกเป็น "ของเสีย" อัตโนมัติ ไม่คืนเข้าสต็อก)</span></span>
               <span id="pr-rm-loss" class="small"></span>
             </label>
-            <div class="table-responsive flex-grow-1" style="min-height:0;overflow-y:auto"><table class="table table-sm align-middle mb-0">
+            <div class="table-responsive" style="max-height:260px;overflow-y:auto"><table class="table table-sm align-middle mb-0">
               <thead><tr><th>รหัส</th><th>รายการ</th><th class="text-end">พร้อมใช้ในสูตร</th><th style="width:190px">เบิกตั้งต้น</th><th class="text-end">ของเสีย</th><th>หน่วย</th><th class="text-end">% หาย</th></tr></thead>
               <tbody id="pr-rm-rows"></tbody>
             </table></div>
+            <div class="small mt-2" id="pr-deductprod-info"></div>
           </div>
         </div>
       </div>
@@ -3656,7 +3689,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: รับ FG เข้าคลัง ═══════════════ -->
-<div class="modal fade" id="fgReceiveModal" tabindex="-1">
+<div class="modal fade" id="fgReceiveModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3720,7 +3753,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: เบิกสินค้า (FG out) ═══════════════ -->
-<div class="modal fade" id="fgoutModal" tabindex="-1">
+<div class="modal fade" id="fgoutModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3761,7 +3794,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: แพ็คกล่อง ═══════════════ -->
-<div class="modal fade" id="packBoxModal" tabindex="-1">
+<div class="modal fade" id="packBoxModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3823,7 +3856,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: แก้ไขกล่อง (Lot + ยอด) ═══════════════ -->
-<div class="modal fade" id="pbEditModal" tabindex="-1">
+<div class="modal fade" id="pbEditModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3880,7 +3913,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: พิมพ์การ์ดสต็อก (เลือกช่วงเดือน) ═══════════════ -->
-<div class="modal fade" id="scPrintModal" tabindex="-1">
+<div class="modal fade" id="scPrintModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3911,7 +3944,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: บันทึกของเสีย ═══════════════ -->
-<div class="modal fade" id="wasteModal" tabindex="-1">
+<div class="modal fade" id="wasteModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -3949,7 +3982,7 @@ td.empty-cell { white-space: normal !important; }
 </div>
 
 <!-- ═══════════════ MODAL: บันทึกของเสีย — เลือก Lot (เฉพาะสินค้าสำเร็จรูป) ═══════════════ -->
-<div class="modal fade" id="wasteLotModal" tabindex="-1">
+<div class="modal fade" id="wasteLotModal" tabindex="-1" data-bs-backdrop="static">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-brand">
@@ -4225,7 +4258,26 @@ function _planFefo(rmId, qty) {
     out.push({ lot_id: l.Lot_ID, lot: l.Lot, exp: l.ExpDate, qty: take });
     left = Math.round((left - take) * 10000) / 10000;
   }
-  if (left > 0) out.push({ lot_id: null, lot: 'ไม่มีล็อตรองรับ (สต็อกไม่พอ)', qty: left });
+  if (left > 0) out.push({ lot_id: null, lot: 'ไม่มีล็อตรองรับ (สต็อกไม่พอ)', short: true, qty: left });
+  return out;
+}
+// FEFO ของสต็อก FG (ไว้พรีวิวล็อตที่จะถูกตัด เวลาสูตร BOM มีรายการ "สินค้า FG" — เอา FG ตัวอื่นมาบวกกล่อง 2026-11-24)
+// stock_fg ไม่มี Lot_ID (คีย์คือ FG_ID+Lot ตรงๆ) จึงไม่มี lot_id ให้ ตัดของจริงฝั่ง DB อยู่ใน rm_issue_post เหมือนกัน
+function _lotsFgFefo(fgId) {
+  const t = v => v ? new Date(v).getTime() : Infinity;
+  return _stockFgCache.filter(l => l.FG_ID === fgId && (parseFloat(l.Qty) || 0) > 0)
+    .sort((a, b) => (t(a.ExpDate) - t(b.ExpDate)) || String(a.Lot).localeCompare(String(b.Lot)));
+}
+function _planFgFefo(fgId, qty) {
+  const out = [];
+  let left = qty;
+  for (const l of _lotsFgFefo(fgId)) {
+    if (left <= 0) break;
+    const take = Math.min(left, parseFloat(l.Qty) || 0);
+    out.push({ lot_id: null, lot: l.Lot, exp: l.ExpDate, qty: take });
+    left = Math.round((left - take) * 10000) / 10000;
+  }
+  if (left > 0) out.push({ lot_id: null, lot: 'ไม่มีล็อตรองรับ (สต็อก FG ไม่พอ)', short: true, qty: left });
   return out;
 }
 function _lotLabel(l) { return l.Lot || (l.Lot_ID?.startsWith('OPEN-') ? 'ยอดยกมา' : l.Lot_ID) || '—'; }
@@ -4234,7 +4286,7 @@ function _lotLabel(l) { return l.Lot || (l.Lot_ID?.startsWith('OPEN-') ? 'ยอ
 // showExp=false ซ่อนวันหมดอายุของล็อตต้นทาง (ตาราง "กำลังเตรียม" ไม่ต้องใส่ ผู้ใช้ขอ 2026-09-28)
 function _lotAllocText(alloc, fmt, showExp = true) {
   fmt = fmt || _bomFmtQty;
-  return (alloc || []).map(a => a.lot_id === null
+  return (alloc || []).map(a => a.short
     ? `<span class="text-danger">${esc(a.lot)} ${fmt(a.qty)}</span>`
     : `<span class="text-nowrap">${esc(_lotLabel({ Lot: a.lot, Lot_ID: a.lot_id }))} <b>${fmt(a.qty)}</b>${showExp && a.exp ? ` <span class="text-muted">(หมด ${fmtDate(a.exp)})</span>` : ''}</span>`).join(' · ');
 }
@@ -6139,6 +6191,24 @@ function _rmmCutPackToggle() {
   const show = _rmMasterCache.some(r => 'CutAtPack' in r) && document.getElementById('rmm-cat').value === CAT_PKG;
   document.getElementById('rmm-cutpack-wrap').classList.toggle('d-none', !show);
 }
+// "ตัดตอนบันทึกผลิต" — คู่ขนานกับ "ตัดตามวันแพ็คกล่อง" ด้านบนทุกประการ ต่างแค่จุดที่ตัดสต็อก (2026-11-24)
+function _rmDeductProdPayload() {
+  if (!_rmMasterCache.some(r => 'DeductAtProd' in r)) return {};
+  return { DeductAtProd: document.getElementById('rmm-cat').value === CAT_PKG && document.getElementById('rmm-deductprod').checked };
+}
+function _rmmDeductProdToggle() {
+  const show = _rmMasterCache.some(r => 'DeductAtProd' in r) && document.getElementById('rmm-cat').value === CAT_PKG;
+  document.getElementById('rmm-deductprod-wrap').classList.toggle('d-none', !show);
+}
+// "% เผื่อเพิ่ม" (2026-11-25) — บวกเพิ่มอัตโนมัติตอนแนะนำ "เบิกตั้งต้น" ของแพ็คเกจจิ้ง (เช่น ถุงตาข่ายเผื่อฉีกขาด)
+function _rmBufferPctPayload() {
+  if (!_rmMasterCache.some(r => 'BufferPct' in r)) return {};
+  return { BufferPct: document.getElementById('rmm-cat').value === CAT_PKG ? (parseFloat(document.getElementById('rmm-bufferpct').value) || 0) : 0 };
+}
+function _rmmBufferPctToggle() {
+  const show = _rmMasterCache.some(r => 'BufferPct' in r) && document.getElementById('rmm-cat').value === CAT_PKG;
+  document.getElementById('rmm-bufferpct-wrap').classList.toggle('d-none', !show);
+}
 async function rmMasterLoad() {
   _rmMasterCache = await sbRun(_sb.from('rm_master').select('*').order('RM_Name'), 'โหลดวัตถุดิบ') || [];
   if (!_vendorCache.length) _vendorCache = await sbRun(_sb.from('vendors').select('*'), 'โหลดผู้ส่งมอบ') || [];
@@ -6207,6 +6277,10 @@ function rmMasterOpenForm(id) {
   document.getElementById('rmm-acct').dataset.auto = '';
   document.getElementById('rmm-cutpack').checked = !!row?.CutAtPack;
   _rmmCutPackToggle();
+  document.getElementById('rmm-deductprod').checked = !!row?.DeductAtProd;
+  _rmmDeductProdToggle();
+  document.getElementById('rmm-bufferpct').value = row?.BufferPct || '';
+  _rmmBufferPctToggle();
   idInput.dataset.auto = id ? '' : idInput.value; idInput.dataset.rand = id ? '' : idInput.value;   // รายการใหม่: ค่าเริ่มต้น = รหัสสุ่มเดิม แล้ว _rmmIdSuggest แทนที่ด้วยรหัสแนะนำตามหมวด
   _rmmIdSuggest();
   _rmmAcctSuggest();   // รายการใหม่: เติมรหัสบัญชีแนะนำตามหมวดให้เลย (แก้ได้) · แก้รายการเดิม: แสดงคำแนะนำเฉยๆ ไม่เติมทับ
@@ -6324,6 +6398,8 @@ async function rmMasterModalSave() {
     Supplier: document.getElementById('rmm-supplier').value.trim() || null, Note: document.getElementById('rmm-note').value.trim() || null,
     ..._rmAcctPayload(),
     ..._rmCutPackPayload(),
+    ..._rmDeductProdPayload(),
+    ..._rmBufferPctPayload(),
     ...prep,
   };
   const ok = await sbRun(_sb.from('rm_master').upsert(payload), 'บันทึกไม่สำเร็จ');
@@ -7007,16 +7083,40 @@ function _bomLineResolve(b) {
 }
 // ต้นทุนต่อ 1 หน่วยสินค้า = รวม (ปริมาณที่ต้องเตรียมรวม Scrap ของแต่ละวัตถุดิบ × ราคาเฉลี่ยปัจจุบันของวัตถุดิบนั้น)
 // incomplete = true ถ้ามีวัตถุดิบในสูตรอย่างน้อย 1 ตัวที่ยังไม่เคยรับเข้าแบบใส่ราคา (ต้นทุนที่ได้จะต่ำกว่าจริง)
-function _bomUnitCost(g) {
-  if (!g.lines.length) return null;
+// รายการในสูตรที่เป็น "สินค้า FG" (MatType='FG', 2026-11-24 — เอา FG ตัวอื่นมาบวกกล่องเป็นรหัสใหม่) คิดต้นทุน
+// แบบรีเคอร์ซีฟจากสูตรของ FG ตัวนั้นเอง — ancestry กันสูตรวนกลับมาอ้างตัวเอง (ไม่ควรเกิดถ้า validate ตอนเพิ่มแล้ว
+// ที่ bomSearchMaterial/_bomFgReachesTarget แต่กันซ้อนไว้เผื่อข้อมูลเก่าก่อนมี validate)
+function _bomUnitCost(g, ancestry) {
+  if (!g || !g.lines.length) return null;
+  ancestry = ancestry || new Set();
+  if (ancestry.has(g.FG_ID)) return null;
+  const nextAncestry = new Set(ancestry); nextAncestry.add(g.FG_ID);
   let cost = 0, incomplete = false;
   g.lines.forEach(l => {
+    if (l.MatType === 'FG') {
+      const subG = _bomGroupFor(l.RM_ID);
+      const sub = subG ? _bomUnitCost(subG, nextAncestry) : null;
+      if (sub == null) { incomplete = true; return; }
+      cost += (parseFloat(l.QtyPerUnit) || 0) * sub.cost;
+      if (sub.incomplete) incomplete = true;
+      return;
+    }
     const qty = _bomWithScrap(l.QtyPerUnit, _bomScrapTotal(_bomScrapSteps(l)));
     const avg = _rmAvgCost(l.RM_ID);
     if (avg == null) { incomplete = true; return; }
     cost += (Number.isFinite(qty) ? qty : l.QtyPerUnit) * avg;
   });
   return { cost, incomplete };
+}
+// FG ตัวอื่น (candidateFgId) จะ "ไปถึง" targetFgId ได้ไหมถ้าไล่ตามรายการ FG ในสูตรของมันไปเรื่อยๆ — ใช้กันวนลูป
+// ตอนเลือก FG มาใส่ในสูตร: ถ้าใส่ candidateFgId เป็นส่วนผสมของ targetFgId แล้วจะวนกลับมาอ้างตัวเอง (ตรง/อ้อม) ห้ามเลือก
+function _bomFgReachesTarget(fromFgId, targetFgId, visited) {
+  if (!fromFgId || !targetFgId) return false;
+  if (fromFgId === targetFgId) return true;
+  visited = visited || new Set();
+  if (visited.has(fromFgId)) return false;
+  visited.add(fromFgId);
+  return _bomCache.some(b => b.FG_ID === fromFgId && b.MatType === 'FG' && _bomFgReachesTarget(b.RM_ID, targetFgId, visited));
 }
 function _bomCatBadge(cat) { return catBadge(cat); }
 // ปริมาณวัตถุดิบ "ใช้ต่อ 1 หน่วย" ในตารางสูตร (BOM) แสดงทศนิยม 5 ตำแหน่งคงที่ (ผู้ใช้ขอ 2026-10-14) — ปริมาณต่อลูกเล็กมาก (เช่น
@@ -7029,14 +7129,24 @@ function _rmFmtQty(n) { return (parseFloat(n) || 0).toLocaleString(undefined, { 
 // เลือกฟอร์แมตให้ถูกตามหมวดของแถวนั้น — ใช้ในตารางที่มีทั้งวัตถุดิบและแพ็คเกจจิ้งปนกัน
 function _qtyFmtByCat(n, category) { return CAT_RAW_ALL.includes(category) ? _rmFmtQty(n) : _bomFmtQty(n); }
 
-function _bomGroupByProduct() {
+// ชื่อของรายการในสูตร 1 แถว ไม่ว่าจะเป็นวัตถุดิบ/แพ็คเกจจิ้ง (rm) หรือสินค้า FG ที่เอามาบวกกล่อง (fg)
+function _bomLineName(l) { return l.MatType === 'FG' ? (l.fg?.FG_Name || l.RM_ID) : (l.rm?.RM_Name || l.RM_ID); }
+// ลำดับหมวดไว้เรียงแถวในสูตร — รายการ FG (เอาสินค้าอื่นมาบวกกล่อง) เรียงไว้ท้ายสุดเสมอ หลังแพ็คเกจจิ้ง
+function _bomLineSortKey(l) { return l.MatType === 'FG' ? 99 : (_BOM_CAT_ORDER[l.rm?.Category] ?? 0); }
+// 1 สินค้า (FG) + รายการในสูตรของมัน — แยกออกมาจาก _bomGroupByProduct ให้เรียกซ้ำได้ (ใช้คิดต้นทุนของ FG ที่ถูก
+// เอาไปบวกกล่องเป็นส่วนผสมของสินค้าอื่นแบบรีเคอร์ซีฟ ดู _bomUnitCost) FG_ID ที่ไม่มีจริงใน Master คืน null
+function _bomGroupFor(fgId) {
+  const fg = _fgMasterCache.find(f => f.FG_ID === fgId);
+  if (!fg) return null;
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
-  return _fgMasterCache.map(fg => {
-    const lines = _bomCache.filter(b => b.FG_ID === fg.FG_ID).map(b => ({ ...b, rm: rmMap[b.RM_ID] || null }))
-      .sort((a, b) => ((_BOM_CAT_ORDER[a.rm?.Category] ?? 0) - (_BOM_CAT_ORDER[b.rm?.Category] ?? 0))
-        || (a.rm?.RM_Name || '').localeCompare(b.rm?.RM_Name || ''));
-    return { ...fg, lines };
-  });
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
+  const lines = _bomCache.filter(b => b.FG_ID === fgId)
+    .map(b => ({ ...b, rm: b.MatType === 'FG' ? null : (rmMap[b.RM_ID] || null), fg: b.MatType === 'FG' ? (fgMap[b.RM_ID] || null) : null }))
+    .sort((a, b) => (_bomLineSortKey(a) - _bomLineSortKey(b)) || _bomLineName(a).localeCompare(_bomLineName(b)));
+  return { ...fg, lines };
+}
+function _bomGroupByProduct() {
+  return _fgMasterCache.map(fg => _bomGroupFor(fg.FG_ID));
 }
 function bomUpdateKPIs() {
   const groups = _bomGroupByProduct();
@@ -7062,7 +7172,7 @@ function bomRenderCards() {
     if (_bomFilterNoFormula && g.lines.length) return false;
     if (!q) return true;
     if ([g.FG_ID, g.FG_Name].join(' ').toLowerCase().includes(q)) return true;
-    return g.lines.some(l => [l.RM_ID, l.rm?.RM_Name].join(' ').toLowerCase().includes(q));
+    return g.lines.some(l => [l.RM_ID, _bomLineName(l)].join(' ').toLowerCase().includes(q));
   });
   _bomLastGroups = groups;
   const box = document.getElementById('bomCards');
@@ -7072,8 +7182,9 @@ function bomRenderCards() {
   }
   box.innerHTML = groups.map((g, gi) => {
     const expanded = _bomExpandedSet.has(g.FG_ID);
-    const pkgCount = g.lines.filter(l => _isPkgLike(l.rm?.Category)).length;
-    const rmCount = g.lines.length - pkgCount;
+    const fgCompCount = g.lines.filter(l => l.MatType === 'FG').length;
+    const pkgCount = g.lines.filter(l => l.MatType !== 'FG' && _isPkgLike(l.rm?.Category)).length;
+    const rmCount = g.lines.length - pkgCount - fgCompCount;
     const uc = _bomUnitCost(g);
     let costBadge = '';
     if (uc) {
@@ -7086,17 +7197,34 @@ function bomRenderCards() {
       }
     }
     const rowsHtml = g.lines.map((l, li) => {
-      const unitMismatch = l.rm && l.Unit !== l.rm.Unit;
+      const isFgLine = l.MatType === 'FG';
+      const unitMismatch = !isFgLine && l.rm && l.Unit !== l.rm.Unit;
       // สูตรที่ยังใช้วัตถุดิบสด ทั้งที่มีตัวพร้อมผลิตของมันแล้ว → เตือนให้เปลี่ยน (เบิกเข้าไลน์ผลิตจะตัดของสด ไม่ใช่ของที่เตรียมแล้ว)
-      const prepAlt = l.rm && l.rm.Category !== CAT_PREP && _rmMasterCache.find(r => r.Category === CAT_PREP && r.SourceRM_ID === l.RM_ID);
+      const prepAlt = !isFgLine && l.rm && l.rm.Category !== CAT_PREP && _rmMasterCache.find(r => r.Category === CAT_PREP && r.SourceRM_ID === l.RM_ID);
+      // ราคา/หน่วย + มูลค่าต่อแถว (ผู้ใช้ขอ 2026-11-24) — วิธีคิดเดียวกับ _bomUnitCost ของทั้งสูตร (รวม Scrap
+      // ของวัตถุดิบ, รีเคอร์ซีฟไปที่สูตรของ FG เองถ้าแถวนี้เป็น "สินค้า FG") ~ นำหน้า = ยังไม่รู้ราคาครบทุกจุด
+      let unitPrice = null, priceIncomplete = false;
+      const qtyWithScrap = isFgLine ? (parseFloat(l.QtyPerUnit) || 0) : _bomWithScrap(l.QtyPerUnit, _bomScrapTotal(_bomScrapSteps(l)));
+      const qtyForValue = Number.isFinite(qtyWithScrap) ? qtyWithScrap : (parseFloat(l.QtyPerUnit) || 0);
+      if (isFgLine) {
+        const subG = l.fg ? _bomGroupFor(l.RM_ID) : null;
+        const sub = subG ? _bomUnitCost(subG) : null;
+        if (sub) { unitPrice = sub.cost; priceIncomplete = sub.incomplete; }
+      } else {
+        unitPrice = _rmAvgCost(l.RM_ID);
+      }
+      const lineValue = unitPrice != null ? qtyForValue * unitPrice : null;
+      const priceTilde = priceIncomplete ? '~' : '';
       return `<tr>
         <td><span class="badge text-bg-secondary">${esc(l.RM_ID)}</span></td>
-        <td>${l.rm ? esc(l.rm.RM_Name) : '<span class="text-danger">(ไม่พบใน Master)</span>'}
+        <td>${isFgLine ? (l.fg ? esc(l.fg.FG_Name) : '<span class="text-danger">(ไม่พบสินค้านี้)</span>') : (l.rm ? esc(l.rm.RM_Name) : '<span class="text-danger">(ไม่พบใน Master)</span>')}
           ${prepAlt ? `<div class="small text-warning-emphasis"><i class="fa-solid fa-triangle-exclamation me-1"></i>มีตัวพร้อมผลิต "${esc(prepAlt.RM_Name)}" — ควรเปลี่ยนมาใช้ตัวนั้น</div>` : ''}
           ${l.Note ? `<div class="text-muted small">${esc(l.Note)}</div>` : ''}</td>
-        <td class="text-end fw-semibold">${CAT_RAW_ALL.includes(l.rm?.Category) ? _bomRawQty5(l.QtyPerUnit) : _qtyFmtByCat(l.QtyPerUnit, l.rm?.Category)}</td>
+        <td class="text-end fw-semibold">${!isFgLine && CAT_RAW_ALL.includes(l.rm?.Category) ? _bomRawQty5(l.QtyPerUnit) : _qtyFmtByCat(l.QtyPerUnit, l.rm?.Category)}</td>
         <td>${esc(l.Unit)}${unitMismatch ? ` <i class="fa-solid fa-triangle-exclamation text-warning" title="หน่วยในสูตร (${esc(l.Unit)}) ไม่ตรงกับหน่วยใน Master (${esc(l.rm.Unit)}) — ตอนเบิกวัตถุดิบระบบไม่แปลงหน่วยให้ ควรแก้ให้ตรงกัน"></i>` : ''}</td>
-        <td>${_bomCatBadge(l.rm?.Category)}</td>
+        <td>${isFgLine ? '<span class="badge text-bg-danger"><i class="fa-solid fa-box me-1"></i>สินค้า FG</span>' : _bomCatBadge(l.rm?.Category)}</td>
+        <td class="text-end">${unitPrice != null ? `${priceTilde}${_fmtBaht(unitPrice)}` : '<span class="text-muted">—</span>'}</td>
+        <td class="text-end fw-semibold">${lineValue != null ? `${priceTilde}${_fmtBaht(lineValue)}` : '<span class="text-muted">—</span>'}</td>
         <td class="text-center">
           <button class="btn btn-outline-primary btn-sm me-1" onclick="bomOpenLineModal(${gi},${li})" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>
           <button class="btn btn-outline-danger btn-sm" onclick="bomDeleteLine(${gi},${li})" title="ลบ"><i class="fa-solid fa-trash"></i></button>
@@ -7115,7 +7243,7 @@ function bomRenderCards() {
           ${g.BatchSize != null ? `<span class="badge bg-light text-primary border ms-1"><i class="fa-solid fa-layer-group me-1"></i>1 แบท = ${_bomFmtQty(g.BatchSize)} ${esc(g.Unit || 'หน่วย')}</span>` : ''}
           ${g.RegNo ? `<span class="badge bg-light text-dark border ms-1"><i class="fa-solid fa-stamp me-1"></i>เลขทะเบียน ${esc(g.RegNo)}</span>` : ''}
           ${g.lines.length
-            ? `<span class="text-muted ms-2 small">วัตถุดิบ ${rmCount} · แพ็คเกจจิ้ง ${pkgCount} รายการ</span>`
+            ? `<span class="text-muted ms-2 small">วัตถุดิบ ${rmCount} · แพ็คเกจจิ้ง ${pkgCount}${fgCompCount ? ` · สินค้า FG ${fgCompCount}` : ''} รายการ</span>`
             : `<span class="badge text-bg-warning ms-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>ยังไม่มีสูตร</span>`}
         </div>
         <div class="d-flex gap-1">
@@ -7129,7 +7257,7 @@ function bomRenderCards() {
       ${g.Note ? `<div class="small text-muted mt-2"><i class="fa-regular fa-note-sticky me-1"></i>${esc(g.Note)}</div>` : ''}
       ${g.lines.length ? `
       <div class="table-responsive mt-3"><table class="table table-sm table-hover mb-0">
-        <thead><tr><th>รหัส</th><th>ชื่อวัตถุดิบ / แพ็คเกจจิ้ง</th><th class="text-end">ใช้ต่อ 1 ${esc(g.Unit || 'หน่วย')}</th><th>หน่วย</th><th>ประเภท</th><th class="text-center" style="width:100px">จัดการ</th></tr></thead>
+        <thead><tr><th>รหัส</th><th>ชื่อวัตถุดิบ / แพ็คเกจจิ้ง</th><th class="text-end">ใช้ต่อ 1 ${esc(g.Unit || 'หน่วย')}</th><th>หน่วย</th><th>ประเภท</th><th class="text-end">ราคา/หน่วย</th><th class="text-end">มูลค่า</th><th class="text-center" style="width:100px">จัดการ</th></tr></thead>
         <tbody>${rowsHtml}</tbody>
       </table></div>`
       : `<div class="text-center text-muted py-3 small">ยังไม่มีรายการในสูตร — กดปุ่ม <i class="fa-solid fa-plus"></i> เพื่อเพิ่มวัตถุดิบ / แพ็คเกจจิ้ง</div>`}`}
@@ -7138,6 +7266,19 @@ function bomRenderCards() {
 }
 
 // ── ค้นหาวัตถุดิบ/แพ็คเกจจิ้งจาก Master (ต่อแถวในโมดัล, seq = data-seq ของแถว) ──
+// สลับ "ประเภทรายการ" (วัตถุดิบ/แพ็คเกจจิ้ง ↔ สินค้า FG — เอา FG มาบวกกล่อง 2026-11-24) — ล้างรายการที่เลือกไว้
+// เพราะเปลี่ยนประเภทแล้วรหัสเดิมใช้ไม่ได้ ต้องค้นหา/เลือกใหม่จาก Master ที่ตรงกับประเภทที่เลือก
+function bomMatTypeChanged(seq) {
+  const isFg = document.getElementById(`bomm-mattype-${seq}`).value === 'FG';
+  document.getElementById(`bomm-mat-label-${seq}`).innerHTML = isFg ? 'สินค้า FG<span class="text-danger">*</span>' : 'วัตถุดิบ / แพ็คเกจจิ้ง<span class="text-danger">*</span>';
+  const search = document.getElementById(`bomm-mat-search-${seq}`);
+  search.placeholder = isFg ? 'พิมพ์รหัสหรือชื่อสินค้า FG เพื่อค้นหา...' : 'พิมพ์รหัสหรือชื่อเพื่อค้นหาจาก Master...';
+  search.value = '';
+  document.getElementById(`bomm-rm-id-${seq}`).value = '';
+  document.getElementById(`bomm-unit-${seq}`).value = '';
+  document.getElementById(`bomm-mat-hint-${seq}`).innerHTML = '';
+  document.getElementById(`bomm-mat-dd-${seq}`).style.display = 'none';
+}
 function bomSearchMaterial(seq, q) {
   const dd = document.getElementById(`bomm-mat-dd-${seq}`);
   // พิมพ์ใหม่ = ยกเลิกรายการที่เลือกไว้ ต้องเลือกจากรายการใหม่อีกครั้ง (กันชื่อในช่องกับรหัสที่บันทึกไม่ตรงกัน)
@@ -7147,6 +7288,21 @@ function bomSearchMaterial(seq, q) {
   document.getElementById(`bomm-scrap-wrap-${seq}`).classList.add('d-none');
   q = (q || '').trim().toLowerCase();
   if (!q) { dd.style.display = 'none'; return; }
+  const isFg = document.getElementById(`bomm-mattype-${seq}`)?.value === 'FG';
+  if (isFg) {
+    // ห้ามเลือกตัวเอง หรือ FG ที่ไล่ตามสูตรของมันไปแล้ววนกลับมาอ้างสินค้านี้เอง (กันสูตรวนลูปไม่รู้จบ)
+    const selfId = _bomModalFgId || document.getElementById('bomm-fg-id')?.value?.trim();
+    const results = _fgMasterCache.filter(f => f.FG_ID !== selfId && !_bomFgReachesTarget(f.FG_ID, selfId)
+      && ((f.FG_Name || '').toLowerCase().includes(q) || (f.FG_ID || '').toLowerCase().includes(q))).slice(0, 10);
+    dd.innerHTML = results.length
+      ? results.map(f => `<button type="button" class="list-group-item list-group-item-action py-1 px-2" style="font-size:.84rem"
+          data-rm="${esc(f.FG_ID)}" onclick="bomSelectMaterial(${seq}, this.dataset.rm)">
+          <span class="badge text-bg-primary me-1">${esc(f.FG_ID)}</span>${esc(f.FG_Name)} <span class="badge text-bg-danger">FG</span>
+          <span class="text-muted small ms-1">(${esc(f.Unit || 'หน่วย')})</span></button>`).join('')
+      : '<div class="list-group-item small text-muted">ไม่พบสินค้า (หรือเลือกไม่ได้เพราะจะทำให้สูตรวนกลับมาอ้างตัวเอง)</div>';
+    dd.style.display = 'block';
+    return;
+  }
   const results = _rmMasterCache.filter(m =>
     (m.RM_Name || '').toLowerCase().includes(q) || (m.RM_ID || '').toLowerCase().includes(q)).slice(0, 10);
   dd.innerHTML = results.length
@@ -7158,6 +7314,7 @@ function bomSearchMaterial(seq, q) {
   dd.style.display = 'block';
 }
 function bomSelectMaterial(seq, rmId) {
+  if (document.getElementById(`bomm-mattype-${seq}`)?.value === 'FG') { _bomSelectFgMaterial(seq, rmId); return; }
   const m = _rmMasterCache.find(r => r.RM_ID === rmId);
   if (!m) return;
   document.getElementById(`bomm-mat-search-${seq}`).value = m.RM_Name;
@@ -7176,6 +7333,17 @@ function bomSelectMaterial(seq, rmId) {
     document.getElementById(`bomm-mat-hint-${seq}`).innerHTML +=
       ` <span class="text-warning-emphasis">· มีตัวพร้อมผลิต "${esc(prepAlt.RM_Name)}" — ถ้าใช้ของที่เตรียมแล้ว ควรเลือกตัวนั้นแทน</span>`;
   }
+}
+function _bomSelectFgMaterial(seq, fgId) {
+  const f = _fgMasterCache.find(x => x.FG_ID === fgId);
+  if (!f) return;
+  document.getElementById(`bomm-mat-search-${seq}`).value = f.FG_Name;
+  document.getElementById(`bomm-rm-id-${seq}`).value = f.FG_ID;
+  document.getElementById(`bomm-unit-${seq}`).value = f.Unit || 'หน่วย';
+  document.getElementById(`bomm-mat-hint-${seq}`).innerHTML = `รหัส: ${esc(f.FG_ID)} · <span class="badge text-bg-danger">สินค้า FG</span>`;
+  document.getElementById(`bomm-mat-dd-${seq}`).style.display = 'none';
+  document.getElementById(`bomm-mat-search-${seq}`).classList.remove('is-invalid');
+  document.getElementById(`bomm-scrap-wrap-${seq}`).classList.add('d-none');
 }
 function bomAddScrapStep(seq, step = '', pct = '') {
   const wrap = document.createElement('div');
@@ -7221,7 +7389,12 @@ function _bomLineRowHTML(seq) {
       style="top:6px;right:6px;padding:0 8px !important" onclick="bomRemoveMaterialRow(${seq})" title="ลบแถวนี้"><i class="fa-solid fa-xmark"></i></button>
     <div class="row g-3">
       <div class="col-md-6 position-relative">
-        <label class="form-label">วัตถุดิบ / แพ็คเกจจิ้ง<span class="text-danger">*</span></label>
+        <label class="form-label">ประเภทรายการ</label>
+        <select id="bomm-mattype-${seq}" class="form-select form-select-sm mb-2" style="max-width:260px" onchange="bomMatTypeChanged(${seq})">
+          <option value="RM" selected>วัตถุดิบ / แพ็คเกจจิ้ง</option>
+          <option value="FG">สินค้าสำเร็จรูป (FG) — เอามาบวกกล่อง</option>
+        </select>
+        <label class="form-label" id="bomm-mat-label-${seq}">วัตถุดิบ / แพ็คเกจจิ้ง<span class="text-danger">*</span></label>
         <input class="form-control bomm-mat-search" id="bomm-mat-search-${seq}" placeholder="พิมพ์รหัสหรือชื่อเพื่อค้นหาจาก Master..."
           autocomplete="off" oninput="bomSearchMaterial(${seq}, this.value)">
         <div class="invalid-feedback" id="bomm-mat-search-${seq}-err"></div>
@@ -7315,7 +7488,10 @@ function bomOpenLineModal(gi = null, li = null) {
     _bomMultiRowMode = false;
     title.innerHTML = '<i class="fa-solid fa-pen me-2"></i>แก้ไขรายการในสูตร';
     const seq = bomAddMaterialRow();
-    if (l.rm) bomSelectMaterial(seq, l.RM_ID);
+    const isFgLine = l.MatType === 'FG';
+    document.getElementById(`bomm-mattype-${seq}`).value = isFgLine ? 'FG' : 'RM';
+    document.getElementById(`bomm-mat-label-${seq}`).innerHTML = isFgLine ? 'สินค้า FG<span class="text-danger">*</span>' : 'วัตถุดิบ / แพ็คเกจจิ้ง<span class="text-danger">*</span>';
+    if (l.rm || l.fg) bomSelectMaterial(seq, l.RM_ID);
     else {
       document.getElementById(`bomm-mat-search-${seq}`).value = l.RM_ID;
       document.getElementById(`bomm-rm-id-${seq}`).value = l.RM_ID;
@@ -7364,7 +7540,7 @@ async function bomLineSubmit() {
   }
 
   // อ่านทุกแถว — แถวที่ว่างทั้งแถวข้ามไป (สินค้าใหม่บันทึกได้โดยยังไม่มีสูตร แล้วค่อยมาเพิ่มทีหลัง)
-  const existingRm = new Set(_bomCache.filter(b => b.FG_ID === fgId && b.BOM_ID !== _bomEditId).map(b => b.RM_ID));
+  const existingRm = new Set(_bomCache.filter(b => b.FG_ID === fgId && b.BOM_ID !== _bomEditId).map(b => `${b.MatType || 'RM'}:${b.RM_ID}`));
   const seen = new Set();
   const payloads = [];
   for (const rowEl of document.querySelectorAll('#bomm-rows .bom-line-row')) {
@@ -7373,26 +7549,41 @@ async function bomLineSubmit() {
     _modalClearErrors([searchId, qtyId]);
     const searchVal = document.getElementById(searchId).value.trim();
     const qtyRaw = document.getElementById(qtyId).value;
+    const matType = document.getElementById(`bomm-mattype-${seq}`)?.value === 'FG' ? 'FG' : 'RM';
     let rmId = document.getElementById(`bomm-rm-id-${seq}`).value;
     if (!rmId && !searchVal && qtyRaw === '') continue;
-    if (!rmId) {
-      // พิมพ์ตรงกับรหัส/ชื่อใน Master เป๊ะแต่ไม่ได้คลิกเลือก — รับได้
-      const s = searchVal.toLowerCase();
-      const m = _rmMasterCache.find(r => (r.RM_ID || '').toLowerCase() === s || (r.RM_Name || '').toLowerCase() === s);
-      if (!m) { _modalShowError(searchId, 'เลือกรายการจาก Master (พิมพ์แล้วคลิกเลือกจากรายการ)'); return; }
-      rmId = m.RM_ID;
+    let rm = null, fg = null;
+    if (matType === 'FG') {
+      if (!rmId) {
+        // พิมพ์ตรงกับรหัส/ชื่อสินค้า FG เป๊ะแต่ไม่ได้คลิกเลือก — รับได้ (เว้นเลือกตัวเอง/วนลูปไม่ได้เหมือนกัน)
+        const s = searchVal.toLowerCase();
+        const m = _fgMasterCache.find(f => (f.FG_ID || '').toLowerCase() === s || (f.FG_Name || '').toLowerCase() === s);
+        if (!m) { _modalShowError(searchId, 'เลือกสินค้า FG จากรายการ (พิมพ์แล้วคลิกเลือกจากรายการ)'); return; }
+        rmId = m.FG_ID;
+      }
+      if (rmId === fgId || _bomFgReachesTarget(rmId, fgId)) { _modalShowError(searchId, 'เลือกสินค้านี้ไม่ได้ — จะทำให้สูตรวนกลับมาอ้างตัวเอง'); return; }
+      fg = _fgMasterCache.find(f => f.FG_ID === rmId);
+    } else {
+      if (!rmId) {
+        // พิมพ์ตรงกับรหัส/ชื่อใน Master เป๊ะแต่ไม่ได้คลิกเลือก — รับได้
+        const s = searchVal.toLowerCase();
+        const m = _rmMasterCache.find(r => (r.RM_ID || '').toLowerCase() === s || (r.RM_Name || '').toLowerCase() === s);
+        if (!m) { _modalShowError(searchId, 'เลือกรายการจาก Master (พิมพ์แล้วคลิกเลือกจากรายการ)'); return; }
+        rmId = m.RM_ID;
+      }
+      rm = _rmMasterCache.find(r => r.RM_ID === rmId);
     }
-    const rm = _rmMasterCache.find(r => r.RM_ID === rmId);
     const qty = parseFloat(qtyRaw);
     if (!(qty > 0)) { _modalShowError(qtyId, 'กรอกปริมาณมากกว่า 0'); return; }
-    if (seen.has(rmId)) { _modalShowError(searchId, 'เลือกรายการนี้ซ้ำในฟอร์ม — รวมปริมาณไว้แถวเดียว'); return; }
-    if (existingRm.has(rmId)) { _modalShowError(searchId, 'มีรายการนี้ในสูตรของสินค้านี้อยู่แล้ว — แก้ไขรายการเดิมแทน'); return; }
-    seen.add(rmId);
+    const dupKey = `${matType}:${rmId}`;
+    if (seen.has(dupKey)) { _modalShowError(searchId, 'เลือกรายการนี้ซ้ำในฟอร์ม — รวมปริมาณไว้แถวเดียว'); return; }
+    if (existingRm.has(dupKey)) { _modalShowError(searchId, 'มีรายการนี้ในสูตรของสินค้านี้อยู่แล้ว — แก้ไขรายการเดิมแทน'); return; }
+    seen.add(dupKey);
     const scrapSteps = [];   // %Scrap ไม่อยู่ใน BOM แล้ว — ดู rm_master.PrepSteps ของรายการพร้อมผลิต
     payloads.push({
-      BOM_ID: _bomEditId || genId('BOM'), FG_ID: fgId, RM_ID: rmId, QtyPerUnit: qty,
+      BOM_ID: _bomEditId || genId('BOM'), FG_ID: fgId, RM_ID: rmId, MatType: matType, QtyPerUnit: qty,
       ScrapSteps: scrapSteps,
-      Unit: rm?.Unit || document.getElementById(`bomm-unit-${seq}`).value || 'กรัม',
+      Unit: (matType === 'FG' ? fg?.Unit : rm?.Unit) || document.getElementById(`bomm-unit-${seq}`).value || (matType === 'FG' ? 'หน่วย' : 'กรัม'),
       Note: document.getElementById(`bomm-note-${seq}`).value.trim() || null,
     });
   }
@@ -7432,7 +7623,7 @@ async function bomDeleteLine(gi, li) {
   const g = _bomLastGroups[gi], l = g?.lines[li];
   if (!l) return;
   const c = await Swal.fire({ title: 'ลบรายการนี้ออกจากสูตร?', icon: 'warning',
-    html: `<b>${esc(l.rm?.RM_Name || l.RM_ID)}</b><br>สินค้า: ${esc(g.FG_Name)}`,
+    html: `<b>${esc(_bomLineName(l))}</b><br>สินค้า: ${esc(g.FG_Name)}`,
     showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก' });
   if (!c.isConfirmed) return;
   if (await sbDelete('bom', 'BOM_ID', l.BOM_ID)) bomLoad();
@@ -8469,7 +8660,7 @@ async function editReqOpen(type, id) {
     leftCol.className = 'col-lg-4';
     rmSection.classList.add('d-flex', 'flex-column');
     rmSection.style.display = '';
-    await _rmUseLoadRows('erq', row.MO_ID);
+    await _rmUseLoadRows('erq', row.MO_ID, row.FG_ID);
   } else {
     dialog.classList.replace('modal-xl', 'modal-lg');
     dialog.classList.remove('rm-wide');
@@ -12824,9 +13015,11 @@ async function issueLoad() {
   const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const pending = _planCache.filter(p => p.Status === 'วางแผน');
   document.getElementById('issueMoTableBody').innerHTML = pending.map(p => `
-    <tr><td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td><td>${fmtDate(p.PlanDate)}</td>
+    <tr><td><input type="checkbox" class="form-check-input issue-mo-chk" data-mo="${esc(p.MO_ID)}" onclick="_issueBulkUpdate()"></td>
+    <td>${esc(p.MO_ID)}</td><td>${esc(fgMap[p.FG_ID]?.FG_Name || p.FG_ID)}</td><td>${_bomFmtQty(p.PlanQty)}</td><td>${fmtDate(p.PlanDate)}</td>
     <td><button class="btn btn-sm btn-success" onclick="issueOpenForm('${p.MO_ID}')"><i class="fa-solid fa-dolly me-1"></i>เบิกวัตถุดิบ</button></td></tr>`).join('')
-    || '<tr><td colspan="5" class="text-center text-muted py-3">ไม่มี MO รอเบิกวัตถุดิบ</td></tr>';
+    || '<tr><td colspan="6" class="text-center text-muted py-3">ไม่มี MO รอเบิกวัตถุดิบ</td></tr>';
+  _issueBulkUpdate();
 
   const [hist] = await Promise.all([
     sbRun(_sb.from('issue_production').select('*').order('IssueDate', { ascending: false }).limit(1000), 'โหลดประวัติการเบิก'),
@@ -12862,8 +13055,11 @@ function _issueRowCost(h) {
   });
   return pricedQty > 0 ? cost : null;
 }
+// ชื่อของแถวที่เบิก ไม่ว่าจะเป็นวัตถุดิบ (RM_ID) หรือ "สินค้า FG" ที่เอามาบวกกล่อง (MatType='FG', 2026-11-24)
+function _issueHistItemName(h, rmMap, fgMap) { return h.MatType === 'FG' ? (fgMap[h.RM_ID]?.FG_Name || h.RM_ID) : (rmMap[h.RM_ID]?.RM_Name || h.RM_ID); }
 function _issueHistRenderCards() {
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  const fgMap = Object.fromEntries(_fgMasterCache.map(f => [f.FG_ID, f]));
   const groups = [];
   const idxByMo = new Map();
   _issueHistCache.forEach(h => {
@@ -12877,7 +13073,7 @@ function _issueHistRenderCards() {
   const filtered = !q ? groups : groups.filter(g => {
     const mo = _planCache.find(m => m.MO_ID === g.moId);
     const fg = _fgMasterCache.find(f => f.FG_ID === mo?.FG_ID);
-    return [g.moId, fg?.FG_Name, mo?.Lot, ...g.rows.flatMap(h => [h.RM_ID, rmMap[h.RM_ID]?.RM_Name])]
+    return [g.moId, fg?.FG_Name, mo?.Lot, ...g.rows.flatMap(h => [h.RM_ID, _issueHistItemName(h, rmMap, fgMap)])]
       .filter(Boolean).join(' ').toLowerCase().includes(q);
   });
   _issueHistGroupsCache = filtered;
@@ -12896,7 +13092,7 @@ function _issueHistRenderCards() {
       if (rowCost != null) { groupCost += rowCost; groupCostKnown++; }
       return `<tr>
       <td><code>${esc(h.Issue_ID)}</code></td>
-      <td>${esc(rmMap[h.RM_ID]?.RM_Name || h.RM_ID)}${rmCount[h.RM_ID] > 1 ? ' <span class="badge text-bg-warning" title="วัตถุดิบนี้มีรายการเบิกมากกว่า 1 แถวใน MO นี้ — ตรวจว่าเบิกซ้ำโดยไม่ตั้งใจหรือไม่">ซ้ำ</span>' : ''}</td>
+      <td>${esc(_issueHistItemName(h, rmMap, fgMap))}${h.MatType === 'FG' ? ' <span class="badge text-bg-danger">สินค้า FG</span>' : ''}${rmCount[h.RM_ID] > 1 ? ' <span class="badge text-bg-warning" title="วัตถุดิบนี้มีรายการเบิกมากกว่า 1 แถวใน MO นี้ — ตรวจว่าเบิกซ้ำโดยไม่ตั้งใจหรือไม่">ซ้ำ</span>' : ''}</td>
       <td class="text-end">${h.QtyBase != null ? _qtyFmtByCat(h.QtyBase, hCat) : '-'}</td>
       <td class="text-end">${h.ScrapPct ? _bomFmtQty(h.ScrapPct) + '%' : '-'}</td>
       <td class="text-end fw-semibold">${_qtyFmtByCat(h.QtyIssued, hCat)} ${esc(h.Unit || '')}
@@ -12972,13 +13168,14 @@ function _issueHistHalfHTML(g, mo, fg, rmMap, prodRecs, fgRecv, copyLabel) {
   // กลุ่มวัตถุดิบ (สด/แห้ง/เคมี/พร้อมผลิต) ไว้ก่อนแพ็คเกจจิ้งเสมอ ใช้ _BOM_CAT_ORDER ตัวเดียวกับหน้าอื่นในแอป
   // (ผู้ใช้ขอ 2026-10-04 หลังเห็นใบพิมพ์จริงที่ลำดับสลับไปมาตามลำดับที่เบิก ไม่ได้เรียงตามรหัส)
   const sortedRows = [...g.rows].sort((a, b) => {
-    const catA = rmMap[a.RM_ID]?.Category || 'วัตถุดิบ', catB = rmMap[b.RM_ID]?.Category || 'วัตถุดิบ';
-    return (_BOM_CAT_ORDER[catA] ?? 9) - (_BOM_CAT_ORDER[catB] ?? 9)
+    const catA = a.MatType === 'FG' ? null : (rmMap[a.RM_ID]?.Category || 'วัตถุดิบ'), catB = b.MatType === 'FG' ? null : (rmMap[b.RM_ID]?.Category || 'วัตถุดิบ');
+    return ((a.MatType === 'FG' ? 99 : _BOM_CAT_ORDER[catA]) ?? 9) - ((b.MatType === 'FG' ? 99 : _BOM_CAT_ORDER[catB]) ?? 9)
       || String(a.RM_ID).localeCompare(String(b.RM_ID), undefined, { numeric: true });
   });
   const rows = sortedRows.map((h, i) => {
-    const hCat = rmMap[h.RM_ID]?.Category;
-    return `<tr><td>${i + 1}</td><td class="ihist-item">${esc(_acctCode(h.RM_ID))} —${esc(rmMap[h.RM_ID]?.RM_Name || h.RM_ID)}</td>
+    const hCat = h.MatType === 'FG' ? null : rmMap[h.RM_ID]?.Category;
+    const itemName = h.MatType === 'FG' ? _fgName(h.RM_ID) : (rmMap[h.RM_ID]?.RM_Name || h.RM_ID);
+    return `<tr><td>${i + 1}</td><td class="ihist-item">${esc(_acctCode(h.RM_ID))} —${esc(itemName)}</td>
       <td class="ihist-qty-num">${_qtyFmtByCat(h.QtyIssued, hCat)}</td>
       <td class="ihist-unit">${esc(h.Unit || '')}</td>
       <td class="ihist-item">${Array.isArray(h.LotAlloc) && h.LotAlloc.length ? _lotAllocText(h.LotAlloc, CAT_RAW_ALL.includes(hCat) ? _rmFmtQty : _bomFmtQty, false) : '-'}</td></tr>`;
@@ -13297,23 +13494,33 @@ async function issueOpenForm(moId) {
   await _packCutProbe();
   if (!_bomCache.length) await bomLoad();
   if (!_stockRmCache.length) await stockRmLoad();
+  if (!_stockFgCache.length) await stockFgLoad();
   const mo = _planCache.find(p => p.MO_ID === moId);
   const fg = _fgMasterCache.find(f => f.FG_ID === mo.FG_ID);
   // วัสดุที่ติ๊ก "ตัดตามวันแพ็คกล่อง" (กล่อง) ไม่อยู่ในใบเบิกเข้าไลน์ — ตัดสต็อกตอนบันทึกแพ็คกล่องแทน (ต้องรัน migration_2026-11-14_pack_box_material_cut.sql
   // ถ้ายังไม่รัน _packCutReady() เป็น false → ยังเบิกพร้อมวัตถุดิบอื่นเหมือนเดิม)
-  const need = _bomCache.filter(b => b.FG_ID === mo.FG_ID && !_isCutAtPack(b.RM_ID)).map(b => {
+  // รายการในสูตรที่เป็น "สินค้า FG" (MatType='FG' — เอา FG ตัวอื่นมาบวกกล่อง 2026-11-24) ตัดสต็อกจาก stock_fg
+  // (FEFO) แทนสต็อกวัตถุดิบ — แท็ก category เป็น CAT_PKG ภายใน (ไม่ได้มาจาก Master จริง) ให้ใช้ตรรกะปัดเศษ/
+  // รูปแบบตัวเลขแบบแพ็คเกจจิ้งที่มีอยู่แล้วได้เลย (ปัดขึ้นเป็นจำนวนเต็ม ไม่คิด %Loss) โดยไม่ต้องเขียนซ้ำ
+  const need = _bomCache.filter(b => b.FG_ID === mo.FG_ID && !_isCutAtPack(b.RM_ID) && !_isDeductAtProd(b.RM_ID)).map(b => {
+    if (b.MatType === 'FG') {
+      const compFg = _fgMasterCache.find(f => f.FG_ID === b.RM_ID);
+      const avail = _stockFgCache.filter(s => s.FG_ID === b.RM_ID).reduce((s, x) => s + (parseFloat(x.Qty) || 0), 0);
+      return { RM_ID: b.RM_ID, matType: 'FG', name: compFg?.FG_Name || b.RM_ID, category: CAT_PKG, unit: b.Unit || compFg?.Unit || 'หน่วย',
+        qtyPerUnit: parseFloat(b.QtyPerUnit) || 0, steps: [], scrapPct: 0, candidates: [], available: avail };
+    }
     // วัตถุดิบชื่อเดียวกันอาจมีหลายรหัส/ซัพพลายเออร์ — ตั้งต้นเลือกตัวที่สต็อกเหลือเยอะสุด (candidates เรียง
     // มาก→น้อยแล้ว) ผู้ใช้กดเปลี่ยนเป็นซัพอื่นได้ที่ดรอปดาวน์ (ดู issueSupplierChanged, _bomLineResolve)
     const { rm, candidates, chosen } = _bomLineResolve(b);
     // %Scrap ไม่อยู่ใน BOM แล้ว — ความสูญเสียเกิดในขั้น "เตรียมวัตถุดิบ" ก่อนหน้านี้ ที่นี่เบิกตามสูตรตรงๆ
-    return { RM_ID: chosen?.RM_ID || b.RM_ID, name: rm?.RM_Name || b.RM_ID, category: rm?.Category, unit: b.Unit,
+    return { RM_ID: chosen?.RM_ID || b.RM_ID, matType: 'RM', name: rm?.RM_Name || b.RM_ID, category: rm?.Category, unit: b.Unit,
       qtyPerUnit: parseFloat(b.QtyPerUnit) || 0, steps: [], scrapPct: 0, candidates, available: parseFloat(chosen?._stock) || 0 };
   }).sort((a, b) => (_BOM_CAT_ORDER[a.category] ?? 0) - (_BOM_CAT_ORDER[b.category] ?? 0));
   if (!need.length) { Swal.fire('ยังไม่มีสูตร', 'สินค้านี้ยังไม่มีสูตรการผลิต (BOM) กรุณาตั้งค่าก่อน', 'info'); return; }
   const lossMap = await _issueLoadLoss(mo.FG_ID);
   need.forEach(n => {
     n.lossPct = null; n.edited = false;
-    if (!CAT_RAW_ALL.includes(n.category || 'วัตถุดิบ')) return;   // แพ็คเกจจิ้ง/วัสดุสิ้นเปลืองไม่คิด Loss
+    if (n.matType === 'FG' || !CAT_RAW_ALL.includes(n.category || 'วัตถุดิบ')) return;   // แพ็คเกจจิ้ง/วัสดุสิ้นเปลือง/สินค้า FG ไม่คิด Loss
     let used = 0, base = 0, cnt = 0;
     _rmSiblings(n.RM_ID).forEach(c => { const o = lossMap[c.RM_ID]; if (o) { used += o.used; base += o.base; cnt += o.n; } });
     if (used > 0 && base > 0) { n.lossPct = (used - base) / used * 100; n.lossN = cnt; }
@@ -13340,7 +13547,7 @@ async function issueOpenForm(moId) {
         ${multi ? `<select class="form-select form-select-sm mt-1 border-warning" style="font-size:.78rem" onchange="issueSupplierChanged(${i}, this.value)">
           ${n.candidates.map(c => `<option value="${esc(c.RM_ID)}" ${c.RM_ID === n.RM_ID ? 'selected' : ''}>${esc(c.RM_ID)} — ${esc(_rmSupLabel(c))} (เหลือ ${_qtyFmtByCat(c._stock, n.category)})</option>`).join('')}
         </select>` : ''}
-        <div>${_bomCatBadge(n.category)}</div></td>
+        <div>${n.matType === 'FG' ? '<span class="badge text-bg-danger"><i class="fa-solid fa-box me-1"></i>สินค้า FG</span>' : _bomCatBadge(n.category)}</div></td>
       <td class="text-end"><div class="fw-semibold" id="issue-base-${i}"></div><div class="small text-muted" id="issue-hint-${i}"></div></td>
       <td class="text-end" id="issue-avail-${i}"></td>
       <td><div class="input-group input-group-sm">
@@ -13364,6 +13571,9 @@ async function _packCutProbe() {
   _packCutProbed = !r.error || r.error.code === 'PGRST202';   // error อื่น (เน็ตหลุด) ลองใหม่รอบหน้า
 }
 const _isCutAtPack = rmId => _packCutOk && !!_rmMasterCache.find(r => r.RM_ID === rmId)?.CutAtPack;
+// "ตัดตอนบันทึกผลิต" (2026-11-24) — ไม่ต้องมี probe เหมือน CutAtPack (ไม่มี RPC แยกให้เช็คว่ารัน SQL หรือยัง)
+// ถ้ายังไม่รัน migration คอลัมน์ DeductAtProd จะไม่มีค่าที่แถวไหนเลย (undefined → falsy) จึงไม่ต้องกันเองเพิ่ม
+const _isDeductAtProd = rmId => !!_rmMasterCache.find(r => r.RM_ID === rmId)?.DeductAtProd;
 function _issueQtyRound(qty, category) {
   if (_isPkgLike(category)) return Math.ceil(qty);
   if (category === CAT_DRY || category === CAT_CHEM || category === CAT_PREP) return Math.round(qty * 1000) / 1000;
@@ -13380,7 +13590,10 @@ function issueQtyEdited(i) {
   issueCheckStock(i);
 }
 function _issueSuggestQty(n, forQty) {
-  const raw = n.qtyPerUnit * forQty;
+  // % เผื่อเพิ่ม (BufferPct, 2026-11-25) — ตั้งไว้ที่ Master วัตถุดิบ (เช่น ถุงตาข่ายเผื่อฉีกขาด) บวกเข้าไปใน
+  // ยอดแนะนำตั้งแต่ตอนเบิกเข้าไลน์ผลิต ไม่ใช่แค่ตอนแก้ไขที่หน้าบันทึกผลิต (ดู _rmUsePackagingRecalc)
+  const bufferPct = n.matType === 'FG' ? 0 : (parseFloat(_rmMasterCache.find(r => r.RM_ID === n.RM_ID)?.BufferPct) || 0);
+  const raw = n.qtyPerUnit * forQty * (1 + bufferPct / 100);
   if (_issueUseLoss && n.lossPct != null && n.lossPct < 99) return _issueQtyRound(raw / (1 - n.lossPct / 100), n.category);
   return _issueQtyRound(_bomWithScrap(raw, n.scrapPct), n.category);
 }
@@ -13411,7 +13624,7 @@ function issueCheckStock(i) {
   const qty = parseFloat(document.getElementById(`issue-qty-${i}`).value) || 0;
   const short = qty > n.available;
   // ตัวอย่างล็อตที่จะถูกตัด (FEFO เหมือนฝั่ง DB) — ของจริงตัดตอนกดยืนยัน ถ้ามีคนเบิกตัดหน้าไปก่อนผลอาจต่างเล็กน้อย
-  const plan = _planFefo(n.RM_ID, qty);
+  const plan = n.matType === 'FG' ? _planFgFefo(n.RM_ID, qty) : _planFefo(n.RM_ID, qty);
   document.getElementById(`issue-avail-${i}`).innerHTML = `${_qtyFmtByCat(n.available, n.category)} ${esc(n.unit)}`
     + (short ? `<div class="small text-danger">ขาด ${_qtyFmtByCat(Math.round((qty - n.available) * 10000) / 10000, n.category)}</div>` : '')
     + (plan.length ? `<div class="small text-muted mt-1">ตัดจาก: ${_lotAllocText(plan, n.category && CAT_RAW_ALL.includes(n.category) ? _rmFmtQty : _bomFmtQty)}</div>` : '');
@@ -13456,12 +13669,13 @@ async function issueModalSave() {
   // เลขที่เบิก = ISS-ปีเดือนวัน-รหัสวัตถุดิบ (ผู้ใช้ขอ 2026-09-28) — ถ้าวันเดียวกันมีเบิกวัตถุดิบตัวเดียวกันจาก
   // คนละ MO ต่อท้าย -2, -3 ... กันชนกัน (เหมือน Prep_ID) ผ่าน _nextIssueIds (2026-10-03, แก้บั๊กเดิมที่เคย
   // ทำให้รายการที่สองของวันเบิกไม่ผ่านเลยจนกว่าจะข้ามวัน)
-  if (typeof qcConfirmPlan === 'function' && !await qcConfirmPlan(rows.map(n => ({ rm_id: n.RM_ID, qty: n.issueQty })))) return;   // QC: เตือน/บล็อกล็อตที่ยังไม่ผ่าน
+  // QC เช็คเฉพาะวัตถุดิบ (ล็อต QC ผูกกับ rm_master) — รายการ "สินค้า FG" ที่เอามาบวกกล่องไม่เกี่ยว ข้าม
+  if (typeof qcConfirmPlan === 'function' && !await qcConfirmPlan(rows.filter(n => n.matType !== 'FG').map(n => ({ rm_id: n.RM_ID, qty: n.issueQty })))) return;   // QC: เตือน/บล็อกล็อตที่ยังไม่ผ่าน
   const _issIds = await _nextIssueIds(todayStr(), rows.map(n => n.RM_ID));
   const { data: alloc, error } = await _sb.rpc('rm_issue_post', {
     p_mo_id: _issueMoId,
     p_rows: rows.map((n, i) => ({ issue_id: _issIds[i], rm_id: n.RM_ID, qty: n.issueQty, unit: n.unit,
-      for_qty: forQty, qty_base: n.base, scrap_pct: n.scrapPct, issue_date: todayStr() })),
+      for_qty: forQty, qty_base: n.base, scrap_pct: n.scrapPct, issue_date: todayStr(), mat_type: n.matType })),
   });
   if (error) { _rmLotRpcErr(error, 'เบิกวัตถุดิบไม่สำเร็จ'); return; }
   bootstrap.Modal.getInstance(document.getElementById('issueModal')).hide();
@@ -13471,11 +13685,130 @@ async function issueModalSave() {
   const rmName = id => _rmMasterCache.find(r => r.RM_ID === id)?.RM_Name || id;
   // ขั้นถัดไปคือบันทึกเข้าเครื่องอบ (วันเดียวกับวันเบิก) — ปุ่มซ้ายสุดพาไปบันทึกต่อเลย (แสดงเมื่อรัน SQL เครื่องอบแล้วเท่านั้น)
   const _issDone = await Swal.fire({ icon: 'success', showDenyButton: true, showCancelButton: _ovenOk && _needOven(_planCache.find(p => p.MO_ID === _doneMoId)?.FG_ID), cancelButtonText: '<i class="fa-solid fa-fire-burner me-1"></i>บันทึกเข้าเครื่องอบ', cancelButtonColor: '#f59e0b', confirmButtonText: 'ตกลง', denyButtonText: '<i class="fa-solid fa-print me-1"></i>พิมพ์ใบเบิก', denyButtonColor: '#0d6efd', title: `เบิกวัตถุดิบแล้ว${liNo ? ` — ใบเบิก ${esc(liNo)}` : ''} — หยิบจากล็อตตามนี้`,
-    html: `<div class="text-start small">${(alloc || []).map(a => `<div class="mb-1"><b>${esc(rmName(a.rm_id))}</b>: ${_lotAllocText(a.alloc, CAT_RAW_ALL.includes(_rmMasterCache.find(r => r.RM_ID === a.rm_id)?.Category) ? _rmFmtQty : _bomFmtQty)}</div>`).join('')}</div>` });
-  await Promise.all([planLoad(), stockRmLoad()]);
+    html: `<div class="text-start small">${(alloc || []).map(a => `<div class="mb-1"><b>${esc(a.mat_type === 'FG' ? _fgName(a.rm_id) : rmName(a.rm_id))}</b>: ${_lotAllocText(a.alloc, a.mat_type === 'FG' ? _bomFmtQty : (CAT_RAW_ALL.includes(_rmMasterCache.find(r => r.RM_ID === a.rm_id)?.Category) ? _rmFmtQty : _bomFmtQty))}</div>`).join('')}</div>` });
+  await Promise.all([planLoad(), stockRmLoad(), stockFgLoad()]);
   await issueLoad();
   if (_issDone.isDenied) { const gi = _issueHistGroupsCache.findIndex(g => g.moId === _doneMoId); if (gi >= 0) issueHistPrint(gi); }
   else if (_issDone.dismiss === Swal.DismissReason.cancel) ovenOpenForm(_doneMoId);
+}
+
+// ── เบิกรวมหลาย MO (2026-11-24) — สินค้าหลายรหัสที่ผสม/เตรียมวัตถุดิบร่วมกันครั้งเดียว (เช่น ลูกประคบหลายลาย
+// ที่ใช้สมุนไพร/สเปรย์/ถุงตาข่ายชุดเดียวกัน ต่างแค่เคสซิลิโคนที่แยกตัดตอน "บันทึกผลิต" แทน — ดู DeductAtProd)
+// ผู้ใช้ติ๊กเลือก MO ที่ "วางแผน" อยู่ตั้งแต่ 2 รายการ ระบบรวมยอดตามสูตร (ผลรวมข้าม MO ต่อวัตถุดิบ 1 ตัว) ให้
+// แก้ไขได้ก่อนยืนยัน (เผื่อเพิ่ม เช่น ถุงตาข่าย +10%) แล้วเบิกจริงครั้งเดียวผ่าน rm_issue_post ตัวเดิม (ไม่ต้อง
+// เขียน RPC ใหม่) ผูกกับ MO ตัวแรกที่เลือกเป็น "หลัก" (มีรายการวัตถุดิบในประวัติ) — MO ที่เหลือแค่เปลี่ยนสถานะ
+// เป็น "เบิกวัตถุดิบแล้ว" ตามไปด้วยคนละ request (ไม่มีรายการวัตถุดิบเป็นของตัวเอง เพราะเป็นของกองรวมที่เบิกไว้
+// ที่ MO หลักแล้ว) พร้อมจด Note อ้างอิงกลับไปกันงงว่าทำไมสถานะเบิกแล้วแต่ไม่มีรายการวัตถุดิบ
+function _issueBulkUpdate() {
+  const chk = [...document.querySelectorAll('.issue-mo-chk:checked')];
+  const btn = document.getElementById('issueBulkBtn');
+  if (!btn) return;
+  btn.style.display = chk.length >= 2 ? '' : 'none';
+  btn.querySelector('.cnt').textContent = chk.length;
+}
+let _issueBulkMoIds = [];
+let _issueBulkNeed = [];
+async function issueBulkOpenForm() {
+  const moIds = [...document.querySelectorAll('.issue-mo-chk:checked')].map(c => c.dataset.mo);
+  if (moIds.length < 2) return;
+  await _packCutProbe();
+  if (!_bomCache.length) await bomLoad();
+  if (!_stockRmCache.length) await stockRmLoad();
+  if (!_stockFgCache.length) await stockFgLoad();
+  const mos = moIds.map(id => _planCache.find(p => p.MO_ID === id)).filter(Boolean);
+  // รวมความต้องการข้าม MO — คีย์ด้วย (MatType, RM_ID) กันชนกันข้ามชนิด (แม้ทางปฏิบัติ FG_ID/RM_ID ไม่ชนกันจริง)
+  const merged = {};
+  mos.forEach(mo => {
+    _bomCache.filter(b => b.FG_ID === mo.FG_ID && !_isCutAtPack(b.RM_ID) && !_isDeductAtProd(b.RM_ID)).forEach(b => {
+      let rmId, matType, name, category, unit, available;
+      if (b.MatType === 'FG') {
+        const compFg = _fgMasterCache.find(f => f.FG_ID === b.RM_ID);
+        rmId = b.RM_ID; matType = 'FG'; name = compFg?.FG_Name || b.RM_ID; category = CAT_PKG; unit = b.Unit || compFg?.Unit || 'หน่วย';
+        available = _stockFgCache.filter(s => s.FG_ID === b.RM_ID).reduce((s, x) => s + (parseFloat(x.Qty) || 0), 0);
+      } else {
+        const { rm, chosen } = _bomLineResolve(b);
+        rmId = chosen?.RM_ID || b.RM_ID; matType = 'RM'; name = rm?.RM_Name || b.RM_ID; category = rm?.Category; unit = b.Unit;
+        available = parseFloat(chosen?._stock) || 0;
+      }
+      const key = `${matType}:${rmId}`;
+      if (!merged[key]) merged[key] = { RM_ID: rmId, matType, name, category, unit, qty: 0, available };
+      // % เผื่อเพิ่ม (BufferPct, 2026-11-25) — ใช้ค่าเดียวกับที่เบิกปกติ (_issueSuggestQty)
+      const bufferPct = matType === 'FG' ? 0 : (parseFloat(_rmMasterCache.find(r => r.RM_ID === rmId)?.BufferPct) || 0);
+      merged[key].qty += (parseFloat(b.QtyPerUnit) || 0) * (parseFloat(mo.PlanQty) || 0) * (1 + bufferPct / 100);
+    });
+  });
+  _issueBulkMoIds = moIds;
+  _issueBulkNeed = Object.values(merged)
+    .sort((a, b) => (a.matType === 'FG' ? 99 : (_BOM_CAT_ORDER[a.category] ?? 0)) - (b.matType === 'FG' ? 99 : (_BOM_CAT_ORDER[b.category] ?? 0)));
+  document.getElementById('issue-bulk-info').innerHTML = `รวม ${moIds.length} MO: ` +
+    mos.map(mo => { const fg = _fgMasterCache.find(f => f.FG_ID === mo.FG_ID);
+      return `<span class="badge bg-light text-dark border me-1">${esc(mo.MO_ID)} — ${esc(fg?.FG_Name || mo.FG_ID)} (${_bomFmtQty(mo.PlanQty)} ${esc(fg?.Unit || '')})</span>`;
+    }).join('') +
+    `<br>ยอดที่แนะนำ = ผลรวมตามสูตรของทุก MO ที่เลือก — แก้ไขทีละแถวได้ก่อนยืนยัน (เช่น เผื่อถุงตาข่ายเพิ่ม)`;
+  document.getElementById('issue-bulk-rows').innerHTML = _issueBulkNeed.map((n, i) => {
+    n.qty = Math.round(n.qty * 10000) / 10000;
+    return `<tr>
+      <td><div class="fw-semibold">${esc(n.name)}</div>
+        <div>${n.matType === 'FG' ? '<span class="badge text-bg-danger"><i class="fa-solid fa-box me-1"></i>สินค้า FG</span>' : _bomCatBadge(n.category)}</div></td>
+      <td class="text-end">${_qtyFmtByCat(n.qty, n.category)} ${esc(n.unit)}</td>
+      <td class="text-end" id="issue-bulk-avail-${i}"></td>
+      <td><div class="input-group input-group-sm">
+        <input type="number" step="any" min="0" class="form-control" id="issue-bulk-qty-${i}" value="${n.qty}" oninput="_issueBulkCheckStock(${i})">
+        <span class="input-group-text">${esc(n.unit)}</span></div></td>
+    </tr>`;
+  }).join('');
+  _issueBulkNeed.forEach((n, i) => _issueBulkCheckStock(i));
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('issueBulkModal')).show();
+}
+function _issueBulkCheckStock(i) {
+  const n = _issueBulkNeed[i];
+  const qty = parseFloat(document.getElementById(`issue-bulk-qty-${i}`).value) || 0;
+  const short = qty > n.available;
+  const plan = n.matType === 'FG' ? _planFgFefo(n.RM_ID, qty) : _planFefo(n.RM_ID, qty);
+  const fmt = n.matType === 'FG' ? _bomFmtQty : (CAT_RAW_ALL.includes(n.category) ? _rmFmtQty : _bomFmtQty);
+  document.getElementById(`issue-bulk-avail-${i}`).innerHTML = `${fmt(n.available)} ${esc(n.unit)}`
+    + (short ? `<div class="small text-danger">ขาด ${fmt(Math.round((qty - n.available) * 10000) / 10000)}</div>` : '')
+    + (plan.length ? `<div class="small text-muted mt-1">ตัดจาก: ${_lotAllocText(plan, fmt)}</div>` : '');
+}
+async function issueBulkModalSave() {
+  const rows = _issueBulkNeed.map((n, i) => ({ ...n, issueQty: parseFloat(document.getElementById(`issue-bulk-qty-${i}`).value) || 0 }))
+    .filter(n => n.issueQty > 0);
+  if (!rows.length) { Swal.fire('ไม่มีรายการเบิก', 'กรอกจำนวนเบิกอย่างน้อย 1 รายการ', 'warning'); return; }
+  const short = rows.filter(n => n.issueQty > n.available);
+  if (short.length && !_hasRole('supervisor')) {
+    Swal.fire({ icon: 'error', title: 'สต็อกไม่พอ เบิกไม่ได้', html: short.map(n => `${esc(n.name)}: เบิก ${_qtyFmtByCat(n.issueQty, n.category)} / คงเหลือ ${_qtyFmtByCat(n.available, n.category)} ${esc(n.unit)}`).join('<br>') + '<br><br>ลดยอดเบิกให้ไม่เกินคงเหลือ หรือให้หัวหน้างานเป็นคนเบิก' });
+    return;
+  }
+  if (short.length) {
+    const c = await Swal.fire({ icon: 'warning', title: 'สต็อกไม่พอบางรายการ',
+      html: short.map(n => `${esc(n.name)}: เบิก ${_qtyFmtByCat(n.issueQty, n.category)} / คงเหลือ ${_qtyFmtByCat(n.available, n.category)} ${esc(n.unit)}`).join('<br>') + '<br><br>ยืนยันเบิกต่อ? (สต็อกจะติดลบ)',
+      showCancelButton: true, confirmButtonText: 'เบิกต่อ', cancelButtonText: 'กลับไปแก้' });
+    if (!c.isConfirmed) return;
+  }
+  if (typeof qcConfirmPlan === 'function' && !await qcConfirmPlan(rows.filter(n => n.matType !== 'FG').map(n => ({ rm_id: n.RM_ID, qty: n.issueQty })))) return;
+  const primaryMoId = _issueBulkMoIds[0];
+  const otherMoIds = _issueBulkMoIds.slice(1);
+  const _issIds = await _nextIssueIds(todayStr(), rows.map(n => n.RM_ID));
+  const { data: alloc, error } = await _sb.rpc('rm_issue_post', {
+    p_mo_id: primaryMoId,
+    p_rows: rows.map((n, i) => ({ issue_id: _issIds[i], rm_id: n.RM_ID, qty: n.issueQty, unit: n.unit,
+      for_qty: null, qty_base: null, scrap_pct: 0, issue_date: todayStr(), mat_type: n.matType })),
+  });
+  if (error) { _rmLotRpcErr(error, 'เบิกวัตถุดิบไม่สำเร็จ'); return; }
+  // MO อื่นที่เบิกรวมด้วย — ไม่มีรายการวัตถุดิบเป็นของตัวเอง (ของกองรวมบันทึกไว้ที่ MO หลักแล้ว) แค่เปลี่ยน
+  // สถานะให้ไปขั้น "บันทึกผลิต" ต่อได้เหมือนกัน พร้อมโน้ตอ้างอิง MO หลักกันงง
+  if (otherMoIds.length) {
+    await Promise.all(otherMoIds.map(id => _sb.from('manufacturing_orders').update({
+      Status: 'เบิกวัตถุดิบแล้ว', Note: `เบิกรวมกับ ${primaryMoId} (ดูรายการวัตถุดิบที่ MO นั้น)`,
+    }).eq('MO_ID', id).eq('Status', 'วางแผน')));
+  }
+  bootstrap.Modal.getInstance(document.getElementById('issueBulkModal')).hide();
+  const liNo = await _issueStamp(_issIds);
+  const rmName = id => _rmMasterCache.find(r => r.RM_ID === id)?.RM_Name || id;
+  await Swal.fire({ icon: 'success', title: `เบิกรวมแล้ว${liNo ? ` — ใบเบิก ${esc(liNo)}` : ''} — ${_issueBulkMoIds.length} MO`,
+    html: `<div class="text-start small">${(alloc || []).map(a => `<div class="mb-1"><b>${esc(a.mat_type === 'FG' ? _fgName(a.rm_id) : rmName(a.rm_id))}</b>: ${_lotAllocText(a.alloc, a.mat_type === 'FG' ? _bomFmtQty : (CAT_RAW_ALL.includes(_rmMasterCache.find(r => r.RM_ID === a.rm_id)?.Category) ? _rmFmtQty : _bomFmtQty))}</div>`).join('')}</div>` });
+  await Promise.all([planLoad(), stockRmLoad(), stockFgLoad()]);
+  await issueLoad();
 }
 
 // ── เบิกเข้าไลน์ผลิต "เบ็ดเตล็ด" (2026-10-03) ──
@@ -13522,13 +13855,14 @@ function issueGenFgChanged() {
   tbody.innerHTML = '';
   if (!fg) return;
   const planQty = parseFloat(document.getElementById('issgen-qty').value) || 0;
-  _bomCache.filter(b => b.FG_ID === fg.FG_ID && !_isCutAtPack(b.RM_ID)).forEach(b => {
+  _bomCache.filter(b => b.FG_ID === fg.FG_ID && !_isCutAtPack(b.RM_ID) && !_isDeductAtProd(b.RM_ID)).forEach(b => {
     // ตรรกะ "หาซัพอื่นที่ชื่อเดียวกัน + เลือกตัวสต็อกเหลือมากสุด" รวมไว้ที่ _bomLineResolve จุดเดียว (ใช้ร่วมกับ
     // issueOpenForm) — แก้กฎการเลือกซัพเริ่มต้นที่เดียวพอ ไม่ต้องไล่แก้ทีละหน้า
     const { rm: m, candidates, chosen } = _bomLineResolve(b);
     if (!m) return;
     const qtyPerUnit = parseFloat(b.QtyPerUnit) || 0;
-    const qty = planQty ? _issgenRound(qtyPerUnit * planQty, m.Category) : '';
+    const bufferPct = parseFloat(m.BufferPct) || 0;   // % เผื่อเพิ่ม (2026-11-25) — เดียวกับหน้าเบิกปกติ
+    const qty = planQty ? _issgenRound(qtyPerUnit * planQty * (1 + bufferPct / 100), m.Category) : '';
     tbody.insertAdjacentHTML('beforeend', _issgenRowHTML(chosen.RM_ID, m.RM_Name, m.Unit, chosen._stock, qtyPerUnit, qty, m.Category, candidates));
   });
   _issgenSortRows();
@@ -13558,7 +13892,8 @@ function issueGenQtyChanged() {
   document.querySelectorAll('#issgen-rows .issgen-row').forEach(tr => {
     const qpu = tr.dataset.qtyperunit;
     if (qpu === undefined || qpu === '') return;
-    tr.querySelector('.issgen-qty').value = planQty ? _issgenRound(parseFloat(qpu) * planQty, tr.dataset.cat) : '';
+    const bufferPct = parseFloat(_rmMasterCache.find(r => r.RM_ID === tr.dataset.rm)?.BufferPct) || 0;
+    tr.querySelector('.issgen-qty').value = planQty ? _issgenRound(parseFloat(qpu) * planQty * (1 + bufferPct / 100), tr.dataset.cat) : '';
   });
 }
 // candidates = ซัพพลายเออร์อื่นของวัตถุดิบชื่อเดียวกัน (ดู _rmSiblings) — มีมากกว่า 1 ตัวถึงจะโชว์ดรอปดาวน์ให้
@@ -13692,28 +14027,17 @@ async function ovenCacheLoad() {
   }
 }
 // ของเสีย (สินค้าสำเร็จรูป) สะสมของแต่ละ MO — ผู้ใช้ขอ 2026-11-21 "Lot แต่ละวันเสียเท่าไหร่ เอามาใส่ไว้ด้วย" ในประวัติ
-// เข้าเครื่องอบ ใช้ waste_log ตัวเดียวกับหน้า "ของเสีย" (ItemType='FG') เป็นยอดสะสมทั้งหมด ไม่ใช่เฉพาะวันที่เข้าอบ
-// เพราะของเสียมักถูกบันทึกทีหลัง (ตอนแพ็ค/ตรวจ QC) คนละวันกับวันเข้าอบ (ยืนยันแล้วว่าโอเค ไม่ต้องจำกัดแค่วันเดียวกัน)
-// สำคัญ: waste_log (FG) คีย์ด้วย production_records.ProdLot (ดู fg_receive_post เรียกด้วย p_lot: p.ProdLot) ซึ่ง
-// เป็นคนละคอลัมน์กับ manufacturing_orders.Lot ที่หน้านี้ใช้โชว์เป็น badge — ถึงปกติจะตั้งค่าให้เท่ากันตอนบันทึก
-// ผลิตครั้งแรก แต่ ProdLot แก้เองได้อิสระ (ช่อง "Lot ผลิต" ในฟอร์มบันทึกผลิต) จึงจับคู่ตรงๆ ด้วยข้อความ Lot ไม่ได้
-// เสมอไป (ลองแล้วไม่ขึ้น — ผู้ใช้ยืนยันว่า Lot นั้นมีของเสียบันทึกไว้จริง) ต้องเดินทางผ่าน MO_ID แทน:
-// waste_log.Lot → (join production_records.ProdLot=waste.Lot) → production_records.MO_ID → เทียบกับ MO_ID ของ
-// บันทึกเข้าเครื่องอบแถวนั้นโดยตรง ไม่ใช่เทียบข้อความ Lot เลย
+// เข้าเครื่องอบ ลองใช้ waste_log (หน้า "ของเสีย") ไปรอบแรกแล้วไม่ขึ้น — ผู้ใช้ชี้ว่า "ของเสียจากหน้าบันทึกผลิต
+// ไม่ได้มาลงในหน้าของเสียเลย" ถึงบางอ้างอิง: ช่อง "เสีย (Scrap)" ที่กรอกตอนบันทึก/แก้ไขผลิต (production_records.
+// QtyDefect) เป็นคอลัมน์ของมันเองเท่านั้น ไม่เคยสร้างแถวใน waste_log — สองระบบนี้แยกขาดจากกันโดยสิ้นเชิง
+// (waste_log = บันทึกของเสียเพิ่มเติมที่หน้า "ของเสีย" เอง เช่น เสียหายตอนแพ็ค/ขนส่ง, QtyDefect = scrap ที่รู้
+// ตั้งแต่ตอนผลิตเสร็จ) เปลี่ยนมาใช้ QtyDefect ตรงๆ (แหล่งเดียวกับที่ใช้ในหัวการ์ด Lot ของหน้า "บันทึกผลิต" —
+// ดูหัวข้อด้านบน "Production history Lot card") สรุปต่อ MO_ID ตรงๆ ไม่ต้องเดินทางผ่าน waste_log/ProdLot อีกต่อไป
 let _ovenWasteByMo = {};
 async function _ovenLoadWaste() {
-  const [wasteR, prodR] = await Promise.all([
-    _sb.from('waste_log').select('Lot,Qty').eq('ItemType', 'FG'),
-    _sb.from('production_records').select('MO_ID,ProdLot'),
-  ]);
-  const wasteByProdLot = {};
-  (wasteR.data || []).forEach(w => { if (w.Lot) wasteByProdLot[w.Lot] = (wasteByProdLot[w.Lot] || 0) + (parseFloat(w.Qty) || 0); });
-  const prodLotsByMo = {};   // 1 MO อาจมีหลายรอบผลิต (partial batch) — เก็บ ProdLot ไม่ซ้ำต่อ MO กันนับของเสียซ้ำถ้า 2 รอบใช้ Lot เดียวกัน
-  (prodR.data || []).forEach(p => { if (p.ProdLot) (prodLotsByMo[p.MO_ID] ||= new Set()).add(p.ProdLot); });
+  const r = await _sb.from('production_records').select('MO_ID,QtyDefect');
   _ovenWasteByMo = {};
-  Object.entries(prodLotsByMo).forEach(([moId, lotSet]) => {
-    _ovenWasteByMo[moId] = [...lotSet].reduce((s, l) => s + (wasteByProdLot[l] || 0), 0);
-  });
+  (r.data || []).forEach(p => { if (p.MO_ID) _ovenWasteByMo[p.MO_ID] = (_ovenWasteByMo[p.MO_ID] || 0) + (parseFloat(p.QtyDefect) || 0); });
 }
 let _ovenBagAgg = {}, _ovenOpenDays = {};
 const _ovBagsOf = o => _ovenBagAgg[o.Oven_ID] || { b: Math.floor((parseFloat(o.Qty) || 0) / OVEN_BAG), o: (parseFloat(o.Qty) || 0) % OVEN_BAG };
@@ -14778,6 +15102,7 @@ async function prodRecordPrint(id, combined = false) {
   const base = (window._prodRecordCache || []).find(x => x.Prod_ID === id);
   if (!base) return;
   if (!_rmMasterCache.length) await rmMasterLoad();
+  if (!_bomCache.length) await bomLoad();
   const fg = _fgMasterCache.find(f => f.FG_ID === base.FG_ID);
   const group = await sbRun(_sb.from('production_records').select('*').eq('ProdLot', base.ProdLot).eq('FG_ID', base.FG_ID), 'โหลดข้อมูลพิมพ์ไม่สำเร็จ') || [base];
   const moIds = [...new Set(group.map(r => r.MO_ID))];
@@ -14803,16 +15128,32 @@ async function prodRecordPrint(id, combined = false) {
   // 2026-10-29: ผู้ใช้ตั้งชื่อใหม่เป็น BPR-… (กันชนกับ PR2026/… ใบรับกลับจากเตรียม) — เปลี่ยนคำนำหน้าฝั่งหน้าเว็บ ไม่ต้องรัน SQL (RPC ยังคืน PR-ปีเดือน-ลำดับ)
   if (!docErr && docCore) h.DocNo = `${String(docCore).replace(/^PR-/, 'BPR-')}-${moIds.length}M`;
   else if (docErr && docErr.code !== 'PGRST202') console.error(docErr);
-  // รวมวัตถุดิบตามรหัส ข้าม MO (ยืนยันกับผู้ใช้แล้ว) — รวม LotAlloc ด้วยเพื่อให้คอลัมน์ "ล็อตที่ตัด" ถูกต้อง
-  // (ไม่ใช่แค่โชว์ของ MO ใดโดด ๆ) ใช้ _mergeLotAllocJs ตรรกะเดียวกับ _merge_lot_alloc ฝั่ง SQL ที่แก้ไปแล้ว
-  const issByRm = {};
-  (issAll || []).forEach(r => {
-    const g = issByRm[r.RM_ID] || (issByRm[r.RM_ID] = { RM_ID: r.RM_ID, Unit: r.Unit, QtyIssued: 0, LotAlloc: [] });
-    g.QtyIssued += parseFloat(r.QtyIssued) || 0;
-    if (Array.isArray(r.LotAlloc)) g.LotAlloc.push(...r.LotAlloc);
-  });
-  const iss = Object.values(issByRm).map(g => ({ ...g, LotAlloc: _mergeLotAllocJs(g.LotAlloc) }));
   const rmMap = Object.fromEntries(_rmMasterCache.map(r => [r.RM_ID, r]));
+  // สโคปวัตถุดิบที่พิมพ์ให้ "แค่ตามสินค้ารหัสนี้เท่านั้น" (ผู้ใช้ขอ 2026-11-25) — issAll ดึงมาทั้ง MO ซึ่งถ้า MO
+  // นี้บันทึกผลิตได้หลายรหัส (ดู production_record_post_multi) จะมีทั้งรายการ Pac ของรหัสอื่นปนมาด้วย และรายการ
+  // Bulk ที่เบิกรวมไว้ก่อน (ยอดเต็ม ไม่ใช่ส่วนแบ่งของรหัสนี้) จึงต้องกรองตามสูตร (BOM) ของรหัสนี้เองแทนการรวม
+  // ทุกแถวดะ: วัสดุ "ตัดตอนบันทึกผลิต" (DeductAtProd) ใช้ยอดจริงที่บันทึกไว้ (คำนวณแยกต่อรหัสอยู่แล้วตอนบันทึก
+  // ผลิต) ส่วนวัสดุ Bulk (เบิกรวมไว้ก่อน ใช้ร่วมกับรหัสอื่นในรุ่นเดียวกัน) คิดส่วนแบ่งของรหัสนี้เองจากสูตร ×
+  // ผลิตได้สุทธิของรหัสนี้ (h.QtyProduced) ตรงกับยอดที่โชว์ในหน้า "บันทึกผลิต" ตอนกรอก ไม่ใช่ยอดเบิกรวมที่แชร์
+  const bomForFg = _bomCache.filter(b => b.FG_ID === base.FG_ID && b.MatType !== 'FG');
+  const iss = bomForFg.map(b => {
+    const matched = (issAll || []).filter(r => r.RM_ID === b.RM_ID);
+    let lotAlloc = _mergeLotAllocJs(matched.flatMap(r => Array.isArray(r.LotAlloc) ? r.LotAlloc : []));
+    const isDed = _isDeductAtProd(b.RM_ID);
+    const qty = isDed
+      ? matched.reduce((s, r) => s + (parseFloat(r.QtyIssued) || 0), 0)
+      : (parseFloat(b.QtyPerUnit) || 0) * (h.QtyProduced || 0);
+    if (isDed && !matched.length) return null;   // ยังไม่เคยบันทึกผลิตรหัสนี้ (ไม่มีรายการตัดจริง) — ข้าม
+    if (!isDed && !matched.length) return null;   // วัสดุ Bulk ตัวนี้ไม่ได้เบิกให้ MO นี้เลย — ข้าม
+    if (!isDed) {
+      // Bulk: ล็อตที่ตัดมาจากยอดเบิกรวม (แชร์กับรหัสอื่น) ต้องย่อสัดส่วนลงตามส่วนแบ่งด้วย ไม่งั้นยอดต่อล็อตที่
+      // โชว์จะไม่ตรงกับ "จำนวนเบิก" ของรหัสนี้ (ผู้ใช้เห็นตัวเลขสองช่องไม่เท่ากันแล้วงง)
+      const totalIssued = matched.reduce((s, r) => s + (parseFloat(r.QtyIssued) || 0), 0);
+      const ratio = totalIssued > 0 ? qty / totalIssued : 0;
+      lotAlloc = lotAlloc.map(a => ({ ...a, qty: Math.round((parseFloat(a.qty) || 0) * ratio * 10000) / 10000 }));
+    }
+    return { RM_ID: b.RM_ID, Unit: b.Unit || rmMap[b.RM_ID]?.Unit, QtyIssued: qty, LotAlloc: lotAlloc };
+  }).filter(Boolean);
   if (combined) {
     // ใบรวมส่งบัญชี (ผู้ใช้ขอ 2026-11-06) — A4 แผ่นเดียว: ครึ่งบน = เอกสารบันทึกผลิต · ครึ่งล่าง = เอกสารรับสินค้าสำเร็จรูปเข้าคลัง 13 (สรุปรวม) ของล็อตเดียวกัน
     // ต้องมีการรับเข้าคลังแล้วอย่างน้อย 1 ครั้ง (ไม่งั้นครึ่งล่างไม่มีอะไรให้ออก)
@@ -14925,28 +15266,213 @@ async function prodRecordOpenForm(moId) {
   // ยอดตั้งต้น: ถ้าผ่านเครื่องอบแล้วใช้ "ยอดที่เข้าเครื่องอบจริง" แทนยอดตามแผน
   const ovenQ = _ovenOk && _needOven(mo.FG_ID) ? Math.round(_ovenQtyOfMo(moId)) : 0, grossDefault = ovenQ > 0 ? ovenQ : mo.PlanQty;
   window._prGrossTouched = false; window._prGrossPlan = parseFloat(grossDefault) || 0;
-  _modalClearErrors(['pr-qty-gross', 'pr-qty', 'pr-lot']);
   document.getElementById('pr-title').textContent = `บันทึกผลิต ${moId}`;
-  document.getElementById('pr-qty-gross').value = grossDefault;
-  document.getElementById('pr-qty-defect').value = 0;
-  prQtyRecalc();
+  // "รหัสหลัก" ของ MO นี้ = แถวแรกเสมอ (ลบไม่ได้/สินค้าเปลี่ยนไม่ได้) เรนเดอร์เป็นแถวเดียวกับที่เพิ่มรหัสอื่น
+  // ทีหลัง (ผู้ใช้ขอ 2026-11-25 "ไฮบริดมากกว่านี้ — ฝั่งซ้ายได้ทั้งหมดจะไม่มี ค่อยมาใส่ทีเดียวพร้อมเพื่อน")
+  document.getElementById('pr-main-row').innerHTML = _prMainRowHTML(fg?.FG_Name || mo.FG_ID);
+  _modalClearErrors(['pr-qty', 'pr-lot']);
   // Lot ตั้งไว้ตั้งแต่ตอนวางแผน (MO.Lot) ให้ใช้ต่อเนื่องกันเป็นค่าเริ่มต้น — ยังแก้ได้ถ้าผลิตจริงต้องแยก Lot
   document.getElementById('pr-lot').value = mo.Lot || _genLotForDate(mo.PlanDate);
+  document.getElementById('pr-qty').value = grossDefault;
+  document.getElementById('pr-qty-defect').value = 0;
   document.getElementById('pr-mfg').value = mfgDefault;
   document.getElementById('pr-exp').value = expDefault;
+  document.getElementById('pr-extra-rows').innerHTML = '';
+  _prExtraRowSeq = 0;
+  prQtyRecalc();
   // ดึงวัตถุดิบที่เบิกไปของ MO นี้มาโชว์ พร้อมช่องแก้ "เบิกตั้งต้น" (ผู้ใช้ขอ 2026-10-04) — ใช้ฟังก์ชันกลาง
   // _rmUse* ร่วมกับตัวแก้ไขบันทึกผลิตเดิมใน editReqOpen (ผู้ใช้ขอ 2026-10-05 ให้ขึ้นเหมือนกัน)
-  await _rmUseLoadRows('pr', moId);
+  await _rmUseLoadRows('pr', moId, mo.FG_ID);
   bootstrap.Modal.getOrCreateInstance(document.getElementById('prodRecordModal')).show();
 }
 // สุทธิ = ได้ทั้งหมด − เสีย (Scrap) เสมอ ไม่ให้ติดลบ (อ่านอย่างเดียว ผู้ใช้ขอ 2026-10-04 "จะได้ตี Scrap ถูก" —
 // เดิมมีแค่ช่องเดียว "จำนวนที่ผลิตได้จริง" กรอกตัวเลขสุทธิตรงๆ ไม่มีที่มาว่าเสียไปเท่าไหร่)
+// ผู้ใช้ขอ 2026-11-25 "ไฮบริดมากกว่านี้": ไม่เอาช่อง "ได้ทั้งหมด" แยกต่างหากฝั่งซ้ายแล้ว — ของดี/ของเสีย
+// กรอกตรงๆ ต่อรหัส (รวมถึงรหัสหลักของ MO เอง) "ได้ทั้งหมด" (QtyGross ที่บันทึกลง DB) คำนวณเป็นแค่ผลรวม
+// ของดี+ของเสียเบื้องหลัง ไม่ต้องให้ผู้ใช้กรอกเองซ้ำอีกช่อง
 function prQtyRecalc() {
-  const gross = parseFloat(document.getElementById('pr-qty-gross').value) || 0;
-  const defect = parseFloat(document.getElementById('pr-qty-defect').value) || 0;
-  const net = Math.max(0, Math.round((gross - defect) * 10000) / 10000);
-  document.getElementById('pr-qty').value = net || (net === 0 ? 0 : '');
-  _rmUsePackagingRecalc('pr', gross);
+  const qty = parseFloat(document.getElementById('pr-qty').value) || 0;
+  const extra = _prExtraRows();
+  // เบิกตั้งต้นของวัตถุดิบ Bulk (ของกลาง เบิกรวมไว้ก่อนแล้ว) คำนวณจาก "ของดี" รวมของทุกรหัสเท่านั้น (ผู้ใช้ขอ
+  // 2026-11-25 "ให้ Bulk ตั้งต้น หารจำนวนที่ใช้ต่อหน่วย คูณจำนวนของดีของแต่ละสินค้า") — ไม่รวม "ของเสีย" เข้าไป
+  // ด้วย เพราะของเสียของแต่ละรหัสไม่ได้แปลว่าบรรจุภัณฑ์ที่ใช้ร่วมกันถูกใช้ไปเพิ่มตามนั้นเสมอ
+  const totalGood = qty + extra.reduce((s, r) => s + r.qty, 0);
+  _rmUsePackagingRecalc('pr', totalGood);
+  _prDeductProdPreview(qty, extra);
+}
+// แถว "รหัสหลัก" ของ MO นี้ — ลบไม่ได้/เปลี่ยนสินค้าไม่ได้ (ต่างจากแถวที่เพิ่มทีหลัง) แต่ใช้ id เดิม (pr-lot/
+// pr-qty/pr-qty-defect) เพื่อให้โค้ดส่วนอื่นที่อ้างอิง id พวกนี้อยู่แล้ว (validation, payload, ฯลฯ) ใช้ต่อได้เลย
+function _prMainRowHTML(fgName) {
+  return `<div class="border rounded p-2 mb-2">
+    <div class="row g-2">
+      <div class="col-12"><span class="fw-semibold">${esc(fgName)}</span> <span class="badge bg-light text-dark border">รหัสหลักของ MO</span></div>
+      <div class="col-4">
+        <label class="form-label small mb-1">Lot<span class="text-danger">*</span></label>
+        <input id="pr-lot" class="form-control form-control-sm">
+        <div class="invalid-feedback" id="pr-lot-err"></div>
+      </div>
+      <div class="col-4">
+        <label class="form-label small mb-1">ของดี<span class="text-danger">*</span></label>
+        <input id="pr-qty" type="number" min="0" step="any" class="form-control form-control-sm" oninput="window._prGrossTouched = true; prQtyRecalc()">
+        <div class="invalid-feedback" id="pr-qty-err"></div>
+      </div>
+      <div class="col-4">
+        <label class="form-label small mb-1">ของเสีย</label>
+        <input id="pr-qty-defect" type="number" min="0" step="any" class="form-control form-control-sm" oninput="prQtyRecalc()">
+      </div>
+    </div>
+  </div>`;
+}
+// รายการ "ผลิตได้เป็นรหัสอื่นร่วมด้วย" (2026-11-24) — ผู้ใช้ขอ: "เบิกวัตถุดิบไปแล้ว ตอนบันทึกผลิตค่อยมาติ๊กว่า
+// จะเอาเข้า BOM ไหนของน้องลูกประคบบ้าง" — ไม่อยากสร้าง MO/เบิกแยกตามรหัส เบิกวัตถุดิบที่ใช้ร่วมกันครั้งเดียว
+// (MO เดียว ผูกกับรหัสไหนก็ได้ — DeductAtProd กันเคสซิลิโคนไม่ให้ถูกเบิกล่วงหน้าไปแล้ว) แล้วมาระบุทีหลังว่า
+// รอบนี้ได้รหัสไหนบ้างกี่ชิ้น ณ ตอน "บันทึกผลิต" — แต่ละแถวที่เพิ่มคือสินค้า 1 รหัส มี Lot/ของดี/ของเสียของตัวเอง
+// ไม่กรอกอะไรเลย = แถวที่ไม่ได้ใช้ ข้ามไปเฉยๆ ตอนบันทึก (ดู prodRecordModalSave)
+let _prExtraRowSeq = 0;
+function _prExtraRowHTML(seq) {
+  return `<div class="border rounded p-2 mb-2 position-relative" data-seq="${seq}">
+    <button type="button" class="btn btn-sm btn-outline-danger position-absolute" style="top:4px;right:4px;padding:0 6px !important" onclick="prRemoveExtraRow(${seq})" title="ลบแถวนี้"><i class="fa-solid fa-xmark"></i></button>
+    <div class="row g-2">
+      <div class="col-6">
+        <label class="form-label small mb-1">สินค้า</label>
+        <select class="form-select form-select-sm" id="pr-ex-fg-${seq}" onchange="prExtraFgChanged(${seq})"></select>
+      </div>
+      <div class="col-6">
+        <label class="form-label small mb-1">Lot</label>
+        <input class="form-control form-control-sm" id="pr-ex-lot-${seq}">
+      </div>
+      <div class="col-6">
+        <label class="form-label small mb-1">ของดี</label>
+        <input type="number" min="0" step="any" class="form-control form-control-sm" id="pr-ex-qty-${seq}" oninput="prExtraRecalc(${seq})">
+      </div>
+      <div class="col-6">
+        <label class="form-label small mb-1">ของเสีย</label>
+        <input type="number" min="0" step="any" class="form-control form-control-sm" id="pr-ex-defect-${seq}" oninput="prExtraRecalc(${seq})">
+      </div>
+    </div>
+  </div>`;
+}
+// สินค้าที่ "อยู่กลุ่มเดียวกัน" กับ fgId — ไม่มีคอลัมน์หมวด/กลุ่มสินค้าจริงจังใน product_master (ผู้ใช้ขอ
+// 2026-11-24 "อยากให้ตัวเลือกเป็นหมวดน้องลูกประคบเหมือนกัน" แต่ไม่มีฟิลด์กลุ่มให้ใช้ตรงๆ) ใช้สูตร (BOM) แทน:
+// สินค้าที่มีวัตถุดิบร่วมกับ fgId อย่างน้อย 1 ตัว = เตรียม/ผลิตร่วมกันได้จริง (ตรงกับที่ฟีเจอร์นี้มีไว้ใช้ — เอา
+// รหัสอื่นที่ผสมร่วมกันในรอบเดียวกันมาเติม) แม่นกว่าเดายื่นชื่อ และไม่ต้องเพิ่มคอลัมน์ใหม่ในสคีมา
+function _fgFamilyOf(fgId) {
+  const rmIds = new Set(_bomCache.filter(b => b.FG_ID === fgId && b.MatType !== 'FG').map(b => b.RM_ID));
+  if (!rmIds.size) return _fgMasterCache.filter(f => f.FG_ID !== fgId);   // ยังไม่มีสูตร — แสดงทั้งหมดไว้ก่อน กันเลือกไม่ได้เลย
+  return _fgMasterCache.filter(f => f.FG_ID !== fgId
+    && _bomCache.some(b => b.FG_ID === f.FG_ID && b.MatType !== 'FG' && rmIds.has(b.RM_ID)));
+}
+function prAddExtraRow() {
+  const seq = _prExtraRowSeq++;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = _prExtraRowHTML(seq).trim();
+  document.getElementById('pr-extra-rows').appendChild(wrap.firstChild);
+  const primaryFgId = _planCache.find(p => p.MO_ID === _prodMoId)?.FG_ID;
+  const used = new Set([primaryFgId, ...[...document.querySelectorAll('#pr-extra-rows select')].map(s => s.value).filter(Boolean)]);
+  const choices = _fgFamilyOf(primaryFgId).filter(f => !used.has(f.FG_ID));
+  document.getElementById(`pr-ex-fg-${seq}`).innerHTML = '<option value="">— เลือกสินค้า —</option>' +
+    choices.map(f => `<option value="${esc(f.FG_ID)}">${esc(f.FG_Name)}</option>`).join('');
+  document.getElementById(`pr-ex-lot-${seq}`).value = document.getElementById('pr-lot').value || '';
+  prExtraRecalc(seq);
+}
+function prRemoveExtraRow(seq) {
+  document.querySelector(`#pr-extra-rows [data-seq="${seq}"]`)?.remove();
+  prQtyRecalc();
+}
+function prExtraFgChanged() { prQtyRecalc(); }
+function prExtraRecalc() { prQtyRecalc(); }
+function _prExtraRows() {
+  return [...document.querySelectorAll('#pr-extra-rows [data-seq]')].map(div => {
+    const seq = div.dataset.seq;
+    return {
+      seq, fgId: document.getElementById(`pr-ex-fg-${seq}`).value,
+      lot: document.getElementById(`pr-ex-lot-${seq}`).value.trim(),
+      qty: parseFloat(document.getElementById(`pr-ex-qty-${seq}`).value) || 0,
+      defect: parseFloat(document.getElementById(`pr-ex-defect-${seq}`).value) || 0,
+    };
+  });
+}
+// พรีวิว "ตัดตอนบันทึกผลิต" (DeductAtProd, 2026-11-24) — วัสดุที่ตั้งใจไม่เบิกล่วงหน้า (เช่น เคสซิลิโคนต่างรหัส
+// ที่ผลิตผสมกันแล้วแยกทีหลัง) ตัดสต็อกตอนกดบันทึกนี้จริง คูณตาม "สุทธิ" (จำนวนจริงที่ได้ ไม่ใช่ตามแผน) ของ
+// แต่ละรหัสที่ระบุ (แถวหลัก + ทุกแถวที่เพิ่ม) — โชว์ไว้ก่อนให้เห็นว่าจะตัดอะไรไปเท่าไหร่ กันแปลกใจ (ของจริง
+// คำนวณ+ตัดอีกทีฝั่ง DB ใน production_record_post/production_record_post_multi)
+// แต่ละแถวให้กรอก "ของเสียเพิ่ม" ได้ (ผู้ใช้ขอ 2026-11-25 "ใส่ได้ว่าแต่ละรหัสเสียเท่าไหร่บ้าง" — เคส/แพ็คเกจ
+// ชำรุดระหว่างแพ็คของรหัสนั้นๆ เพิ่มเติมจากที่ต้องใช้ตามสูตร) ไม่ใช้กลไก "แบ่งคืนสต็อก/ของเสีย" แบบตาราง
+// วัตถุดิบที่ใช้จริงด้านบน (อันนั้นมีไว้แก้ยอดที่ "เบิกไปแล้ว" จริง — ตัวนี้ยังไม่เคยเบิกอะไรมาก่อนเลย ไม่มี
+// ยอดเดิมให้แบ่ง) แค่บวกเพิ่มตรงๆ: รวมตัดสต็อก = ตามสูตร + ของเสียที่กรอก — อ่านย้อนตอนบันทึกจาก data-fgid/
+// data-rmid ของแต่ละแถว (ดู _prDeductWasteMapFor) ส่งเป็น WasteMap ต่อรหัสไปให้ RPC ตัดสต็อกรวมให้ถูก
+function _prDeductProdPreview(netQty, extraRows) {
+  const box = document.getElementById('pr-deductprod-info');
+  if (!box) return;
+  const mo = _planCache.find(p => p.MO_ID === _prodMoId);
+  const targets = [{ fgId: mo?.FG_ID, qty: netQty }, ...(extraRows || []).filter(r => r.fgId && r.qty > 0).map(r => ({ fgId: r.fgId, qty: r.qty }))];
+  const rows = [];
+  let idx = 0;
+  targets.forEach(t => {
+    if (!(t.qty > 0) || !t.fgId) return;
+    const lines = _bomCache.filter(b => b.FG_ID === t.fgId && b.MatType !== 'FG');
+    lines.filter(b => _isDeductAtProd(b.RM_ID)).forEach(b => {
+      const rm = _rmMasterCache.find(r => r.RM_ID === b.RM_ID);
+      const base = (parseFloat(b.QtyPerUnit) || 0) * t.qty;
+      const avail = _stockRmCache.find(s => s.RM_ID === b.RM_ID)?.Qty ?? 0;
+      const i = idx++;
+      // คงค่า "ของเสียเพิ่ม" เดิมไว้ถ้าแถวนี้เคยมีมาก่อน (พรีวิวรีเฟรชทุกครั้งที่พิมพ์ยอดใหม่ — ไม่งั้นค่าที่กรอกหาย)
+      const prevWaste = parseFloat(document.getElementById(`pr-ded-waste-${i}`)?.value) || 0;
+      rows.push(`<tr data-fgid="${esc(t.fgId)}" data-rmid="${esc(b.RM_ID)}">
+        <td>${esc(_fgName(t.fgId))}</td>
+        <td><span class="badge text-bg-secondary">${esc(b.RM_ID)}</span> ${esc(rm?.RM_Name || b.RM_ID)}</td>
+        <td class="text-end" id="pr-ded-base-${i}" data-base="${base}" data-avail="${avail}" data-cat="${esc(rm?.Category || '')}">${_qtyFmtByCat(base, rm?.Category)}</td>
+        <td style="width:110px"><input type="number" min="0" step="any" class="form-control form-control-sm" id="pr-ded-waste-${i}" value="${prevWaste || ''}" placeholder="0" oninput="_prDeductTotalRecalc(${i})"></td>
+        <td class="text-end fw-semibold" id="pr-ded-total-${i}">${_prDeductTotalHtml(base, prevWaste, avail, rm?.Category)}</td>
+        <td>${esc(b.Unit || '')}</td>
+      </tr>`);
+    });
+    // ต่อท้าย: ส่วนแบ่งของวัตถุดิบ Bulk (เบิกรวมไว้ก่อนแล้วในตาราง "วัตถุดิบที่ใช้จริง" ด้านบน) ที่รหัสนี้ใช้ไป
+    // เอง (QtyPerUnit × ของดี ของรหัสนี้) — ไว้ดูเฉยๆ ว่าแต่ละรหัสกินส่วนแบ่งไปเท่าไหร่ (ผู้ใช้ขอ 2026-11-25
+    // "ให้เห็นรายการ Bulk ในแต่ละสินค้า ต่อท้าย Pac ด้วย") ไม่มีช่องของเสียเพิ่ม/ไม่ได้ตัดซ้ำ — ยอดตัดจริงของ
+    // Bulk มาจากช่อง "เบิกตั้งต้น" ที่แก้ไขได้ในตารางด้านบนเพียงจุดเดียว (รวมทุกรหัสไว้แล้ว)
+    lines.filter(b => !_isDeductAtProd(b.RM_ID)).forEach(b => {
+      const rm = _rmMasterCache.find(r => r.RM_ID === b.RM_ID);
+      const base = (parseFloat(b.QtyPerUnit) || 0) * t.qty;
+      rows.push(`<tr class="table-light">
+        <td>${esc(_fgName(t.fgId))}</td>
+        <td><span class="badge text-bg-secondary">${esc(b.RM_ID)}</span> ${esc(rm?.RM_Name || b.RM_ID)} <span class="badge bg-light text-dark border">Bulk</span></td>
+        <td class="text-end">${_qtyFmtByCat(base, rm?.Category)}</td>
+        <td class="small text-muted">รวมในยอด Bulk ด้านบนแล้ว</td>
+        <td class="text-end">${_qtyFmtByCat(base, rm?.Category)}</td>
+        <td>${esc(b.Unit || '')}</td>
+      </tr>`);
+    });
+  });
+  // ทำหน้าตาให้เหมือนตาราง "วัตถุดิบที่ใช้จริง" ด้านบน (ผู้ใช้ขอ 2026-11-24 "ให้หน้าตาเหมือนกัน") แทนกล่อง
+  // ข้อความธรรมดา — เป็นตารางจริงคอลัมน์เดียวกัน มี thead ชัดเจนเหมือนกัน
+  box.innerHTML = !rows.length ? '' : `
+    <div class="small text-muted mb-1 mt-2"><i class="fa-solid fa-scissors me-1"></i>จะตัดสต็อกเพิ่ม <span class="fw-normal">(ตัดตอนบันทึกผลิตนี้ — เติม "ของเสียเพิ่ม" ถ้ามีของชำรุด/เสียระหว่างแพ็ครหัสนั้น)</span></div>
+    <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+      <thead><tr><th>สินค้า</th><th>วัสดุที่จะตัด</th><th class="text-end">ตามสูตร</th><th>ของเสียเพิ่ม</th><th class="text-end">รวมตัดสต็อก</th><th>หน่วย</th></tr></thead>
+      <tbody>${rows.join('')}</tbody>
+    </table></div>`;
+}
+function _prDeductTotalHtml(base, waste, avail, cat) {
+  const total = base + (parseFloat(waste) || 0);
+  return `${_qtyFmtByCat(total, cat)}${total > avail ? `<div class="small text-danger fw-normal">คงเหลือ ${_qtyFmtByCat(avail, cat)}</div>` : ''}`;
+}
+function _prDeductTotalRecalc(i) {
+  const baseEl = document.getElementById(`pr-ded-base-${i}`);
+  if (!baseEl) return;
+  const waste = parseFloat(document.getElementById(`pr-ded-waste-${i}`)?.value) || 0;
+  document.getElementById(`pr-ded-total-${i}`).innerHTML = _prDeductTotalHtml(
+    parseFloat(baseEl.dataset.base) || 0, waste, parseFloat(baseEl.dataset.avail) || 0, baseEl.dataset.cat);
+}
+// รวม "ของเสียเพิ่ม" ที่กรอกไว้ของรหัส fgId ให้เป็น {RM_ID: qty} ส่งไปกับ payload ตอนบันทึก (ดู prodRecordModalSave)
+function _prDeductWasteMapFor(fgId) {
+  const map = {};
+  document.querySelectorAll('#pr-deductprod-info tbody tr[data-rmid]').forEach(tr => {
+    if (tr.dataset.fgid !== fgId) return;
+    const waste = parseFloat(tr.querySelector('input')?.value) || 0;
+    if (waste > 0) map[tr.dataset.rmid] = waste;
+  });
+  return map;
 }
 // ตาราง "วัตถุดิบที่ใช้จริง" ใช้ร่วมกัน 2 จุด: บันทึกผลิตใหม่ (#pr-rm-*, prodRecordModal) และแก้ไขบันทึกผลิต
 // เดิมผ่าน "คำขอแก้ไข" (#erq-rm-*, editReqOpen) — ผู้ใช้ขอ 2026-10-05 ให้ตัวแก้ไขของเดิมมีเหมือนตัวใหม่ด้วย
@@ -14974,7 +15500,7 @@ function _rmUseRowHTML(prefix, r, rm, note) {
   // แถวกล่องที่ลงจากการแพ็ค (Issue_ID ..-PK-..) ยอดมาจากจำนวนกล่อง CT ที่แพ็คจริง — ไม่คำนวณตาม "ได้ทั้งหมด" และแก้ที่นี่ไม่ได้ (แก้ที่หน้าแพ็คกล่อง)
   const isPk = /-PK-/.test(r.Issue_ID || '');
   const perUnit = (!isPk && r.QtyBase != null && r.ForQty) ? parseFloat(r.QtyBase) / parseFloat(r.ForQty) : '';
-  return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${orig}" data-saved="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}" data-perunit="${perUnit}" data-scrap="${r.ScrapPct ?? 0}">
+  return `<tr data-issue="${esc(r.Issue_ID)}" data-original="${orig}" data-saved="${r.QtyIssued}" data-cat="${esc(rm?.Category || '')}" data-perunit="${perUnit}" data-scrap="${r.ScrapPct ?? 0}" data-rmid="${esc(r.RM_ID)}">
     <td><code>${esc(r.RM_ID)}</code></td><td>${esc(rm?.RM_Name || r.RM_ID)}${note ? `<div class="small text-warning-emphasis"><i class="fa-solid fa-hourglass-half me-1"></i>${note}</div>` : ''}</td>
     <td class="text-end text-muted">${_rmFmtQty(orig)}</td>
     <td><div class="d-flex gap-1 align-items-center">
@@ -15012,10 +15538,13 @@ function _rmUsePackagingRecalc(prefix, grossQty) {
     const scrapPct = parseFloat(tr.dataset.scrap) || 0;
     const input = tr.querySelector(`.${prefix}-rm-qty`);
     if (!input) return;
+    // % เผื่อเพิ่ม (BufferPct, 2026-11-25) — ตั้งไว้ที่ Master วัตถุดิบ (เช่น ถุงตาข่ายเผื่อฉีกขาด/ของเสียระหว่าง
+    // บรรจุ) บวกเข้าไปก่อนปัดเศษ ยังแก้ยอดเองตอนเบิกได้เสมอ ไม่ใช่ค่าตายตัว
+    const bufferPct = parseFloat(_rmMasterCache.find(r => r.RM_ID === tr.dataset.rmid)?.BufferPct) || 0;
     // แพ็คเกจจิ้งปัดเป็นจำนวนเต็มเสมอ (ผู้ใช้ขอ 2026-10-08 "ไม่มีทศนิยม" — ของจริงแบ่งเศษซอง/เศษกล่องไม่ได้)
     // ใช้ _issgenRound ตัวเดียวกับที่หน้า "เบิกเบ็ดเตล็ด" ใช้ปัดแพ็คเกจจิ้งอยู่แล้ว (Math.round ธรรมดา ไม่ใช่
     // ceil) ให้กติกาปัดเลขของแพ็คเกจจิ้งเหมือนกันทั้งแอป ไม่ใช่คิดกฎใหม่เฉพาะจุดนี้
-    input.value = _issgenRound(perUnit * grossQty / (1 - scrapPct / 100), CAT_PKG);
+    input.value = _issgenRound(perUnit * grossQty * (1 + bufferPct / 100) / (1 - scrapPct / 100), CAT_PKG);
   });
   _rmUseRecalc(prefix);
 }
@@ -15048,9 +15577,28 @@ async function _rmUseLotEditOpen(prefix, issueId) {
 }
 // ต้องมี _rmMasterCache ไว้แสดงชื่อ — ถ้าเข้าเป็นหน้าแรกของ session (ยังไม่เคยโหลด RM master จากหน้าอื่นมา
 // ก่อน) ชื่อจะโชว์เป็นรหัสซ้ำแทน (บั๊กที่เจอจริง 2026-10-04)
-async function _rmUseLoadRows(prefix, moId) {
+// fgId: ใส่เมื่อแก้ไข/ดูของสินค้ารหัสเดียวใน MO ที่อาจบันทึกผลิตได้หลายรหัส (production_record_post_multi) —
+// กรองไม่ให้ Pac (DeductAtProd) ของรหัสอื่นปนมา ถ้า MO นี้มีมากกว่า 1 รหัสจริงๆ (เช็คจาก production_records)
+// วัสดุ Bulk ที่ใช้ร่วมกับรหัสอื่นจะถูกตัดออกจากตารางนี้ไปเลย (ไม่ใช่แค่ล็อกแก้ไม่ได้) เพราะไม่มี Issue_ID
+// เป็นของรหัสนี้โดยเฉพาะให้แก้ไขอย่างปลอดภัย — ให้ไปแก้ที่หน้า "เบิกเข้าไลน์ผลิต" แทน (ผู้ใช้เจอจริง 2026-11-25:
+// เปิดแก้ไขบันทึกผลิตของ LOVE แล้วเห็นเคสซิลิโคนของ BLUR/JOY/SHY ปนมาด้วยทั้งหมด)
+async function _rmUseLoadRows(prefix, moId, fgId) {
   if (!_rmMasterCache.length) await rmMasterLoad();
-  const issRows = await sbRun(_sb.from('issue_production').select('*').eq('MO_ID', moId), 'โหลดวัตถุดิบที่เบิก') || [];
+  let issRows = await sbRun(_sb.from('issue_production').select('*').eq('MO_ID', moId), 'โหลดวัตถุดิบที่เบิก') || [];
+  let bulkNote = '';
+  if (fgId) {
+    const codeRows = await sbRun(_sb.from('production_records').select('FG_ID').eq('MO_ID', moId), 'โหลดข้อมูลบันทึกผลิตไม่สำเร็จ') || [];
+    const distinctFgs = [...new Set(codeRows.map(r => r.FG_ID))];
+    if (distinctFgs.length > 1) {
+      if (!_bomCache.length) await bomLoad();
+      const bomRmIds = new Set(_bomCache.filter(b => b.FG_ID === fgId && b.MatType !== 'FG').map(b => b.RM_ID));
+      const before = issRows.length;
+      // ตัดวัสดุ Bulk ออกจากตารางนี้ไปเลย (เบิกรวมไว้ก่อน ใช้ร่วมกับรหัสอื่นของ MO นี้ — แก้ยอดจากรหัสเดียวไม่ได้
+      // อย่างปลอดภัย เพราะ Issue_ID เดียวกันเป็นของทุกรหัส) เหลือแค่ Pac (DeductAtProd) ที่เป็นของรหัสนี้โดยตรง
+      issRows = issRows.filter(r => _isDeductAtProd(r.RM_ID) && bomRmIds.has(r.RM_ID));
+      if (before > issRows.length) bulkNote = '<tr><td colspan="7" class="small text-muted py-2"><i class="fa-solid fa-circle-info me-1"></i>MO นี้บันทึกผลิตได้หลายรหัส — วัตถุดิบที่ใช้ร่วมกับรหัสอื่น (Bulk) ไม่แสดงที่นี่ แก้ไขยอดที่หน้า "เบิกเข้าไลน์ผลิต" แทน</td></tr>';
+    }
+  }
   // เรียงตามหมวด (ผู้ใช้เคยขอไว้: สด → แห้ง → เคมี → แพ็คเกจจิ้ง ใช้ _BOM_CAT_ORDER ตัวเดียวกับหน้าอื่นในแอป —
   // พร้อมผลิตอยู่ก่อนสดตามลำดับเดิมของ _BOM_CAT_ORDER) ยกเว้นรหัสกล่อง (ขึ้นต้น "BX") ให้ไปท้ายสุดเสมอไม่ว่าจะ
   // หมวดไหน (ผู้ใช้ขอ 2026-10-31 "พวกที่เป็นกล่องให้อยู่ท้ายสุด") แล้วค่อยเรียงตามรหัสในกลุ่มเดียวกัน
@@ -15087,8 +15635,8 @@ async function _rmUseLoadRows(prefix, moId) {
   const isWaitLegacy = r => !lotPacked && _isCutAtPack(r.RM_ID) && !/-PK-/.test(r.Issue_ID || '');
   document.getElementById(`${prefix}-rm-rows`).innerHTML = (issRows.length || pendingRows)
     ? issRows.map(r => isWaitLegacy(r) ? waitRow(r.RM_ID, r.Unit, `(เบิกไว้ ${_bomFmtQty(r.QtyIssued)} ตอนเข้าไลน์)`)
-        : _rmUseRowHTML(prefix, r, _rmMasterCache.find(x => x.RM_ID === r.RM_ID))).join('') + pendingRows
-    : '<tr><td colspan="7" class="text-center text-muted py-2">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>';
+        : _rmUseRowHTML(prefix, r, _rmMasterCache.find(x => x.RM_ID === r.RM_ID))).join('') + pendingRows + bulkNote
+    : bulkNote || '<tr><td colspan="7" class="text-center text-muted py-2">ไม่พบรายการวัตถุดิบที่เบิกของ MO นี้</td></tr>';
   _rmUseRecalc(prefix);
 }
 // % หาย / ของเสีย (สูตรปรับ 2026-10-12 ให้ตรงกับหน้า "ต้นทุนการผลิต" หลังตรวจที่มา — ผู้ใช้ขอ "ปรับสูตรหน้าบันทึก
@@ -15232,20 +15780,19 @@ async function prodRecordModalSaveOnce(btn) {
   try { await prodRecordModalSave(); } finally { btn.disabled = false; }
 }
 async function prodRecordModalSave() {
-  _modalClearErrors(['pr-qty-gross', 'pr-qty', 'pr-lot']);
-  const gross = parseFloat(document.getElementById('pr-qty-gross').value);
-  const defect = parseFloat(document.getElementById('pr-qty-defect').value) || 0;
+  _modalClearErrors(['pr-qty', 'pr-lot']);
   const qty = parseFloat(document.getElementById('pr-qty').value);
+  const defect = parseFloat(document.getElementById('pr-qty-defect').value) || 0;
+  const gross = qty + defect;   // "ได้ทั้งหมด" ไม่มีช่องให้กรอกแยกแล้ว (ผู้ใช้ขอ 2026-11-25) — คำนวณเป็นแค่ผลรวมของดี+ของเสียเพื่อเก็บลง QtyGross
   const lot = document.getElementById('pr-lot').value.trim();
-  if (!gross || gross <= 0) { _modalShowError('pr-qty-gross', 'กรอกจำนวนที่ได้ทั้งหมดให้ถูกต้อง'); return; }
-  if (!(qty > 0)) { _modalShowError('pr-qty', 'จำนวนสุทธิต้องมากกว่า 0 — เสียเยอะเกินจำนวนที่ได้ทั้งหมด'); return; }
+  if (!(qty > 0)) { _modalShowError('pr-qty', 'กรอก "ของดี" ให้มากกว่า 0'); return; }
   if (!lot) { _modalShowError('pr-lot', 'กรอก Lot'); return; }
-  // ยอดได้ทั้งหมดยังเป็นค่าตามแผนที่ระบบใส่ให้ (ไม่ได้พิมพ์เอง) — กันบันทึกยอดตามแผนแทนยอดจริงโดยไม่ตั้งใจ (ผู้ใช้ขอ 2026-11-12)
-  if (!window._prGrossTouched && gross === window._prGrossPlan) {
+  // ยอด "ของดี" ยังเป็นค่าตามแผนที่ระบบใส่ให้ (ไม่ได้พิมพ์เอง) — กันบันทึกยอดตามแผนแทนยอดจริงโดยไม่ตั้งใจ (ผู้ใช้ขอ 2026-11-12)
+  if (!window._prGrossTouched && qty === window._prGrossPlan) {
     const c0 = await Swal.fire({ icon: 'question', title: 'ยืนยันยอดที่ผลิตได้',
-      html: `ช่อง "ได้ทั้งหมด" ยังเป็นยอดตามแผน <b>${_bomFmtQty(gross)}</b> ที่ระบบใส่ให้ — ผลิตได้จริงเท่านี้ใช่ไหม?`,
+      html: `ช่อง "ของดี" ยังเป็นยอดตามแผน <b>${_bomFmtQty(qty)}</b> ที่ระบบใส่ให้ — ผลิตได้จริงเท่านี้ใช่ไหม?`,
       showCancelButton: true, confirmButtonText: 'ใช่ ผลิตได้เท่านี้', cancelButtonText: 'กลับไปแก้' });
-    if (!c0.isConfirmed) { document.getElementById('pr-qty-gross').focus(); document.getElementById('pr-qty-gross').select(); return; }
+    if (!c0.isConfirmed) { document.getElementById('pr-qty').focus(); document.getElementById('pr-qty').select(); return; }
   }
   // วัตถุดิบที่ใช้จริง: ตรวจก่อนบันทึก (เก็บเฉพาะแถวที่ค่าต่างจากที่เบิกไปเดิมไว้ใช้ทีหลัง ไม่ต้องยิง RPC เปล่าๆ)
   const rmCorrections = _rmUseReadCorrections('pr');
@@ -15254,6 +15801,13 @@ async function prodRecordModalSave() {
   }
   const prSplitErr = _rmUseValidateSplits('pr');
   if (prSplitErr) { Swal.fire('แบ่งคืนสต็อก/ของเสียไม่ครบ', prSplitErr, 'error'); return; }
+  // รหัสอื่นที่เพิ่มร่วม (2026-11-24) — แถวที่ไม่ได้กรอกอะไรเลยถือว่าไม่ใช้ ข้ามไป ที่เหลือต้องครบ (สินค้า/ของดี/Lot)
+  const extraRows = _prExtraRows().filter(r => r.fgId || r.qty > 0 || r.defect > 0 || r.lot);
+  for (const r of extraRows) {
+    if (!r.fgId) { Swal.fire('ข้อมูลไม่ครบ', 'เลือกสินค้าให้ครบทุกแถวที่เพิ่ม หรือกดลบแถวที่ไม่ได้ใช้ออก', 'warning'); return; }
+    if (!(r.qty > 0)) { Swal.fire('ข้อมูลไม่ครบ', `กรอก "ของดี" ของ ${esc(_fgName(r.fgId))} ให้มากกว่า 0`, 'warning'); return; }
+    if (!r.lot) { Swal.fire('ข้อมูลไม่ครบ', `กรอก Lot ของ ${esc(_fgName(r.fgId))}`, 'warning'); return; }
+  }
   const changedCount = rmCorrections.filter(c => Math.abs(c.actual - c.original) > 1e-9).length;
   // แก้จำนวนที่ใช้จริง = แก้รายการเบิกเดิมและสต็อกตามตัวเลขใหม่ → ใบเบิกผลิตที่พิมพ์ส่งบัญชีไปแล้วจะไม่ตรง (ผู้ใช้ขอเตือน 2026-10-30)
   if (changedCount) {
@@ -15262,30 +15816,54 @@ async function prodRecordModalSave() {
       showCancelButton: true, confirmButtonText: 'ยืนยันและบันทึก', cancelButtonText: 'กลับไปแก้' });
     if (!c.isConfirmed) return;
   }
+  const _prPrimaryFgId = _planCache.find(p => p.MO_ID === _prodMoId).FG_ID;
   const payload = {
-    Prod_ID: genId('PR'), MO_ID: _prodMoId, FG_ID: _planCache.find(p => p.MO_ID === _prodMoId).FG_ID,
+    Prod_ID: genId('PR'), MO_ID: _prodMoId, FG_ID: _prPrimaryFgId,
     QtyProduced: qty, QtyGross: gross, QtyDefect: defect, ProdLot: lot,
     MfgDate: document.getElementById('pr-mfg').value || todayStr(), ExpDate: document.getElementById('pr-exp').value || todayStr(),
     ProducedBy: null,
+    WasteMap: _prDeductWasteMapFor(_prPrimaryFgId),
   };
   // บันทึกผลิต + ปรับสถานะ MO เป็น "ผลิตแล้ว" ในคำสั่งเดียวกันฝั่ง DB (migration_2026-10-11_atomic_prod_fg_
   // rpc.sql) — เดิมเป็น insert() แล้ว update() แยกกันคนละ request ถ้าเน็ตหลุดกลางทาง (ทดสอบผ่านมือถือ/
   // แท็บเล็ตหน้างานจริงเท่านั้น ไม่มี dev/staging) จะได้บันทึกผลิตที่สร้างแล้วแต่ MO ค้างสถานะเดิมตลอดไป
   // บันทึกผลิต + ปรับยอดวัตถุดิบที่ใช้จริง เป็นธุรกรรมเดียว (migration_2026-11-12_prod_record_atomic.sql) — ล้มขั้นไหนย้อนทั้งหมด
   // ยังไม่ได้รัน SQL (PGRST202) → ใช้วิธีเดิมสองจังหวะ
-  const changedCorr = rmCorrections.filter(c => Math.abs(c.actual - c.original) > 1e-9);
-  let atomicDone = false;
-  if (changedCorr.length) {
-    const { error: aErr } = await _sb.rpc('production_record_post_corrected', {
-      p_row: payload,
-      p_corrections: changedCorr.map(c => ({ issue_id: c.issueId, new_qty: c.actual, return_qty: c.returnQty, waste_qty: c.wasteQty })),
+  if (!extraRows.length) {
+    const changedCorr = rmCorrections.filter(c => Math.abs(c.actual - c.original) > 1e-9);
+    let atomicDone = false;
+    if (changedCorr.length) {
+      const { error: aErr } = await _sb.rpc('production_record_post_corrected', {
+        p_row: payload,
+        p_corrections: changedCorr.map(c => ({ issue_id: c.issueId, new_qty: c.actual, return_qty: c.returnQty, waste_qty: c.wasteQty })),
+      });
+      if (!aErr) { atomicDone = true; _stockRmCache = []; _rmLotCache = []; }
+      else if (aErr.code !== 'PGRST202') { Swal.fire('บันทึกผลิตไม่สำเร็จ (ไม่ได้บันทึกอะไรเลย)', esc(aErr.message), 'error'); return; }
+    }
+    if (!atomicDone) {
+      const { error } = await _sb.rpc('production_record_post', { p_row: payload });
+      if (error) { _rpcErr(error, 'บันทึกผลิตไม่สำเร็จ', 'migration_2026-10-11_atomic_prod_fg_rpc.sql'); return; }
+      const failedMsgs = await _rmUseApplyCorrections(rmCorrections);
+      if (failedMsgs.length) {
+        Swal.fire('บันทึกผลิตแล้ว แต่ปรับจำนวนวัตถุดิบบางรายการไม่สำเร็จ', failedMsgs.join('<br>'), 'warning');
+      }
+    }
+  } else {
+    // ผลิตได้หลายรหัสในครั้งเดียว (2026-11-24) — 1 MO, หลายแถว production_records (คนละ FG_ID) บันทึกพร้อมกัน
+    // ยังไม่มีตัว "_corrected" สำหรับหลายแถว (ไม่ค่อยเกิดร่วมกับ "ผลิตได้หลายรหัส" ในเซสชันเดียว) ใช้วิธีเดิม
+    // สองจังหวะเสมอ: production_record_post_multi ก่อน แล้วค่อยปรับยอดวัตถุดิบที่ใช้จริงทีหลังเหมือนโหมดปกติ
+    const mfg = document.getElementById('pr-mfg').value || todayStr();
+    const extraPayloads = extraRows.map(r => {
+      const fg = _fgMasterCache.find(f => f.FG_ID === r.fgId);
+      return {
+        Prod_ID: genId('PR'), MO_ID: _prodMoId, FG_ID: r.fgId,
+        QtyProduced: r.qty, QtyGross: r.qty + r.defect, QtyDefect: r.defect, ProdLot: r.lot,
+        MfgDate: mfg, ExpDate: addDays(mfg, fg?.ShelfLifeDays ?? 5), ProducedBy: null,
+        WasteMap: _prDeductWasteMapFor(r.fgId),
+      };
     });
-    if (!aErr) { atomicDone = true; _stockRmCache = []; _rmLotCache = []; }
-    else if (aErr.code !== 'PGRST202') { Swal.fire('บันทึกผลิตไม่สำเร็จ (ไม่ได้บันทึกอะไรเลย)', esc(aErr.message), 'error'); return; }
-  }
-  if (!atomicDone) {
-    const { error } = await _sb.rpc('production_record_post', { p_row: payload });
-    if (error) { _rpcErr(error, 'บันทึกผลิตไม่สำเร็จ', 'migration_2026-10-11_atomic_prod_fg_rpc.sql'); return; }
+    const { error } = await _sb.rpc('production_record_post_multi', { p_rows: [payload, ...extraPayloads] });
+    if (error) { _rpcErr(error, 'บันทึกผลิตไม่สำเร็จ', 'migration_2026-11-24_prod_record_multi.sql'); return; }
     const failedMsgs = await _rmUseApplyCorrections(rmCorrections);
     if (failedMsgs.length) {
       Swal.fire('บันทึกผลิตแล้ว แต่ปรับจำนวนวัตถุดิบบางรายการไม่สำเร็จ', failedMsgs.join('<br>'), 'warning');
@@ -15819,6 +16397,56 @@ function _faRenderSeq() {
     ${list.map(h => `<tr><td><b>${esc(h.name)}</b></td><td class="text-end">${h.lots.length}</td><td class="text-end">${(h.days / h.lots.length).toFixed(1)}</td>${cols.map(i => cell(h.bySeq[i], h, i)).join('')}</tr>`).join('')}</tbody></table></div>
     <div class="small text-muted"><i class="fa-solid fa-circle-info me-1"></i>"วันผลิตที่ N" = ครั้งที่ N ที่ใช้ของรอบรับเข้านั้น (นับเฉพาะวันที่มีการใช้ เช่น รับ 12 พ.ย. ใช้ 14, 16, 17, 19 → วันผลิตที่ 1–4) · ตัวเล็กใต้ค่า = ยอดใช้และ <b>อายุเฉลี่ย</b> (วันหลังรับเข้า) ของวันผลิตนั้น · ${inc ? 'ฐาน = วันผลิตที่ 1 · แสดงส่วนที่เสียเพิ่มจากฐาน' : 'แสดง %เสียรวม'} · ใช้สวิตช์โหมดของตารางแรกสลับได้</div>`;
 }function faSetMode(m) { _faMode = m; _faRenderMatrix(); _faRenderSeq(); }
+// มุมมองที่ 3 — รายรอบรับเข้า (2026-11-21 ผู้ใช้: "ขอดูแต่ละรอบการรับ %หายเท่าไหร่ ทำได้กี่วัน/รอบ") — 1 การ์ด = 1 ล็อตรับเข้า
+// (เดิมเป็นตาราง 11 คอลัมน์ ผู้ใช้บ่นว่า "ดูและวิเคราะห์ยังไง งง" วันเดียวกันนั้นเอง — เปลี่ยนเป็นการ์ด _faLotCard
+// ตัวเดียวกับที่ใช้ในส่วน "รายสมุนไพร → รายรอบรับเข้า" ด้านล่าง กดการ์ดกางดูรายวันได้เลย ไม่ต้องสลับไปมุมมองอื่น)
+//   %เสีย = ของรอบนั้น (L.loss) · เสียเพิ่ม = หัก %เสียฐานของสมุนไพรตัวนั้น (h.base) · ใช้ผลิต = จำนวนวันที่มีการใช้ (L.days) + ช่วงอายุของ (a0–a1)
+//   หัวกลุ่มต่อสมุนไพร (เฉพาะตอนดู "ทุกสมุนไพร"): เฉลี่ยวัน/รอบ + %เสียถ่วงน้ำหนัก · ตัวกรองสมุนไพร + การเรียง
+let _faLots = [];
+// ตารางรายวันของ 1 ล็อต (อายุ 0,1,2,3... วันหลังรับเข้า → ใช้ไปเท่าไหร่ เสีย % เท่าไหร่) — ใช้ร่วมกันทั้ง
+// "มุมมองที่ 3" ด้านบน (ผู้ใช้ขอ 2026-11-21) และการ์ด "รายสมุนไพร → รายรอบรับเข้า" ด้านล่าง (lotCard เดิม
+// ในฟังก์ชัน freshAnRun) — ดึงออกมาเป็นฟังก์ชันกลางกันเขียนตารางเดียวกันซ้ำสองที่
+function _faDailyTableHtml(L, h) {
+  const fmt = _faFmt, pc = _faPc;
+  const rows = L.ns.map(n => { const p = n.kUsed > 0 ? (n.kUsed - n.kYield) / n.kUsed * 100 : null;
+    return `<tr><td class="text-center text-muted">${n.seq ? `ที่ ${n.seq}` : '-'}</td><td class="text-center fw-semibold">${n.age}</td><td>${fmtDate(n.date)}${n.mixed ? ' <span class="badge text-bg-light border text-muted" title="วันนี้ใช้สมุนไพรตัวนี้จากหลายล็อต แยกไม่ได้ว่าเสียของล็อตไหน — ไม่นำมาคิด %เสีย">ใช้ปนหลายล็อต · ไม่นับ %</span>' : ''}</td><td class="text-end">${n.used ? fmt(n.used) : '-'}</td><td class="text-end">${n.kUsed > 0 ? fmt(n.kYield) : '-'}</td><td class="text-end">${n.kUsed > 0 ? fmt(n.kUsed - n.kYield) : '-'}</td><td class="text-end fw-bold ${_faCls(p)}">${pc(p)}</td><td class="text-end fw-semibold ${n.age === h.baseAge ? 'text-muted' : _faIncCls(p != null && h.base != null ? p - h.base : null)}">${n.age === h.baseAge && p != null ? 'ฐาน' : (p != null && h.base != null ? _faSgn(p - h.base) : '-')}</td><td class="text-end">${n.waste ? `<span class="text-danger">${fmt(n.waste)}</span>` : '-'}</td><td class="small">${[...n.src].join(' + ') || '-'}</td><td class="small">${[...n.fg].sort().join(', ') || '-'}</td></tr>`; }).join('');
+  return `<table class="table table-sm mb-0 align-middle"><thead><tr><th class="text-center" style="width:80px">วันผลิตที่</th><th class="text-center" style="width:80px">หลังรับ (วัน)</th><th>วันที่</th><th class="text-end">ใช้ (${esc(L.unit)})</th><th class="text-end">ได้ใช้จริง</th><th class="text-end">เสีย</th><th class="text-end">%เสีย</th><th class="text-end" title="หัก %เสียฐานของสมุนไพรตัวนี้ (วัน 0)">เสียเพิ่มจากเหี่ยว</th><th class="text-end">ของเสียทิ้ง</th><th>ที่มา</th><th>FG Lot</th></tr></thead><tbody>${rows || '<tr><td colspan="11" class="text-center text-muted">ยังไม่มีการใช้</td></tr>'}</tbody></table>`;
+}
+// การ์ด 1 ใบ = 1 รอบรับเข้า (Lot) — ใช้ร่วมกันทั้ง "มุมมองที่ 3" (ผู้ใช้ขอ 2026-11-21 "ดูยาก งง ทำให้ดูง่าย
+// ใช้ง่ายหน่อย" — เดิมเป็นตาราง 11 คอลัมน์แน่นมาก) และการ์ด "รายสมุนไพร → รายรอบรับเข้า" ด้านล่าง (ของเดิม
+// ดึงออกมาจาก freshAnRun's lotCard ให้เรียกใช้ซ้ำได้จากนอกฟังก์ชันด้วย)
+function _faLotCard(L, h) {
+  const fmt = _faFmt, pc = _faPc, key = L.id, share = L.recvQty > 0 ? L.used / L.recvQty * 100 : null;
+  return `<details class="ov-day pl-card" style="border-left-color:${_faBg(L.loss)}" data-k="${esc(key)}" ${_faOpen[key] ? 'open' : ''} ontoggle="_faOpen[this.dataset.k]=this.open">
+    <summary class="pl-h"><i class="fa-solid fa-chevron-right ov-day-chev"></i>
+      <div class="pl-main"><div class="pl-top"><span class="pl-lot"><i class="fa-solid fa-barcode me-1"></i>${esc(L.lot)}</span><span class="pl-name" style="font-size:1rem">รับเข้า ${fmtDate(L.recv)} · ${fmt(L.recvQty)} ${esc(L.unit)}</span></div>
+        <div class="pl-meta"><span>ใช้ไป <b class="text-body">${fmt(L.used)}</b> (${share != null ? share.toFixed(0) : '-'}%)</span><span><i class="fa-regular fa-calendar me-1"></i>ใช้ผลิต <b class="text-body">${L.days}</b> วัน${L.days ? ` (อายุของ ${L.a0}–${L.a1} วัน)` : ''}</span><span><i class="fa-solid fa-boxes-stacked me-1"></i>FG <b class="text-body">${L.fg.size}</b> Lot</span><span>คงเหลือ ${fmt(L.remain)}</span>${L.waste ? `<span class="text-danger">ของเสียทิ้ง ${fmt(L.waste)}</span>` : ''}</div></div>
+      <div class="pl-total" style="background:${_faBg(L.loss)};min-width:96px"><small>%เสียรวม</small><b>${pc(L.loss)}</b></div></summary>
+    <div class="table-responsive ov-day-b no-inner-scroll">${_faDailyTableHtml(L, h)}</div></details>`;
+}
+function _faRenderRounds() {
+  const el = document.getElementById('faRounds'); if (!el) return;
+  const sel = document.getElementById('faRoundHerb'), sortBy = document.getElementById('faRoundSort')?.value || 'recv';
+  const names = _faHerbs.map(h => h.name), cur = sel.value;
+  sel.innerHTML = '<option value="">ทุกสมุนไพร</option>' + names.map(n => `<option value="${esc(n)}" ${n === cur ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  const herbs = _faHerbs.filter(h => !cur || h.name === cur);
+  if (!herbs.length) { el.innerHTML = '<div class="text-center text-muted py-3">ไม่มีข้อมูล</div>'; return; }
+  const fmt = _faFmt, pc = _faPc;
+  const sorter = { recv: (a, b) => String(b.recv).localeCompare(String(a.recv)), loss: (a, b) => (b.loss ?? -1) - (a.loss ?? -1), days: (a, b) => b.days - a.days }[sortBy];
+  // เปลี่ยนจากตาราง 11 คอลัมน์เป็นการ์ดต่อรอบรับเข้า — ใช้การ์ดตัวเดียวกับ "รายสมุนไพร → รายรอบรับเข้า" ด้านล่าง
+  // (_faLotCard) ทั้งหมด (ผู้ใช้ขอ 2026-11-21 "ดูและวิเคราะห์ยังไง งง ทำให้ดูง่าย ใช้ง่ายหน่อย") — กดการ์ดกาง
+  // ดูรายวันได้เหมือนเดิม (ใช้ _faOpen[L.id] ตัวเดียวกับการ์ดด้านล่าง เปิดที่นี่จะเปิดที่นั่นด้วย ตั้งใจ)
+  const body = herbs.map(h => {
+    const lots = h.lots.slice().sort(sorter), used = lots.filter(L => L.days > 0);
+    const avgDays = used.length ? used.reduce((s, L) => s + L.days, 0) / used.length : null;
+    const head = !cur ? `<div class="d-flex flex-wrap align-items-center gap-2 mb-1 mt-2"><b><i class="fa-solid fa-seedling me-1 text-success"></i>${esc(h.name)}</b>
+      <span class="small text-muted">${lots.length} รอบ · รับ ${fmt(h.recv)} ${esc(h.unit)} · ใช้ ${fmt(h.used)}${avgDays != null ? ` · เฉลี่ย ${avgDays.toFixed(1)} วัน/รอบ` : ''}</span>
+      <span class="badge text-white ms-auto" style="background:${_faBg(h.loss)}" title="%เสียเฉลี่ยของสมุนไพรนี้ทั้งหมด">เฉลี่ยเสีย ${pc(h.loss)}</span></div>` : '';
+    return head + `<div class="d-flex flex-column gap-2 mb-2">${lots.map(L => _faLotCard(L, h)).join('')}</div>`;
+  }).join('');
+  el.innerHTML = `<div class="small text-muted mb-2"><i class="fa-solid fa-circle-info me-1"></i>1 การ์ด = 1 รอบรับเข้า (Lot) — กดการ์ดเพื่อดูว่าแต่ละวันหลังรับเข้าเสียเท่าไหร่ · "%เสียรวม" ที่มุมขวาคือเฉลี่ยทั้งรอบ</div>
+    ${body}`;
+}
 function _faRenderMatrix() {
   const el = document.getElementById('faMatrix'), inc = _faMode === 'inc', fmt = _faFmt;
   const list = _faHerbs;
@@ -15930,29 +16558,18 @@ async function freshAnRun() {
   const avgLoss = tot.ku > 0 ? (tot.ku - tot.ky) / tot.ku * 100 : null;
   const kpi = (n, l) => `<div class="col-6 col-md"><div class="kpi-card"><div class="kpi-num">${n}</div><div class="kpi-label">${l}</div></div></div>`;
   document.getElementById('faKpis').innerHTML = [kpi(herbList.length, 'สมุนไพรสดที่มีรับเข้า'), kpi(tot.lots, 'รอบรับเข้า (ล็อต)'), kpi(`${fmt(tot.recv)} <small class="fw-normal text-muted">กก.</small>`, 'รับเข้ารวม'), kpi(`${fmt(tot.used)} <small class="fw-normal text-muted">กก.</small>`, 'ใช้ไปแล้ว'), kpi(`<span class="${_faCls(avgLoss)}">${pc(avgLoss)}</span>`, '%เสียเฉลี่ยรวม (ถ่วงน้ำหนัก)')].join('');
-  _faHerbs = herbList; _faRenderMatrix(); _faRenderSeq();
+  _faHerbs = herbList; _faLots = lotList; _faRenderMatrix(); _faRenderSeq(); _faRenderRounds();
   // ตรวจรายการใช้ที่อายุเกิน (ผิดปกติ?) — บอกเอกสาร/ล็อต/วันรับเข้า เพื่อไล่ดูว่าวันรับเข้าผิด หรือล็อตเก่าค้างแล้วถูกเบิกทีหลัง
   const evTop = events.sort((a, b) => b.age - a.age || String(b.date).localeCompare(String(a.date)));
   document.getElementById('faAnomaly').innerHTML = `<h6 class="mb-1"><i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i>รายการใช้ที่อายุเกิน ${evMin} วัน <span class="badge text-bg-${events.length ? 'warning' : 'success'}">${events.length}</span></h6>
     <div class="small text-muted mb-2">${cut != null ? `กำลัง<b>ตัดออกจากการคิด</b>ทั้งหมดนี้ (เลือก "ตัดอายุเกิน ${cut} วัน" ด้านบน) — ` : ''}ไล่ดูเลขเอกสาร/วันรับเข้าของล็อต ว่าวันรับเข้าในระบบผิด หรือเป็นล็อตเก่าที่เหลือค้างแล้วถูกหยิบทีหลัง</div>
     ${events.length ? `<div class="table-responsive no-inner-scroll"><table class="table table-sm align-middle mb-0"><thead><tr class="small text-muted"><th>สมุนไพร</th><th>Lot</th><th>รับเข้า</th><th>วันที่ใช้</th><th class="text-end">อายุ (วัน)</th><th class="text-end">ยอด</th><th>เอกสาร</th><th>ที่มา</th></tr></thead><tbody>${evTop.slice(0, 150).map(e => `<tr><td>${esc(e.name)}</td><td><span class="badge bg-light text-dark border">${esc(e.lot)}</span></td><td>${fmtDate(e.recv)}</td><td>${fmtDate(e.date)}</td><td class="text-end fw-bold text-danger">${e.age}</td><td class="text-end">${fmt(e.qty)}</td><td class="small"><code>${esc(e.doc || '-')}</code></td><td class="small">${e.src}</td></tr>`).join('')}</tbody></table></div>${events.length > 150 ? `<div class="small text-muted mt-1">แสดง 150 รายการแรก (อายุมากสุดก่อน) จากทั้งหมด ${events.length}</div>` : ''}` : '<div class="text-success small">ไม่มีรายการอายุเกินเกณฑ์</div>'}`;
-  const lotCard = (L, h) => {
-    const key = L.id, share = L.recvQty > 0 ? L.used / L.recvQty * 100 : null;
-    const rows = L.ns.map(n => { const p = n.kUsed > 0 ? (n.kUsed - n.kYield) / n.kUsed * 100 : null;
-      return `<tr><td class="text-center text-muted">${n.seq ? `ที่ ${n.seq}` : '-'}</td><td class="text-center fw-semibold">${n.age}</td><td>${fmtDate(n.date)}${n.mixed ? ' <span class="badge text-bg-light border text-muted" title="วันนี้ใช้สมุนไพรตัวนี้จากหลายล็อต แยกไม่ได้ว่าเสียของล็อตไหน — ไม่นำมาคิด %เสีย">ใช้ปนหลายล็อต · ไม่นับ %</span>' : ''}</td><td class="text-end">${n.used ? fmt(n.used) : '-'}</td><td class="text-end">${n.kUsed > 0 ? fmt(n.kYield) : '-'}</td><td class="text-end">${n.kUsed > 0 ? fmt(n.kUsed - n.kYield) : '-'}</td><td class="text-end fw-bold ${_faCls(p)}">${pc(p)}</td><td class="text-end fw-semibold ${n.age === h.baseAge ? 'text-muted' : _faIncCls(p != null && h.base != null ? p - h.base : null)}">${n.age === h.baseAge && p != null ? 'ฐาน' : (p != null && h.base != null ? _faSgn(p - h.base) : '-')}</td><td class="text-end">${n.waste ? `<span class="text-danger">${fmt(n.waste)}</span>` : '-'}</td><td class="small">${[...n.src].join(' + ') || '-'}</td><td class="small">${[...n.fg].sort().join(', ') || '-'}</td></tr>`; }).join('');
-    return `<details class="ov-day pl-card" style="border-left-color:${_faBg(L.loss)}" data-k="${esc(key)}" ${_faOpen[key] ? 'open' : ''} ontoggle="_faOpen[this.dataset.k]=this.open">
-      <summary class="pl-h"><i class="fa-solid fa-chevron-right ov-day-chev"></i>
-        <div class="pl-main"><div class="pl-top"><span class="pl-lot"><i class="fa-solid fa-barcode me-1"></i>${esc(L.lot)}</span><span class="pl-name" style="font-size:1rem">รับเข้า ${fmtDate(L.recv)} · ${fmt(L.recvQty)} ${esc(L.unit)}</span></div>
-          <div class="pl-meta"><span>ใช้ไป <b class="text-body">${fmt(L.used)}</b> (${share != null ? share.toFixed(0) : '-'}%)</span><span><i class="fa-regular fa-calendar me-1"></i>ใช้ผลิต <b class="text-body">${L.days}</b> วัน${L.days ? ` (อายุของ ${L.a0}–${L.a1} วัน)` : ''}</span><span><i class="fa-solid fa-boxes-stacked me-1"></i>FG <b class="text-body">${L.fg.size}</b> Lot</span><span>คงเหลือ ${fmt(L.remain)}</span>${L.waste ? `<span class="text-danger">ของเสียทิ้ง ${fmt(L.waste)}</span>` : ''}</div></div>
-        <div class="pl-total" style="background:${_faBg(L.loss)};min-width:96px"><small>%เสียรวม</small><b>${pc(L.loss)}</b></div></summary>
-      <div class="table-responsive ov-day-b no-inner-scroll"><table class="table table-sm mb-0 align-middle"><thead><tr><th class="text-center" style="width:80px">วันผลิตที่</th><th class="text-center" style="width:80px">หลังรับ (วัน)</th><th>วันที่</th><th class="text-end">ใช้ (${esc(L.unit)})</th><th class="text-end">ได้ใช้จริง</th><th class="text-end">เสีย</th><th class="text-end">%เสีย</th><th class="text-end" title="หัก %เสียฐานของสมุนไพรตัวนี้ (วัน 0)">เสียเพิ่มจากเหี่ยว</th><th class="text-end">ของเสียทิ้ง</th><th>ที่มา</th><th>FG Lot</th></tr></thead><tbody>${rows || '<tr><td colspan="11" class="text-center text-muted">ยังไม่มีการใช้</td></tr>'}</tbody></table></div></details>`;
-  };
   box.innerHTML = herbList.map(h => `<details class="ov-day" data-k="H:${esc(h.name)}" ${_faOpen['H:' + h.name] ? 'open' : ''} ontoggle="_faOpen[this.dataset.k]=this.open" style="border-left:5px solid ${_faBg(h.loss)}">
     <summary class="pl-h"><i class="fa-solid fa-chevron-right ov-day-chev"></i>
       <div class="pl-main"><div class="pl-top"><span class="pl-name" style="font-size:1.12rem"><i class="fa-solid fa-seedling me-1 text-success"></i>${esc(h.name)}</span></div>
         <div class="pl-meta"><span><b class="text-body">${h.lots.length}</b> รอบรับเข้า</span><span>รับ <b class="text-body">${fmt(h.recv)}</b> ${esc(h.unit)}</span><span>ใช้ <b class="text-body">${fmt(h.used)}</b></span><span>ใช้ผลิตเฉลี่ย <b class="text-body">${(h.days / h.lots.length).toFixed(1)}</b> วัน/รอบ</span><span title="%เสียของอายุแรกที่มีข้อมูล (ปกติวัน 0) = ของเสียจากการเตรียม/ตัดแต่ง">ฐาน${h.baseAge > 0 ? `วัน ${h.baseAge}` : ''} <b class="text-body">${pc(h.base)}</b></span>${h.loss != null && h.base != null ? `<span>เสียเพิ่มเพราะเหี่ยวเฉลี่ย <b class="${_faIncCls(h.loss - h.base)}">${_faSgn(h.loss - h.base)}</b></span>` : ''}${h.waste ? `<span class="text-danger">ของเสียทิ้ง ${fmt(h.waste)}</span>` : ''}</div></div>
       <div class="pl-total" style="background:${_faBg(h.loss)};min-width:96px"><small>%เสียเฉลี่ย</small><b>${pc(h.loss)}</b></div></summary>
-    <div class="ov-day-b d-flex flex-column gap-2" style="padding:10px">${h.lots.map(L => lotCard(L, h)).join('')}</div></details>`).join('') || '<div class="text-center text-muted py-4">ไม่มีรอบรับเข้าในช่วงวันที่ที่เลือก</div>';
+    <div class="ov-day-b d-flex flex-column gap-2" style="padding:10px">${h.lots.map(L => _faLotCard(L, h)).join('')}</div></details>`).join('') || '<div class="text-center text-muted py-4">ไม่มีรอบรับเข้าในช่วงวันที่ที่เลือก</div>';
 }
 
 // ย้ายที่เก็บทั้งสินค้า แบบ FIFO (2026-11-21 ผู้ใช้ขอ "ใส่จำนวน เลือกสถานที่ เลือกยอดจากชั้น 3 ว่าล็อตไหนไปเท่าไหร่ เรียงตาม FIFO")
@@ -16503,7 +17120,7 @@ function miscOutRender() {
     return `<details class="ov-day pl-card" style="border-left-color:${accent}" data-k="${k}" ${_moOpen[s.key] ? 'open' : ''} ontoggle="_moOpen[this.dataset.k]=this.open">
       <summary class="pl-h"><i class="fa-solid fa-chevron-right ov-day-chev"></i>
       <div class="pl-main">
-        <div class="pl-top">${s.docNo ? `<span class="pl-lot" style="background:${accent}">${esc(s.docNo)}</span>` : '<span class="text-muted small">ยังไม่ออกเลข</span>'}${badge(s.type, s.type === 'โอนย้าย' ? 'info' : (s.type === 'ขายลูกค้า' ? 'success' : 'secondary'))}<span class="pl-name" style="font-size:1rem"><i class="fa-regular fa-calendar me-1 text-muted"></i>${fmtDate(s.date)}</span><span class="pl-name" style="font-size:1.12rem"><i class="fa-regular fa-comment-dots me-1 text-muted" style="font-size:.9em"></i>${purposeText}</span></div>
+        <div class="pl-top">${s.type === 'ขายลูกค้า' && s.docNo ? `<input type="checkbox" class="form-check-input mo-sale-chk me-1" data-k="${k}" onclick="event.stopPropagation();_moBulkDnUpdate()" title="ติ๊กเพื่อรวมหลายใบขายลูกค้าเป็นใบส่งเดียว">` : ''}${s.docNo ? `<span class="pl-lot" style="background:${accent}">${esc(s.docNo)}</span>` : '<span class="text-muted small">ยังไม่ออกเลข</span>'}${badge(s.type, s.type === 'โอนย้าย' ? 'info' : (s.type === 'ขายลูกค้า' ? 'success' : 'secondary'))}<span class="pl-name" style="font-size:1rem"><i class="fa-regular fa-calendar me-1 text-muted"></i>${fmtDate(s.date)}</span><span class="pl-name" style="font-size:1.12rem"><i class="fa-regular fa-comment-dots me-1 text-muted" style="font-size:.9em"></i>${purposeText}</span></div>
         <div class="pl-meta"><span><i class="fa-solid fa-list-ul me-1"></i>${s.lines.length} รายการ</span><span class="text-truncate" style="max-width:420px">${esc(s.lines.slice(0, 3).map(l => l.name).join(', '))}${s.lines.length > 3 ? ` +${s.lines.length - 3}` : ''}</span></div>
       </div>
       ${showPrice ? `<div class="pl-total" style="min-width:110px;padding:4px 12px"><small>มูลค่ารวม</small><b style="font-size:1.15rem">฿${_fmtBaht(total)}</b></div>` : ''}
@@ -16515,6 +17132,7 @@ function miscOutRender() {
         ${canDel ? `<button class="btn btn-sm btn-outline-danger" data-k="${k}" onclick="miscOutDelete(this.dataset.k)" title="ลบทั้งใบ (คืนสต็อก)"><i class="fa-solid fa-trash"></i></button>` : ''}</div></summary>
       <div class="table-responsive ov-day-b no-inner-scroll"><table class="table table-sm mb-0 align-middle"><thead><tr><th>ประเภท</th><th>รายการ</th><th>Lot</th><th class="text-end">จำนวน</th><th>หน่วย</th>${showPrice ? '<th class="text-end">ราคา/หน่วย</th><th class="text-end">มูลค่า (บาท)</th>' : ''}</tr></thead><tbody>${lineHtml}</tbody>${totalRow}</table></div></details>`;
   }).join('') || '<div class="text-center text-muted py-4"><div class="mb-1">ยังไม่มีใบในช่วงวันที่ที่เลือก</div><div class="small mb-2">ลองขยายช่วงวันที่ หรือสร้างใบใหม่</div><button class="btn btn-brand btn-sm me-1" onclick="miscOutOpen(\'เบิกเบ็ดเตล็ด\')"><i class="fa-solid fa-plus me-1"></i>เบิกเบ็ดเตล็ด</button><button class="btn btn-outline-primary btn-sm" onclick="miscOutOpen(\'โอนย้าย\')"><i class="fa-solid fa-truck-arrow-right me-1"></i>โอนย้าย</button></div>';
+  _moBulkDnUpdate();   // รีเรนเดอร์ใหม่ = checkbox ที่ติ๊กไว้หายไปหมด (DOM สร้างใหม่) ต้องซ่อนปุ่ม/รีเซ็ตจำนวนตาม
 }
 let _moOpen = {};
 
@@ -16795,6 +17413,49 @@ async function miscOutPrintDel(key) {
     p_header: { customer: ti.CustomerName || s.dest || '', address: ti.CustomerAddress || '', contact: ti.ContactPerson || '', tel: ti.ContactTel || '', po: ti.PO_No || '' }, p_lines: lines });
   if (error) { console.error(error); Swal.fire('ออกใบส่งสินค้าไม่สำเร็จ', esc(error.message), 'error'); return; }
   _dnPrint({ DN_No: no, DocType: 'DN', NoteDate: date, CustomerName: ti.CustomerName, CustomerAddress: ti.CustomerAddress, ContactPerson: ti.ContactPerson, ContactTel: ti.ContactTel, PO_No: ti.PO_No, Lines: lines });
+}
+// โชว์/ซ่อนปุ่ม "ออกใบส่งรวม" ตามจำนวนที่ติ๊กไว้ — เรียกทุกครั้งที่ติ๊ก/เอาติ๊กออก (เหมือนรูปแบบ packboxBulkQrBtn)
+function _moBulkDnUpdate() {
+  const n = document.querySelectorAll('.mo-sale-chk:checked').length;
+  const btn = document.getElementById('moBulkDnBtn');
+  btn.style.display = n >= 2 ? '' : 'none';
+  btn.querySelector('.cnt').textContent = n;
+}
+// รวมหลายใบขายลูกค้า (ติ๊กไว้) เป็นใบส่งสินค้า (DEL) ใบเดียว (ผู้ใช้ขอ 2026-11-23 "อยากเลือก 2 ใบนี้ ออกใบส่งเป็น
+// ใบเดียว") — ใช้บรรทัดจากใบรับเข้าคลัง 14 (TI14) ของแต่ละใบขาย รวมกันเป็น p_lines เดียว เรียก delivery_note_create
+// ครั้งเดียว ต่างจาก miscOutPrintDel ที่ออกทีละใบ — ต้องเป็นลูกค้าเดียวกันทุกใบ (ใบส่ง 1 ใบ = 1 หัวลูกค้า)
+async function miscOutPrintDelBulk() {
+  const keys = [...document.querySelectorAll('.mo-sale-chk:checked')].map(c => c.dataset.k);
+  if (keys.length < 2) { Swal.fire('เลือกอย่างน้อย 2 ใบ', 'ติ๊กใบขายลูกค้าที่จะรวมเป็นใบส่งเดียวอย่างน้อย 2 ใบ', 'info'); return; }
+  const slips = keys.map(k => _moSlips.find(x => x.key === k)).filter(Boolean);
+  const results = await Promise.all(slips.map(s => _issueTiNotes(s.docNo)));
+  const missing = results.map((r, i) => !r.ti ? slips[i].docNo : null).filter(Boolean);
+  if (missing.length) { Swal.fire('มีบางใบยังไม่มีใบรับเข้าคลัง 14', `กด "เบิก+14" ให้ครบทุกใบก่อน แล้วค่อยออกใบส่งรวม — ใบที่ยังไม่มี: ${missing.map(esc).join(', ')}`, 'info'); return; }
+  const tis = results.map(r => r.ti);
+  const customers = [...new Set(tis.map(t => t.CustomerName || ''))];
+  if (customers.length > 1) { Swal.fire('ลูกค้าไม่ตรงกัน', `รวมใบส่งได้เฉพาะลูกค้าเดียวกันเท่านั้น — ใบที่เลือกมีลูกค้าต่างกัน: ${customers.map(esc).join(', ')}`, 'warning'); return; }
+  const dn = await _sb.from('delivery_notes').select('*').eq('DocType', 'DN').order('CreatedAt', { ascending: false }).limit(2000);
+  if (!dn.error) {
+    const already = slips.filter(s => (dn.data || []).some(n => !_dnIsVoid(n) && (n.Lines || []).some(l => l.fi_no === s.docNo)));
+    if (already.length) {
+      const c = await Swal.fire({ icon: 'warning', title: 'บางใบเคยออกใบส่งแล้ว', showCancelButton: true, confirmButtonText: 'ออกใบส่งรวมต่อ', cancelButtonText: 'ยกเลิก',
+        html: `<div class="small text-start">ใบ ${already.map(s => `<code>${esc(s.docNo)}</code>`).join(', ')} เคยออกใบส่งไปแล้ว — ถ้าทำต่อจะได้ใบส่งใหม่ซ้ำซ้อนกับใบเดิม</div>` });
+      if (!c.isConfirmed) return;
+    }
+  }
+  const allLines = tis.flatMap(t => (t.Lines || []).filter(l => Number(l.qty) > 0));
+  if (!allLines.length) { Swal.fire('ไม่มีรายการ', 'ใบที่เลือกไม่มีรายการให้ออกใบส่ง', 'info'); return; }
+  const first = tis[0], poText = [...new Set(tis.map(t => t.PO_No).filter(Boolean))].join(', ');
+  const c = await Swal.fire({ icon: 'question', title: 'ออกใบส่งสินค้ารวม (DEL)?', showCancelButton: true, confirmButtonText: 'ออกใบส่ง + พิมพ์', cancelButtonText: 'ยกเลิก',
+    html: `<div class="small text-start">รวม ${slips.length} ใบ (${slips.map(s => `<code>${esc(s.docNo)}</code>`).join(', ')}) เป็นใบส่งเดียว เลข <b>DEL…</b><br>ลูกค้า <b>${esc(first.CustomerName || '-')}</b> · รวม ${allLines.length} รายการ<br><span class="text-muted">เป็นเอกสารอย่างเดียว ไม่ตัดสต็อก</span></div>` });
+  if (!c.isConfirmed) return;
+  const date = todayStr();
+  const { data: no, error } = await _sb.rpc('delivery_note_create', { p_date: date,
+    p_header: { customer: first.CustomerName || '', address: first.CustomerAddress || '', contact: first.ContactPerson || '', tel: first.ContactTel || '', po: poText }, p_lines: allLines });
+  if (error) { console.error(error); Swal.fire('ออกใบส่งสินค้าไม่สำเร็จ', esc(error.message), 'error'); return; }
+  _dnPrint({ DN_No: no, DocType: 'DN', NoteDate: date, CustomerName: first.CustomerName, CustomerAddress: first.CustomerAddress, ContactPerson: first.ContactPerson, ContactTel: first.ContactTel, PO_No: poText, Lines: allLines });
+  document.querySelectorAll('.mo-sale-chk:checked').forEach(c2 => c2.checked = false);
+  _moBulkDnUpdate();
 }
 async function miscOutPrint(keyOrDoc) {
   const s = _moSlips.find(x => x.key === keyOrDoc || x.docNo === keyOrDoc);
