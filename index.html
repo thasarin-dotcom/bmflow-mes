@@ -13077,11 +13077,37 @@ function _issueHistRenderCards() {
       .filter(Boolean).join(' ').toLowerCase().includes(q);
   });
   _issueHistGroupsCache = filtered;
+  // "รอบที่ N" (ผู้ใช้ขอ 2026-11-27): MO คนละใบที่ผลิตสินค้าเดียวกัน + Lot เดียวกัน (ผลิตหลายรอบในวันเดียว/
+  // ต่อเนื่องกัน) หน้าตาเหมือนกันแยกไม่ออก — ไล่หา MO ที่ (FG_ID, Lot) ซ้ำกันจาก groups ทั้งหมด (ไม่ใช่แค่ที่
+  // กรองค้นหาไว้ กันเลขรอบเปลี่ยนไปมาเวลาพิมพ์ค้นหา) เรียงตามรหัส MO (เลขรันตามลำดับสร้างอยู่แล้ว) ให้รอบที่ 1
+  // คือ MO ที่สร้างก่อน ไม่ติดป้ายเลยถ้ามีแค่ MO เดียวที่ใช้ (FG_ID, Lot) คู่นั้น (กันป้ายรกตาตอนไม่จำเป็น)
+  const _issueHistRound = {};
+  {
+    const byKey = {};
+    groups.forEach(g => {
+      const mo = _planCache.find(m => m.MO_ID === g.moId);
+      if (!mo?.Lot) return;
+      const key = `${mo.FG_ID}|${mo.Lot}`;
+      (byKey[key] = byKey[key] || []).push(mo.MO_ID);
+    });
+    Object.values(byKey).forEach(ids => {
+      if (ids.length < 2) return;
+      [...new Set(ids)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+        .forEach((id, i) => { _issueHistRound[id] = i + 1; });
+    });
+  }
   const isAdmin = _hasRole('admin');   // ต้นทุน/ราคา = ข้อมูลอ่อนไหวเรื่องเงิน เห็นได้เฉพาะแอดมิน (ผู้ใช้ขอ 2026-10-31)
   document.getElementById('issueHistCards').innerHTML = filtered.map((g, gi) => {
     const mo = _planCache.find(m => m.MO_ID === g.moId);
     const fg = _fgMasterCache.find(f => f.FG_ID === mo?.FG_ID);
-    const first = g.rows[0];
+    // วันที่เบิกที่โชว์บนการ์ด = วันที่เก่าสุดในกลุ่ม ไม่ใช่ g.rows[0] (ผู้ใช้ขอ 2026-11-27 "วันที่ไม่ตรง แก้แล้ว
+    // ไม่เปลี่ยน") — _issueHistCache ถูก query มาเรียง IssueDate ใหม่→เก่า (.order ascending:false) แล้ว group
+    // ตาม MO โดยคง "ตัวแรกที่เจอ" ไว้เป็น rows[0] เสมอ ซึ่งคือแถว "วันที่ล่าสุด" ของ MO นั้น ไม่ใช่วันที่เบิกจริง
+    // — ยิ่งเห็นชัดกับ MO ที่บันทึกผลิตได้หลายรหัส (production_record_post_multi) เพราะแถว DeductAtProd (ตัดตอน
+    // บันทึกผลิต, Issue_ID ลงท้าย -PR-) ประทับ IssueDate = วันที่กดบันทึกผลิต ซึ่งอาจช้ากว่าวันที่เบิกวัตถุดิบ
+    // จริงหลายวัน ทำให้ขึ้นวันที่ผิดเป็นวันที่ล่าสุดแทน และกด "แก้วันที่เบิก" (issueDateBulkEdit) ไปแล้วก็ยังดู
+    // เหมือนไม่เปลี่ยน เพราะรอบบันทึกผลิตถัดไปจะประทับวันที่ใหม่ทับกลับมาอีกทุกครั้ง
+    const first = g.rows.reduce((min, r) => (!min || (r.IssueDate && r.IssueDate < min.IssueDate) || !min.IssueDate) ? r : min, null);
     const expanded = _issueHistExpanded.has(g.moId);
     const rmCount = {};
     g.rows.forEach(h => { rmCount[h.RM_ID] = (rmCount[h.RM_ID] || 0) + 1; });   // วัตถุดิบเดียวกันเบิกหลายแถวใน MO เดียว → ติดป้าย "ซ้ำ" ให้เห็น (อาจเบิกซ้ำโดยไม่ตั้งใจ)
@@ -13113,6 +13139,7 @@ function _issueHistRenderCards() {
           <b>${esc(fg?.FG_Name || mo?.FG_ID || '-')}</b>
           <span class="badge bg-light text-dark border ms-2">ผลิต ${_bomFmtQty(first?.ForQty ?? mo?.PlanQty ?? 0)} ${esc(fg?.Unit || '')}</span>
           <span class="badge bg-light text-dark border ms-1"><i class="fa-solid fa-tag me-1"></i>${esc(mo?.Lot || '-')}</span>
+          ${_issueHistRound[g.moId] ? `<span class="badge bg-light text-dark border ms-1" title="สินค้า+Lot เดียวกันนี้ ผลิตมาแล้วหลาย MO — นี่คือรอบที่ ${_issueHistRound[g.moId]}"><i class="fa-solid fa-repeat me-1"></i>รอบที่ ${_issueHistRound[g.moId]}</span>` : ''}
           ${costBadge}
           <span onclick="event.stopPropagation()">${_editBtn('mo_lot', g.moId)}</span>
           <span class="text-muted ms-2 small">${fmtDate(first?.IssueDate)} · ${g.rows.length} วัตถุดิบ</span>
@@ -13192,7 +13219,7 @@ function _issueHistHalfHTML(g, mo, fg, rmMap, prodRecs, fgRecv, copyLabel) {
       <div><span class="lbl">จำนวนผลิต</span><b>${_bomFmtQty(g.rows[0]?.ForQty ?? mo?.PlanQty ?? 0)} ${esc(fg?.Unit || '')}</b></div>
     </div>
     <div class="ihist-meta">
-      <div><span class="lbl">วันที่เบิกวัตถุดิบ</span>${fmtDateLong(g.rows[0]?.IssueDate)}</div>
+      <div><span class="lbl">วันที่เบิกวัตถุดิบ</span>${fmtDateLong(g.rows.reduce((m, r) => (!m || (r.IssueDate && r.IssueDate < m)) ? r.IssueDate : m, null))}</div>
       <div><span class="lbl">วันที่รับ FG เข้าคลัง</span>${recvDates.length ? recvDates.map(fmtDateLong).join(', ') : 'ยังไม่รับเข้าคลัง'}</div>
     </div>
     <table class="ihist-table">
@@ -13225,11 +13252,15 @@ function _issueDateBulkBtn(moId) {
 async function issueDateBulkEdit(moId) {
   const rows = _issueHistCache.filter(h => h.MO_ID === moId);
   if (!rows.length) return;
+  // ใช้วันที่เก่าสุดของกลุ่มเป็นค่าตั้งต้น (ไม่ใช่ rows[0] ซึ่งเป็นแถวล่าสุดเสมอ เพราะ _issueHistCache query มา
+  // เรียงใหม่→เก่า) ให้ตรงกับที่การ์ดแสดง (ดูหมายเหตุใน _issueHistRenderCards) กันเลือกวันที่จากแถว -PR- ที่อาจ
+  // ประทับวันที่หลังบันทึกผลิตมาเป็นค่าตั้งต้นโดยไม่ตั้งใจ
+  const minDate = rows.reduce((m, r) => (!m || (r.IssueDate && r.IssueDate < m)) ? r.IssueDate : m, null);
   const { value: form } = await Dlg.form({
     title: 'แก้วันที่เบิกวัตถุดิบ', confirmText: 'บันทึก', width: 480,
     html: `<div class="text-start small mb-3">MO <b>${esc(moId)}</b> · ${rows.length} วัตถุดิบ — เปลี่ยนวันที่เบิกของทุกรายการพร้อมกัน เปลี่ยนได้ทันที ระบบจะแจ้งหัวหน้า/แอดมินว่ามีการแก้ไข</div>
       <div class="text-start mb-2"><label class="form-label small mb-1">วันที่เบิกใหม่</label>
-        <input id="idb-date" type="date" class="form-control" value="${esc(rows[0].IssueDate || '')}"></div>`,
+        <input id="idb-date" type="date" class="form-control" value="${esc(minDate || '')}"></div>`,
     preConfirm: () => {
       const date = document.getElementById('idb-date').value;
       if (!date) { Dlg.invalid('เลือกวันที่เบิกใหม่'); return false; }
@@ -13237,7 +13268,7 @@ async function issueDateBulkEdit(moId) {
     },
   });
   if (!form) return;
-  if (form.date === rows[0].IssueDate && rows.every(r => r.IssueDate === form.date)) return;
+  if (rows.every(r => r.IssueDate === form.date)) return;
   const { error } = await _sb.rpc('issue_date_bulk_change', { p_mo_id: moId, p_new_date: form.date });
   if (error) { _rpcErr(error, 'แก้วันที่เบิกไม่สำเร็จ', 'migration_2026-10-12_issue_date_bulk_change.sql'); return; }
   Swal.fire({ toast: true, position: 'top-end', icon: 'success', showConfirmButton: false, timer: 2500, title: 'แก้วันที่เบิกแล้ว — แจ้งเตือนหัวหน้า/แอดมินแล้ว' });
@@ -18547,7 +18578,14 @@ async function stockCardRender() {
         const moLot = _planCache.find(p => p.MO_ID === r.MO_ID)?.Lot;
         const pd = moLot ? packDateByLot[moLot] : null;
         const byPack = pd && pd >= r.IssueDate;
-        const e = { pk: /-PK-/.test(r.Issue_ID || ''), fgLot: moLot || '', date: byPack ? pd : r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (moLot ? ` → FG Lot ${moLot}` : '') + (byPack ? ' · ตัดวันแพ็คกล่อง' : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), alloc: r.LotAlloc, in: 0, out: r.QtyIssued };
+        // ใช้ยอดจาก LotAlloc จริง (ไม่ใช่ QtyIssued ตรงๆ) เป็นยอด "จ่ายออก" ของแถวนี้ — QtyIssued อาจถูกแก้ลงทีหลัง
+        // ตอน "บันทึกผลิต" (วัตถุดิบที่ใช้จริงน้อยกว่าที่เบิก ส่วนต่างลงเป็น "ของเสีย" "ไม่คืนเข้าสต็อก" ตามที่
+        // ตั้งใจไว้ — ดู issue_qty_correct/migration_2026-10-30_issue_return_waste_split.sql) กรณีไม่คืนสต็อกเลย
+        // (v_return=0) ฟังก์ชันนั้นจะไม่แตะ LotAlloc เลย ของจริงที่ตัดออกจากคลังไปแล้วยังเป็นยอดเดิมเต็มจำนวนตาม
+        // LotAlloc (ไม่ได้ลดตาม QtyIssued ใหม่) ถ้าการ์ดนี้ใช้ QtyIssued ตรงๆ จะโชว์ "คงเหลือสะสม" สูงเกินจริง
+        // (ผู้ใช้เจอจริง 2026-11-27: เตยสด/ตะไคร้สด/ขมิ้นสด "คงเหลือรวม" ไม่ตรงกับผลรวมแต่ละ Lot หลายกิโล)
+        const issOut = Array.isArray(r.LotAlloc) && r.LotAlloc.length ? r.LotAlloc.reduce((s, a) => s + (parseFloat(a.qty) || 0), 0) : r.QtyIssued;
+        const e = { pk: /-PK-/.test(r.Issue_ID || ''), fgLot: moLot || '', date: byPack ? pd : r.IssueDate, ts: r.CreatedAt, label: 'เบิกเข้าไลน์ผลิต' + (moLot ? ` → FG Lot ${moLot}` : '') + (byPack ? ' · ตัดวันแพ็คกล่อง' : ''), ref: r.Issue_ID, lot: _scAllocLots(r.LotAlloc), alloc: r.LotAlloc, in: 0, out: issOut };
         // วัสดุ "ตัดตามวันแพ็คกล่อง" ที่ FG Lot นั้นยังไม่มีการแพ็คกล่อง = ยังไม่ได้ใช้จริง → ไม่ลงยอดในการ์ด แสดงเป็นแถวสีเทา "รอแพ็คกล่อง" ท้ายตาราง
         if (cutPack && moLot && !pd) { scPending.push({ ...e, label: e.label + ' · รอแพ็คกล่อง (ยังไม่นับในยอด)' }); return []; }
         return [e];
